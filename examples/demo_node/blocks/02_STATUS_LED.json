@@ -1,0 +1,15 @@
+{
+  "id": "02_STATUS_LED",
+  "title": "STATUS LED",
+  "status": "draft",
+  "purpose": "One green status LED driven active-high from an MCU GPIO.",
+  "ports": ["LED_STAT", "GND"],
+  "parts": [
+    {"ref": "LED1", "mpn": "KT-0603G", "kind": "passive", "role": "green status LED", "pins": {"1": "GND", "2": "LED_STAT_A"}},
+    {"ref": "R2", "mpn": "0402WGF1001TCE", "value": "1k 1% 0402", "role": "LED1 series resistor, ~1.2 mA at 3.3 V", "pins": {"1": "LED_STAT", "2": "LED_STAT_A"}}
+  ],
+  "qa": [
+    {"item": "I_LED", "formula": "(3.3-2.1)/1000", "result": "1.2 mA", "limit": "< GPIO 20 mA, visible", "source": "LED datasheet Vf", "pass": true}
+  ],
+  "decisions": ["LED anode/cathode pin numbers differ between libraries: confirm with tools/pins.py before build."]
+}

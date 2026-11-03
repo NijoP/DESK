@@ -1,0 +1,9 @@
+{
+  "name": "DEMO_NODE",
+  "board": "MAIN",
+  "sheet_uuid": "REPLACE_ME",
+  "pcb_uuid": "REPLACE_ME",
+  "top": 3200,
+  "row_max": 5200,
+  "block_order": ["01_PWR_3V3", "02_STATUS_LED"]
+}

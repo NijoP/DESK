@@ -1,0 +1,61 @@
+"""DESK bridge: run JavaScript inside the live EasyEDA Pro client through the EasyEDA API Gateway.
+Every DESK tool talks to EasyEDA only through ex(). Nothing else opens sockets."""
+import json, os, sys, time, urllib.request, io
+
+if hasattr(sys.stdout, "buffer"):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+
+def _discover():
+    """EDA_PORT env wins; else scan 49620-49629 for the bridge /health handshake (service: easyeda-bridge)."""
+    if os.environ.get("EDA_PORT"):
+        return int(os.environ["EDA_PORT"])
+    for port in range(49620, 49630):
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}/health", timeout=1) as r:
+                if b"easyeda-bridge" in r.read():
+                    return port
+        except OSError:
+            pass
+    return 49620
+
+
+PORT = _discover()
+
+
+def ex(code, timeout=280, retries=0):
+    """Execute JS (body of an async function; use `return` for the result). Raises SystemExit on EDA error."""
+    body = json.dumps({"code": code}).encode("utf-8")
+    for attempt in range(retries + 1):
+        try:
+            req = urllib.request.Request(f"http://127.0.0.1:{PORT}/execute", data=body,
+                                         headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                resp = json.loads(r.read().decode("utf-8"))
+            if not resp.get("success"):
+                raise SystemExit("EDA error: " + str(resp.get("error")))
+            return resp.get("result")
+        except (OSError, TimeoutError) as e:
+            if attempt == retries:
+                raise SystemExit(f"Bridge not reachable on port {PORT}: {e}\n"
+                                 "-> Is EasyEDA Pro open with the API Gateway connected? (see docs/06_EASYEDA_API.md)")
+            time.sleep(10)
+
+
+def guard(doc_uuid, open_doc=True):
+    """JS prefix that (optionally) opens the document and refuses to run on any other sheet."""
+    o = f'await eda.dmt_EditorControl.openDocument("{doc_uuid}"); await new Promise(r=>setTimeout(r,1200));' if open_doc else ""
+    return (o + f'const __D=await eda.dmt_SelectControl.getCurrentDocumentInfo();'
+                f'if(!__D||__D.uuid!=="{doc_uuid}") return {{error:"WRONG SHEET", active:__D&&__D.uuid}};\n')
+
+
+def load_project(path):
+    p = os.path.join(path, "project.json")
+    if not os.path.exists(p):
+        raise SystemExit(f"No project.json in {path}. Copy templates/project/ first.")
+    return json.load(open(p, encoding="utf-8"))
+
+
+def check(res):
+    if isinstance(res, dict) and res.get("error"):
+        raise SystemExit(f"STOP: {res}")
+    return res

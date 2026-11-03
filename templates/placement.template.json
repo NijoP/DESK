@@ -1,0 +1,16 @@
+{
+  "origin_mm": [0, 0],
+  "grid_mm": 0.05,
+  "passive_gap_mm": 0.4,
+  "decap_max_mm": 2.0,
+  "board_mm": [40.0, 30.0],
+  "parts": [
+    ["J1", 2.5, 15.0, 90, "T", "USB-C on left edge, mouth flush with board edge (mechanical)"],
+    ["U1", 20.0, 15.0, 0, "T", "MCU centre, antenna end over board edge, keep-out respected"],
+    ["U2", 8.0, 15.0, 0, "T", "3V3 regulator between USB input and MCU (power flows left->right)"]
+  ],
+  "passives": [
+    ["C1", "U2", "1", "U2 VIN cap at VIN pin"],
+    ["C2", "U2", "5", "U2 VOUT cap at VOUT pin"]
+  ]
+}

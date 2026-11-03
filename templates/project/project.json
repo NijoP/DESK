@@ -1,0 +1,9 @@
+{
+  "name": "MY_PRODUCT",
+  "board": "MAIN",
+  "sheet_uuid": "PASTE_FROM tools/ping.py WHILE THE SCHEMATIC PAGE IS OPEN",
+  "pcb_uuid": "PASTE_FROM tools/ping.py WHILE THE PCB IS OPEN",
+  "top": 3200,
+  "row_max": 5200,
+  "block_order": ["01_PWR_IN", "02_PWR_3V3", "03_MCU"]
+}

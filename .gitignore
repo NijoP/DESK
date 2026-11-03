@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+projects/*/state/
+projects/*/exports/
+.DS_Store
