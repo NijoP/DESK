@@ -1,0 +1,29 @@
+# 09 — Capability status (evidence-based)
+
+**GREEN** = acceptance criteria met **and** test evidence exists. **AMBER** = implemented, offline-tested, live path not
+yet exercised. **RED** = not implemented. Live = against EasyEDA Pro 3.2.149 on this machine.
+
+| # | Capability | Status | Acceptance criteria | Evidence |
+|---|---|---|---|---|
+| 1 | Knowledge + ledger | GREEN | source-required decisions, append-only, corrections supersede, verification STALE on spec **or library device** change, incremental index | tests/test_context.py (16) |
+| 1b | Context engine + API lookup | GREEN | packs within budget, live lint, next gate from real state; `ctx.py api` flags live-verified failures | tests/test_context.py; bench −69 % on real sessions |
+| 2 | Schematic generation | **AMBER** | build→verify VERIFIED on a live sheet; clear→rebuild identical | drawing routine identical to the one that produced proven sheets; **DESK build/verify/clear never run live** (see blocker) |
+| 3a | Offline electrical checks | GREEN | computed QA (expr/min/max, safe eval), ground/supply pin rules, cap ratings, numeric values | tests/test_core.py |
+| 3b | Netlist validation | GREEN (logic) / AMBER (live) | pin-by-pin compare, collisions, stray parts | tests/test_core.py; live read path untested in DESK |
+| 3c | EasyEDA ERC | AMBER | `sch_Drc.check(...,true)` parsed, 0 errors gate | method exists live (api_map); not executed |
+| 4 | PCB placement | AMBER | apply plan with reasons, pin-snapped passives, gap + decap distance check | offline only; courtyard/outline/height/thermal checks **RED** |
+| 5a | Net classes / diff pairs | AMBER | create + read back | methods exist live; not executed |
+| 5b | Autorouting | AMBER | DSN→Freerouting→SES→DRC | Java 23 present; Freerouting jar not installed; not executed |
+| 5c | DRC | AMBER | `pcb_Drc.check(...,true)` 0 violations gate | method exists live; not executed |
+| 6 | API coverage | GREEN (discovery) | live probe of all modules/methods; per-call verified/failed register | library/api_map.json: 93 modules, 702 methods; api_verified.json: 7 calls observed (incl. `openProject` → false) |
+| 7 | Agent execution | GREEN (offline) | single-writer lock, op journal, dirty-failure recovery, tool catalog | tests/test_core.py (lock, dirty/clean fail, resolve) |
+| 8 | Integration testing | AMBER | unit + adapter integration green; live suite | 41 tests green; **no live write tests yet** |
+| 9 | Manufacturing release | AMBER | offline+live gates, exports, BOM/PnP/Gerber cross-checks, sha256 manifest, immutability, ledger entry | checks + manifest tamper test green; live export path not executed |
+| 10 | Learning engine | GREEN | real corpus, ≥2-session corroboration, human gate, protected surfaces, regression revert, benchmark | tests/test_learn.py (16); real run: 33 sessions, 36 proposals, 1.9 s |
+
+## Blocker for every AMBER live item
+`dmt_Project.createProject` works live (disposable project **DESK_LIVETEST_11031644**, uuid
+`fc66155d5a2f4d2d9b1dd3bcd8093391`, was created), but `dmt_Project.openProject` returned **false** while your project
+was open, so DESK could not switch to it without risking your unsaved work. To unblock: open that project in EasyEDA
+yourself (or tell DESK it may switch), then run the live sequence: resolve → pins → lint → build → verify → clear → build
+→ verify → erc → (PCB) importChanges → pcb_dump → pcb_rules → drc → release. Delete the project afterwards.

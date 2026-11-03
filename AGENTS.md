@@ -10,6 +10,8 @@ python tools/ctx.py projects/<P> block <ID>     # everything for the next gate o
 python tools/ctx.py projects/<P> delta          # follow-up session: only what changed
 ```
 Do not read docs/specs whole; use `find`, `doc`, `net`, `req` for anything else.
+EasyEDA API questions: `python tools/ctx.py api <method|module>` (signature + live existence + verified status) — never read the API reference or skill docs whole.
+Tool list: `python tools/desk.py tools`. Interrupted live write: `python tools/desk.py recover projects/<P>`.
 Record every decision / confirmed fact / assumption with its source:
 `python tools/ledger.py projects/<P> add decision "<what + why>" --block <ID> --source "<datasheet page / mail / calc>"`
 

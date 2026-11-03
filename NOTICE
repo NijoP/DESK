@@ -1,0 +1,6 @@
+DESK — Copyright (c) 2026 NijoP, MIT License (see LICENSE).
+
+Third-party software used (not vendored; fetched at a pinned commit by `python tools/learn.py setup`):
+- backpass (https://github.com/kunchenguid/backpass), Copyright (c) 2026 Kun Chen, MIT License.
+  DESK calls its harness discovery adapters and redaction module from desk/learn/collect.mjs.
+- Freerouting (optional, https://github.com/freerouting/freerouting), GPL-3.0, run as a separate process by tools/route.py.

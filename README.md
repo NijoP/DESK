@@ -29,6 +29,8 @@ all on the 100-mil grid. Blocks flow left→right in rows. See [docs/02_SCHEMATI
 | [docs/04_PLACEMENT.md](docs/04_PLACEMENT.md) | PCB placement mental model |
 | [docs/05_ROUTING.md](docs/05_ROUTING.md) | Stackup, net classes, routing order, grounding |
 | [docs/06_EASYEDA_API.md](docs/06_EASYEDA_API.md) | Connecting EasyEDA, API calls used, gotchas |
+| [docs/08_LEARNING_ENGINE.md](docs/08_LEARNING_ENGINE.md) | **Learning Engine**: learns from Claude/Codex/OpenCode/Pi sessions (via Backpass adapters) + DESK logs; human-gated proposals |
+| [docs/09_STATUS.md](docs/09_STATUS.md) | **Capability status** with acceptance criteria and evidence (what is live-verified, what is not) |
 | [docs/07_CONTEXT_ENGINE.md](docs/07_CONTEXT_ENGINE.md) | **Context Engine**: task-aware, token-budgeted context packs + project ledger (decisions, facts, verifications) |
 | `desk/` | `bridge.py` (connection), `draw.py` (**the style, as code**), `spec.py` (lint rules), `context.py` (context engine), `ledger.py` (project memory) |
 | `tests/` | offline tests: `python -m unittest discover -s tests -v` |
@@ -106,5 +108,12 @@ Tell the model: *"Read AGENTS.md, then run `python tools/ctx.py projects/X block
 The model only writes JSON and runs tools; the style is in code and correctness is proven by the netlist,
 so model size affects speed of spec writing, not sheet quality. Keep tasks one block per session to save tokens.
 
+## Learning from sessions
+```bash
+python tools/learn.py setup && python tools/learn.py run    # read-only analysis of real agent sessions
+python tools/learn.py show <ID>; python tools/learn.py accept <ID> --reviewer NAME
+```
+See [docs/08_LEARNING_ENGINE.md](docs/08_LEARNING_ENGINE.md).
+
 ## License
-[MIT](LICENSE)
+[MIT](LICENSE). Third-party notices: [NOTICE](NOTICE).

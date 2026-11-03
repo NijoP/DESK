@@ -450,3 +450,55 @@ def _snippet(text, query, width=700):
     start = max(0, low.rfind("\n", 0, max(0, pos - 200)) + 1)
     s = text[start:start + width]
     return s + (" …" if start + width < len(text) else "")
+
+
+# ----------------------------------------------------------------------------- EasyEDA API lookup (learned: agents
+# read the 180k-token SKILL.md / class docs whole in 27 sessions; this answers the same question in ~100 tokens)
+API_REF_DEFAULT = os.path.join(os.path.expanduser("~"), ".agents", "skills", "easyeda-api", "references", "_quick-reference.md")
+
+
+def api_index():
+    """{ 'sch_PrimitiveComponent.create': signature } built from the local EasyEDA API quick reference (cached)."""
+    cache = os.path.join(ROOT, "library", "api_signatures.json")
+    ref = os.environ.get("EASYEDA_API_REF", API_REF_DEFAULT)
+    if os.path.exists(cache) and (not os.path.exists(ref) or os.path.getmtime(cache) >= os.path.getmtime(ref)):
+        return _json(cache, {})
+    idx, cls = {}, None
+    if os.path.exists(ref):
+        with open(ref, encoding="utf-8") as f:
+            for ln in f:
+                m = re.match(r"^## (\w+)", ln)
+                if m:
+                    c = m.group(1); cls = (c.split("_", 1)[0].lower() + "_" + c.split("_", 1)[1]) if "_" in c and not c.startswith("I") else c
+                    continue
+                m = re.match(r"^- \*\*(\w+)\*\*: `(.*)`", ln.strip())
+                if cls and m:
+                    sig = re.sub(r"\s+", " ", m.group(2)).replace("function ", "")
+                    name = sig.split("(", 1)[0].strip()
+                    idx[f"{cls}.{name}"] = sig[:300]
+        _dump(idx, cache)
+    return idx
+
+
+def api_lookup(query, budget=600):
+    """Method signatures + whether the method exists in the live client (api_map) + live-verified status."""
+    idx = api_index()
+    live = _json(os.path.join(ROOT, "library", "api_map.json"), {}).get("modules", {})
+    ver = _json(os.path.join(ROOT, "library", "api_verified.json"), {}).get("calls", {})
+    q = query.lower().replace("eda.", "")
+    names = set(idx) | {f"{m}.{f}" for m, fs in live.items() for f in fs}
+    hit = sorted(n for n in names if q in n.lower())
+    if not hit:
+        words = [w for w in re.split(r"[\s._]+", q) if w]
+        hit = sorted(n for n in names if all(w in n.lower() for w in words))
+    P = Pack(f"API {query} — {len(hit)} match(es)", budget)
+    lines = []
+    for n in hit[:40]:
+        m, f = n.split(".", 1)
+        exists = "live" if f in live.get(m, []) else ("NOT IN LIVE CLIENT" if live else "live map missing (tools/api_probe.py)")
+        v = ver.get(n)
+        vs = f" | verified {'OK' if v['ok'] else 'FAILED'}: {v['observed']}" if v else ""
+        lines.append(f"eda.{n}  [{exists}{vs}]  {idx.get(n, '(no signature in reference)')}")
+    P.add(0, "methods", "\n".join(lines) or "no match; try a module name (sch_Drc) or a verb (getGerber)")
+    if len(hit) > 40: P.add(1, "more", f"{len(hit) - 40} more — narrow the query")
+    return P.render()

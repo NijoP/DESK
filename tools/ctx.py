@@ -8,6 +8,7 @@ Usage: python tools/ctx.py <project> <command> [args] [--budget N] [--full]
   find "<text>"         ranked search over docs, requirements, blocks, ledger (BM25)
   doc "<heading>"       one doc section by heading (e.g. "G4", "Passive selection", "Troubleshooting")
   delta                 only what changed since the previous delta/brief (incremental follow-up sessions)
+  api "<method|module>"  EasyEDA API: signature + exists in live client + live-verified status (instead of reading docs)
   index                 rebuild/refresh the index and print stats
 Default budgets (tokens): brief 1500, block 3000, net 1200, req 1500, find 1500, doc 2500, delta 2000."""
 import sys
@@ -21,6 +22,9 @@ def opt(name, default=None):
     return default
 budget = opt("--budget"); full = "--full" in a
 a = [x for x in a if x != "--full"]
+if len(a) >= 1 and a[0] == "api":                      # project-independent
+    from desk.context import api_lookup
+    print(api_lookup(" ".join(a[1:]), **({"budget": int(budget)} if budget else {}))); sys.exit(0)
 if len(a) < 2: raise SystemExit(__doc__)
 proj, cmd, rest = a[0], a[1], a[2:]
 E = Engine(proj)

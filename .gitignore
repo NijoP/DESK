@@ -5,3 +5,7 @@ examples/*/state/
 **/state/ctx_*.json
 projects/*/exports/
 .DS_Store
+library/tools/backpass/
+library/tools/*.jar
+.desk_learn/
+library/api_signatures.json
