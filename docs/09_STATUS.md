@@ -11,7 +11,7 @@ yet exercised. **RED** = not implemented. Live = against EasyEDA Pro 3.2.149 on 
 | 3a | Offline electrical checks | GREEN | computed QA (expr/min/max, safe eval), ground/supply pin rules, cap ratings, numeric values | tests/test_core.py |
 | 3b | Netlist validation | GREEN (logic) / AMBER (live) | pin-by-pin compare, collisions, stray parts | tests/test_core.py; live read path untested in DESK |
 | 3c | EasyEDA ERC | AMBER | `sch_Drc.check(...,true)` parsed, 0 errors gate | method exists live (api_map); not executed |
-| 4 | PCB placement | AMBER | apply plan with reasons, pin-snapped passives, gap + decap distance check | offline only; courtyard/outline/height/thermal checks **RED** |
+| 4 | PCB placement | AMBER | rules of docs/04 enforced: edge, pad-to-pad/body by package class, connector edge + mating keep-out + ESD distance, sensor vs heat, heat spreading, RF at edge, keep-outs, height zones, decap distance/side, rotation, utilisation/hotspots/free space | desk/placement.py + tests/test_placement.py (12, one rule broken per synthetic board); **live pcb_dump readback not yet exercised**; thermal is spacing-based (no thermal simulation) |
 | 5a | Net classes / diff pairs | AMBER | create + read back | methods exist live; not executed |
 | 5b | Autorouting | AMBER | DSN→Freerouting→SES→DRC | Java 23 present; Freerouting jar not installed; not executed |
 | 5c | DRC | AMBER | `pcb_Drc.check(...,true)` 0 violations gate | method exists live; not executed |

@@ -1,13 +1,41 @@
 {
   "origin_mm": [0, 0],
+  "board_mm": [40.0, 30.0],
+  "layers": 4,
   "grid_mm": 0.05,
   "passive_gap_mm": 0.4,
-  "decap_max_mm": 2.0,
-  "board_mm": [40.0, 30.0],
+  "roles": {
+    "connectors": ["J1", "J2"],
+    "sensors": ["U5"],
+    "heat": ["U2", "L1", "U4"],
+    "rf": ["U1"],
+    "esd": ["D1"],
+    "inductors_are_heat": true
+  },
+  "heights": {"J1": 3.2, "L1": 1.2, "U1": 3.1},
+  "overhang_allowed": ["J1"],
+  "keepouts": [
+    {"name": "antenna", "rect_mm": [30.0, 24.0, 40.0, 30.0], "side": "both", "allow": ["U1"]},
+    {"name": "mounting hole M1", "rect_mm": [0.0, 0.0, 4.0, 4.0], "side": "both"}
+  ],
+  "reserved": [
+    {"name": "battery contact area (deliberately empty)", "rect_mm": [10.0, 0.0, 20.0, 5.0]}
+  ],
+  "height_zones": [
+    {"name": "under display", "rect_mm": [12.0, 8.0, 38.0, 22.0], "max_mm": 1.0, "side": "T"}
+  ],
+  "rules": {
+    "edge_pad_mm": 0.3, "connector_edge_mm": 1.0, "connector_front_keepout_mm": 3.0, "esd_max_mm": 3.0,
+    "sensor_heat_mm": 7.0, "heat_spacing_mm": 3.0, "rf_edge_mm": 0.5, "decap_max_mm": 2.0,
+    "max_utilisation": 0.55, "density_cell_mm": 2.5, "hotspot_fill": 0.85,
+    "pad":  {"p0201": 0.20, "p0402": 0.25, "p0603": 0.30, "ic": 0.40, "fine": 0.50, "connector": 0.50, "tall": 0.50},
+    "body": {"p0201": 0.15, "p0402": 0.20, "p0603": 0.25, "ic": 0.30, "fine": 0.50, "connector": 1.00, "tall": 1.00}
+  },
   "parts": [
     ["J1", 2.5, 15.0, 90, "T", "USB-C on left edge, mouth flush with board edge (mechanical)"],
-    ["U1", 20.0, 15.0, 0, "T", "MCU centre, antenna end over board edge, keep-out respected"],
-    ["U2", 8.0, 15.0, 0, "T", "3V3 regulator between USB input and MCU (power flows left->right)"]
+    ["U1", 35.0, 26.0, 0, "T", "radio module in top-right corner, antenna over keep-out at board edge"],
+    ["U2", 9.0, 15.0, 0, "T", "3V3 regulator between USB input and MCU (power flows left->right)"],
+    ["U5", 36.0, 4.0, 0, "T", "temperature sensor bottom-right corner, >7 mm from U2/L1/U4"]
   ],
   "passives": [
     ["C1", "U2", "1", "U2 VIN cap at VIN pin"],
