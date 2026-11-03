@@ -2,7 +2,7 @@
 
 Prerequisite for every block: **gate R** (requirements, [00](00_REQUIREMENTS.md)) and **gate B** (component selection, [00b](00b_COMPONENT_SELECTION.md)) are passed.
 
-Each block passes **seven gates**. A gate is passed only by tool output, never by opinion.
+Each block passes **seven gates**. `python tools/ctx.py projects/<P> block <ID>` tells you which gate is next and packs what it needs. A gate is passed only by tool output, never by opinion.
 Only one block is "in progress" at any time.
 
 ```
@@ -54,7 +54,7 @@ Single-pin nets are allowed only for ports whose other side is in a block not ye
 Then a human glances at the sheet for neatness (screenshots from the API can be stale — trust your screen).
 
 ## ACCEPT
-- Set block `status` to `accepted`, add a row to `RESULT.md`.
+- Set block `status` to `accepted`, add a row to `RESULT.md`; record any decision made on the way with `tools/ledger.py ... --source`.
 - In EasyEDA: save + create a project revision/backup.
 - `git commit -m "<P>: <BLOCK_ID> accepted (verify clean)"`.
 - Next block.

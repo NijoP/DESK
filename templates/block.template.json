@@ -29,7 +29,7 @@
   {
    "ref": "C1",
    "mpn": "EXACT_MPN",
-   "value": "1uF 10V X5R 0402",
+   "value": "1uF",
    "role": "U1 input cap, at pin 1",
    "pins": {
     "1": "VIN_5V",
@@ -42,7 +42,7 @@
   {
    "ref": "C2",
    "mpn": "EXACT_MPN",
-   "value": "1uF 10V X5R 0402",
+   "value": "1uF",
    "role": "U1 output cap, at pin 5",
    "pins": {
     "1": "+3V3",

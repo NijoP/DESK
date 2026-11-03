@@ -18,24 +18,27 @@ def safe(mpn):
 
 
 def load_library():
-    return json.load(open(LIB_FILE, encoding="utf-8")) if os.path.exists(LIB_FILE) else {}
+    if not os.path.exists(LIB_FILE): return {}
+    with open(LIB_FILE, encoding="utf-8") as f: return json.load(f)
 
 
 def save_library(lib):
     os.makedirs(os.path.dirname(LIB_FILE), exist_ok=True)
-    json.dump(dict(sorted(lib.items())), open(LIB_FILE, "w", encoding="utf-8"), indent=1)
+    with open(LIB_FILE, "w", encoding="utf-8") as f: json.dump(dict(sorted(lib.items())), f, indent=1)
 
 
 def load_pins(mpn):
     f = os.path.join(PIN_DIR, safe(mpn) + ".json")
-    return json.load(open(f, encoding="utf-8")) if os.path.exists(f) else None
+    if not os.path.exists(f): return None
+    with open(f, encoding="utf-8") as fh: return json.load(fh)
 
 
 def load_blocks(project):
     files = sorted(glob.glob(os.path.join(project, "blocks", "*.json")))
     blocks = []
     for f in files:
-        b = json.load(open(f, encoding="utf-8"))
+        with open(f, encoding="utf-8") as fh:
+            b = json.load(fh)
         b["_file"] = os.path.basename(f)
         blocks.append(b)
     return blocks

@@ -3,6 +3,16 @@
 You are a hardware capture assistant. You do **engineering in JSON** and let DESK tools draw and verify.
 These rules exist so a small/fast model produces the same neat, correct sheets as a large one.
 
+## Start every session with the Context Engine (docs/07_CONTEXT_ENGINE.md)
+```
+python tools/ctx.py projects/<P> brief          # where are we, what is next
+python tools/ctx.py projects/<P> block <ID>     # everything for the next gate of that block (re-run after each step)
+python tools/ctx.py projects/<P> delta          # follow-up session: only what changed
+```
+Do not read docs/specs whole; use `find`, `doc`, `net`, `req` for anything else.
+Record every decision / confirmed fact / assumption with its source:
+`python tools/ledger.py projects/<P> add decision "<what + why>" --block <ID> --source "<datasheet page / mail / calc>"`
+
 ## Never
 1. Never write your own EasyEDA drawing JavaScript. Drawing = `tools/build.py` only.
 2. Never guess pin numbers. Use `library/pins/<MPN>.json` (from `tools/pins.py`).

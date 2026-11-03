@@ -6,6 +6,7 @@ Placement: blocks flow left->right in rows (row_max), new row below the tallest 
 import sys, os, json
 from _common import ex, guard, load_project, check, S
 from desk.draw import block_js, STYLE
+from desk import ledger as LG
 
 args = sys.argv[1:]
 proj, bid = args[0], args[1]
@@ -47,5 +48,6 @@ if nx > P.get("row_max", 5200):
 else:
     st["cursor"], st["row_h"] = [nx, y], rh
 json.dump(st, open(st_file, "w"), indent=1)
+LG.add(proj, "built", f"built at ({x},{y}) size {W:.0f}x{H:.0f}, {len(res['REF'])} parts", block=bid, spec_hash=LG.block_hash(b))
 print(f"BUILT {bid} '{b['title']}' at ({x},{y}) size {W:.0f}x{H:.0f}, {len(res['REF'])} parts")
 print(f"NEXT: python tools/verify.py {proj} {bid}")

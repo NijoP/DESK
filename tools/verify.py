@@ -5,6 +5,7 @@ Checks sheet-wide: no unexpected nets (label collisions / merges), single-pin ne
 Writes state/snapshot.json + state/netlist.net. Exit 0 only when clean."""
 import sys, os, json, collections
 from _common import ex, guard, load_project, check, S
+from desk import ledger as LG
 
 proj = sys.argv[1]; only = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] != "all" else None
 P = load_project(proj)
@@ -55,4 +56,9 @@ print("power/ground fan-out:", ", ".join(f"{n}:{len(nets[n])}" for n in sorted(n
 print("single-pin nets (ok only if the other side is in a block not yet built):", singles or "none")
 for e in E: print("ERROR", e)
 print("VERIFIED" if not E else f"FAIL ({len(E)} errors)")
+if not E:
+    for b in blocks:
+        if only or b["id"] in built:
+            LG.add(proj, "verified", f"live netlist == spec ({len(b['parts'])} parts); sheet {len(snap['parts'])} parts / {len(nets)} nets",
+                   block=b["id"], spec_hash=LG.block_hash(b))
 sys.exit(1 if E else 0)

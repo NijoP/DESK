@@ -29,7 +29,9 @@ all on the 100-mil grid. Blocks flow left→right in rows. See [docs/02_SCHEMATI
 | [docs/04_PLACEMENT.md](docs/04_PLACEMENT.md) | PCB placement mental model |
 | [docs/05_ROUTING.md](docs/05_ROUTING.md) | Stackup, net classes, routing order, grounding |
 | [docs/06_EASYEDA_API.md](docs/06_EASYEDA_API.md) | Connecting EasyEDA, API calls used, gotchas |
-| `desk/` | `bridge.py` (connection), `draw.py` (**the style, as code**), `spec.py` (lint rules) |
+| [docs/07_CONTEXT_ENGINE.md](docs/07_CONTEXT_ENGINE.md) | **Context Engine**: task-aware, token-budgeted context packs + project ledger (decisions, facts, verifications) |
+| `desk/` | `bridge.py` (connection), `draw.py` (**the style, as code**), `spec.py` (lint rules), `context.py` (context engine), `ledger.py` (project memory) |
+| `tests/` | offline tests: `python -m unittest discover -s tests -v` |
 | `tools/` | command-line tools (below) |
 | `library/` | shared across products: `devices.json` (resolved parts), `pins/` (real pin maps) |
 | `templates/` | project skeleton, block spec, placement, requirements, block plan, result |
@@ -91,7 +93,16 @@ python tools/pcb_dump.py  projects/MY_PRODUCT && python tools/pcb_check.py proje
 Then routing by [docs/05_ROUTING.md](docs/05_ROUTING.md), EasyEDA DRC to 0 errors.
 
 ## Using DESK with a lightweight model
-Tell the model: *"Read AGENTS.md and docs/03_BLOCK_WORKFLOW.md. Work on block NN_ID of projects/X only. Stop at each gate failure."*
+Start every session with the **Context Engine** instead of letting the model read files:
+```bash
+python tools/ctx.py projects/MY_PRODUCT brief              # ~300 tokens: state, next action, rules, decisions
+python tools/ctx.py projects/MY_PRODUCT block 02_PWR_3V3   # ~800 tokens: live lint, spec, neighbours, requirements, pins, how-to
+python tools/ctx.py projects/MY_PRODUCT delta              # follow-up: only changes
+python tools/ledger.py projects/MY_PRODUCT add decision "..." --source "datasheet p.12"
+```
+Measured on the example: ~10 % of the tokens of reading the docs and specs, with the next step computed from real state.
+
+Tell the model: *"Read AGENTS.md, then run `python tools/ctx.py projects/X block NN_ID`. Work on that block only. Stop at each gate failure."*
 The model only writes JSON and runs tools; the style is in code and correctness is proven by the netlist,
 so model size affects speed of spec writing, not sheet quality. Keep tasks one block per session to save tokens.
 

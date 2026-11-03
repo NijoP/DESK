@@ -27,7 +27,7 @@
   {
    "ref": "C1",
    "mpn": "CL05A105KA5NQNC",
-   "value": "1uF 25V X5R 0402",
+   "value": "1uF",
    "role": "U1 VIN cap, at pin 1",
    "pins": {
     "1": "VBUS",
@@ -39,7 +39,7 @@
   {
    "ref": "C2",
    "mpn": "CL05A105KA5NQNC",
-   "value": "1uF 25V X5R 0402",
+   "value": "1uF",
    "role": "U1 VOUT cap, at pin 5",
    "pins": {
     "1": "+3V3",
@@ -51,7 +51,7 @@
   {
    "ref": "R1",
    "mpn": "0402WGF1003TCE",
-   "value": "100k 1% 0402",
+   "value": "100k",
    "role": "EN pull-up to VBUS -> rail on when USB present",
    "pins": {
     "1": "VBUS",
@@ -89,5 +89,8 @@
  ],
  "decisions": [
   "Pin numbers MUST be re-checked against tools/pins.py output for the library symbol you resolve."
+ ],
+ "requirements": [
+  "R-01"
  ]
 }

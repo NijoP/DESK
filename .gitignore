@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
 projects/*/state/
+examples/*/state/
+**/state/ctx_*.json
 projects/*/exports/
 .DS_Store

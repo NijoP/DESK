@@ -24,7 +24,7 @@
   {
    "ref": "R2",
    "mpn": "0402WGF1001TCE",
-   "value": "1k 1% 0402",
+   "value": "1k",
    "role": "LED1 series resistor, ~1.2 mA at 3.3 V",
    "pins": {
     "1": "LED_STAT",
@@ -46,5 +46,8 @@
  ],
  "decisions": [
   "LED anode/cathode pin numbers differ between libraries: confirm with tools/pins.py before build."
+ ],
+ "requirements": [
+  "R-02"
  ]
 }
