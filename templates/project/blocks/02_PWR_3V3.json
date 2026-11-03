@@ -1,20 +1,81 @@
 {
-  "id": "02_PWR_3V3",
-  "title": "3V3 REGULATOR",
-  "status": "draft",
-  "purpose": "One sentence: what this block does and for whom.",
-  "ports": ["VIN_5V", "+3V3", "PWR_EN", "GND"],
-  "parts": [
-    {"ref": "U1", "mpn": "EXACT_MPN_OR_LCSC", "role": "main IC of the block",
-     "pins": {"1": "VIN_5V", "2": "GND", "3": "PWR_EN", "5": "+3V3"}, "nc": ["4"]},
-    {"ref": "C1", "mpn": "EXACT_MPN", "value": "1uF 10V X5R 0402", "role": "U1 input cap, at pin 1",
-     "pins": {"1": "VIN_5V", "2": "GND"}},
-    {"ref": "C2", "mpn": "EXACT_MPN", "value": "1uF 10V X5R 0402", "role": "U1 output cap, at pin 5",
-     "pins": {"1": "+3V3", "2": "GND"}}
-  ],
-  "qa": [
-    {"item": "Vout", "formula": "fixed 3.3 V part", "result": "3.3 V", "limit": "3.0-3.6 V", "source": "datasheet p.3", "pass": true},
-    {"item": "Iout", "formula": "load budget 120 mA", "result": "600 mA rated", "limit": ">= 2x load", "source": "datasheet p.1", "pass": true}
-  ],
-  "decisions": ["EN tied to PWR_EN (pulled down in 01_PWR_IN) so the rail boots OFF"]
+ "id": "02_PWR_3V3",
+ "title": "3V3 REGULATOR",
+ "status": "draft",
+ "purpose": "One sentence: what this block does and for whom.",
+ "ports": [
+  "VIN_5V",
+  "+3V3",
+  "PWR_EN",
+  "GND"
+ ],
+ "parts": [
+  {
+   "ref": "U1",
+   "mpn": "EXACT_MPN_OR_LCSC",
+   "role": "main IC of the block",
+   "pins": {
+    "1": "VIN_5V",
+    "2": "GND",
+    "3": "PWR_EN",
+    "5": "+3V3"
+   },
+   "nc": [
+    "4"
+   ],
+   "lcsc": "Cxxxx",
+   "package": "SOT-23-5"
+  },
+  {
+   "ref": "C1",
+   "mpn": "EXACT_MPN",
+   "value": "1uF 10V X5R 0402",
+   "role": "U1 input cap, at pin 1",
+   "pins": {
+    "1": "VIN_5V",
+    "2": "GND"
+   },
+   "lcsc": "Cxxxx",
+   "rating": "10V X5R",
+   "package": "0402"
+  },
+  {
+   "ref": "C2",
+   "mpn": "EXACT_MPN",
+   "value": "1uF 10V X5R 0402",
+   "role": "U1 output cap, at pin 5",
+   "pins": {
+    "1": "+3V3",
+    "2": "GND"
+   },
+   "lcsc": "Cxxxx",
+   "rating": "10V X5R",
+   "package": "0402"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Vout",
+   "formula": "fixed 3.3 V part",
+   "result": "3.3 V",
+   "limit": "3.0-3.6 V",
+   "source": "datasheet p.3",
+   "pass": true
+  },
+  {
+   "item": "Iout",
+   "formula": "load budget 120 mA",
+   "result": "600 mA rated",
+   "limit": ">= 2x load",
+   "source": "datasheet p.1",
+   "pass": true
+  }
+ ],
+ "decisions": [
+  "EN tied to PWR_EN (pulled down in 01_PWR_IN) so the rail boots OFF"
+ ],
+ "requirements": [
+  "R-02",
+  "R-03"
+ ]
 }

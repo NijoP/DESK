@@ -12,6 +12,13 @@ These rules exist so a small/fast model produces the same neat, correct sheets a
 6. Never mark QA `pass: true` without a formula and datasheet source.
 7. Never declare success yourself — only `VERIFIED` / `PASS` printed by a tool counts.
 
+## Before any block — gates R and B (docs/00, docs/00b)
+1. **Gate R:** REQUIREMENTS.md has all 10 dimensions with value or PROVISIONAL assumption, power budget, voltage tree,
+   mechanical envelope, interface table, GPIO budget, and client confirmation. Missing → ask the client; do not pick parts.
+2. **Gate B:** BOM_SELECTION.md has a comparison matrix (F1–F7) and one-line reason per key part, plus the preferred
+   passive set. Every passive value comes from a formula/datasheet; every part has mpn, lcsc, value, rating, package.
+   `python tools/bom.py projects/<P>` shows no warnings you cannot justify.
+
 ## Always — the loop for each block (docs/03_BLOCK_WORKFLOW.md)
 ```
 read REQUIREMENTS.md + BLOCK_PLAN.md
@@ -33,6 +40,8 @@ an IC enable that would be ON at reset.
 
 ## Spec writing checklist (per block)
 - [ ] `title` UPPER-CASE function name (it is printed on the frame)
+- [ ] `requirements` lists the requirement IDs this block serves
+- [ ] each part has `mpn`, `lcsc`, `package`; passives also `value` + `rating` (voltage/tolerance/Isat)
 - [ ] `parts` ordered: ICs in signal-flow order, then passives grouped by the pin they serve
 - [ ] each passive `role` says what it serves, e.g. `"U3 VIN cap, at pin 10"` (used by PCB placement check)
 - [ ] every pin in `pins` or `nc`; exposed pad decided

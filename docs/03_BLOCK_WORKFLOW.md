@@ -1,5 +1,7 @@
 # 03 — Block workflow (one section complete, then the next)
 
+Prerequisite for every block: **gate R** (requirements, [00](00_REQUIREMENTS.md)) and **gate B** (component selection, [00b](00b_COMPONENT_SELECTION.md)) are passed.
+
 Each block passes **seven gates**. A gate is passed only by tool output, never by opinion.
 Only one block is "in progress" at any time.
 
@@ -14,7 +16,8 @@ G1 PLAN ─► G2 PARTS ─► G3 PINS ─► G4 QA ─► G5 LINT ─► G6 BUI
 
 ## G2 — Choose real parts
 - From the datasheet's typical application circuit: list the IC + **every** external component it needs.
-- Each part gets an exact `mpn` (or LCSC code). Prefer JLC basic/preferred parts for passives.
+- Parts come from `BOM_SELECTION.md` (key ICs) and the preferred passive set; values from formulas (docs/00b).
+- Each part gets `mpn`, `lcsc`, `package`; passives also `value` + `rating`. Check with `python tools/bom.py projects/<P>`.
 - `python tools/resolve.py projects/<P>` → every MPN is in `library/devices.json` (ask the human when it prints `??`).
 
 ## G3 — Real pin map

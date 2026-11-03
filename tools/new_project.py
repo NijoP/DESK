@@ -5,7 +5,7 @@ name = sys.argv[1]
 dst = os.path.join(ROOT, "projects", name)
 if os.path.exists(dst): raise SystemExit(f"{dst} exists")
 shutil.copytree(os.path.join(ROOT, "templates", "project"), dst)
-for f in ("REQUIREMENTS.md", "BLOCK_PLAN.md", "RESULT.md"):
+for f in ("REQUIREMENTS.md", "BOM_SELECTION.md", "BLOCK_PLAN.md", "RESULT.md"):
     shutil.copy(os.path.join(ROOT, "templates", f), os.path.join(dst, f))
 pj = os.path.join(dst, "project.json"); p = json.load(open(pj)); p["name"] = name; json.dump(p, open(pj, "w"), indent=1)
-print("created", dst, "-> fill REQUIREMENTS.md, then BLOCK_PLAN.md (docs/03_BLOCK_WORKFLOW.md)")
+print("created", dst, "-> fill REQUIREMENTS.md (docs/00), BOM_SELECTION.md (docs/00b), then BLOCK_PLAN.md (docs/03)")

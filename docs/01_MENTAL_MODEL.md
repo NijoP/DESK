@@ -49,6 +49,7 @@ Typical block set for a product: `USB-C INPUT` · `BATTERY + CHARGER` · `3V3 RE
 
 ## Order of work
 
+0. Gate R (requirements understood, docs/00) and gate B (BOM selected incl. passives, docs/00b).
 1. Blocks whose inputs are fully decided (power, MCU core) first.
 2. Close open decisions (TBD in REQUIREMENTS.md).
 3. Then dependent blocks (connectors, interfaces, variants).

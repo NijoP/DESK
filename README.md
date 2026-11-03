@@ -7,7 +7,7 @@ DESK is a workflow + toolkit for capturing hardware products in **EasyEDA Pro**,
 DESK draws each block in one fixed style through the EasyEDA API, then reads back the live netlist and **proves** that the sheet matches the spec.
 
 ```
-REQUIREMENTS.md → BLOCK_PLAN.md → blocks/NN_ID.json → lint → build (draw) → verify (netlist) → accept → next block
+client brief → REQUIREMENTS.md (gate R) → BOM_SELECTION.md (gate B) → BLOCK_PLAN.md → blocks/NN_ID.json → lint → build (draw) → verify (netlist) → accept → next block
                                                                         ↓ all blocks accepted
                                                          placement.json → pcb_place → pcb_check → routing plan → DRC
 ```
@@ -21,6 +21,8 @@ all on the 100-mil grid. Blocks flow left→right in rows. See [docs/02_SCHEMATI
 | Path | What |
 |---|---|
 | [AGENTS.md](AGENTS.md) / CLAUDE.md | **Rules for any AI model.** Point your model at this file first. |
+| [docs/00_REQUIREMENTS.md](docs/00_REQUIREMENTS.md) | **Understand the client**: 10 requirement dimensions (function, electrical, interfaces, mechanical, environment, regulatory, manufacturing, cost, lifecycle), interview method, derivations |
+| [docs/00b_COMPONENT_SELECTION.md](docs/00b_COMPONENT_SELECTION.md) | **Select the BOM incl. passives**: selection order, filter funnel F1–F7, category traps, resistor/capacitor/inductor rules, preferred passive set |
 | [docs/01_MENTAL_MODEL.md](docs/01_MENTAL_MODEL.md) | How to think: data first, QA before drawing, one block at a time, netlist is truth |
 | [docs/02_SCHEMATIC_STYLE.md](docs/02_SCHEMATIC_STYLE.md) | The non-negotiable visual rules |
 | [docs/03_BLOCK_WORKFLOW.md](docs/03_BLOCK_WORKFLOW.md) | The 7 gates per block, QA checklists |
@@ -55,9 +57,11 @@ python tools/ping.py                             # shows the open project + ACTI
 ```bash
 python tools/new_project.py MY_PRODUCT
 ```
-1. Fill `projects/MY_PRODUCT/REQUIREMENTS.md` (power, interfaces, GPIO map, board size).
-2. Fill `BLOCK_PLAN.md` (list of blocks, order, ports, global net names).
-3. In EasyEDA: create the project + a schematic page, open it, run `python tools/ping.py`,
+1. **Understand the client** → fill `projects/MY_PRODUCT/REQUIREMENTS.md` with all 10 dimensions, power budget,
+   voltage tree, mechanical envelope, interface table; get client confirmation (gate R, [docs/00](docs/00_REQUIREMENTS.md)).
+2. **Select the parts** → `BOM_SELECTION.md`: comparison matrix per key part, preferred passive set (gate B, [docs/00b](docs/00b_COMPONENT_SELECTION.md)).
+3. Fill `BLOCK_PLAN.md` (list of blocks, order, ports, global net names).
+4. In EasyEDA: create the project + a schematic page, open it, run `python tools/ping.py`,
    paste the document uuid into `project.json` → `sheet_uuid` (later the PCB uuid into `pcb_uuid`).
 
 ## 4. One block, start to finish
@@ -71,6 +75,8 @@ python tools/verify.py  projects/MY_PRODUCT 02_PWR_3V3   # live netlist == spec:
 ```
 Wrong? `python tools/clear_block.py projects/MY_PRODUCT 02_PWR_3V3`, fix the **spec**, build again.
 Accepted → save an EasyEDA revision, `git commit`, next block.
+
+BOM at any time: `python tools/bom.py projects/MY_PRODUCT` → `bom.csv` + warnings (missing ratings, under-rated caps, odd values, too many package sizes).
 
 Whole sheet at the end: `python tools/verify.py projects/MY_PRODUCT all` and `python tools/lint.py projects/MY_PRODUCT --final`.
 

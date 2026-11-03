@@ -1,20 +1,93 @@
 {
-  "id": "01_PWR_3V3",
-  "title": "3V3 LDO",
-  "status": "draft",
-  "purpose": "5 V USB input to 3.3 V logic rail, 600 mA, enable controlled by MCU-independent pull-up.",
-  "ports": ["VBUS", "+3V3", "GND"],
-  "parts": [
-    {"ref": "U1", "mpn": "AP2112K-3.3TRG1", "role": "LDO 3.3 V 600 mA, SOT-23-5",
-     "pins": {"1": "VBUS", "2": "GND", "3": "LDO_EN", "5": "+3V3"}, "nc": ["4"]},
-    {"ref": "C1", "mpn": "CL05A105KA5NQNC", "value": "1uF 25V X5R 0402", "role": "U1 VIN cap, at pin 1", "pins": {"1": "VBUS", "2": "GND"}},
-    {"ref": "C2", "mpn": "CL05A105KA5NQNC", "value": "1uF 25V X5R 0402", "role": "U1 VOUT cap, at pin 5", "pins": {"1": "+3V3", "2": "GND"}},
-    {"ref": "R1", "mpn": "0402WGF1003TCE", "value": "100k 1% 0402", "role": "EN pull-up to VBUS -> rail on when USB present", "pins": {"1": "VBUS", "2": "LDO_EN"}}
-  ],
-  "qa": [
-    {"item": "Vout", "formula": "fixed", "result": "3.3 V +-1.5%", "limit": "3.0-3.6 V", "source": "AP2112 datasheet, Electrical Characteristics", "pass": true},
-    {"item": "Dissipation", "formula": "(5.0-3.3) V x 0.15 A", "result": "0.26 W", "limit": "< 0.4 W SOT-23-5", "source": "datasheet thermal table", "pass": true},
-    {"item": "EN threshold", "formula": "VBUS 5 V via 100k, I_EN ~ 0", "result": "EN = 5 V", "limit": "> 1.5 V, <= VIN", "source": "datasheet", "pass": true}
-  ],
-  "decisions": ["Pin numbers MUST be re-checked against tools/pins.py output for the library symbol you resolve."]
+ "id": "01_PWR_3V3",
+ "title": "3V3 LDO",
+ "status": "draft",
+ "purpose": "5 V USB input to 3.3 V logic rail, 600 mA, enable controlled by MCU-independent pull-up.",
+ "ports": [
+  "VBUS",
+  "+3V3",
+  "GND"
+ ],
+ "parts": [
+  {
+   "ref": "U1",
+   "mpn": "AP2112K-3.3TRG1",
+   "role": "LDO 3.3 V 600 mA, SOT-23-5",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND",
+    "3": "LDO_EN",
+    "5": "+3V3"
+   },
+   "nc": [
+    "4"
+   ],
+   "package": "SOT-23-5"
+  },
+  {
+   "ref": "C1",
+   "mpn": "CL05A105KA5NQNC",
+   "value": "1uF 25V X5R 0402",
+   "role": "U1 VIN cap, at pin 1",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "rating": "25V X5R",
+   "package": "0402"
+  },
+  {
+   "ref": "C2",
+   "mpn": "CL05A105KA5NQNC",
+   "value": "1uF 25V X5R 0402",
+   "role": "U1 VOUT cap, at pin 5",
+   "pins": {
+    "1": "+3V3",
+    "2": "GND"
+   },
+   "rating": "25V X5R",
+   "package": "0402"
+  },
+  {
+   "ref": "R1",
+   "mpn": "0402WGF1003TCE",
+   "value": "100k 1% 0402",
+   "role": "EN pull-up to VBUS -> rail on when USB present",
+   "pins": {
+    "1": "VBUS",
+    "2": "LDO_EN"
+   },
+   "rating": "1% 62.5mW",
+   "package": "0402"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Vout",
+   "formula": "fixed",
+   "result": "3.3 V +-1.5%",
+   "limit": "3.0-3.6 V",
+   "source": "AP2112 datasheet, Electrical Characteristics",
+   "pass": true
+  },
+  {
+   "item": "Dissipation",
+   "formula": "(5.0-3.3) V x 0.15 A",
+   "result": "0.26 W",
+   "limit": "< 0.4 W SOT-23-5",
+   "source": "datasheet thermal table",
+   "pass": true
+  },
+  {
+   "item": "EN threshold",
+   "formula": "VBUS 5 V via 100k, I_EN ~ 0",
+   "result": "EN = 5 V",
+   "limit": "> 1.5 V, <= VIN",
+   "source": "datasheet",
+   "pass": true
+  }
+ ],
+ "decisions": [
+  "Pin numbers MUST be re-checked against tools/pins.py output for the library symbol you resolve."
+ ]
 }
