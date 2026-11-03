@@ -44,7 +44,7 @@ async function labelPins(id,map){
 async function ext(id,map){const ps=await eda.sch_PrimitiveComponent.getAllPinsByPrimitiveId(id);let L=1e9,R=-1e9,T=-1e9,B=1e9;
  for(const p of ps){const x=p.getState_X(),y=p.getState_Y(),r=p.getState_Rotation(),n=(map[p.getState_PinNumber()]||"").length*CH;
   L=Math.min(L,x);R=Math.max(R,x);T=Math.max(T,y);B=Math.min(B,y);
-  if(r===180)L=Math.min(L,x-ST[1]-10-n); if(r===0)R=Math.max(R,x+ST[1]+n); if(r===270)B=Math.min(B,y-ST[1]-n); if(r===90)T=Math.max(T,y+ST[1]+n);}
+  if(r===180)L=Math.min(L,x-ST[1]-10); if(r===0)R=Math.max(R,x+ST[1]+n); if(r===270)B=Math.min(B,y-ST[1]-n); if(r===90)T=Math.max(T,y+ST[1]+n);}
  return {L:L-40,R:R+40,T:T+40,B:B-40};}
 async function nc(id,list){if(!list.length)return;const ps=await eda.sch_PrimitiveComponent.getAllPinsByPrimitiveId(id);
  for(const p of ps){if(list.includes(p.getState_PinNumber())){p.setState_NoConnected(true);await p.done();}}}
