@@ -97,10 +97,22 @@ def lint(project, only=None, final=False):
                 E.append(f"{tag}: net {net} touches only {rs[0]} and is not a declared port -> missing connection or add to 'ports'")
         for port in ports:
             if port not in local: W.append(f"{tag}: port {port} declared but not used in block")
+        from desk.calc import check_qa
+        computed = {item: (v, ok, msg) for item, v, ok, msg in check_qa(b)}
         for q in b.get("qa", []):
-            if q.get("pass") is not True: E.append(f"{tag}: QA item '{q.get('item')}' not passed")
+            if q.get("item") in computed:
+                v, ok, msg = computed[q.get("item")]
+                if not ok: E.append(f"{tag}: QA computed FAIL: {msg}")
+                elif q.get("pass") is False: E.append(f"{tag}: QA '{q.get('item')}' marked pass=false but computes OK: {msg}")
+                if not q.get("source"): E.append(f"{tag}: QA '{q.get('item')}' has no datasheet source")
+            elif q.get("pass") is not True: E.append(f"{tag}: QA item '{q.get('item')}' not passed")
+            elif not q.get("source"): W.append(f"{tag}: QA '{q.get('item')}' has no source")
         if not b.get("qa") and any(p["ref"][0] == "U" for p in b.get("parts", [])):
             W.append(f"{tag}: block has ICs but no 'qa' entries (datasheet values unchecked)")
+    from desk import erc
+    ee, ew = erc.check(project)
+    pick = (lambda m: m.startswith(only + "/")) if only else (lambda m: True)
+    E += [f"ERC {m}" for m in ee if pick(m)]; W += [f"ERC {m}" for m in ew if pick(m)]
     if final:
         for net, ps in net_pins.items():
             if len(ps) == 1: E.append(f"net {net} has a single pin project-wide: {ps[0]}")

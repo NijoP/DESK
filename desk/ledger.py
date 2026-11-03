@@ -13,7 +13,7 @@ Types:
 Entries are never edited; supersede them with a 'correction' entry (field 'refs')."""
 import json, os, hashlib, datetime
 
-TYPES = ("decision", "fact", "assumption", "correction", "built", "verified")
+TYPES = ("decision", "fact", "assumption", "correction", "built", "verified", "release")
 
 
 def path(project):
@@ -28,9 +28,14 @@ def read(project):
         return [json.loads(ln) for ln in f if ln.strip()]
 
 
-def block_hash(block):
-    """Hash of the electrically relevant content of a block (status / bookkeeping excluded)."""
+def block_hash(block, lib=None):
+    """Hash of the electrically relevant content of a block (status / bookkeeping excluded).
+    With lib (library/devices.json) the resolved device of every MPN is included, so re-resolving a part to a
+    different library symbol also invalidates earlier verifications."""
     core = {k: v for k, v in block.items() if k not in ("status", "_file")}
+    if lib is not None:
+        core["_devices"] = {m: [lib.get(m, {}).get("libraryUuid"), lib.get(m, {}).get("uuid")]
+                            for m in sorted({p.get("mpn") for p in block.get("parts", []) if p.get("mpn")})}
     return hashlib.sha1(json.dumps(core, sort_keys=True).encode()).hexdigest()[:12]
 
 

@@ -25,7 +25,7 @@ ROOT = S.ROOT
 DOC_FILES = ["AGENTS.md", "docs/*.md"]
 PROJECT_MD = ["REQUIREMENTS.md", "BOM_SELECTION.md", "BLOCK_PLAN.md", "RESULT.md", "ROUTING_PLAN.md"]
 TOK = 4  # chars per token (estimate)
-FORMAT = 2  # bump when chunk format changes -> old caches are rebuilt
+FORMAT = 3  # bump when chunk format changes -> old caches are rebuilt
 
 
 def _json(path, default=None):
@@ -278,7 +278,7 @@ class Engine:
         unresolved = [m for m in mpns if m not in self.lib]
         nopins = [m for m in mpns if S.load_pins(m) is None]
         errs, warns = S.lint(self.project, bid)
-        h = LG.block_hash(b)
+        h = LG.block_hash(b, self.lib)
         built = bid in self.layout or any(e["type"] == "built" and e.get("block") == bid for e in self.ledger)
         ver = LG.verification_state(self.ledger, bid, h)
         if unresolved: gate, todo = "G2", f"python tools/resolve.py <P>  (unresolved: {', '.join(unresolved)})"
@@ -302,7 +302,7 @@ class Engine:
             if bid and e.get("block") != bid: continue
             st = "superseded" if e["id"] in sup else None
             if e["type"] in ("verified", "built") and e.get("block") in self.blocks:
-                cur = LG.block_hash(self.blocks[e["block"]])
+                cur = LG.block_hash(self.blocks[e["block"]], self.lib)
                 st = st or ("fresh" if e.get("spec_hash") == cur else "stale")
             out.append(fmt_ledger(e, st))
         return out[-limit:] if limit else out
@@ -330,6 +330,11 @@ class Engine:
         if nxt:
             P.add(0, "next action", f"{nxt[0]}: gate {nxt[1]['gate']} -> {nxt[1]['todo']}\n"
                                     f"get its pack: python tools/ctx.py {os.path.relpath(self.project).replace(chr(92), '/')} block {nxt[0]}")
+        from desk import ops
+        pend = ops.pending(self.project)
+        if pend:
+            P.add(0, "PENDING live operations (recover first)", "; ".join(f"{r['op']} {r['target']} op={r['id']}" + (" DIRTY" if r.get("dirty") else "") for r in pend)
+                  + " -> python tools/desk.py recover " + os.path.relpath(self.project).replace(chr(92), "/"))
         P.add(1, "rules (AGENTS.md)", self.rules(), "AGENTS.md#never")
         led = [l for l in self.ledger_for() if "[built" not in l and "[verified" not in l]
         P.add(2, "recent decisions / facts (LEDGER)", "\n".join(led[-8:]))

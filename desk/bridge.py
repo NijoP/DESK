@@ -59,3 +59,18 @@ def check(res):
     if isinstance(res, dict) and res.get("error"):
         raise SystemExit(f"STOP: {res}")
     return res
+
+
+_B64 = ('if(!f) return {error:"NO FILE returned by EasyEDA"}; const ab=await f.arrayBuffer(); let s=""; const u=new Uint8Array(ab);'
+        'for(let i=0;i<u.length;i+=0x8000){s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));} return {name:f.name,b64:btoa(s)};')
+
+
+def fetch_file(js_get, dest_dir, prefix="", timeout=280):
+    """js_get must assign `const f = await <EasyEDA call returning File>;`. Saves the file, returns its path."""
+    import base64
+    r = check(ex(js_get + _B64, timeout=timeout))
+    os.makedirs(dest_dir, exist_ok=True)
+    path = os.path.join(dest_dir, prefix + r["name"])
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(r["b64"]))
+    return path

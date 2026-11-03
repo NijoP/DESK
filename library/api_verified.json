@@ -1,0 +1,41 @@
+{
+ "_note": "Calls proven (or disproven) against a live client. ok=true only from an observed result.",
+ "editor": "3.2.149",
+ "calls": {
+  "dmt_Project.createProject": {
+   "ok": true,
+   "observed": "returned project uuid",
+   "date": "2026-11-03"
+  },
+  "dmt_Project.openProject": {
+   "ok": false,
+   "observed": "returned false while another project was open; project not switched",
+   "date": "2026-11-03"
+  },
+  "dmt_Project.getCurrentProjectInfo": {
+   "ok": true,
+   "observed": "friendlyName+uuid",
+   "date": "2026-11-03"
+  },
+  "dmt_SelectControl.getCurrentDocumentInfo": {
+   "ok": true,
+   "observed": "uuid, documentType",
+   "date": "2026-11-03"
+  },
+  "dmt_Board.getAllBoardsInfo": {
+   "ok": true,
+   "observed": "boards with pcb + schematic pages",
+   "date": "2026-11-03"
+  },
+  "dmt_Schematic.getAllSchematicPagesInfo": {
+   "ok": true,
+   "observed": "pages incl. titleBlockData (large: filter fields!)",
+   "date": "2026-11-03"
+  },
+  "sys_Environment.getEditorCurrentVersion": {
+   "ok": true,
+   "observed": "3.2.149.88089769",
+   "date": "2026-11-03"
+  }
+ }
+}

@@ -35,19 +35,22 @@ clash = sorted(set(existing) & {p["ref"] for p in b["parts"]})
 if clash:
     raise SystemExit(f"STOP: designators already on sheet: {clash}")
 
+from desk import ops
 if "--at" in args:
     i = args.index("--at"); x, y = int(args[i + 1]), int(args[i + 2])
 else:
     x, y = st["cursor"]
-res = check(ex(G + block_js(b, lib, x, y, pin_counts), timeout=600))
-W, H = res["W"], res["H"]
-st["blocks"][bid] = {"x": x, "y": y, "W": W, "H": H}
-nx, rh = x + W + STYLE["block_gap"], max(st["row_h"], H)
-if nx > P.get("row_max", 5200):
-    st["cursor"], st["row_h"] = [100, y - rh - STYLE["block_gap"]], 0
-else:
-    st["cursor"], st["row_h"] = [nx, y], rh
-json.dump(st, open(st_file, "w"), indent=1)
-LG.add(proj, "built", f"built at ({x},{y}) size {W:.0f}x{H:.0f}, {len(res['REF'])} parts", block=bid, spec_hash=LG.block_hash(b))
+with ops.write_op(proj, "build", bid, force_unlock="--force-unlock" in args) as rec:
+    rec["dirty"] = True                      # from here on the sheet may change
+    res = check(ex(G + block_js(b, lib, x, y, pin_counts), timeout=600))
+    W, H = res["W"], res["H"]
+    st["blocks"][bid] = {"x": x, "y": y, "W": W, "H": H}
+    nx, rh = x + W + STYLE["block_gap"], max(st["row_h"], H)
+    if nx > P.get("row_max", 5200):
+        st["cursor"], st["row_h"] = [100, y - rh - STYLE["block_gap"]], 0
+    else:
+        st["cursor"], st["row_h"] = [nx, y], rh
+    with open(st_file, "w") as f: json.dump(st, f, indent=1)
+    LG.add(proj, "built", f"built at ({x},{y}) size {W:.0f}x{H:.0f}, {len(res['REF'])} parts", block=bid, spec_hash=LG.block_hash(b, lib))
 print(f"BUILT {bid} '{b['title']}' at ({x},{y}) size {W:.0f}x{H:.0f}, {len(res['REF'])} parts")
 print(f"NEXT: python tools/verify.py {proj} {bid}")
