@@ -30,6 +30,7 @@ class Base(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         self._state, self._root = L.STATE, L.ROOT
         L.STATE = os.path.join(self.tmp, ".desk_learn"); os.makedirs(L.STATE)
+        L.ROOT = self.tmp
         self.c = dict(L.DEFAULTS)
 
     def tearDown(self):

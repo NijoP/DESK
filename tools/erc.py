@@ -5,7 +5,7 @@ import sys, json, collections
 from _common import ex, guard, load_project, check
 
 proj = sys.argv[1]; P = load_project(proj)
-r = check(ex(guard(P["sheet_uuid"]) + 'const r=await eda.sch_Drc.check(true,false,true); return Array.isArray(r)?r:{raw:r};', timeout=300))
+r = check(ex(guard(P["sheet_uuid"]) + 'const r=await eda.sch_Drc.check(true,false,true); return Array.isArray(r)?r:{raw:r};', timeout=300, window_id=P.get("window_id")))
 items = r if isinstance(r, list) else []
 def level(e): return str(e.get("errorLevel") or e.get("level") or e.get("type") or "").lower()
 def text(e): return str(e.get("message") or e.get("errorMessage") or e.get("msg") or json.dumps(e)[:160])

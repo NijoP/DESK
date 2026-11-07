@@ -30,7 +30,7 @@ if bid in st["blocks"]:
     raise SystemExit(f"STOP: {bid} already built at {st['blocks'][bid]} - run tools/clear_block.py {proj} {bid} first")
 
 existing = check(ex(G + 'const cs=await eda.sch_PrimitiveComponent.get(await eda.sch_PrimitiveComponent.getAllPrimitiveId());'
-                        'return cs.map(c=>c.getState_Designator()).filter(x=>x);'))
+                        'return cs.map(c=>c.getState_Designator()).filter(x=>x);', window_id=P.get("window_id")))
 clash = sorted(set(existing) & {p["ref"] for p in b["parts"]})
 if clash:
     raise SystemExit(f"STOP: designators already on sheet: {clash}")
@@ -42,7 +42,7 @@ else:
     x, y = st["cursor"]
 with ops.write_op(proj, "build", bid, force_unlock="--force-unlock" in args) as rec:
     rec["dirty"] = True                      # from here on the sheet may change
-    res = check(ex(G + block_js(b, lib, x, y, pin_counts), timeout=600))
+    res = check(ex(G + block_js(b, lib, x, y, pin_counts), timeout=600, window_id=P.get("window_id")))
     W, H = res["W"], res["H"]
     st["blocks"][bid] = {"x": x, "y": y, "W": W, "H": H}
     nx, rh = x + W + STYLE["block_gap"], max(st["row_h"], H)

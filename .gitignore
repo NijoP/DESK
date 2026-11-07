@@ -1,6 +1,10 @@
 __pycache__/
 *.pyc
+*.class
+*.bak
 projects/*/state/
+projects/*/state*/
+projects/*/release/
 examples/*/state/
 **/state/ctx_*.json
 projects/*/exports/

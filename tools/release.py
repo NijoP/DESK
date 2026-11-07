@@ -70,7 +70,11 @@ for k, js in jobs.items():
     except SystemExit as e:
         (gate if k in ("gerber", "bom", "pnp") else (lambda n, ok, d: print(f"WARN optional export {n} failed: {d}")))(f"export {k}", False, str(e)[:160])
 if not fail:
-    def txt(k): return open(files[k], encoding="utf-8-sig", errors="replace").read()
+    def txt(k):
+        raw = open(files[k], "rb").read()
+        if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff"):
+            return raw.decode("utf-16", errors="replace")
+        return raw.decode("utf-8-sig", errors="replace")
     e = RL.check_bom(txt("bom"), refs); gate("BOM designators == specs", not e, "; ".join(e))
     e = RL.check_pnp(txt("pnp"), refs); gate("pick-and-place complete", not e, "; ".join(e))
     e, names = RL.check_gerber(files["gerber"], layers); gate(f"Gerber set ({layers} layers)", not e, "; ".join(e) or f"{len(names)} files")

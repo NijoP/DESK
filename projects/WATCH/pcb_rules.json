@@ -1,0 +1,68 @@
+{
+  "net_classes": {
+    "PWR": [
+      "VBUS",
+      "VSYS",
+      "3V3",
+      "VBAT",
+      "VBUS_BOOST"
+    ],
+    "GND": [
+      "GND"
+    ],
+    "USB": [
+      "USB_DP",
+      "USB_DM"
+    ],
+    "AUDIO": [
+      "I2S_MIC_CLK",
+      "I2S_MIC_SD1",
+      "I2S_MIC_SD2",
+      "I2S_MIC_WS",
+      "I2S_SPK_BCLK",
+      "I2S_SPK_DOUT",
+      "I2S_SPK_WS",
+      "SPK_L_N",
+      "SPK_L_P",
+      "SPK_R_N",
+      "SPK_R_P"
+    ],
+    "SPI": [
+      "LCD_CS",
+      "LCD_DC",
+      "LCD_RST",
+      "LCD_SCL",
+      "LCD_SDA",
+      "LCD_BL",
+      "SD_CS",
+      "SD_DET",
+      "SD_SPI_CLK",
+      "SD_SPI_MISO",
+      "SD_SPI_MOSI"
+    ],
+    "I2C": [
+      "I2C_SCL",
+      "I2C_SDA",
+      "IMU_INT1"
+    ]
+  },
+  "diff_pairs": {
+    "USB_D": [
+      "USB_DP",
+      "USB_DM"
+    ]
+  },
+  "equal_length": {
+    "I2S_MIC": [
+      "I2S_MIC_CLK",
+      "I2S_MIC_WS",
+      "I2S_MIC_SD1",
+      "I2S_MIC_SD2"
+    ],
+    "I2S_SPK": [
+      "I2S_SPK_BCLK",
+      "I2S_SPK_WS",
+      "I2S_SPK_DOUT"
+    ]
+  }
+}

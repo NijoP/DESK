@@ -8,7 +8,7 @@ proj = sys.argv[1]
 P = load_project(proj)
 G = guard(P["pcb_uuid"])
 ids = check(ex(G + 'const cs=await eda.pcb_PrimitiveComponent.get(await eda.pcb_PrimitiveComponent.getAllPrimitiveId());'
-                   'return cs.map(c=>[c.getState_PrimitiveId(),c.getState_Designator()]);'))
+                   'return cs.map(c=>[c.getState_PrimitiveId(),c.getState_Designator()]);', window_id=P.get("window_id")))
 out = {}
 for i in range(0, len(ids), 40):
     chunk = [x[0] for x in ids[i:i + 40]]
@@ -16,7 +16,7 @@ for i in range(0, len(ids), 40):
  const pads=await eda.pcb_PrimitiveComponent.getAllPinsByPrimitiveId(id)||[]; const b=await eda.pcb_Primitive.getPrimitivesBBox([id]);
  res[c.getState_Designator()]={id,x,y,rot:c.getState_Rotation(),layer:c.getState_Layer(),fp:(c.getState_Footprint()||{}).name,
   bbox:[b.minX-x,b.maxX-x,b.minY-y,b.maxY-y],
-  pads:pads.map(p=>({num:p.getState_PadNumber(),dx:p.getState_X()-x,dy:p.getState_Y()-y,shape:p.getState_Pad(),rot:p.getState_Rotation(),net:p.getState_Net(),layer:p.getState_Layer()}))}; } return res;''' % json.dumps(chunk)))
+  pads:pads.map(p=>({num:p.getState_PadNumber(),dx:p.getState_X()-x,dy:p.getState_Y()-y,shape:p.getState_Pad(),rot:p.getState_Rotation(),net:p.getState_Net(),layer:p.getState_Layer()}))}; } return res;''' % json.dumps(chunk), window_id=P.get("window_id")))
     out.update(r); print(f"{len(out)}/{len(ids)}")
 os.makedirs(os.path.join(proj, "state"), exist_ok=True)
 json.dump(out, open(os.path.join(proj, "state", "pcb_dump.json"), "w"), indent=0)

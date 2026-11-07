@@ -1,0 +1,110 @@
+{
+ "id": "06_AUDIO_IN",
+ "title": "06 THREE-MICROPHONE AUDIO INPUT",
+ "status": "draft",
+ "purpose": "Three digital MEMS microphones (ICS-43434) with 24-bit I2S output. Mic 1 and Mic 2 share I2S_MIC_SD1 with L/R select, Mic 3 is on I2S_MIC_SD2. All microphones share common I2S_MIC_CLK and I2S_MIC_WS clock lines.",
+ "ports": [
+  "3V3",
+  "GND",
+  "I2S_MIC_CLK",
+  "I2S_MIC_WS",
+  "I2S_MIC_SD1",
+  "I2S_MIC_SD2"
+ ],
+ "parts": [
+  {
+   "ref": "MIC1",
+   "mpn": "ICS-43434",
+   "role": "Digital MEMS Microphone 1 (Left Channel on SD1)",
+   "pins": {
+    "1": "I2S_MIC_WS",
+    "2": "GND",
+    "3": "GND",
+    "4": "I2S_MIC_CLK",
+    "5": "3V3",
+    "6": "I2S_MIC_SD1"
+   },
+   "lcsc": "C5656610",
+   "package": "LGA-6"
+  },
+  {
+   "ref": "MIC2",
+   "mpn": "ICS-43434",
+   "role": "Digital MEMS Microphone 2 (Right Channel on SD1)",
+   "pins": {
+    "1": "I2S_MIC_WS",
+    "2": "3V3",
+    "3": "GND",
+    "4": "I2S_MIC_CLK",
+    "5": "3V3",
+    "6": "I2S_MIC_SD1"
+   },
+   "lcsc": "C5656610",
+   "package": "LGA-6"
+  },
+  {
+   "ref": "MIC3",
+   "mpn": "ICS-43434",
+   "role": "Digital MEMS Microphone 3 (Left Channel on SD2)",
+   "pins": {
+    "1": "I2S_MIC_WS",
+    "2": "GND",
+    "3": "GND",
+    "4": "I2S_MIC_CLK",
+    "5": "3V3",
+    "6": "I2S_MIC_SD2"
+   },
+   "lcsc": "C5656610",
+   "package": "LGA-6"
+  },
+  {
+   "ref": "C16",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF decoupling capacitor for MIC1 VDD",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "value": "100nF",
+   "package": "0402"
+  },
+  {
+   "ref": "C17",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF decoupling capacitor for MIC2 VDD",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "value": "100nF",
+   "package": "0402"
+  },
+  {
+   "ref": "C18",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF decoupling capacitor for MIC3 VDD",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "value": "100nF",
+   "package": "0402"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Microphone L/R Select Configuration",
+   "formula": "MIC1: LR=GND (Left), MIC2: LR=VDD (Right), MIC3: LR=GND (Left on SD2)",
+   "result": "Enables TDM/Stereo pair on SD1 line while MIC3 provides dedicated reference/beamforming channel on SD2.",
+   "source": "TDK InvenSense ICS-43434 Datasheet Section 4",
+   "pass": true
+  },
+  {
+   "item": "Microphone VDD Power Decoupling",
+   "formula": "C_dec = 0.1 uF placed close to each VDD pin",
+   "result": "Meets recommendation of 0.1uF ceramic bypass to suppress clock feedthrough and supply ripple.",
+   "source": "TDK InvenSense ICS-43434 Datasheet Section 6",
+   "pass": true
+  }
+ ]
+}

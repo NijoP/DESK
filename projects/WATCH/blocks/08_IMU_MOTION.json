@@ -1,0 +1,123 @@
+{
+ "id": "08_IMU_MOTION",
+ "title": "08 IMU AND MOTION SENSING",
+ "status": "draft",
+ "purpose": "TDK InvenSense ICM-42670-P 6-axis IMU with I2C interface, motion interrupt line, local decoupling and I2C bus pull-ups.",
+ "ports": [
+  "3V3",
+  "GND",
+  "I2C_SDA",
+  "I2C_SCL",
+  "IMU_INT1"
+ ],
+ "qa": [
+  {
+   "item": "I2C Bus Pull-up Value",
+   "formula": "R_pu = 4.7k to 3V3, C_bus <= 50 pF, t_r = 0.8473 * R_pu * C_bus <= 200 ns",
+   "result": "Rise time complies with I2C Fast-Mode (400 kHz) specification (< 300 ns).",
+   "source": "TDK InvenSense ICM-42670-P Datasheet Section 4.1",
+   "pass": true
+  },
+  {
+   "item": "Power Supply Decoupling",
+   "formula": "VDD: 1uF || 0.1uF, VDDIO: 0.1uF",
+   "result": "Meets manufacturer recommended application schematic for low noise performance.",
+   "source": "TDK InvenSense ICM-42670-P Datasheet Section 5.1",
+   "pass": true
+  }
+ ],
+ "parts": [
+  {
+   "ref": "U8",
+   "mpn": "ICM-42670-P",
+   "role": "6-axis Motion Tracking IMU (Accel + Gyro)",
+   "nc": [
+    "9"
+   ],
+   "pins": {
+    "1": "GND",
+    "2": "GND",
+    "3": "GND",
+    "4": "IMU_INT1",
+    "5": "3V3",
+    "6": "GND",
+    "7": "GND",
+    "8": "3V3",
+    "10": "GND",
+    "11": "GND",
+    "12": "3V3",
+    "13": "I2C_SCL",
+    "14": "I2C_SDA"
+   }
+  },
+  {
+   "ref": "C23",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF VDDIO decoupling capacitor",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "C24",
+   "mpn": "CL05A105KA5NQNC",
+   "role": "1uF VDD decoupling capacitor",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "R17",
+   "mpn": "0402WGF4701TCE",
+   "role": "4.7k I2C SCL pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "I2C_SCL"
+   }
+  },
+  {
+   "ref": "R18",
+   "mpn": "0402WGF4701TCE",
+   "role": "4.7k I2C SDA pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "I2C_SDA"
+   }
+  }
+ ],
+ "nets": {
+  "3V3": [
+   "U8.5",
+   "U8.8",
+   "U8.12",
+   "C23.1",
+   "C24.1",
+   "R17.1",
+   "R18.1"
+  ],
+  "GND": [
+   "U8.1",
+   "U8.2",
+   "U8.3",
+   "U8.6",
+   "U8.7",
+   "U8.10",
+   "U8.11",
+   "C23.2",
+   "C24.2"
+  ],
+  "I2C_SCL": [
+   "U8.13",
+   "R17.2"
+  ],
+  "I2C_SDA": [
+   "U8.14",
+   "R18.2"
+  ],
+  "IMU_INT1": [
+   "U8.4"
+  ]
+ }
+}

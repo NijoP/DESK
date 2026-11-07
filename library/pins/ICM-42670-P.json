@@ -1,0 +1,58 @@
+[
+{
+"num": "1",
+"name": "AP_SDO/AP_AD0"
+},
+{
+"num": "2",
+"name": "RESV"
+},
+{
+"num": "3",
+"name": "RESV"
+},
+{
+"num": "4",
+"name": "INT1/INT"
+},
+{
+"num": "5",
+"name": "VDDIO"
+},
+{
+"num": "6",
+"name": "GND"
+},
+{
+"num": "7",
+"name": "FSYNC"
+},
+{
+"num": "8",
+"name": "VDD"
+},
+{
+"num": "9",
+"name": "INT2"
+},
+{
+"num": "10",
+"name": "RESV"
+},
+{
+"num": "11",
+"name": "RESV"
+},
+{
+"num": "12",
+"name": "AP_CS"
+},
+{
+"num": "13",
+"name": "AP_SCL/AP_SCLK"
+},
+{
+"num": "14",
+"name": "AP_SDA/AP_SDIO/AP_SDI"
+}
+]

@@ -1,0 +1,54 @@
+[
+{
+"num": "1",
+"name": "DAT2(RSV)"
+},
+{
+"num": "2",
+"name": "CDDAT3(CS)"
+},
+{
+"num": "3",
+"name": "CMD(DI)"
+},
+{
+"num": "4",
+"name": "VDD"
+},
+{
+"num": "5",
+"name": "CLK(SCLK)"
+},
+{
+"num": "6",
+"name": "VSS"
+},
+{
+"num": "7",
+"name": "DAT0(D0)"
+},
+{
+"num": "8",
+"name": "DAT1(RSV)"
+},
+{
+"num": "9",
+"name": "CD"
+},
+{
+"num": "10",
+"name": "GND"
+},
+{
+"num": "11",
+"name": "GND"
+},
+{
+"num": "12",
+"name": "GND"
+},
+{
+"num": "13",
+"name": "GND"
+}
+]

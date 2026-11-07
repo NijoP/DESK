@@ -1,0 +1,26 @@
+[
+{
+"num": "1",
+"name": "VIN"
+},
+{
+"num": "2",
+"name": "GND"
+},
+{
+"num": "3",
+"name": "ON"
+},
+{
+"num": "4",
+"name": "CT"
+},
+{
+"num": "5",
+"name": "QOD"
+},
+{
+"num": "6",
+"name": "VOUT"
+}
+]

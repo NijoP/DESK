@@ -1,0 +1,38 @@
+[
+{
+"num": "1",
+"name": "IN"
+},
+{
+"num": "2",
+"name": "ISET"
+},
+{
+"num": "3",
+"name": "TS"
+},
+{
+"num": "4",
+"name": "GND"
+},
+{
+"num": "5",
+"name": "STAT"
+},
+{
+"num": "6",
+"name": "PG#"
+},
+{
+"num": "7",
+"name": "VSET"
+},
+{
+"num": "8",
+"name": "OUT"
+},
+{
+"num": "9",
+"name": "EP"
+}
+]

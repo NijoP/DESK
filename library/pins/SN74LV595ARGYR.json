@@ -1,0 +1,70 @@
+[
+{
+"num": "1",
+"name": "QB"
+},
+{
+"num": "2",
+"name": "QC"
+},
+{
+"num": "3",
+"name": "QD"
+},
+{
+"num": "4",
+"name": "QE"
+},
+{
+"num": "5",
+"name": "QF"
+},
+{
+"num": "6",
+"name": "QG"
+},
+{
+"num": "7",
+"name": "QH"
+},
+{
+"num": "8",
+"name": "GND"
+},
+{
+"num": "9",
+"name": "QH&apos;"
+},
+{
+"num": "10",
+"name": "SRCLR_n"
+},
+{
+"num": "11",
+"name": "SRCLK"
+},
+{
+"num": "12",
+"name": "RCLK"
+},
+{
+"num": "13",
+"name": "OE_n"
+},
+{
+"num": "14",
+"name": "SER"
+},
+{
+"num": "15",
+"name": "QA"
+},
+{
+"num": "16",
+"name": "VCC"
+},
+{
+"num": "17",
+"name": "EP"
+}
+]

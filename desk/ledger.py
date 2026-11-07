@@ -13,7 +13,8 @@ Types:
 Entries are never edited; supersede them with a 'correction' entry (field 'refs')."""
 import json, os, hashlib, datetime
 
-TYPES = ("decision", "fact", "assumption", "correction", "built", "verified", "release")
+TYPES = ("decision", "fact", "assumption", "correction", "built", "verified", "release",
+         "placement_freeze", "routing_attempt", "drc_convergence", "readiness")
 
 
 def path(project):

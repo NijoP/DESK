@@ -1,0 +1,25 @@
+{
+ "name": "WATCH",
+ "project_uuid": "c1859960f83648a892c64af27feb9e63",
+ "board": "MAIN",
+ "sheet_uuid": "c75145b22afda01f",
+ "pcb_uuid": "d8c5340d62893518",
+ "window_id": "556928eb-5a4d-4664-a775-3cf55a10d20d",
+ "top": 3200,
+ "row_max": 5200,
+ "block_order": [
+  "01_PWR_IN",
+  "02_CHG_BAT",
+  "03_REG_3V3",
+  "04_BST_5V",
+  "05_MCU_CORE",
+  "06_AUDIO_IN",
+  "07_AUDIO_OUT",
+  "08_IMU_MOTION",
+  "09_STORAGE",
+  "10_LCD_DISP",
+  "11_BUTTONS",
+  "12_STATUS_LEDS",
+  "13_VBUS_SENSE"
+ ]
+}

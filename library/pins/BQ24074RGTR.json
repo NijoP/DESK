@@ -1,0 +1,70 @@
+[
+{
+"num": "1",
+"name": "TS"
+},
+{
+"num": "2",
+"name": "BAT"
+},
+{
+"num": "3",
+"name": "BAT"
+},
+{
+"num": "4",
+"name": "CE#"
+},
+{
+"num": "5",
+"name": "EN2"
+},
+{
+"num": "6",
+"name": "EN1"
+},
+{
+"num": "7",
+"name": "PGOOD#"
+},
+{
+"num": "8",
+"name": "VSS"
+},
+{
+"num": "9",
+"name": "CHG#"
+},
+{
+"num": "10",
+"name": "OUT"
+},
+{
+"num": "11",
+"name": "OUT"
+},
+{
+"num": "12",
+"name": "ILIM"
+},
+{
+"num": "13",
+"name": "IN"
+},
+{
+"num": "14",
+"name": "TMR"
+},
+{
+"num": "15",
+"name": "ITERM"
+},
+{
+"num": "16",
+"name": "ISET"
+},
+{
+"num": "17",
+"name": "EP"
+}
+]

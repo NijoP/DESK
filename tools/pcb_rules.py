@@ -12,7 +12,7 @@ from _common import ex, guard, load_project, check
 proj = sys.argv[1]; P = load_project(proj)
 R = json.load(open(os.path.join(proj, "pcb_rules.json")))
 G = guard(P["pcb_uuid"])
-have = set(check(ex(G + 'return await eda.pcb_Net.getAllNetsName();')) or [])
+have = set(check(ex(G + 'return await eda.pcb_Net.getAllNetsName();', window_id=P.get("window_id"))) or [])
 want = {n for v in R.get("net_classes", {}).values() for n in v} | {n for v in R.get("diff_pairs", {}).values() for n in v} \
      | {n for v in R.get("equal_length", {}).values() for n in v}
 missing = sorted(want - have)
@@ -27,7 +27,7 @@ const exEL=(await eda.pcb_Drc.getAllEqualLengthNetGroups()||[]).map(g=>g.name);
 for(const [n,nets] of Object.entries(R.equal_length||{})){ if(exEL.includes(n)) await eda.pcb_Drc.deleteEqualLengthNetGroup(n); out.el.push([n,await eda.pcb_Drc.createEqualLengthNetGroup(n,nets,null)]); }
 out.readback={nc:await eda.pcb_Drc.getAllNetClasses(), dp:await eda.pcb_Drc.getAllDifferentialPairs(), el:await eda.pcb_Drc.getAllEqualLengthNetGroups()};
 return out;''' % json.dumps(R)
-r = check(ex(js, timeout=120))
+r = check(ex(js, timeout=120, window_id=P.get("window_id")))
 bad = [x for k in ("nc", "dp", "el") for x in r[k] if x[1] is not True]
 print(json.dumps({k: r[k] for k in ("nc", "dp", "el")}))
 rb = json.dumps(r["readback"])

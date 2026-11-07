@@ -1,0 +1,134 @@
+{
+ "id": "10_LCD_DISP",
+ "title": "10 WAVESHARE LCD INTERFACE",
+ "status": "draft",
+ "purpose": "JST PH 2.0mm 8-pin connector matching Waveshare 1.47-inch LCD interface cable with power decoupling and control line conditioning.",
+ "ports": [
+  "3V3",
+  "GND",
+  "LCD_SCL",
+  "LCD_SDA",
+  "LCD_CS",
+  "LCD_DC",
+  "LCD_RST",
+  "LCD_BL"
+ ],
+ "qa": [
+  {
+   "item": "SPI Control Line Termination",
+   "formula": "R_pu = 10k to 3V3 on CS, RST",
+   "result": "Ensures display remains unselected and held out of reset during MCU boot.",
+   "source": "Waveshare 1.47inch LCD Module User Manual Section 3",
+   "pass": true
+  },
+  {
+   "item": "Backlight Control Pull-down",
+   "formula": "R_pd = 100k to GND on BL",
+   "result": "Guarantees backlight remains dark until explicitly initialized by MCU PWM.",
+   "source": "Waveshare 1.47inch LCD Module Schematic",
+   "pass": true
+  }
+ ],
+ "parts": [
+  {
+   "ref": "J6",
+   "mpn": "S8B-PH-SM4-TB",
+   "role": "JST PH 2.0mm 8-pin Right-Angle SMT Header",
+   "pins": {
+    "1": "3V3",
+    "2": "GND",
+    "3": "LCD_SDA",
+    "4": "LCD_SCL",
+    "5": "LCD_CS",
+    "6": "LCD_DC",
+    "7": "LCD_RST",
+    "8": "LCD_BL",
+    "9": "GND",
+    "10": "GND"
+   }
+  },
+  {
+   "ref": "C27",
+   "mpn": "CL10A106KP8NNNC",
+   "role": "10uF 0603 VCC bulk capacitor",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "C28",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF 0402 VCC bypass capacitor",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "R22",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k 0402 LCD_CS pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "LCD_CS"
+   }
+  },
+  {
+   "ref": "R23",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k 0402 LCD_RST pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "LCD_RST"
+   }
+  },
+  {
+   "ref": "R24",
+   "mpn": "0402WGF1003TCE",
+   "role": "100k 0402 LCD_BL pull-down resistor",
+   "pins": {
+    "1": "LCD_BL",
+    "2": "GND"
+   }
+  }
+ ],
+ "nets": {
+  "3V3": [
+   "J6.1",
+   "C27.1",
+   "C28.1",
+   "R22.1",
+   "R23.1"
+  ],
+  "GND": [
+   "J6.2",
+   "J6.9",
+   "J6.10",
+   "C27.2",
+   "C28.2",
+   "R24.2"
+  ],
+  "LCD_SDA": [
+   "J6.3"
+  ],
+  "LCD_SCL": [
+   "J6.4"
+  ],
+  "LCD_CS": [
+   "J6.5",
+   "R22.2"
+  ],
+  "LCD_DC": [
+   "J6.6"
+  ],
+  "LCD_RST": [
+   "J6.7",
+   "R23.2"
+  ],
+  "LCD_BL": [
+   "J6.8",
+   "R24.1"
+  ]
+ }
+}

@@ -1,0 +1,63 @@
+{
+ "id": "13_VBUS_SENSE",
+ "title": "13 VBUS PRESENCE DETECTION",
+ "status": "draft",
+ "purpose": "High-impedance precision resistor voltage divider and RC filter for USB-C VBUS power sensing on ESP32-S3 ADC GPIO45.",
+ "ports": [
+  "VBUS",
+  "VBUS_SENSE",
+  "GND"
+ ],
+ "qa": [
+  {
+   "item": "VBUS Sense Voltage Divider",
+   "formula": "V_sense = VBUS * R31 / (R30 + R31) = 5.0V * 100k / 200k = 2.50 V",
+   "result": "Provides safe 2.5V sensing level to ESP32-S3 GPIO45 (well below 3.6V maximum rating).",
+   "source": "Espressif ESP32-S3 Hardware Design Guidelines Section 2.5",
+   "pass": true
+  }
+ ],
+ "parts": [
+  {
+   "ref": "R30",
+   "mpn": "0402WGF1003TCE",
+   "role": "100k 0402 Top Voltage Divider Resistor",
+   "pins": {
+    "1": "VBUS",
+    "2": "VBUS_SENSE"
+   }
+  },
+  {
+   "ref": "R31",
+   "mpn": "0402WGF1003TCE",
+   "role": "100k 0402 Bottom Voltage Divider Resistor",
+   "pins": {
+    "1": "VBUS_SENSE",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "C32",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF 0402 VBUS Sense Noise Filter Capacitor",
+   "pins": {
+    "1": "VBUS_SENSE",
+    "2": "GND"
+   }
+  }
+ ],
+ "nets": {
+  "VBUS": [
+   "R30.1"
+  ],
+  "VBUS_SENSE": [
+   "R30.2",
+   "R31.1",
+   "C32.1"
+  ],
+  "GND": [
+   "R31.2",
+   "C32.2"
+  ]
+ }
+}

@@ -15,8 +15,9 @@ for m in want:
     if S.load_pins(m) and "--force" not in args: continue
     d = lib[m]
     r = ex('''const c=await eda.sch_PrimitiveComponent.create({libraryUuid:"%s",uuid:"%s"},-5000,-5000,"",0,false,true,true);
-const ps=await c.getAllPins(); const o=ps.map(p=>({num:p.getState_PinNumber(),name:p.getState_PinName()}));
-await eda.sch_PrimitiveComponent.delete([c.getState_PrimitiveId()]); return o;''' % (d["libraryUuid"], d["uuid"]))
+const ps=await eda.sch_PrimitiveComponent.getAllPinsByPrimitiveId(c.getState_PrimitiveId());
+const o=ps.map(p=>({num:p.getState_PinNumber(),name:p.getState_PinName()}));
+await eda.sch_PrimitiveComponent.delete([c.getState_PrimitiveId()]); return o;''' % (d["libraryUuid"], d["uuid"]), window_id=os.environ.get("EDA_WINDOW_ID") or (json.load(open("projects/WATCH/project.json")).get("window_id") if os.path.exists("projects/WATCH/project.json") else None))
     r.sort(key=lambda q: (len(q["num"]), q["num"]))
     json.dump(r, open(os.path.join(S.PIN_DIR, S.safe(m) + ".json"), "w", encoding="utf-8"), indent=0)
     print(f"{m}: " + ", ".join(f"{q['num']}={q['name']}" for q in r))

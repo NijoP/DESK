@@ -1,0 +1,34 @@
+[
+{
+"num": "1",
+"name": "GND"
+},
+{
+"num": "2",
+"name": "VIN"
+},
+{
+"num": "3",
+"name": "MODE"
+},
+{
+"num": "4",
+"name": "EN"
+},
+{
+"num": "5",
+"name": "VSET"
+},
+{
+"num": "6",
+"name": "STOP"
+},
+{
+"num": "7",
+"name": "SW"
+},
+{
+"num": "8",
+"name": "VOS"
+}
+]

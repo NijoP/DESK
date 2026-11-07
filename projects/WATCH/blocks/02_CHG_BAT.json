@@ -1,0 +1,221 @@
+{
+ "id": "02_CHG_BAT",
+ "title": "02 BATTERY CHARGING AND POWER PATH",
+ "status": "draft",
+ "purpose": "BQ24074RGTR 1.5A USB-friendly LiPo battery charger and autonomous NVDC power-path manager. Powers VSYS directly from VBUS while charging the LiPo cell at 400mA, with dynamic power management (ILIM=1.5A), termination current at 40mA (ITERM=2k), and safety timer / thermal monitoring.",
+ "ports": [
+  "VBUS",
+  "VSYS",
+  "VBAT",
+  "CHG_STAT",
+  "PGOOD_N",
+  "CHG_EN",
+  "GND"
+ ],
+ "parts": [
+  {
+   "ref": "U2",
+   "mpn": "BQ24074RGTR",
+   "role": "Autonomous 1.5A NVDC Power-Path Charger IC",
+   "pins": {
+    "1": "GND",
+    "2": "VBAT",
+    "3": "VBAT",
+    "4": "CHG_EN",
+    "5": "VBUS",
+    "6": "GND",
+    "7": "PGOOD_N",
+    "8": "GND",
+    "9": "CHG_STAT",
+    "10": "VSYS",
+    "11": "VSYS",
+    "12": "NET_ILIM",
+    "13": "VBUS",
+    "14": "NET_TMR",
+    "15": "NET_ITERM",
+    "16": "NET_ISET",
+    "17": "GND"
+   },
+   "nc": [],
+   "lcsc": "C54313",
+   "package": "VQFN-16"
+  },
+  {
+   "ref": "J2",
+   "mpn": "S2B-PH-SM4-TB",
+   "role": "2-pin JST PH 2.0mm LiPo battery connector with shield tabs",
+   "pins": {
+    "1": "VBAT",
+    "2": "GND",
+    "3": "GND",
+    "4": "GND"
+   },
+   "nc": [],
+   "lcsc": "C295747",
+   "package": "JST-PH-2P-SMD"
+  },
+  {
+   "ref": "R3",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k pull-up on CHG_STAT status open-drain output",
+   "pins": {
+    "1": "VSYS",
+    "2": "CHG_STAT"
+   },
+   "nc": [],
+   "lcsc": "C25744",
+   "package": "0402"
+  },
+  {
+   "ref": "R4",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k pull-up on PGOOD_N power-good open-drain output",
+   "pins": {
+    "1": "VSYS",
+    "2": "PGOOD_N"
+   },
+   "nc": [],
+   "lcsc": "C25744",
+   "package": "0402"
+  },
+  {
+   "ref": "R5",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k pull-down on CHG_EN for default charging enabled",
+   "pins": {
+    "1": "CHG_EN",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25744",
+   "package": "0402"
+  },
+  {
+   "ref": "R6",
+   "mpn": "0402WGF1200TCE",
+   "role": "1.2k resistor on ILIM pin setting input current limit to 1.3A",
+   "pins": {
+    "1": "NET_ILIM",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25079",
+   "package": "0402"
+  },
+  {
+   "ref": "R7",
+   "mpn": "0402WGF2000TCE",
+   "role": "2.0k resistor on ISET pin setting charge current to 400mA",
+   "pins": {
+    "1": "NET_ISET",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25087",
+   "package": "0402"
+  },
+  {
+   "ref": "R8",
+   "mpn": "0402WGF2000TCE",
+   "role": "2.0k resistor on ITERM pin setting termination current to 40mA",
+   "pins": {
+    "1": "NET_ITERM",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25087",
+   "package": "0402"
+  },
+  {
+   "ref": "R9",
+   "mpn": "0402WGF4702TCE",
+   "role": "47k resistor on TMR pin setting fast-charge safety timer to 6.2 hours",
+   "pins": {
+    "1": "NET_TMR",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25792",
+   "package": "0402"
+  },
+  {
+   "ref": "C3",
+   "mpn": "CL10A106KP8NNNC",
+   "role": "10uF bypass capacitor on BQ24074 IN (VBUS) pin",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C19702",
+   "package": "0603"
+  },
+  {
+   "ref": "C4",
+   "mpn": "CL10A106KP8NNNC",
+   "role": "10uF output capacitor on VSYS power-path output",
+   "pins": {
+    "1": "VSYS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C19702",
+   "package": "0603"
+  },
+  {
+   "ref": "C5",
+   "mpn": "CL10A106KP8NNNC",
+   "role": "10uF capacitor on VBAT battery terminal",
+   "pins": {
+    "1": "VBAT",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C19702",
+   "package": "0603"
+  }
+ ],
+ "nets": [
+  "VBUS",
+  "VSYS",
+  "VBAT",
+  "CHG_STAT",
+  "PGOOD_N",
+  "CHG_EN",
+  "NET_ILIM",
+  "NET_ISET",
+  "NET_ITERM",
+  "NET_TMR",
+  "GND"
+ ],
+ "qa": [
+  {
+   "item": "Charge Current I_CHG Calculation",
+   "formula": "I_CHG = K_ISET / R_ISET, K_ISET = 800 A*Ohm (BQ24074 Datasheet Section 9.3.7.2)",
+   "result": "R_ISET = 2.0 kOhm -> I_CHG = 800 / 2000 = 0.400 A (400 mA). Perfectly sized for typical 1S wearable LiPo cells (350-600 mAh at ~0.8C-1C rate).",
+   "source": "Texas Instruments BQ24074 Datasheet SLUS884F Section 9.3.7.2",
+   "pass": true
+  },
+  {
+   "item": "Input Current Limit I_IN_MAX Calculation",
+   "formula": "I_IN_MAX = K_ILIM / R_ILIM, K_ILIM = 1550 A*Ohm (BQ24074 Section 9.3.7.1)",
+   "result": "R_ILIM = 1.2 kOhm -> I_IN_MAX = 1550 / 1200 = 1.29 A (~1.3 A). Safely supports 400 mA charging + 500 mA system peak load under USB Type-C 1.5A supply.",
+   "source": "Texas Instruments BQ24074 Datasheet SLUS884F Section 9.3.7.1",
+   "pass": true
+  },
+  {
+   "item": "Charge Termination Current I_TERM Calculation",
+   "formula": "I_TERM = (R_ITERM / 1000) * (I_CHG / 20) with R_ITERM in Ohm",
+   "result": "R_ITERM = 2.0 kOhm -> I_TERM = 0.1 * I_CHG = 40 mA. Standard 10% termination ensures complete saturation of LiPo without over-soaking.",
+   "source": "Texas Instruments BQ24074 Datasheet SLUS884F Section 9.3.7.3",
+   "pass": true
+  },
+  {
+   "item": "Safety Timer T_MAX Calculation",
+   "formula": "t_MAX = K_TMR * R_TMR, K_TMR = 0.133 hr/kOhm",
+   "result": "R_TMR = 47 kOhm -> t_MAX = 0.133 * 47 = 6.25 hours fast-charge limit. Ample time for full CC-CV charging while preventing thermal runaway on defective cells.",
+   "source": "Texas Instruments BQ24074 Datasheet SLUS884F Section 9.3.7.4",
+   "pass": true
+  }
+ ]
+}

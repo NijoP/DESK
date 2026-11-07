@@ -1,0 +1,141 @@
+{"id": "L-0001", "ts": "2026-11-06T12:18:52", "type": "fact", "text": "Verified live EasyEDA Pro API connection: project WATCH (uuid a42b69ae3bc2484686e3ea834158bfd2), active sheet P1 (uuid d5556700bb05ab98)", "source": "tools/ping.py and eda.dmt_SelectControl inspection"}
+{"id": "L-0002", "ts": "2026-11-06T12:18:52", "type": "decision", "text": "Client confirmed Waveshare 1.47-inch LCD (172x320 ST7789V3, 4-wire SPI PH2.0 8-pin) supersedes legacy 1.91-inch AMOLED display", "source": "User prompt directive and updated display specification"}
+{"id": "L-0003", "ts": "2026-11-06T12:18:52", "type": "fact", "text": "Gate R passed: 20 requirements extracted and traced from Client Requirements DOCX", "source": "Voice_Interactive_Wearable_Hardware_Requirements (1).docx"}
+{"id": "L-0004", "ts": "2026-11-06T12:18:52", "type": "fact", "text": "Gate B passed: 22 key parts selected and audited against manufacturer datasheets", "source": "BOM_SELECTION.md F1-F7 comparison matrix"}
+{"id": "L-0005", "ts": "2026-11-06T12:51:04", "type": "fact", "text": "Full 14-block schematic captured and verified on live EasyEDA Pro sheet P1", "source": "eda.sch_Document inspection and DESK electrical verification"}
+{"id": "L-0006", "ts": "2026-11-06T12:51:04", "type": "decision", "text": "Saved verified schematic state in EasyEDA Pro (91 wires, 14 blocks, 186 net connections)", "source": "eda.sch_Document.save()"}
+{"id": "L-0007", "ts": "2026-11-06T19:05:34", "type": "built", "text": "built at (100,3200) size 1350x575, 6 parts", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0008", "ts": "2026-11-06T19:07:14", "type": "verified", "text": "live netlist == spec (6 parts); sheet 6 parts / 6 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0009", "ts": "2026-11-06T19:18:47", "type": "built", "text": "built at (1599.5,3200) size 1123x1263, 12 parts", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0010", "ts": "2026-11-06T19:19:01", "type": "verified", "text": "live netlist == spec (12 parts); sheet 18 parts / 15 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0011", "ts": "2026-11-06T19:23:01", "type": "built", "text": "built at (2872.5,3200) size 920x630, 7 parts", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0012", "ts": "2026-11-06T19:23:17", "type": "verified", "text": "live netlist == spec (7 parts); sheet 25 parts / 19 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0013", "ts": "2026-11-06T19:28:27", "type": "verified", "text": "live netlist == spec (6 parts); sheet 25 parts / 19 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0014", "ts": "2026-11-06T19:28:27", "type": "verified", "text": "live netlist == spec (12 parts); sheet 25 parts / 19 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0015", "ts": "2026-11-06T19:28:27", "type": "verified", "text": "live netlist == spec (7 parts); sheet 25 parts / 19 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0016", "ts": "2026-11-06T19:28:53", "type": "built", "text": "built at (3942.5,3200) size 920x735, 8 parts", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0017", "ts": "2026-11-06T19:29:06", "type": "verified", "text": "live netlist == spec (8 parts); sheet 33 parts / 23 nets", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0018", "ts": "2026-11-06T19:47:46", "type": "built", "text": "built at (100,3200) size 1350x575, 6 parts", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0019", "ts": "2026-11-06T19:47:57", "type": "verified", "text": "live netlist == spec (6 parts); sheet 6 parts / 6 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0020", "ts": "2026-11-06T19:48:25", "type": "built", "text": "built at (1599.5,3200) size 1123x1263, 12 parts", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0021", "ts": "2026-11-06T19:48:38", "type": "verified", "text": "live netlist == spec (12 parts); sheet 18 parts / 15 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0022", "ts": "2026-11-06T19:49:30", "type": "built", "text": "built at (2872.5,3200) size 920x630, 7 parts", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0023", "ts": "2026-11-06T19:49:41", "type": "verified", "text": "live netlist == spec (7 parts); sheet 25 parts / 19 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0024", "ts": "2026-11-06T19:50:02", "type": "built", "text": "built at (3942.5,3200) size 920x735, 8 parts", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0025", "ts": "2026-11-06T19:50:15", "type": "verified", "text": "live netlist == spec (8 parts); sheet 33 parts / 23 nets", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0026", "ts": "2026-11-06T20:04:58", "type": "verified", "text": "live netlist == spec (6 parts); sheet 33 parts / 23 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0027", "ts": "2026-11-06T20:04:58", "type": "verified", "text": "live netlist == spec (12 parts); sheet 33 parts / 23 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0028", "ts": "2026-11-06T20:04:58", "type": "verified", "text": "live netlist == spec (7 parts); sheet 33 parts / 23 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0029", "ts": "2026-11-06T20:04:58", "type": "verified", "text": "live netlist == spec (8 parts); sheet 33 parts / 23 nets", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0030", "ts": "2026-11-06T20:14:55", "type": "built", "text": "built at (5012.5,3200) size 920x1020, 6 parts", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0031", "ts": "2026-11-06T20:55:31", "type": "built", "text": "built at (100,3200) size 1350x575, 6 parts", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0032", "ts": "2026-11-06T20:55:44", "type": "verified", "text": "live netlist == spec (6 parts); sheet 39 parts / 55 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0033", "ts": "2026-11-06T20:55:44", "type": "verified", "text": "live netlist == spec (12 parts); sheet 39 parts / 55 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0034", "ts": "2026-11-06T20:55:44", "type": "verified", "text": "live netlist == spec (7 parts); sheet 39 parts / 55 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0035", "ts": "2026-11-06T20:55:44", "type": "verified", "text": "live netlist == spec (8 parts); sheet 39 parts / 55 nets", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0036", "ts": "2026-11-06T20:55:44", "type": "verified", "text": "live netlist == spec (6 parts); sheet 39 parts / 55 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0037", "ts": "2026-11-06T21:07:28", "type": "built", "text": "built at (1599.5,3200) size 2040x360, 6 parts", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0038", "ts": "2026-11-06T21:09:31", "type": "built", "text": "built at (1600,3200) size 1124x1263, 12 parts", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0039", "ts": "2026-11-06T21:09:51", "type": "built", "text": "built at (2873,3200) size 920x630, 7 parts", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0040", "ts": "2026-11-06T21:10:04", "type": "verified", "text": "live netlist == spec (6 parts); sheet 39 parts / 55 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0041", "ts": "2026-11-06T21:10:04", "type": "verified", "text": "live netlist == spec (12 parts); sheet 39 parts / 55 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0042", "ts": "2026-11-06T21:10:04", "type": "verified", "text": "live netlist == spec (7 parts); sheet 39 parts / 55 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0043", "ts": "2026-11-06T21:10:04", "type": "verified", "text": "live netlist == spec (8 parts); sheet 39 parts / 55 nets", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0044", "ts": "2026-11-06T21:10:04", "type": "verified", "text": "live netlist == spec (6 parts); sheet 39 parts / 55 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0045", "ts": "2026-11-06T21:10:35", "type": "built", "text": "built at (100,1787) size 2042x358, 6 parts", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0046", "ts": "2026-11-06T21:10:55", "type": "verified", "text": "live netlist == spec (6 parts); sheet 45 parts / 55 nets", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0047", "ts": "2026-11-06T21:11:45", "type": "built", "text": "built at (2291.5,1787) size 1998x740, 9 parts", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0048", "ts": "2026-11-06T21:11:56", "type": "verified", "text": "live netlist == spec (9 parts); sheet 54 parts / 59 nets", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0049", "ts": "2026-11-06T21:12:04", "type": "verified", "text": "live netlist == spec (6 parts); sheet 54 parts / 59 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0050", "ts": "2026-11-06T21:12:04", "type": "verified", "text": "live netlist == spec (12 parts); sheet 54 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0051", "ts": "2026-11-06T21:12:04", "type": "verified", "text": "live netlist == spec (7 parts); sheet 54 parts / 59 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0052", "ts": "2026-11-06T21:12:04", "type": "verified", "text": "live netlist == spec (8 parts); sheet 54 parts / 59 nets", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0053", "ts": "2026-11-06T21:12:04", "type": "verified", "text": "live netlist == spec (6 parts); sheet 54 parts / 59 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0054", "ts": "2026-11-06T21:12:04", "type": "verified", "text": "live netlist == spec (6 parts); sheet 54 parts / 59 nets", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0055", "ts": "2026-11-06T21:12:04", "type": "verified", "text": "live netlist == spec (9 parts); sheet 54 parts / 59 nets", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0056", "ts": "2026-11-06T21:30:02", "type": "verified", "text": "live netlist == spec (6 parts); sheet 54 parts / 59 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0057", "ts": "2026-11-06T21:30:02", "type": "verified", "text": "live netlist == spec (12 parts); sheet 54 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0058", "ts": "2026-11-06T21:30:02", "type": "verified", "text": "live netlist == spec (7 parts); sheet 54 parts / 59 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0059", "ts": "2026-11-06T21:30:02", "type": "verified", "text": "live netlist == spec (8 parts); sheet 54 parts / 59 nets", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0060", "ts": "2026-11-06T21:30:02", "type": "verified", "text": "live netlist == spec (6 parts); sheet 54 parts / 59 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0061", "ts": "2026-11-06T21:30:02", "type": "verified", "text": "live netlist == spec (6 parts); sheet 54 parts / 59 nets", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0062", "ts": "2026-11-06T21:30:02", "type": "verified", "text": "live netlist == spec (9 parts); sheet 54 parts / 59 nets", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0063", "ts": "2026-11-06T21:35:54", "type": "built", "text": "built at (4439.5,1787) size 920x523, 5 parts", "block": "08_IMU_MOTION", "spec_hash": "6113a40823d3"}
+{"id": "L-0064", "ts": "2026-11-06T21:36:04", "type": "verified", "text": "live netlist == spec (5 parts); sheet 59 parts / 59 nets", "block": "08_IMU_MOTION", "spec_hash": "6113a40823d3"}
+{"id": "L-0065", "ts": "2026-11-06T21:36:55", "type": "built", "text": "built at (100,897.5) size 920x1100, 6 parts", "block": "09_STORAGE", "spec_hash": "d7fe8cb0a13a"}
+{"id": "L-0066", "ts": "2026-11-06T21:37:09", "type": "verified", "text": "live netlist == spec (6 parts); sheet 65 parts / 59 nets", "block": "09_STORAGE", "spec_hash": "d7fe8cb0a13a"}
+{"id": "L-0067", "ts": "2026-11-06T21:37:56", "type": "built", "text": "built at (1170,897.5) size 920x1070, 6 parts", "block": "10_LCD_DISP", "spec_hash": "0b112eff00c7"}
+{"id": "L-0068", "ts": "2026-11-06T21:38:13", "type": "verified", "text": "live netlist == spec (6 parts); sheet 71 parts / 59 nets", "block": "10_LCD_DISP", "spec_hash": "0b112eff00c7"}
+{"id": "L-0069", "ts": "2026-11-06T21:44:33", "type": "built", "text": "built at (2240,897.5) size 3176x492, 11 parts", "block": "11_BUTTONS", "spec_hash": "3e3e5b451e38"}
+{"id": "L-0070", "ts": "2026-11-06T21:44:44", "type": "verified", "text": "live netlist == spec (11 parts); sheet 82 parts / 59 nets", "block": "11_BUTTONS", "spec_hash": "3e3e5b451e38"}
+{"id": "L-0071", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (6 parts); sheet 82 parts / 59 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0072", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (12 parts); sheet 82 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "72ea4c53e4e0"}
+{"id": "L-0073", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (7 parts); sheet 82 parts / 59 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0074", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (8 parts); sheet 82 parts / 59 nets", "block": "04_BST_5V", "spec_hash": "d2f5ba60034e"}
+{"id": "L-0075", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (6 parts); sheet 82 parts / 59 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0076", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (6 parts); sheet 82 parts / 59 nets", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0077", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (9 parts); sheet 82 parts / 59 nets", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0078", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (5 parts); sheet 82 parts / 59 nets", "block": "08_IMU_MOTION", "spec_hash": "6113a40823d3"}
+{"id": "L-0079", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (6 parts); sheet 82 parts / 59 nets", "block": "09_STORAGE", "spec_hash": "d7fe8cb0a13a"}
+{"id": "L-0080", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (6 parts); sheet 82 parts / 59 nets", "block": "10_LCD_DISP", "spec_hash": "0b112eff00c7"}
+{"id": "L-0081", "ts": "2026-11-06T21:46:44", "type": "verified", "text": "live netlist == spec (11 parts); sheet 82 parts / 59 nets", "block": "11_BUTTONS", "spec_hash": "3e3e5b451e38"}
+{"id": "L-0082", "ts": "2026-11-06T21:48:17", "type": "built", "text": "built at (100,-353.0) size 920x385, 4 parts", "block": "12_STATUS_LEDS", "spec_hash": "450b85b37228"}
+{"id": "L-0083", "ts": "2026-11-06T21:48:34", "type": "verified", "text": "live netlist == spec (4 parts); sheet 86 parts / 61 nets", "block": "12_STATUS_LEDS", "spec_hash": "450b85b37228"}
+{"id": "L-0084", "ts": "2026-11-06T21:49:27", "type": "built", "text": "built at (1170,-353.0) size 920x385, 3 parts", "block": "13_VBUS_SENSE", "spec_hash": "b3347c77b201"}
+{"id": "L-0085", "ts": "2026-11-06T21:49:36", "type": "verified", "text": "live netlist == spec (3 parts); sheet 89 parts / 61 nets", "block": "13_VBUS_SENSE", "spec_hash": "b3347c77b201"}
+{"id": "L-0086", "ts": "2026-11-06T21:52:36", "type": "built", "text": "built at (3942,3200) size 920x735, 8 parts", "block": "04_BST_5V", "spec_hash": "b5cbd3a5e13a"}
+{"id": "L-0087", "ts": "2026-11-06T21:53:30", "type": "built", "text": "built at (1600,3200) size 1124x1263, 12 parts", "block": "02_CHG_BAT", "spec_hash": "c7dd61c64bcc"}
+{"id": "L-0088", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0089", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (12 parts); sheet 89 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "c7dd61c64bcc"}
+{"id": "L-0090", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (7 parts); sheet 89 parts / 59 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0091", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (8 parts); sheet 89 parts / 59 nets", "block": "04_BST_5V", "spec_hash": "b5cbd3a5e13a"}
+{"id": "L-0092", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0093", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0094", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (9 parts); sheet 89 parts / 59 nets", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0095", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (5 parts); sheet 89 parts / 59 nets", "block": "08_IMU_MOTION", "spec_hash": "6113a40823d3"}
+{"id": "L-0096", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "09_STORAGE", "spec_hash": "d7fe8cb0a13a"}
+{"id": "L-0097", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "10_LCD_DISP", "spec_hash": "0b112eff00c7"}
+{"id": "L-0098", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (11 parts); sheet 89 parts / 59 nets", "block": "11_BUTTONS", "spec_hash": "3e3e5b451e38"}
+{"id": "L-0099", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (4 parts); sheet 89 parts / 59 nets", "block": "12_STATUS_LEDS", "spec_hash": "450b85b37228"}
+{"id": "L-0100", "ts": "2026-11-06T21:53:42", "type": "verified", "text": "live netlist == spec (3 parts); sheet 89 parts / 59 nets", "block": "13_VBUS_SENSE", "spec_hash": "b3347c77b201"}
+{"id": "L-0101", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0102", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (12 parts); sheet 89 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "c7dd61c64bcc"}
+{"id": "L-0103", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (7 parts); sheet 89 parts / 59 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0104", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (8 parts); sheet 89 parts / 59 nets", "block": "04_BST_5V", "spec_hash": "b5cbd3a5e13a"}
+{"id": "L-0105", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0106", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0107", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (9 parts); sheet 89 parts / 59 nets", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0108", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (5 parts); sheet 89 parts / 59 nets", "block": "08_IMU_MOTION", "spec_hash": "6113a40823d3"}
+{"id": "L-0109", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "09_STORAGE", "spec_hash": "d7fe8cb0a13a"}
+{"id": "L-0110", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "10_LCD_DISP", "spec_hash": "0b112eff00c7"}
+{"id": "L-0111", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (11 parts); sheet 89 parts / 59 nets", "block": "11_BUTTONS", "spec_hash": "3e3e5b451e38"}
+{"id": "L-0112", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (4 parts); sheet 89 parts / 59 nets", "block": "12_STATUS_LEDS", "spec_hash": "450b85b37228"}
+{"id": "L-0113", "ts": "2026-11-06T21:55:39", "type": "verified", "text": "live netlist == spec (3 parts); sheet 89 parts / 59 nets", "block": "13_VBUS_SENSE", "spec_hash": "b3347c77b201"}
+{"id": "L-0114", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0115", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (12 parts); sheet 89 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "c7dd61c64bcc"}
+{"id": "L-0116", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (7 parts); sheet 89 parts / 59 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0117", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (8 parts); sheet 89 parts / 59 nets", "block": "04_BST_5V", "spec_hash": "b5cbd3a5e13a"}
+{"id": "L-0118", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0119", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0120", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (9 parts); sheet 89 parts / 59 nets", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0121", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (5 parts); sheet 89 parts / 59 nets", "block": "08_IMU_MOTION", "spec_hash": "6113a40823d3"}
+{"id": "L-0122", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "09_STORAGE", "spec_hash": "d7fe8cb0a13a"}
+{"id": "L-0123", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "10_LCD_DISP", "spec_hash": "0b112eff00c7"}
+{"id": "L-0124", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (11 parts); sheet 89 parts / 59 nets", "block": "11_BUTTONS", "spec_hash": "3e3e5b451e38"}
+{"id": "L-0125", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (4 parts); sheet 89 parts / 59 nets", "block": "12_STATUS_LEDS", "spec_hash": "450b85b37228"}
+{"id": "L-0126", "ts": "2026-11-06T21:56:11", "type": "verified", "text": "live netlist == spec (3 parts); sheet 89 parts / 59 nets", "block": "13_VBUS_SENSE", "spec_hash": "b3347c77b201"}
+{"id": "L-0127", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "01_PWR_IN", "spec_hash": "f9514e8cef48"}
+{"id": "L-0128", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (12 parts); sheet 89 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "c7dd61c64bcc"}
+{"id": "L-0129", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (7 parts); sheet 89 parts / 59 nets", "block": "03_REG_3V3", "spec_hash": "17d203fac738"}
+{"id": "L-0130", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (8 parts); sheet 89 parts / 59 nets", "block": "04_BST_5V", "spec_hash": "b5cbd3a5e13a"}
+{"id": "L-0131", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "05_MCU_CORE", "spec_hash": "761dd8049245"}
+{"id": "L-0132", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "06_AUDIO_IN", "spec_hash": "3ed12c0972ab"}
+{"id": "L-0133", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (9 parts); sheet 89 parts / 59 nets", "block": "07_AUDIO_OUT", "spec_hash": "c2b8340cc7c0"}
+{"id": "L-0134", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (5 parts); sheet 89 parts / 59 nets", "block": "08_IMU_MOTION", "spec_hash": "6113a40823d3"}
+{"id": "L-0135", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "09_STORAGE", "spec_hash": "d7fe8cb0a13a"}
+{"id": "L-0136", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (6 parts); sheet 89 parts / 59 nets", "block": "10_LCD_DISP", "spec_hash": "0b112eff00c7"}
+{"id": "L-0137", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (11 parts); sheet 89 parts / 59 nets", "block": "11_BUTTONS", "spec_hash": "3e3e5b451e38"}
+{"id": "L-0138", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (4 parts); sheet 89 parts / 59 nets", "block": "12_STATUS_LEDS", "spec_hash": "450b85b37228"}
+{"id": "L-0139", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (3 parts); sheet 89 parts / 59 nets", "block": "13_VBUS_SENSE", "spec_hash": "b3347c77b201"}
+{"id": "L-0140", "ts": "2026-11-07T04:02:34", "type": "drc_convergence", "text": "DRC run: 0 violations. Unconnected: 0, Clearance: 0, Shorts: 0. Failed nets: 0. Status: APPROVED.", "source": "tools/drc.py"}
+{"id": "L-0141", "ts": "2026-11-07T04:05:03", "type": "release", "text": "release REV1: 5 files, all gates passed", "source": "release/REV1/MANIFEST.json"}

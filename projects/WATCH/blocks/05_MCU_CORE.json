@@ -1,0 +1,170 @@
+{
+ "id": "05_MCU_CORE",
+ "title": "05 ESP32-S3 MCU CORE AND STRAPPING",
+ "status": "draft",
+ "purpose": "ESP32-S3-WROOM-1-N8R8 dual-core Xtensa LX7 MCU with 8MB Octal Flash and 8MB Octal PSRAM, decoupling, chip enable/reset RC circuit, and GPIO strapping network.",
+ "ports": [
+  "3V3",
+  "GND",
+  "MCU_EN",
+  "MCU_BOOT",
+  "I2S_MIC_SD1",
+  "I2S_MIC_SD2",
+  "I2S_MIC_CLK",
+  "I2S_MIC_WS",
+  "I2S_SPK_BCLK",
+  "I2S_SPK_WS",
+  "I2S_SPK_DOUT",
+  "AMP_SD_MODE",
+  "I2C_SDA",
+  "I2C_SCL",
+  "IMU_INT1",
+  "SD_SPI_MOSI",
+  "SD_SPI_MISO",
+  "SD_SPI_CLK",
+  "SD_CS",
+  "SD_DET",
+  "LCD_SCL",
+  "LCD_SDA",
+  "USB_DM",
+  "USB_DP",
+  "LCD_CS",
+  "LCD_DC",
+  "LCD_RST",
+  "LCD_BL",
+  "BTN_VOICE",
+  "BTN_USER1",
+  "BTN_USER2",
+  "LED_STAT",
+  "VBUS_BOOST_EN",
+  "VBUS_SENSE",
+  "CHG_STAT",
+  "CHG_EN",
+  "LED_PWR"
+ ],
+ "parts": [
+  {
+   "ref": "U5",
+   "mpn": "ESP32-S3-WROOM-1-N8R8",
+   "role": "ESP32-S3-WROOM-1 module with Wi-Fi and Bluetooth LE",
+   "pins": {
+    "1": "GND",
+    "2": "3V3",
+    "3": "MCU_EN",
+    "4": "I2S_MIC_WS",
+    "5": "I2S_SPK_BCLK",
+    "6": "I2S_SPK_WS",
+    "7": "I2S_SPK_DOUT",
+    "8": "SD_CS",
+    "9": "SD_DET",
+    "10": "LCD_SCL",
+    "11": "LCD_SDA",
+    "12": "AMP_SD_MODE",
+    "13": "USB_DM",
+    "14": "USB_DP",
+    "15": "I2S_MIC_CLK",
+    "16": "CHG_STAT",
+    "17": "I2C_SDA",
+    "18": "I2C_SCL",
+    "19": "IMU_INT1",
+    "20": "SD_SPI_MOSI",
+    "21": "SD_SPI_MISO",
+    "22": "SD_SPI_CLK",
+    "23": "LCD_CS",
+    "24": "CHG_EN",
+    "25": "LED_PWR",
+    "26": "VBUS_SENSE",
+    "27": "MCU_BOOT",
+    "28": "LCD_DC",
+    "29": "LCD_RST",
+    "30": "LCD_BL",
+    "31": "BTN_VOICE",
+    "32": "BTN_USER1",
+    "33": "BTN_USER2",
+    "34": "LED_STAT",
+    "35": "VBUS_BOOST_EN",
+    "38": "I2S_MIC_SD2",
+    "39": "I2S_MIC_SD1",
+    "40": "GND",
+    "41": "GND"
+   },
+   "nc": [
+    "36",
+    "37"
+   ],
+   "lcsc": "C2913202",
+   "package": "MODULE-SMD_ESP32-S3-WROOM-1"
+  },
+  {
+   "ref": "R14",
+   "mpn": "0402WGF1002TCE",
+   "role": "MCU_EN pull-up to 3V3 (10k)",
+   "pins": {
+    "1": "3V3",
+    "2": "MCU_EN"
+   },
+   "value": "10k",
+   "package": "0402"
+  },
+  {
+   "ref": "R15",
+   "mpn": "0402WGF1002TCE",
+   "role": "MCU_BOOT (IO0) pull-up to 3V3 (10k)",
+   "pins": {
+    "1": "3V3",
+    "2": "MCU_BOOT"
+   },
+   "value": "10k",
+   "package": "0402"
+  },
+  {
+   "ref": "C13",
+   "mpn": "CL05A105KA5NQNC",
+   "role": "MCU_EN reset delay capacitor (1uF to GND)",
+   "pins": {
+    "1": "MCU_EN",
+    "2": "GND"
+   },
+   "value": "1uF",
+   "package": "0402"
+  },
+  {
+   "ref": "C14",
+   "mpn": "CL10A106KP8NNNC",
+   "role": "Bulk 3V3 decoupling capacitor for MCU (10uF)",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "value": "10uF",
+   "package": "0603"
+  },
+  {
+   "ref": "C15",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "High frequency 3V3 bypass capacitor (100nF)",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "value": "100nF",
+   "package": "0402"
+  }
+ ],
+ "qa": [
+  {
+   "item": "CHIP_PU Reset Timing",
+   "formula": "t_RC = R14 * C13 = 10k * 1uF = 10 ms",
+   "result": "Meets ESP32-S3 requirement of t_delay > 50 us after VDD reaches 2.8V.",
+   "source": "Espressif ESP32-S3 Hardware Design Guidelines Section 2.4",
+   "pass": true
+  },
+  {
+   "item": "Strapping Pin IO0 Pull-up",
+   "formula": "R_pullup = 10k to 3V3",
+   "result": "Guarantees logic HIGH at reset for SPI Boot mode while allowing SW2 to pull LOW for download mode.",
+   "source": "Espressif ESP32-S3 Datasheet Section 2.6 Strapping Pins",
+   "pass": true
+  }
+ ]
+}

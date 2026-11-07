@@ -1,0 +1,78 @@
+{
+ "id": "12_STATUS_LEDS",
+ "title": "12 STATUS AND POWER INDICATOR LEDS",
+ "status": "draft",
+ "purpose": "Green and Blue surface-mount 0603 status indicator LEDs with 1k current-limiting resistors for power state and BLE/DSP activity indication.",
+ "ports": [
+  "LED_PWR",
+  "LED_STAT",
+  "GND"
+ ],
+ "qa": [
+  {
+   "item": "LED Forward Current Limiting",
+   "formula": "I_f = (V_OH - V_f) / R_limit = (3.3V - 2.8V) / 1000 = 0.5 mA",
+   "result": "Provides crisp, low-power indication well below ESP32-S3 maximum GPIO current rating (40mA).",
+   "source": "Kingbright KT-0603 Datasheet Table 1",
+   "pass": true
+  }
+ ],
+ "parts": [
+  {
+   "ref": "LED1",
+   "mpn": "KT-0603G",
+   "role": "Green Power / Battery Charging Status LED",
+   "pins": {
+    "1": "GND",
+    "2": "NET_LED_PWR_A"
+   }
+  },
+  {
+   "ref": "LED2",
+   "mpn": "KT-0603B",
+   "role": "Blue Bluetooth / DSP Processing Status LED",
+   "pins": {
+    "1": "GND",
+    "2": "NET_LED_STAT_A"
+   }
+  },
+  {
+   "ref": "R28",
+   "mpn": "0402WGF1001TCE",
+   "role": "1k 0402 Current Limiting Resistor for LED1",
+   "pins": {
+    "1": "LED_PWR",
+    "2": "NET_LED_PWR_A"
+   }
+  },
+  {
+   "ref": "R29",
+   "mpn": "0402WGF1001TCE",
+   "role": "1k 0402 Current Limiting Resistor for LED2",
+   "pins": {
+    "1": "LED_STAT",
+    "2": "NET_LED_STAT_A"
+   }
+  }
+ ],
+ "nets": {
+  "GND": [
+   "LED1.1",
+   "LED2.1"
+  ],
+  "LED_PWR": [
+   "R28.1"
+  ],
+  "NET_LED_PWR_A": [
+   "R28.2",
+   "LED1.2"
+  ],
+  "LED_STAT": [
+   "R29.1"
+  ],
+  "NET_LED_STAT_A": [
+   "R29.2",
+   "LED2.2"
+  ]
+ }
+}

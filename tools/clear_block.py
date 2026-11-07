@@ -21,7 +21,7 @@ const REFS=%s, B=%s; const inb=(x,y)=>x>=B[0]&&x<=B[1]&&y>=B[2]&&y<=B[3]; const 
 const cs=await eda.sch_PrimitiveComponent.get(await eda.sch_PrimitiveComponent.getAllPrimitiveId());
 const pc=cs.filter(c=>REFS.includes(c.getState_Designator())).map(c=>c.getState_PrimitiveId()); if(pc.length) await eda.sch_PrimitiveComponent.delete(pc); out.parts=pc.length;
 try{const ws=await eda.sch_PrimitiveWire.get(await eda.sch_PrimitiveWire.getAllPrimitiveId());
- const d=ws.filter(w=>{const l=w.getState_Line().flat(); return inb(l[0],l[1]);}).map(w=>w.getState_PrimitiveId()); if(d.length) await eda.sch_PrimitiveWire.delete(d); out.wires=d.length;}catch(e){out.wires="ERR "+e;}
+ const d=ws.filter(w=>{const raw=w.getState_Line(); if(!raw) return false; const l=Array.isArray(raw[0])?raw.flat():raw; return inb(l[0],l[1]);}).map(w=>w.getState_PrimitiveId()); if(d.length) await eda.sch_PrimitiveWire.delete(d); out.wires=d.length;}catch(e){out.wires="ERR "+e;}
 try{const ts=await eda.sch_PrimitiveText.get(await eda.sch_PrimitiveText.getAllPrimitiveId());
  const d=ts.filter(t=>inb(t.getState_X(),t.getState_Y())).map(t=>t.getState_PrimitiveId()); if(d.length) await eda.sch_PrimitiveText.delete(d); out.texts=d.length;}catch(e){out.texts="ERR "+e;}
 try{const rs=await eda.sch_PrimitiveRectangle.get(await eda.sch_PrimitiveRectangle.getAllPrimitiveId());
@@ -31,7 +31,7 @@ for p in [p for p in ops.pending(proj) if p["target"] == bid]:
     ops.resolve_pending(proj, p["id"], "clear_block started")
 with ops.write_op(proj, "clear", bid, force_unlock="--force-unlock" in sys.argv) as rec:
     rec["dirty"] = True
-    print(check(ex(js)))
+    print(check(ex(js, window_id=P.get("window_id"))))
     st["blocks"].pop(bid, None)
     os.makedirs(os.path.dirname(st_file), exist_ok=True)
     with open(st_file, "w") as h: json.dump(st, h, indent=1)

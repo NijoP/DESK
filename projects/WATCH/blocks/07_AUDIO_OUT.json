@@ -1,0 +1,169 @@
+{
+ "id": "07_AUDIO_OUT",
+ "title": "07 STEREO CLASS-D AUDIO OUTPUT",
+ "status": "draft",
+ "purpose": "Stereo Class-D audio amplifier subsystem utilizing two MAX98357A ICs powered from VSYS. U6 drives Left Channel transducer via J3, U7 drives Right Channel transducer via J4. Configured for 12dB gain with integrated thermal and overcurrent protection.",
+ "ports": [
+  "VSYS",
+  "GND",
+  "I2S_SPK_BCLK",
+  "I2S_SPK_WS",
+  "I2S_SPK_DOUT",
+  "AMP_SD_MODE"
+ ],
+ "parts": [
+  {
+   "ref": "U6",
+   "mpn": "MAX98357AETE+T",
+   "role": "Class-D Audio Amplifier Left Channel",
+   "pins": {
+    "1": "I2S_SPK_DOUT",
+    "2": "GND",
+    "3": "GND",
+    "4": "AMP_SD_MODE",
+    "7": "VSYS",
+    "8": "VSYS",
+    "9": "SPK_L_P",
+    "10": "SPK_L_N",
+    "11": "GND",
+    "14": "I2S_SPK_WS",
+    "15": "GND",
+    "16": "I2S_SPK_BCLK",
+    "17": "GND"
+   },
+   "nc": [
+    "5",
+    "6",
+    "12",
+    "13"
+   ],
+   "lcsc": "C910544",
+   "package": "TQFN-16"
+  },
+  {
+   "ref": "U7",
+   "mpn": "MAX98357AETE+T",
+   "role": "Class-D Audio Amplifier Right Channel",
+   "pins": {
+    "1": "I2S_SPK_DOUT",
+    "2": "GND",
+    "3": "GND",
+    "4": "AMP_SD_MODE",
+    "7": "VSYS",
+    "8": "VSYS",
+    "9": "SPK_R_P",
+    "10": "SPK_R_N",
+    "11": "GND",
+    "14": "I2S_SPK_WS",
+    "15": "GND",
+    "16": "I2S_SPK_BCLK",
+    "17": "GND"
+   },
+   "nc": [
+    "5",
+    "6",
+    "12",
+    "13"
+   ],
+   "lcsc": "C910544",
+   "package": "TQFN-16"
+  },
+  {
+   "ref": "J3",
+   "mpn": "SM02B-SRSS-TB",
+   "role": "Left Transducer 2-pin connector (Ole Wolff OWS-142550TA-4)",
+   "pins": {
+    "1": "SPK_L_P",
+    "2": "SPK_L_N",
+    "3": "GND",
+    "4": "GND"
+   },
+   "lcsc": "C160402",
+   "package": "CONN-SMD_SM02B-SRSS-TB"
+  },
+  {
+   "ref": "J4",
+   "mpn": "SM02B-SRSS-TB",
+   "role": "Right Transducer 2-pin connector (Ole Wolff OWS-142550TA-4)",
+   "pins": {
+    "1": "SPK_R_P",
+    "2": "SPK_R_N",
+    "3": "GND",
+    "4": "GND"
+   },
+   "lcsc": "C160402",
+   "package": "CONN-SMD_SM02B-SRSS-TB"
+  },
+  {
+   "ref": "C19",
+   "mpn": "CL10A106KP8NNNC",
+   "role": "10uF bulk decoupling capacitor on U6 VDD",
+   "pins": {
+    "1": "VSYS",
+    "2": "GND"
+   },
+   "value": "10uF",
+   "package": "0603"
+  },
+  {
+   "ref": "C20",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF high-frequency bypass capacitor on U6 VDD",
+   "pins": {
+    "1": "VSYS",
+    "2": "GND"
+   },
+   "value": "100nF",
+   "package": "0402"
+  },
+  {
+   "ref": "C21",
+   "mpn": "CL10A106KP8NNNC",
+   "role": "10uF bulk decoupling capacitor on U7 VDD",
+   "pins": {
+    "1": "VSYS",
+    "2": "GND"
+   },
+   "value": "10uF",
+   "package": "0603"
+  },
+  {
+   "ref": "C22",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF high-frequency bypass capacitor on U7 VDD",
+   "pins": {
+    "1": "VSYS",
+    "2": "GND"
+   },
+   "value": "100nF",
+   "package": "0402"
+  },
+  {
+   "ref": "R16",
+   "mpn": "0402WGF1003TCE",
+   "role": "100k pull-down on AMP_SD_MODE line",
+   "pins": {
+    "1": "AMP_SD_MODE",
+    "2": "GND"
+   },
+   "value": "100k",
+   "package": "0402"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Class-D Speaker Power Capability",
+   "formula": "P_out = (V_RMS)^2 / R_load = (0.707 * 4.2)^2 / 4 = 2.2W peak",
+   "result": "Meets 2.0W continuous / peak rating of Ole Wolff 4-ohm transducers with <10% THD+N.",
+   "source": "Maxim Integrated MAX98357A Datasheet Section 9.2",
+   "pass": true
+  },
+  {
+   "item": "Gain Slot Selection",
+   "formula": "GAIN_SLOT connected to GND -> 12 dB Gain",
+   "result": "Configures both Left and Right channels for optimal dynamic range from ESP32-S3 digital I2S audio stream.",
+   "source": "Maxim Integrated MAX98357A Datasheet Table 1",
+   "pass": true
+  }
+ ]
+}

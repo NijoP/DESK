@@ -1,0 +1,183 @@
+{
+ "id": "11_BUTTONS",
+ "title": "11 PHYSICAL BUTTON INTERFACES",
+ "status": "draft",
+ "purpose": "Five momentary tactile switches for Hardware Reset, Firmware Boot Mode, Voice Push-to-Talk, and two configurable user interaction buttons with RC debouncing.",
+ "ports": [
+  "3V3",
+  "GND",
+  "MCU_EN",
+  "MCU_BOOT",
+  "BTN_VOICE",
+  "BTN_USER1",
+  "BTN_USER2"
+ ],
+ "qa": [
+  {
+   "item": "Hardware Debounce Low-Pass Filter",
+   "formula": "t_filter = R_pu * C_debounce = 10k * 100nF = 1.0 ms",
+   "result": "Filters tactile switch contact bounce (typically < 5ms) while providing snappy human response.",
+   "source": "Galloway, Contact Bounce and Hardware Debouncing Techniques, EDN",
+   "pass": true
+  }
+ ],
+ "parts": [
+  {
+   "ref": "SW1",
+   "mpn": "TS-1187A-B-A-B",
+   "role": "Hardware Reset Tactile Switch",
+   "pins": {
+    "1": "MCU_EN",
+    "2": "MCU_EN",
+    "3": "GND",
+    "4": "GND"
+   }
+  },
+  {
+   "ref": "SW2",
+   "mpn": "TS-1187A-B-A-B",
+   "role": "Firmware Download / Boot Select Switch",
+   "pins": {
+    "1": "MCU_BOOT",
+    "2": "MCU_BOOT",
+    "3": "GND",
+    "4": "GND"
+   }
+  },
+  {
+   "ref": "SW3",
+   "mpn": "TS-1187A-B-A-B",
+   "role": "Push-to-Talk / Voice Capture Switch",
+   "pins": {
+    "1": "BTN_VOICE",
+    "2": "BTN_VOICE",
+    "3": "GND",
+    "4": "GND"
+   }
+  },
+  {
+   "ref": "SW4",
+   "mpn": "TS-1187A-B-A-B",
+   "role": "User Configurable Button 1",
+   "pins": {
+    "1": "BTN_USER1",
+    "2": "BTN_USER1",
+    "3": "GND",
+    "4": "GND"
+   }
+  },
+  {
+   "ref": "SW5",
+   "mpn": "TS-1187A-B-A-B",
+   "role": "User Configurable Button 2",
+   "pins": {
+    "1": "BTN_USER2",
+    "2": "BTN_USER2",
+    "3": "GND",
+    "4": "GND"
+   }
+  },
+  {
+   "ref": "R25",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k 0402 BTN_VOICE pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "BTN_VOICE"
+   }
+  },
+  {
+   "ref": "R26",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k 0402 BTN_USER1 pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "BTN_USER1"
+   }
+  },
+  {
+   "ref": "R27",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k 0402 BTN_USER2 pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "BTN_USER2"
+   }
+  },
+  {
+   "ref": "C29",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF 0402 BTN_VOICE debounce capacitor",
+   "pins": {
+    "1": "BTN_VOICE",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "C30",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF 0402 BTN_USER1 debounce capacitor",
+   "pins": {
+    "1": "BTN_USER1",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "C31",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF 0402 BTN_USER2 debounce capacitor",
+   "pins": {
+    "1": "BTN_USER2",
+    "2": "GND"
+   }
+  }
+ ],
+ "nets": {
+  "3V3": [
+   "R25.1",
+   "R26.1",
+   "R27.1"
+  ],
+  "GND": [
+   "SW1.3",
+   "SW1.4",
+   "SW2.3",
+   "SW2.4",
+   "SW3.3",
+   "SW3.4",
+   "SW4.3",
+   "SW4.4",
+   "SW5.3",
+   "SW5.4",
+   "C29.2",
+   "C30.2",
+   "C31.2"
+  ],
+  "MCU_EN": [
+   "SW1.1",
+   "SW1.2"
+  ],
+  "MCU_BOOT": [
+   "SW2.1",
+   "SW2.2"
+  ],
+  "BTN_VOICE": [
+   "SW3.1",
+   "SW3.2",
+   "R25.2",
+   "C29.1"
+  ],
+  "BTN_USER1": [
+   "SW4.1",
+   "SW4.2",
+   "R26.2",
+   "C30.1"
+  ],
+  "BTN_USER2": [
+   "SW5.1",
+   "SW5.2",
+   "R27.2",
+   "C31.1"
+  ]
+ }
+}

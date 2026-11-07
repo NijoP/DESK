@@ -1,0 +1,137 @@
+{
+ "id": "09_STORAGE",
+ "title": "09 MICROSD STORAGE INTERFACE",
+ "status": "draft",
+ "purpose": "MicroSD TF card socket with SPI bus interface, card-detection line, pull-up resistors and bulk power decoupling.",
+ "ports": [
+  "3V3",
+  "GND",
+  "SD_SPI_MOSI",
+  "SD_SPI_MISO",
+  "SD_SPI_CLK",
+  "SD_CS",
+  "SD_DET"
+ ],
+ "qa": [
+  {
+   "item": "SPI Bus Pull-up Termination",
+   "formula": "R_pu = 10k to 3V3 on CS, MISO, DET",
+   "result": "Provides default high-state on CS and prevents floating inputs during card removal.",
+   "source": "SD Specifications Part 1 Physical Layer Simplified Specification Version 9.00 Section 3.6",
+   "pass": true
+  },
+  {
+   "item": "Power Supply Decoupling",
+   "formula": "C_bypass = 10uF || 0.1uF on VDD",
+   "result": "Absorbs inrush current transients during card hot-insertion.",
+   "source": "SD Specifications Part 1 Physical Layer Section 6.4.1",
+   "pass": true
+  }
+ ],
+ "parts": [
+  {
+   "ref": "J5",
+   "mpn": "TF-01A_C91145",
+   "role": "Push-push MicroSD Card Socket with Detect Switch",
+   "nc": [
+    "1",
+    "8"
+   ],
+   "pins": {
+    "2": "SD_CS",
+    "3": "SD_SPI_MOSI",
+    "4": "3V3",
+    "5": "SD_SPI_CLK",
+    "6": "GND",
+    "7": "SD_SPI_MISO",
+    "9": "SD_DET",
+    "10": "GND",
+    "11": "GND",
+    "12": "GND",
+    "13": "GND"
+   }
+  },
+  {
+   "ref": "C25",
+   "mpn": "CL10A106KP8NNNC",
+   "role": "10uF 0603 VDD bulk decoupling capacitor",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "C26",
+   "mpn": "CL05B104KO5NNNC",
+   "role": "100nF 0402 VDD high-frequency decoupling capacitor",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   }
+  },
+  {
+   "ref": "R19",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k 0402 SD_CS pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "SD_CS"
+   }
+  },
+  {
+   "ref": "R20",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k 0402 SD_MISO pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "SD_SPI_MISO"
+   }
+  },
+  {
+   "ref": "R21",
+   "mpn": "0402WGF1002TCE",
+   "role": "10k 0402 SD_DET pull-up resistor",
+   "pins": {
+    "1": "3V3",
+    "2": "SD_DET"
+   }
+  }
+ ],
+ "nets": {
+  "3V3": [
+   "J5.4",
+   "C25.1",
+   "C26.1",
+   "R19.1",
+   "R20.1",
+   "R21.1"
+  ],
+  "GND": [
+   "J5.6",
+   "J5.10",
+   "J5.11",
+   "J5.12",
+   "J5.13",
+   "C25.2",
+   "C26.2"
+  ],
+  "SD_CS": [
+   "J5.2",
+   "R19.2"
+  ],
+  "SD_SPI_MOSI": [
+   "J5.3"
+  ],
+  "SD_SPI_CLK": [
+   "J5.5"
+  ],
+  "SD_SPI_MISO": [
+   "J5.7",
+   "R20.2"
+  ],
+  "SD_DET": [
+   "J5.9",
+   "R21.2"
+  ]
+ }
+}

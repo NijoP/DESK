@@ -159,7 +159,7 @@ def check(dump, plan, blocks=()):
                 if g > R["esd_max_mm"]: Wn.append(f"{p.ref}: ESD for {c.ref}/{net} is {g:.1f} mm away (> {R['esd_max_mm']})")
 
     # ---- sensors vs heat, heat spreading, RF at edge
-    heat = [P[r] for r in roles.get("heat", []) if r in P] + [p for p in P.values() if p.ref.startswith("L") and p.ref not in roles.get("heat", []) and roles.get("inductors_are_heat", True)]
+    heat = [P[r] for r in roles.get("heat", []) if r in P] + [p for p in P.values() if re.match(r"^L\d", p.ref) and p.ref not in roles.get("heat", []) and roles.get("inductors_are_heat", True)]
     for s in [P[r] for r in roles.get("sensors", []) if r in P]:
         for h in heat:
             g = _gap(s.body, h.body)

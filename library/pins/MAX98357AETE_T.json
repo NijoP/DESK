@@ -1,0 +1,70 @@
+[
+{
+"num": "1",
+"name": "DIN"
+},
+{
+"num": "2",
+"name": "GAIN_SLOT"
+},
+{
+"num": "3",
+"name": "GND"
+},
+{
+"num": "4",
+"name": "SD_MODE#"
+},
+{
+"num": "5",
+"name": "N.C."
+},
+{
+"num": "6",
+"name": "N.C."
+},
+{
+"num": "7",
+"name": "VDD"
+},
+{
+"num": "8",
+"name": "VDD"
+},
+{
+"num": "9",
+"name": "OUTP"
+},
+{
+"num": "10",
+"name": "OUTN"
+},
+{
+"num": "11",
+"name": "GND"
+},
+{
+"num": "12",
+"name": "N.C."
+},
+{
+"num": "13",
+"name": "N.C."
+},
+{
+"num": "14",
+"name": "LRCLK"
+},
+{
+"num": "15",
+"name": "GND"
+},
+{
+"num": "16",
+"name": "BCLK"
+},
+{
+"num": "17",
+"name": "EP"
+}
+]

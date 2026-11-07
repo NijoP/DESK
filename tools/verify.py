@@ -18,7 +18,7 @@ return {nl,parts};'''
 
 
 def read_sheet(P):
-    return check(ex(guard(P["sheet_uuid"]) + READ_JS, timeout=600))
+    return check(ex(guard(P["sheet_uuid"]) + READ_JS, timeout=600, window_id=P.get("window_id")))
 
 
 if __name__ == "__main__":

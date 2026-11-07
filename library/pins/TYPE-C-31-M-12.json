@@ -1,0 +1,66 @@
+[
+{
+"num": "A1B12",
+"name": "GND"
+},
+{
+"num": "B1A12",
+"name": "GND"
+},
+{
+"num": "A4B9",
+"name": "VBUS"
+},
+{
+"num": "B4A9",
+"name": "VBUS"
+},
+{
+"num": "A5",
+"name": "CC1"
+},
+{
+"num": "B5",
+"name": "CC2"
+},
+{
+"num": "A6",
+"name": "DP1"
+},
+{
+"num": "B6",
+"name": "DP2"
+},
+{
+"num": "A7",
+"name": "DN1"
+},
+{
+"num": "B7",
+"name": "DN2"
+},
+{
+"num": "A8",
+"name": "SBU1"
+},
+{
+"num": "B8",
+"name": "SBU2"
+},
+{
+"num": "1",
+"name": "EH"
+},
+{
+"num": "2",
+"name": "EH"
+},
+{
+"num": "3",
+"name": "EH"
+},
+{
+"num": "4",
+"name": "EH"
+}
+]
