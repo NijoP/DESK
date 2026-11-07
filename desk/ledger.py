@@ -21,12 +21,24 @@ def path(project):
     return os.path.join(project, "LEDGER.jsonl")
 
 
+_LEDGER_CACHE = {}  # path -> (mtime, size, entries)
+
 def read(project):
     p = path(project)
     if not os.path.exists(p):
         return []
-    with open(p, encoding="utf-8") as f:
-        return [json.loads(ln) for ln in f if ln.strip()]
+    try:
+        st = os.stat(p)
+        cached = _LEDGER_CACHE.get(p)
+        if cached and cached[0] == st.st_mtime and cached[1] == st.st_size:
+            return list(cached[2])
+        with open(p, encoding="utf-8") as f:
+            entries = [json.loads(ln) for ln in f if ln.strip()]
+        _LEDGER_CACHE[p] = (st.st_mtime, st.st_size, entries)
+        return entries
+    except Exception:
+        with open(p, encoding="utf-8") as f:
+            return [json.loads(ln) for ln in f if ln.strip()]
 
 
 def block_hash(block, lib=None):
@@ -40,19 +52,36 @@ def block_hash(block, lib=None):
     return hashlib.sha1(json.dumps(core, sort_keys=True).encode()).hexdigest()[:12]
 
 
+def _count_entries(project):
+    p = path(project)
+    if not os.path.exists(p): return 0
+    cached = _LEDGER_CACHE.get(p)
+    if cached: return len(cached[2])
+    with open(p, "rb") as f:
+        return sum(1 for ln in f if ln.strip())
+
 def add(project, type_, text, block=None, source=None, spec_hash=None, refs=None):
     if type_ not in TYPES:
         raise SystemExit(f"ledger type must be one of {TYPES}")
     if type_ in ("decision", "fact", "assumption") and not source:
         raise SystemExit(f"a ledger '{type_}' needs --source (datasheet page, client mail, calculation, ...)")
-    entries = read(project)
-    e = {"id": f"L-{len(entries) + 1:04d}", "ts": datetime.datetime.now().isoformat(timespec="seconds"),
+    n_entries = _count_entries(project)
+    e = {"id": f"L-{n_entries + 1:04d}", "ts": datetime.datetime.now().isoformat(timespec="seconds"),
          "type": type_, "text": text}
     for k, v in (("block", block), ("source", source), ("spec_hash", spec_hash), ("refs", refs)):
         if v:
             e[k] = v
-    with open(path(project), "a", encoding="utf-8") as f:
+    p = path(project)
+    with open(p, "a", encoding="utf-8") as f:
         f.write(json.dumps(e, ensure_ascii=False) + "\n")
+    # Invalidate or update cache
+    if p in _LEDGER_CACHE:
+        try:
+            st = os.stat(p)
+            _LEDGER_CACHE[p][2].append(e)
+            _LEDGER_CACHE[p] = (st.st_mtime, st.st_size, _LEDGER_CACHE[p][2])
+        except Exception:
+            _LEDGER_CACHE.pop(p, None)
     return e
 
 

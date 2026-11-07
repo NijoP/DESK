@@ -211,6 +211,10 @@ class NativeMazeRouter:
         path.reverse()
         return path
 
+BOUNDARY_RX = re.compile(r"\(boundary\s*\(path[^\)]+\)\s*\)")
+RULE_WIDTH_RX = re.compile(r"\(rule\s*\(width\s+[\d\.]+\)\)")
+CLASS_BLOCK_RX = re.compile(r"\(class\s+([^\s]+)\s+'([^']+)'\s*\(rule\s*\(width\s+[\d\.]+\)\s*\(clearance\s+[\d\.]+\)\)", re.MULTILINE)
+
 class DSNTuningEngine:
     """Tuning engine for EasyEDA DSN export: fixes boundaries, fine-pitch clearances, and class widths."""
 
@@ -225,10 +229,10 @@ class DSNTuningEngine:
         # 1. Update boundary to match true board dimension rectangle
         new_boundary = (f"(boundary\n    (path signal 0 0 0 0 {W_mil:.2f} {H_mil:.2f} "
                         f"{W_mil:.2f} {H_mil:.2f} 0 0 0)\n  )")
-        content = re.sub(r"\(boundary\s*\(path[^\)]+\)\s*\)", new_boundary, dsn_content)
+        content = BOUNDARY_RX.sub(new_boundary, dsn_content, count=1)
 
         # 2. Tune default track width and clearance for fine pitch escape
-        content = re.sub(r"\(rule\s*\(width\s+[\d\.]+\)\)", f"(rule (width {fine_pitch_width_mil}))", content)
+        content = RULE_WIDTH_RX.sub(f"(rule (width {fine_pitch_width_mil}))", content)
 
         # 3. Inject power net class widths
         def power_repl(m):
@@ -239,10 +243,7 @@ class DSNTuningEngine:
                     f"        (width {w})\n"
                     f"        (clearance {fine_pitch_clearance_mil}))")
 
-        pattern = re.compile(r"\(class\s+([^\s]+)\s+'([^']+)'\s*\n\s*\(rule\s*\n\s*\(width\s+[\d\.]+\)\s*\n\s*\(clearance\s+[\d\.]+\)\)", re.MULTILINE)
-        content = pattern.sub(power_repl, content)
-
-        return content
+        return CLASS_BLOCK_RX.sub(power_repl, content)
 
 class RoutingPlanGenerator:
     """Generates a complete ordered RoutingPlan with stage allocations and net constraints."""

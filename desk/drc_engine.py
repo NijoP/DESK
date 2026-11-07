@@ -115,12 +115,50 @@ class FailureDiagnoser:
         return categories
 
 class RecoveryPlanner:
-    """Designs targeted rework plans based on DRC feedback."""
+    """Designs targeted rework plans based on DRC feedback and verified legal geometries."""
+
+    @staticmethod
+    def find_legal_via_candidate(origin: Tuple[float, float],
+                                 board_bounds_mil: Tuple[float, float] = (2000.0, 2000.0),
+                                 obstacles: Optional[List[Tuple[float, float, float]]] = None,
+                                 via_dia_mil: float = 24.0,
+                                 clearance_mil: float = 6.0) -> Optional[Tuple[float, float]]:
+        """Calculates a verified legal through-via location in 8 radial candidate directions."""
+        obstacles = obstacles or []
+        ox, oy = origin
+        req_dist = (via_dia_mil / 2.0) + clearance_mil + 10.0  # Safe offset from pad center
+        max_w, max_h = board_bounds_mil
+
+        # Test candidate offsets (cardinal + diagonal)
+        angles = [0.0, math.pi / 2, math.pi, 3 * math.pi / 2,
+                  math.pi / 4, 3 * math.pi / 4, 5 * math.pi / 4, 7 * math.pi / 4]
+
+        for a in angles:
+            cand_x = round(ox + req_dist * math.cos(a), 2)
+            cand_y = round(oy + req_dist * math.sin(a), 2)
+
+            # 1. Board bounds check
+            if cand_x < (via_dia_mil / 2.0) or cand_x > (max_w - via_dia_mil / 2.0): continue
+            if cand_y < (via_dia_mil / 2.0) or cand_y > (max_h - via_dia_mil / 2.0): continue
+
+            # 2. Obstacle clearance check
+            collision = False
+            for obs_x, obs_y, obs_r in obstacles:
+                d = math.hypot(cand_x - obs_x, cand_y - obs_y)
+                if d < (obs_r + via_dia_mil / 2.0 + clearance_mil):
+                    collision = True
+                    break
+            if not collision:
+                return (cand_x, cand_y)
+
+        return None
 
     @staticmethod
     def plan_recovery(iteration: int,
                       violations: List[DRCViolation],
-                      net_priorities: Optional[Dict[str, int]] = None) -> RoutingRecoveryPlan:
+                      net_priorities: Optional[Dict[str, int]] = None,
+                      board_bounds_mil: Tuple[float, float] = (2000.0, 2000.0),
+                      obstacles: Optional[List[Tuple[float, float, float]]] = None) -> RoutingRecoveryPlan:
         failed_nets = sorted(list(FailureDiagnoser.identify_failed_nets(violations)))
         tracks_to_rip = []
         layer_shifts = {}
@@ -128,36 +166,35 @@ class RecoveryPlanner:
 
         for v in violations:
             desc = f"{v.rule_name} {v.error_type}".lower()
-            # If there is a short or clearance conflict, rip-up the lower-priority track
             if "clearance" in desc or "short" in desc:
-                # Rip up conflicting segment if primitiveId exists
                 if v.obj1_type in ("TRACK", "LINE") and v.obj1_id:
                     tracks_to_rip.append(v.obj1_id)
                 elif v.obj2_type in ("TRACK", "LINE") and v.obj2_id:
                     tracks_to_rip.append(v.obj2_id)
 
-                # Suggest layer shift for the failed net
                 conflict_net = v.obj1_net or v.obj2_net
                 if conflict_net:
                     cur_layer = 1 if "top" in v.layer.lower() else 2
                     layer_shifts[conflict_net] = 2 if cur_layer == 1 else 1
 
-            # If unconnected pad, suggest escape via
             if "unconnected" in desc and v.location != (0.0, 0.0):
-                inserted_vias.append({
-                    "net": v.obj1_net or v.obj2_net,
-                    "x_mil": v.location[0] + 20.0,  # 20 mil offset for escape via
-                    "y_mil": v.location[1],
-                    "diameter_mil": 24.0,
-                    "drill_mil": 12.0
-                })
+                target_net = v.obj1_net or v.obj2_net
+                legal_via_pos = RecoveryPlanner.find_legal_via_candidate(
+                    v.location, board_bounds_mil=board_bounds_mil, obstacles=obstacles
+                )
+                if legal_via_pos is not None:
+                    inserted_vias.append({
+                        "net": target_net,
+                        "x_mil": legal_via_pos[0],
+                        "y_mil": legal_via_pos[1],
+                        "diameter_mil": 24.0,
+                        "drill_mil": 12.0
+                    })
 
-        # Deduplicate
         tracks_to_rip = sorted(list(set(tracks_to_rip)))
-
         rationale = (f"Iteration {iteration}: Targeting {len(failed_nets)} failed nets. "
                      f"Selective rip-up of {len(tracks_to_rip)} conflicting tracks; "
-                     f"planning {len(layer_shifts)} layer transitions and {len(inserted_vias)} escape vias.")
+                     f"planning {len(layer_shifts)} layer transitions and {len(inserted_vias)} verified legal escape vias.")
 
         return RoutingRecoveryPlan(
             iteration=iteration,

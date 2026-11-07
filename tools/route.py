@@ -23,9 +23,17 @@ if not args or args[0].startswith("-"):
     raise SystemExit(__doc__)
 
 proj = args[0]
-passes = args[args.index("--passes") + 1] if "--passes" in args else "30"
-dry = "--dry" in args
+adaptive = "--adaptive" in args
 recovery = "--recovery" in args
+dry = "--dry" in args
+
+# Adaptive pass budget
+if "--passes" in args:
+    passes = args[args.index("--passes") + 1]
+elif adaptive:
+    passes = "20" if recovery else "12"
+else:
+    passes = "30"
 
 P = load_project(proj)
 dump_path = os.path.join(proj, "state", "pcb_dump.json")
@@ -95,7 +103,7 @@ p = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
 with open(os.path.join(wd, "freerouting.log"), "w", encoding="utf-8") as f:
     f.write(p.stdout + p.stderr)
 
-if p.returncode != 0 or not os.path.exists(ses):
+if p.returncode != 0 or not os.path.exists(ses) or os.path.getsize(ses) == 0:
     raise SystemExit(f"STOP: Freerouting failed (rc {p.returncode}); see {wd}/freerouting.log")
 
 dur = time.time() - t0

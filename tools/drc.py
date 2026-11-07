@@ -32,13 +32,20 @@ def run_live_drc():
     raw = check(ex(js, timeout=600, window_id=P.get("window_id")))
     return DRCParser.parse(raw)
 
+dump_path = os.path.join(proj, "state", "pcb_dump.json")
+dump = json.load(open(dump_path, encoding="utf-8")) if os.path.exists(dump_path) else {}
+plan_path = os.path.join(proj, "placement.json")
+plan = json.load(open(plan_path, encoding="utf-8")) if os.path.exists(plan_path) else {"board_mm": [50.0, 50.0]}
+board_bounds_mil = (plan.get("board_mm", [50.0, 50.0])[0] * 39.37, plan.get("board_mm", [50.0, 50.0])[1] * 39.37)
+obstacles = [(comp.get("x", 0.0), comp.get("y", 0.0), 30.0) for comp in dump.values()]
+
 iteration = 1
 violations = run_live_drc()
 cats = FailureDiagnoser.categorize_violations(violations)
 failed_nets = FailureDiagnoser.identify_failed_nets(violations)
 
-# Save recovery plan
-rec_plan = RecoveryPlanner.plan_recovery(iteration, violations)
+# Save verified recovery plan
+rec_plan = RecoveryPlanner.plan_recovery(iteration, violations, board_bounds_mil=board_bounds_mil, obstacles=obstacles)
 os.makedirs(os.path.join(proj, "state"), exist_ok=True)
 rec_plan_path = os.path.join(proj, "state", "recovery_plan.json")
 with open(rec_plan_path, "w", encoding="utf-8") as f:
@@ -55,8 +62,9 @@ with open(rec_plan_path, "w", encoding="utf-8") as f:
 history_path = os.path.join(proj, "state", "pcb_iterations.json")
 history = json.load(open(history_path, encoding="utf-8")) if os.path.exists(history_path) else []
 
-# If converge mode requested and errors exist, run convergence loop
+# If converge mode requested and errors exist, run progress-aware convergence loop
 if converge and violations:
+    unchanged_streak = 0
     while iteration <= max_iter and violations:
         print(f"\n--- DRC Convergence Loop: Iteration {iteration}/{max_iter} ---")
         print(f"Current violations: {len(violations)} across {len(failed_nets)} nets")
@@ -67,33 +75,61 @@ if converge and violations:
         print("Executing targeted routing rework...")
         r_run = subprocess.run(cmd, capture_output=True, text=True)
 
+        if r_run.returncode != 0:
+            print(f"Routing subprocess error (rc {r_run.returncode}): {r_run.stderr.strip()[:200]}")
+            history.append({
+                "iteration": iteration,
+                "status": "ROUTING_FAILED",
+                "error": r_run.stderr.strip()[:200],
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            })
+            break
+
         # Re-run DRC
-        prev_violations = violations
+        prev_count = len(violations)
         violations = run_live_drc()
         cats = FailureDiagnoser.categorize_violations(violations)
         failed_nets = FailureDiagnoser.identify_failed_nets(violations)
+        curr_count = len(violations)
 
-        iter_rec = DRCConvergenceLoop.record_iteration(
-            iteration=iteration,
-            placement_rev="HEAD",
-            routing_plan_rev=f"REV_{iteration}",
-            attempt=None,
-            violations=violations
-        )
+        # Progress Classification
+        if curr_count == 0:
+            status = "CONVERGED"
+        elif curr_count < prev_count:
+            status = "IMPROVED"
+            unchanged_streak = 0
+        elif curr_count == prev_count:
+            status = "UNCHANGED"
+            unchanged_streak += 1
+        else:
+            status = "REGRESSED"
+            unchanged_streak = 0
+
+        print(f"Iteration {iteration} Result: {status} ({prev_count} -> {curr_count} violations)")
+
         history.append({
             "iteration": iteration,
-            "violations_count": len(violations),
+            "status": status,
+            "violations_count": curr_count,
             "failed_nets": sorted(list(failed_nets)),
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
         })
 
+        if status == "CONVERGED":
+            break
+
+        if unchanged_streak >= 2:
+            print("Convergence halted: No progress across 2 consecutive iterations. Manual inspection required.")
+            break
+
         iteration += 1
-        rec_plan = RecoveryPlanner.plan_recovery(iteration, violations)
+        rec_plan = RecoveryPlanner.plan_recovery(iteration, violations, board_bounds_mil=board_bounds_mil, obstacles=obstacles)
         with open(rec_plan_path, "w", encoding="utf-8") as f:
             json.dump({
                 "iteration": iteration,
                 "failed_nets": rec_plan.failed_nets,
                 "conflicting_tracks_to_ripup": rec_plan.conflicting_tracks_to_ripup,
+                "inserted_escape_vias": rec_plan.inserted_escape_vias,
                 "rationale": rec_plan.rationale
             }, f, indent=2)
 

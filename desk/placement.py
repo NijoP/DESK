@@ -122,14 +122,20 @@ def check(dump, plan, blocks=()):
     worst = collections.defaultdict(lambda: 9.0)
     for ra, rb in pairs:
         a, b = P[ra], P[rb]
+        body_gap = _gap(a.body, b.body)
         if a.side == b.side:
-            need = pair_clearance(a, b, R, "body"); g = _gap(a.body, b.body)
-            if g < 0: E.append(f"{ra} <-> {rb}: bodies overlap ({-g:.2f} mm)")
-            elif g < need: Wn.append(f"{ra} <-> {rb}: body gap {g:.2f} mm < {need} ({a.cls}/{b.cls})")
+            need = pair_clearance(a, b, R, "body")
+            if body_gap < 0: E.append(f"{ra} <-> {rb}: bodies overlap ({-body_gap:.2f} mm)")
+            elif body_gap < need: Wn.append(f"{ra} <-> {rb}: body gap {body_gap:.2f} mm < {need} ({a.cls}/{b.cls})")
         need = pair_clearance(a, b, R, "pad")
+        # If components are physically far apart, their pads cannot violate clearance
+        if body_gap > need + 1.5:
+            continue
         for pa in a.pads:
+            sa = pa[5]
             for pb in b.pads:
-                if not (set(pa[5]) & set(pb[5])): continue
+                sb = pb[5]
+                if sa != sb and sa != "TB" and sb != "TB": continue
                 g = _gap(pa, pb)
                 if g < worst[(ra, rb)]: worst[(ra, rb)] = g
         if worst[(ra, rb)] < need - 1e-6:

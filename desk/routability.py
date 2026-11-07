@@ -1,8 +1,8 @@
 """Routability-Aware Placement Evaluation Engine and Acceptance Gate for DESK.
 Evaluates proposed PCB placements before routing:
 - Net connectivity graph & pad-level topology
-- Multi-terminal Minimum Spanning Tree (MST) and HPWL wire length estimation
-- Planar ratsnest crossings calculation
+- Multi-terminal Minimum Spanning Tree (MST) and HPWL wire length estimation (Optimized O(V^2))
+- Planar ratsnest crossings calculation with spatial bounding-box & sweep-line pre-filtering
 - Pin escape congestion and fine-pitch fanout feasibility
 - Mechanical screw terminal and connector accessibility verification
 - Placement freeze snapshot and acceptance gate
@@ -26,8 +26,12 @@ MIL = 39.37007874
 def _segments_intersect(p1: Tuple[float, float], p2: Tuple[float, float],
                         p3: Tuple[float, float], p4: Tuple[float, float]) -> bool:
     """Returns True if line segment p1-p2 strictly intersects p3-p4."""
-    def ccw(a, b, c):
-        return (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0])
+    # Fast Bounding-Box Rejection
+    if max(p1[0], p2[0]) < min(p3[0], p4[0]) or \
+       max(p3[0], p4[0]) < min(p1[0], p2[0]) or \
+       max(p1[1], p2[1]) < min(p3[1], p4[1]) or \
+       max(p3[1], p4[1]) < min(p1[1], p2[1]):
+        return False
 
     # Ignore shared endpoints
     if (math.isclose(p1[0], p3[0]) and math.isclose(p1[1], p3[1])) or \
@@ -36,22 +40,70 @@ def _segments_intersect(p1: Tuple[float, float], p2: Tuple[float, float],
        (math.isclose(p2[0], p4[0]) and math.isclose(p2[1], p4[1])):
         return False
 
+    def ccw(a, b, c):
+        return (c[1] - a[1]) * (b[0] - a[0]) > (b[1] - a[1]) * (c[0] - a[0])
+
     return (ccw(p1, p3, p4) != ccw(p2, p3, p4)) and (ccw(p1, p2, p3) != ccw(p1, p2, p4))
 
+def _compute_fast_mst(endpoints: List[NetEndpoint]) -> Tuple[List[Tuple[NetEndpoint, NetEndpoint]], float]:
+    """Computes exact Minimum Spanning Tree in O(V^2) using distance table Prim algorithm."""
+    n = len(endpoints)
+    if n < 2:
+        return [], 0.0
+    if n == 2:
+        d = math.hypot(endpoints[0].x_mil - endpoints[1].x_mil, endpoints[0].y_mil - endpoints[1].y_mil)
+        return [(endpoints[0], endpoints[1])], d
+
+    min_dist = [float("inf")] * n
+    parent = [0] * n
+    visited = [False] * n
+    visited[0] = True
+
+    p0x = endpoints[0].x_mil
+    p0y = endpoints[0].y_mil
+    for i in range(1, n):
+        min_dist[i] = math.hypot(p0x - endpoints[i].x_mil, p0y - endpoints[i].y_mil)
+
+    edges = []
+    total_d = 0.0
+
+    for _ in range(n - 1):
+        best_d = float("inf")
+        u = -1
+        for i in range(1, n):
+            if not visited[i] and min_dist[i] < best_d:
+                best_d = min_dist[i]
+                u = i
+        if u == -1:
+            break
+        visited[u] = True
+        total_d += best_d
+        edges.append((endpoints[parent[u]], endpoints[u]))
+
+        ux = endpoints[u].x_mil
+        uy = endpoints[u].y_mil
+        for i in range(1, n):
+            if not visited[i]:
+                d = math.hypot(ux - endpoints[i].x_mil, uy - endpoints[i].y_mil)
+                if d < min_dist[i]:
+                    min_dist[i] = d
+                    parent[i] = u
+
+    return edges, total_d
+
 class RoutabilityEvaluator:
-    """Constructs NetConnectivityGraph and analyzes routing feasibility."""
+    """Constructs NetConnectivityGraph and analyzes routing feasibility with spatial acceleration."""
 
     @staticmethod
     def build_connectivity_graph(dump: Dict[str, Any],
                                  placement_target: Optional[Dict[str, List[Any]]] = None) -> NetConnectivityGraph:
-        """Extracts pad endpoints for every populated net in absolute mil coordinates."""
+        """Extracts pad endpoints for every populated net and builds exact MSTs."""
         nets: Dict[str, List[NetEndpoint]] = {}
         target = placement_target or {}
 
         for ref, comp in dump.items():
             if not ref or not isinstance(comp, dict): continue
             pads = comp.get("pads", [])
-            # If target coordinates exist in placement_target, compute transformed pad positions
             if ref in target:
                 tx_mm, ty_mm, rot_deg, side = target[ref][:4]
                 base_x_mil = tx_mm * MIL
@@ -70,7 +122,7 @@ class RoutabilityEvaluator:
 
             for p in pads:
                 net = p.get("net")
-                if not net or net.strip() == "": continue
+                if not net or not net.strip(): continue
                 dx = p.get("dx", 0.0)
                 dy = p.get("dy", 0.0)
                 px = base_x_mil + dx * cos_a - dy * sin_a
@@ -91,57 +143,49 @@ class RoutabilityEvaluator:
                     nets[net] = []
                 nets[net].append(endpoint)
 
-        # Build Minimum Spanning Tree for multi-terminal nets
         mst_trees: Dict[str, List[Tuple[NetEndpoint, NetEndpoint]]] = {}
         total_hpwl = 0.0
         total_mst = 0.0
-        mst_segments: List[Tuple[Tuple[float, float], Tuple[float, float]]] = []
+        mst_segments: List[Tuple[Tuple[float, float], Tuple[float, float], float, float, float, float]] = []
+
+        PWR_RX = re.compile(r"GND|VSS|VCC|VDD|3V3|5V|1V8|VBAT|VBUS", re.I)
 
         for net_name, endpoints in nets.items():
             if len(endpoints) < 2: continue
-            # HPWL
             xs = [ep.x_mil for ep in endpoints]
             ys = [ep.y_mil for ep in endpoints]
             hpwl = (max(xs) - min(xs)) + (max(ys) - min(ys))
             total_hpwl += hpwl
 
-            # MST using Prim's algorithm
-            unvisited = set(range(1, len(endpoints)))
-            visited = {0}
-            edges = []
-
-            while unvisited:
-                best_dist = float("inf")
-                best_edge = None
-                best_target = None
-                for u in visited:
-                    p_u = endpoints[u]
-                    for v in unvisited:
-                        p_v = endpoints[v]
-                        d = math.hypot(p_u.x_mil - p_v.x_mil, p_u.y_mil - p_v.y_mil)
-                        if d < best_dist:
-                            best_dist = d
-                            best_edge = (p_u, p_v)
-                            best_target = v
-                if best_target is not None:
-                    visited.add(best_target)
-                    unvisited.remove(best_target)
-                    edges.append(best_edge)
-                    total_mst += best_dist
-                    # Filter out power/ground nets from ratsnest crossing count to avoid noise
-                    if not re.search(r"GND|VSS|VCC|VDD|3V3|5V|1V8|VBAT|VBUS", net_name, re.I):
-                        mst_segments.append(((best_edge[0].x_mil, best_edge[0].y_mil),
-                                            (best_edge[1].x_mil, best_edge[1].y_mil)))
-
+            edges, net_mst = _compute_fast_mst(endpoints)
+            total_mst += net_mst
             mst_trees[net_name] = edges
 
-        # Compute signal ratsnest crossings
+            if not PWR_RX.search(net_name):
+                for e in edges:
+                    p1 = (e[0].x_mil, e[0].y_mil)
+                    p2 = (e[1].x_mil, e[1].y_mil)
+                    min_x = min(p1[0], p2[0])
+                    max_x = max(p1[0], p2[0])
+                    min_y = min(p1[1], p2[1])
+                    max_y = max(p1[1], p2[1])
+                    mst_segments.append((p1, p2, min_x, max_x, min_y, max_y))
+
+        # Sweep-line planar ratsnest crossing analysis with spatial x-axis sorting
+        mst_segments.sort(key=lambda s: s[2])  # Sort by min_x
         crossings = 0
         n_segs = len(mst_segments)
+
         for i in range(n_segs):
-            for j in range(i + 1, min(i + 200, n_segs)):  # capped window for fast evaluation
-                if _segments_intersect(mst_segments[i][0], mst_segments[i][1],
-                                        mst_segments[j][0], mst_segments[j][1]):
+            s1_p1, s1_p2, s1_min_x, s1_max_x, s1_min_y, s1_max_y = mst_segments[i]
+            for j in range(i + 1, min(i + 300, n_segs)):
+                s2_p1, s2_p2, s2_min_x, s2_max_x, s2_min_y, s2_max_y = mst_segments[j]
+                if s2_min_x > s1_max_x:
+                    break  # All remaining segments start to the right of s1
+                # Bounding-box y-overlap check
+                if s1_max_y < s2_min_y or s2_max_y < s1_min_y:
+                    continue
+                if _segments_intersect(s1_p1, s1_p2, s2_p1, s2_p2):
                     crossings += 1
 
         return NetConnectivityGraph(
@@ -155,17 +199,15 @@ class RoutabilityEvaluator:
     @staticmethod
     def evaluate_pin_escape_congestion(dump: Dict[str, Any],
                                        target: Optional[Dict[str, List[Any]]] = None) -> float:
-        """Scores pin escape density around high-pin-count components (0.0=free, 1.0=congested)."""
+        """Scores pin escape density around high-pin-count components."""
         congestions = []
         for ref, comp in dump.items():
             pads = comp.get("pads", [])
             if len(pads) < 8: continue
-            # Bounding box perimeter
             bb = comp.get("bbox", [-50, 50, -50, 50])
             w_mil = max(10.0, bb[1] - bb[0])
             h_mil = max(10.0, bb[3] - bb[2])
             perimeter_mil = 2 * (w_mil + h_mil)
-            # Standard pad escape requires at least 15 mil perimeter per signal pad
             signal_pads = [p for p in pads if p.get("net") and not re.search(r"GND|VSS", p.get("net"), re.I)]
             req_perimeter = len(signal_pads) * 15.0
             ratio = req_perimeter / perimeter_mil if perimeter_mil > 0 else 1.0
@@ -178,33 +220,30 @@ class RoutabilityEvaluator:
                                  target: Dict[str, List[Any]],
                                  reqs: Dict[str, ComponentRequirement],
                                  board_dims_mm: Tuple[float, float]) -> List[str]:
-        """Ensures screwdriver access to screw terminals and plug insertion to connectors are not blocked."""
+        """Ensures screwdriver access and plug insertion are not blocked using bounding-box checks."""
         errs = []
-        W, H = board_dims_mm
+        if not target: return errs
 
         for ref, cr in reqs.items():
-            if cr.electrical_role == "screw_terminal" and ref in target:
+            if ref not in target: continue
+            if cr.electrical_role == "screw_terminal":
                 x_mm, y_mm = target[ref][0], target[ref][1]
                 half_w = cr.width_mm / 2.0
                 half_h = cr.height_mm / 2.0
                 body = (x_mm - half_w, x_mm + half_w, y_mm - half_h, y_mm + half_h)
-
-                # Screwdriver and wire corridors
                 corridors = MechanicalEnvelope.get_screw_terminal_access_corridor(body)
                 sd_box = corridors["screwdriver_access"]
                 wire_box = corridors["wire_entry"]
 
-                # Check if any other component intrudes into the screwdriver or wire corridor
                 for other_ref, other_target in target.items():
                     if other_ref == ref: continue
                     ox, oy = other_target[0], other_target[1]
-                    # Check intrusion
                     if (sd_box[0] <= ox <= sd_box[1]) and (sd_box[2] <= oy <= sd_box[3]):
                         errs.append(f"{other_ref}: blocks screwdriver access corridor for screw terminal {ref}")
                     if (wire_box[0] <= ox <= wire_box[1]) and (wire_box[2] <= oy <= wire_box[3]):
                         errs.append(f"{other_ref}: blocks wire entry corridor for screw terminal {ref}")
 
-            elif cr.electrical_role == "mechanical_anchor" and "CONN" in cr.footprint_id.upper() and ref in target:
+            elif cr.electrical_role == "mechanical_anchor" and "CONN" in cr.footprint_id.upper():
                 x_mm, y_mm = target[ref][0], target[ref][1]
                 half_w = cr.width_mm / 2.0
                 half_h = cr.height_mm / 2.0
@@ -228,30 +267,28 @@ class PlacementAcceptanceGate:
                  reqs: Dict[str, ComponentRequirement],
                  board_dims_mm: Tuple[float, float],
                  standard_errors: Optional[List[str]] = None,
-                 standard_warnings: Optional[List[str]] = None) -> PlacementValidationResult:
+                 standard_warnings: Optional[List[str]] = None,
+                 precomputed_graph: Optional[NetConnectivityGraph] = None) -> PlacementValidationResult:
         errs = list(standard_errors or [])
         warns = list(standard_warnings or [])
 
         # 1. Footprint Invariants
         for ref, cr in reqs.items():
             if cr.invariants and ref in dump:
-                inv_errs = cr.invariants.validate_invariance(
-                    len(dump[ref].get("pads", [])),
-                    [str(p.get("num", "")) for p in dump[ref].get("pads", [])],
-                    {str(p.get("num", "")): (float(p.get("dx", 0.0)), float(p.get("dy", 0.0))) for p in dump[ref].get("pads", [])}
-                )
+                pads = dump[ref].get("pads", [])
+                cur_nums = [str(p.get("num", "")) for p in pads]
+                cur_pos = {str(p.get("num", "")): (float(p.get("dx", 0.0)), float(p.get("dy", 0.0))) for p in pads}
+                inv_errs = cr.invariants.validate_invariance(len(pads), cur_nums, cur_pos)
                 errs.extend(inv_errs)
 
-        # 2. Mechanical Access (Screwdriver, Connectors)
+        # 2. Mechanical Access
         mech_errs = RoutabilityEvaluator.verify_mechanical_access(dump, placement_target, reqs, board_dims_mm)
         errs.extend(mech_errs)
 
-        # 3. Routability Connectivity Analysis
-        net_graph = RoutabilityEvaluator.build_connectivity_graph(dump, placement_target)
+        # 3. Routability Connectivity Analysis (use precomputed graph if available)
+        net_graph = precomputed_graph or RoutabilityEvaluator.build_connectivity_graph(dump, placement_target)
         escape_congestion = RoutabilityEvaluator.evaluate_pin_escape_congestion(dump, placement_target)
 
-        # Score routability: based on ratsnest crossings and escape congestion
-        # 0.0 to 1.0 (1.0 = ideal)
         crossings_penalty = min(0.4, net_graph.ratsnest_crossings * 0.002)
         congestion_penalty = min(0.4, max(0.0, escape_congestion - 0.5) * 0.8)
         routability_score = round(max(0.1, 1.0 - crossings_penalty - congestion_penalty), 2)
@@ -281,7 +318,6 @@ class PlacementAcceptanceGate:
     @staticmethod
     def freeze_placement(placement_target: Dict[str, List[Any]],
                          result: PlacementValidationResult) -> Dict[str, Any]:
-        """Creates an immutable placement snapshot dictionary with SHA-1 hash."""
         if not result.passed:
             raise ValueError(f"Cannot freeze placement: validation failed with {len(result.errors)} errors")
 

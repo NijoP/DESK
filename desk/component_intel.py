@@ -120,14 +120,18 @@ class FootprintIntegrityEngine:
             if "drill" in p:
                 drill_defs[num] = float(p["drill"])
 
-        # Estimate pitch
+        # Estimate pitch (O(N log N) with sweep-line window)
         pitch_mm = 0.0
         if len(pad_positions) >= 2:
-            pts = list(pad_positions.values())
+            pts = sorted(pad_positions.values(), key=lambda pt: pt[0])
             min_dist = float("inf")
-            for i in range(len(pts)):
-                for j in range(i + 1, len(pts)):
-                    d = math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]) / MIL
+            n_pts = len(pts)
+            for i in range(n_pts):
+                px, py = pts[i]
+                for j in range(i + 1, min(i + 8, n_pts)):
+                    if (pts[j][0] - px) / MIL >= min_dist:
+                        break
+                    d = math.hypot(px - pts[j][0], py - pts[j][1]) / MIL
                     if d > 0.05 and d < min_dist:
                         min_dist = d
             pitch_mm = round(min_dist, 3) if min_dist != float("inf") else 0.0

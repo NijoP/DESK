@@ -14,6 +14,7 @@ from _common import S
 from desk import placement
 from desk.component_intel import ComponentIntelligenceExtractor
 from desk.routability import PlacementAcceptanceGate
+from desk.snapshot import PCBSnapshotCache
 from desk import ledger as LG
 
 args = sys.argv[1:]
@@ -25,20 +26,26 @@ with open(os.path.join(proj, "state", "pcb_dump.json"), encoding="utf-8") as f: 
 with open(os.path.join(proj, "placement.json"), encoding="utf-8") as f: plan = json.load(f)
 blocks = S.load_blocks(proj)
 
+# Fast indexed PCB snapshot
+snapshot = PCBSnapshotCache.get_snapshot(proj, dump)
+
 target_path = os.path.join(proj, "state", "placement_target.json")
 target = json.load(open(target_path, encoding="utf-8")) if os.path.exists(target_path) else {}
 
 # Standard placement rule checks
 E, W, M = placement.check(dump, plan, blocks)
 
-# Deep Component Intelligence & Invariant extraction
+# Component Intelligence extraction
 reqs = ComponentIntelligenceExtractor.extract_all(
     dump, blocks=blocks, roles=plan.get("roles", {}), heights=plan.get("heights", {})
 )
 
 # Routability & Acceptance Gate Evaluation
 board_dims = tuple(plan.get("board_mm", [50.0, 50.0]))
-gate_result = PlacementAcceptanceGate.evaluate(dump, target, reqs, board_dims, standard_errors=E, standard_warnings=W)
+gate_result = PlacementAcceptanceGate.evaluate(
+    dump, target, reqs, board_dims, standard_errors=E, standard_warnings=W,
+    precomputed_graph=snapshot.connectivity_graph
+)
 
 if "--freeze" in args and gate_result.passed:
     frozen_record = PlacementAcceptanceGate.freeze_placement(target, gate_result)
