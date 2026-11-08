@@ -95,3 +95,57 @@ def verification_state(entries, block_id, current_hash):
     if not v:
         return "never"
     return "fresh" if v[-1].get("spec_hash") == current_hash else "stale"
+
+
+def add_decision_record(project, decision, source, model_id=None, model_version=None,
+                        req_ids=None, alternatives=None, reasoning=None, board_rev=None,
+                        verification_result="UNVERIFIED", spec_hash=None, profile_hash=None):
+    """Structured decision memory record per Master Directive Section 10."""
+    n_entries = _count_entries(project)
+    e = {
+        "id": f"L-{n_entries + 1:04d}",
+        "ts": datetime.datetime.now().isoformat(timespec="seconds"),
+        "type": "decision",
+        "text": decision,
+        "source": source,
+        "model_id": model_id,
+        "model_version": model_version,
+        "req_ids": req_ids or [],
+        "alternatives": alternatives or [],
+        "reasoning": reasoning or "",
+        "board_rev": board_rev,
+        "verification_result": verification_result,
+        "spec_hash": spec_hash,
+        "profile_hash": profile_hash
+    }
+    e = {k: v for k, v in e.items() if v is not None}
+    p = path(project)
+    with open(p, "a", encoding="utf-8") as f:
+        f.write(json.dumps(e, ensure_ascii=False) + "\n")
+    if p in _LEDGER_CACHE:
+        try:
+            st = os.stat(p)
+            _LEDGER_CACHE[p][2].append(e)
+            _LEDGER_CACHE[p] = (st.st_mtime, st.st_size, _LEDGER_CACHE[p][2])
+        except Exception:
+            _LEDGER_CACHE.pop(p, None)
+    return e
+
+
+def query_decision_memory(project, req_id=None, model_id=None, current_profile_hash=None):
+    """Query decision records, marking stale entries if profile_hash has diverged."""
+    entries = read(project)
+    results = []
+    for e in entries:
+        if e.get("type") != "decision": continue
+        if req_id and req_id not in e.get("req_ids", []): continue
+        if model_id and e.get("model_id") != model_id: continue
+
+        is_stale = False
+        if current_profile_hash and e.get("profile_hash") and e.get("profile_hash") != current_profile_hash:
+            is_stale = True
+
+        res = dict(e)
+        res["staleness"] = "STALE" if is_stale else "FRESH"
+        results.append(res)
+    return results

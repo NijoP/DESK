@@ -34,7 +34,12 @@ class StackupManager:
     """Manages layer definitions and routing allocations."""
 
     @staticmethod
-    def detect_stackup(dump: Dict[str, Any], rules: Optional[Dict[str, Any]] = None) -> List[str]:
+    def detect_stackup(dump: Dict[str, Any], rules: Optional[Dict[str, Any]] = None, profile: Optional[Any] = None) -> List[str]:
+        if profile and hasattr(profile, "get_stackup_layers"):
+            return profile.get_stackup_layers()
+        rules = rules or {}
+        if rules.get("stackup"):
+            return list(rules["stackup"])
         rules = rules or {}
         layer_count = rules.get("layers", 2)
         # Check if any primitives in dump reference inner layers (e.g. layer 3, 4, 15, 16)
@@ -106,7 +111,10 @@ class TraceWidthCalculator:
 
     @staticmethod
     def get_width_mil(net_name: str, current_A: float = 0.2, is_inner: bool = False,
-                      min_signal_width_mil: float = 5.0, max_power_width_mil: float = 40.0) -> float:
+                      min_signal_width_mil: float = 5.0, max_power_width_mil: float = 40.0,
+                      profile: Optional[Any] = None) -> float:
+        if profile and hasattr(profile, "derive_trace_width_mil"):
+            return profile.derive_trace_width_mil(net_name, is_inner=is_inner)
         net_u = net_name.upper()
         # High power / supply nets default to thicker traces
         if re.search(r"VBUS|VBAT|VSYS|12V", net_u):
@@ -283,9 +291,19 @@ class RoutingPlanGenerator:
     def generate_plan(net_graph: NetConnectivityGraph,
                       dump: Dict[str, Any],
                       board_dims_mm: Tuple[float, float],
-                      rules: Optional[Dict[str, Any]] = None) -> RoutingPlan:
+                      rules: Optional[Dict[str, Any]] = None,
+                      profile: Optional[Any] = None) -> RoutingPlan:
         rules = rules or {}
-        stackup = StackupManager.detect_stackup(dump, rules)
+        stackup = StackupManager.detect_stackup(dump, rules, profile=profile)
+        diff_p = dict(rules.get("diff_pairs") or {})
+        high_c = dict(rules.get("high_current") or {})
+        if profile:
+            if hasattr(profile, "diff_pairs"):
+                for dp_name, dp in profile.diff_pairs.items():
+                    diff_p[dp_name] = (dp.pos_net, dp.neg_net)
+            if hasattr(profile, "current_limits_A"):
+                for n, c in profile.current_limits_A.items():
+                    if c > 0.3: high_c[n] = c
         stages = RoutingPriorityScheduler.schedule_nets(
             net_graph.nets,
             diff_pairs=rules.get("diff_pairs"),

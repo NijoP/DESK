@@ -90,8 +90,18 @@ def _inside(r, z):
     return not (r[1] <= z[0] or r[0] >= z[2] or r[3] <= z[1] or r[2] >= z[3])
 
 
-def check(dump, plan, blocks=()):
+def check(dump, plan, blocks=(), profile=None):
     R = dict(RULES); R.update({k: v for k, v in plan.get("rules", {}).items() if k not in ("pad", "body")})
+    if profile:
+        if hasattr(profile, "manufacturing"):
+            mfg = profile.manufacturing
+            R["edge_pad_mm"] = mfg.copper_to_edge_mil / 39.37007874
+            min_c_mm = mfg.min_clearance_mil / 39.37007874
+            for k in R["pad"]:
+                R["pad"][k] = max(R["pad"][k], min_c_mm)
+        if hasattr(profile, "thermal"):
+            if profile.thermal.max_temperature_rise_c < 10.0:
+                R["heat_spacing_mm"] = max(R["heat_spacing_mm"], 5.0)
     for k in ("pad", "body"): R[k] = {**RULES[k], **plan.get("rules", {}).get(k, {})}
     ox, oy = plan.get("origin_mm", [0, 0]); W, H = plan["board_mm"]
     roles, heights = plan.get("roles", {}), plan.get("heights", {})

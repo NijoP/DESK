@@ -265,8 +265,12 @@ class TopologicalPassiveSnapper:
 class PlacementIntelligenceEngine:
     """Integrated engine enforcing mechanical, footprint, electrical, and functional placement rules."""
 
-    def __init__(self, board_dims_mm: Tuple[float, float], origin_mm: Tuple[float, float] = (0.0, 0.0)):
-        self.W, self.H = board_dims_mm
+    def __init__(self, board_dims_mm: Tuple[float, float], origin_mm: Tuple[float, float] = (0.0, 0.0), profile: Optional[Any] = None):
+        self.profile = profile
+        if profile and hasattr(profile, "board_dimensions_mm"):
+            self.W, self.H = profile.board_dimensions_mm
+        else:
+            self.W, self.H = board_dims_mm
         self.ox, self.oy = origin_mm
 
     def generate_hierarchical_placement(self,
