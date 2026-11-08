@@ -201,10 +201,10 @@ flowchart TD
 - **What DESK Does:** Synthesizes functional blocks, derives IPC-2152 trace constraints, schedules net routing, pours ground planes, and evaluates quality gates.
 
 ### Workflow B: Continue an Unfinished PCB Project (`REWORK_MODE`)
-- **Status:** `IN ACTIVE DEVELOPMENT`
+- **Status:** `AVAILABLE`
 - **When to Choose:** You have an existing EasyEDA Pro PCB that is partially routed or has outstanding DRC violations that need repair.
 - **What You Provide:** An active EasyEDA Pro board document.
-- **What DESK Does:** Captures an exact baseline snapshot of existing tracks and footprints, audits remaining unrouted airwires and clearance collisions, proposes a surgical repair plan, and requests human approval before making any modifications.
+- **What DESK Does:** Captures an exact baseline snapshot of existing tracks and footprints, performs an 8-domain engineering audit, proposes a surgical minimal-change repair plan, and requests human approval before applying modifications with readback verification.
 
 ### Workflow C: Inspect an Existing Project (`AUDIT_MODE`)
 - **Status:** `AVAILABLE`
@@ -375,7 +375,7 @@ An honest, evidence-based status of DESK capabilities verified by automated test
 | **Local Mission Control (Cockpit)** | `AVAILABLE` | In-browser server tested on port 49630 (`test_server.py`). |
 | **Component Intelligence & BOM** | `AVAILABLE` | Parametric search & pricing tested (`test_component_intelligence.py`). |
 | **EasyEDA Pro TCP Bridge** | `AVAILABLE (OFFLINE TESTED)` | Fast port discovery tested; mutations quarantined (`test_bridge.py`). |
-| **Rework Mode (Existing Boards)** | `IN ACTIVE DEVELOPMENT` | Mode detection, baseline capture & readiness engines implemented. |
+| **Rework Mode (Existing Boards)** | `AVAILABLE` | 8-domain engineering audit, baseline snapshot, surgical repair planner & fail-closed release gates (`test_rework_*.py`). |
 | **Fabrication Release Packaging** | `AVAILABLE` | BOM and manufacturing output formatting tested. |
 
 ---
@@ -406,6 +406,7 @@ Detailed guides organized by your engineering task:
 
 ### PCB Layout & Verification
 - [**Autonomous Routing Architecture**](docs/05_ROUTING.md) — How the 6-stage priority scheduler routes nets.
+- [**Rework Mode Architecture & Operations**](docs/rework/01_REWORK_MODE_OVERVIEW.md) — Existing PCB recovery, 8-domain audit, surgical repair, and manufacturing readiness.
 - [**Execution Telemetry & Events**](docs/execution-events.md) — Complete event schema for the 12 engineering stages.
 - [**Safety Checklist for CAD Integration**](docs/LIVE_INTEGRATION_CHECKLIST.md) — Pre-flight checks before modifying live boards.
 - [**Capability Status Ledger**](docs/09_STATUS.md) — Authoritative, granular implementation tracking.
