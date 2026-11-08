@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="archBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#060c16"/>
+      <stop offset="50%" stop-color="#0a1424"/>
+      <stop offset="100%" stop-color="#040810"/>
+    </linearGradient>
+
+    <!-- Card Backgrounds -->
+    <linearGradient id="pillarCard" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#141f33"/>
+      <stop offset="100%" stop-color="#0b1322"/>
+    </linearGradient>
+
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1200" height="680" rx="16" fill="url(#archBg)"/>
+  <rect width="1198" height="678" x="1" y="1" rx="15" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+
+  <!-- Title & Header -->
+  <g text-anchor="middle">
+    <text x="600" y="48" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="700" letter-spacing="4" fill="#38bdf8">
+      DESK BIOMIMETIC ARCHITECTURE
+    </text>
+    <text x="600" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="400" fill="#94a3b8">
+      Mapping Biological Systems to Verified Engineering Responsibilities &amp; Source Modules
+    </text>
+  </g>
+
+  <!-- Central Sentinel Organism Core -->
+  <g transform="translate(600, 140)" text-anchor="middle">
+    <circle cx="0" cy="0" r="42" fill="#0c2340" stroke="#38bdf8" stroke-width="2.5"/>
+    <circle cx="0" cy="0" r="28" fill="#0284c7" opacity="0.4"/>
+    <circle cx="0" cy="0" r="14" fill="#38bdf8"/>
+    <text x="0" y="58" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="12" font-weight="700" letter-spacing="1" fill="#ffffff">
+      THE SENTINEL
+    </text>
+    <text x="0" y="74" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="500" fill="#38bdf8">
+      Homeostatic Core
+    </text>
+  </g>
+
+  <!-- Interconnecting Nerve Conduits -->
+  <g stroke="#0ea5e9" stroke-width="2" stroke-dasharray="4 4" fill="none" opacity="0.6">
+    <path d="M 560,140 C 400,140 220,180 220,240"/>
+    <path d="M 580,180 C 500,210 460,220 460,240"/>
+    <path d="M 620,180 C 700,210 740,220 740,240"/>
+    <path d="M 640,140 C 800,140 980,180 980,240"/>
+  </g>
+
+  <!-- ==================== PILLAR 1: IMMUNE SYSTEM ==================== -->
+  <g transform="translate(40, 240)" filter="url(#cardShadow)">
+    <rect width="260" height="390" rx="12" fill="url(#pillarCard)" stroke="#38bdf8" stroke-width="1.5"/>
+    <!-- Header Badge -->
+    <rect x="0" y="0" width="260" height="46" rx="12" fill="#075985" opacity="0.3"/>
+    <circle cx="28" cy="23" r="12" fill="#0284c7"/>
+    <!-- Shield / Immune Icon -->
+    <path d="M 28,15 C 33,18 35,19 35,24 C 35,30 30,32 28,33 C 26,32 21,30 21,24 C 21,19 23,18 28,15 Z" fill="#ffffff"/>
+    <text x="50" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#ffffff">IMMUNE SYSTEM</text>
+    <text x="50" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="600" fill="#38bdf8">Surveillance &amp; Tolerance</text>
+
+    <!-- Biological Concept -->
+    <text x="16" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">BIOLOGICAL ROLE</text>
+    <text x="16" y="88" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" fill="#cbd5e1">
+      <tspan x="16" dy="0">• Distinguishes healthy vs damaged</tspan>
+      <tspan x="16" dy="16">• Preserves self-tolerance</tspan>
+      <tspan x="16" dy="16">• Neutralizes abnormal mutations</tspan>
+    </text>
+
+    <!-- Engineering Responsibility -->
+    <line x1="16" y1="135" x2="244" y2="135" stroke="#1e293b" stroke-width="1"/>
+    <text x="16" y="155" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#38bdf8">DESK RESPONSIBILITY</text>
+    <text x="16" y="173" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" fill="#e2e8f0">
+      <tspan x="16" dy="0">• 8-Domain engineering defect audit</tspan>
+      <tspan x="16" dy="16">• Protect verified layout geometry</tspan>
+      <tspan x="16" dy="16">• Flag shorts, opens &amp; clearance faults</tspan>
+    </text>
+
+    <!-- Source Modules -->
+    <line x1="16" y1="225" x2="244" y2="225" stroke="#1e293b" stroke-width="1"/>
+    <text x="16" y="245" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#10b981">SOURCE MODULES</text>
+    <rect x="16" y="258" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="273" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/rework/audit.py</text>
+    <rect x="16" y="286" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="301" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/drc_engine.py</text>
+    <rect x="16" y="314" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="329" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/snapshot.py</text>
+
+    <!-- Verification Badge -->
+    <rect x="16" y="350" width="228" height="26" rx="6" fill="#064e3b" stroke="#10b981"/>
+    <text x="130" y="367" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="700" fill="#34d399" text-anchor="middle">
+      TESTED OFFLINE (25 Tests)
+    </text>
+  </g>
+
+  <!-- ==================== PILLAR 2: WOUND HEALING ==================== -->
+  <g transform="translate(325, 240)" filter="url(#cardShadow)">
+    <rect width="260" height="390" rx="12" fill="url(#pillarCard)" stroke="#0ea5e9" stroke-width="1.5"/>
+    <!-- Header Badge -->
+    <rect x="0" y="0" width="260" height="46" rx="12" fill="#0369a1" opacity="0.3"/>
+    <circle cx="28" cy="23" r="12" fill="#0284c7"/>
+    <!-- Wound / Suture Icon -->
+    <path d="M 23,28 L 33,18 M 23,18 L 33,28" stroke="#ffffff" stroke-width="2"/>
+    <text x="50" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#ffffff">WOUND HEALING</text>
+    <text x="50" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="600" fill="#0ea5e9">Controlled Repair Lifecycle</text>
+
+    <!-- Biological Concept -->
+    <text x="16" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">BIOLOGICAL ROLE</text>
+    <text x="16" y="88" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" fill="#cbd5e1">
+      <tspan x="16" dy="0">• Hemostasis: Stabilize lesion</tspan>
+      <tspan x="16" dy="16">• Inflammation: Clean debris</tspan>
+      <tspan x="16" dy="16">• Proliferation &amp; Remodeling</tspan>
+    </text>
+
+    <!-- Engineering Responsibility -->
+    <line x1="16" y1="135" x2="244" y2="135" stroke="#1e293b" stroke-width="1"/>
+    <text x="16" y="155" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#0ea5e9">DESK RESPONSIBILITY</text>
+    <text x="16" y="173" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" fill="#e2e8f0">
+      <tspan x="16" dy="0">• Baseline capture (hemostasis)</tspan>
+      <tspan x="16" dy="16">• Minimal-change surgical planning</tspan>
+      <tspan x="16" dy="16">• Atomic mutex repair execution</tspan>
+    </text>
+
+    <!-- Source Modules -->
+    <line x1="16" y1="225" x2="244" y2="225" stroke="#1e293b" stroke-width="1"/>
+    <text x="16" y="245" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#10b981">SOURCE MODULES</text>
+    <rect x="16" y="258" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="273" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/rework/session.py</text>
+    <rect x="16" y="286" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="301" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/rework/planner.py</text>
+    <rect x="16" y="314" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="329" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/rework/executor.py</text>
+
+    <!-- Verification Badge -->
+    <rect x="16" y="350" width="228" height="26" rx="6" fill="#064e3b" stroke="#10b981"/>
+    <text x="130" y="367" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="700" fill="#34d399" text-anchor="middle">
+      MUTEX LOCK &amp; CHECKPOINTS
+    </text>
+  </g>
+
+  <!-- ==================== PILLAR 3: NERVOUS SYSTEM ==================== -->
+  <g transform="translate(615, 240)" filter="url(#cardShadow)">
+    <rect width="260" height="390" rx="12" fill="url(#pillarCard)" stroke="#6366f1" stroke-width="1.5"/>
+    <!-- Header Badge -->
+    <rect x="0" y="0" width="260" height="46" rx="12" fill="#312e81" opacity="0.3"/>
+    <circle cx="28" cy="23" r="12" fill="#4f46e5"/>
+    <!-- Nerve / Pulse Icon -->
+    <path d="M 20,23 L 25,23 L 27,17 L 30,29 L 32,23 L 36,23" stroke="#ffffff" stroke-width="2" fill="none"/>
+    <text x="50" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#ffffff">NERVOUS SYSTEM</text>
+    <text x="50" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="600" fill="#818cf8">Sensing &amp; Coordination</text>
+
+    <!-- Biological Concept -->
+    <text x="16" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">BIOLOGICAL ROLE</text>
+    <text x="16" y="88" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" fill="#cbd5e1">
+      <tspan x="16" dy="0">• Sensory receptors observe stimulus</tspan>
+      <tspan x="16" dy="16">• Neural pathways transmit signals</tspan>
+      <tspan x="16" dy="16">• Feedback guides neuromuscular action</tspan>
+    </text>
+
+    <!-- Engineering Responsibility -->
+    <line x1="16" y1="135" x2="244" y2="135" stroke="#1e293b" stroke-width="1"/>
+    <text x="16" y="155" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#818cf8">DESK RESPONSIBILITY</text>
+    <text x="16" y="173" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" fill="#e2e8f0">
+      <tspan x="16" dy="0">• ECAD window &amp; port observation</tspan>
+      <tspan x="16" dy="16">• Task scheduling &amp; event telemetry</tspan>
+      <tspan x="16" dy="16">• Local Mission Control cockpit</tspan>
+    </text>
+
+    <!-- Source Modules -->
+    <line x1="16" y1="225" x2="244" y2="225" stroke="#1e293b" stroke-width="1"/>
+    <text x="16" y="245" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#10b981">SOURCE MODULES</text>
+    <rect x="16" y="258" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="273" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/rework/connection.py</text>
+    <rect x="16" y="286" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="301" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/runtime/server.py</text>
+    <rect x="16" y="314" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="329" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/runtime/events.py</text>
+
+    <!-- Verification Badge -->
+    <rect x="16" y="350" width="228" height="26" rx="6" fill="#064e3b" stroke="#10b981"/>
+    <text x="130" y="367" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="700" fill="#34d399" text-anchor="middle">
+      PORT 49630 TELEMETRY
+    </text>
+  </g>
+
+  <!-- ==================== PILLAR 4: HOMEOSTASIS ==================== -->
+  <g transform="translate(900, 240)" filter="url(#cardShadow)">
+    <rect width="260" height="390" rx="12" fill="url(#pillarCard)" stroke="#10b981" stroke-width="2"/>
+    <!-- Header Badge -->
+    <rect x="0" y="0" width="260" height="46" rx="12" fill="#064e3b" opacity="0.3"/>
+    <circle cx="28" cy="23" r="12" fill="#059669"/>
+    <!-- Homeostasis / Equilibrium Icon -->
+    <circle cx="28" cy="23" r="7" fill="none" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="28" cy="23" r="2.5" fill="#ffffff"/>
+    <text x="50" y="22" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="13" font-weight="700" fill="#ffffff">HOMEOSTASIS</text>
+    <text x="50" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" font-weight="600" fill="#34d399">Equilibrium &amp; Quality Gates</text>
+
+    <!-- Biological Concept -->
+    <text x="16" y="70" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#94a3b8">BIOLOGICAL ROLE</text>
+    <text x="16" y="88" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" fill="#cbd5e1">
+      <tspan x="16" dy="0">• Dynamically balances physiological state</tspan>
+      <tspan x="16" dy="16">• Enforces strict boundary thresholds</tspan>
+      <tspan x="16" dy="16">• Fails closed to protect survival</tspan>
+    </text>
+
+    <!-- Engineering Responsibility -->
+    <line x1="16" y1="135" x2="244" y2="135" stroke="#1e293b" stroke-width="1"/>
+    <text x="16" y="155" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#34d399">DESK RESPONSIBILITY</text>
+    <text x="16" y="173" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="10" fill="#e2e8f0">
+      <tspan x="16" dy="0">• 8 Hard acceptance quality gates</tspan>
+      <tspan x="16" dy="16">• IPC-2152 thermal &amp; ampacity bounds</tspan>
+      <tspan x="16" dy="16">• Manufacturing release certification</tspan>
+    </text>
+
+    <!-- Source Modules -->
+    <line x1="16" y1="225" x2="244" y2="225" stroke="#1e293b" stroke-width="1"/>
+    <text x="16" y="245" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" fill="#10b981">SOURCE MODULES</text>
+    <rect x="16" y="258" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="273" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/quality.py</text>
+    <rect x="16" y="286" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="301" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/rework/readiness.py</text>
+    <rect x="16" y="314" width="228" height="22" rx="4" fill="#0f172a" stroke="#334155"/>
+    <text x="24" y="329" font-family="ui-monospace, monospace" font-size="9.5" fill="#38bdf8">desk/profile.py</text>
+
+    <!-- Verification Badge -->
+    <rect x="16" y="350" width="228" height="26" rx="6" fill="#064e3b" stroke="#10b981"/>
+    <text x="130" y="367" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="9.5" font-weight="700" fill="#34d399" text-anchor="middle">
+      FAIL-CLOSED RELEASE
+    </text>
+  </g>
+</svg>

@@ -1,8 +1,13 @@
 # DESK
 
-### Your electronics engineering workbench.
+### Your Electronics Engineering Workbench.
+**THE SENTINEL — A Homeostatic Engineering Organism**
 
-**From circuit requirements to PCB design, engineering verification and manufacturing preparation.**
+*Protect the design. Repair the damage. Preserve the integrity.*
+
+<p align="center">
+  <img src="assets/branding/desk-sentinel.svg" alt="THE SENTINEL — Homeostatic Engineering Organism" width="850"/>
+</p>
 
 [![Tests](https://img.shields.io/badge/tests-303%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
@@ -17,39 +22,204 @@
 
 **DESK** is an open-source, AI-assisted engineering workbench built specifically for hardware and electronics engineers working with **EasyEDA Pro**.
 
-In traditional hardware development, moving from a completed schematic to a fabricated, working circuit board requires hours of repetitive, manual tasks: calculating trace widths for current limits, routing dense connections without creating electromagnetic interference (EMI), generating ground planes, checking manufacturer clearances, and verifying that no airwires remain.
+In traditional Electronic Design Automation (EDA), moving from an engineering requirement to a fabricated, working circuit board requires hours of iterative, manual tasks: sizing trace widths for high-current limits, routing dense connections without creating electromagnetic interference (EMI), pouring ground planes, diagnosing DRC clearance collisions, and verifying manufacturing readiness.
 
 DESK works alongside your ECAD software as an intelligent, physics-guided co-pilot. It does not replace your engineering judgment or guess coordinates like a generic chatbot. Instead, it enforces a fundamental hardware principle:
 
 > **Knowledge before geometry. Physical electrical laws before layout appearance. Deterministic verification before automated board mutation.**
 
-Whether you are starting a new board from scratch, continuing an unfinished design, or verifying a completed layout before sending it to a fab house like JLCPCB, DESK helps you design with confidence.
+Whether you are starting a new board from scratch, continuing an unfinished design, or repairing an existing PCB layout before releasing it to a fabrication house like JLCPCB, DESK helps you design with deterministic confidence.
 
 ---
 
-## 2. Why DESK? (The Engineering Problem)
+## 2. The Philosophy: Homeostasis in Electronics Design
 
-Every electronics engineer recognizes these practical bottlenecks in PCB development:
+In natural biology, **homeostasis** is the active process by which an organism maintains internal stability while adjusting to external changes. An organism regulates its temperature, repairs cellular lesions, neutralizes pathogens, and balances metabolic energy.
 
-- **The schematic is finished, but layout is stalled:** You have a validated schematic and netlist, but unplaced footprints and unrouted nets sit on the canvas waiting for manual layout.
-- **Trace widths are guessed rather than calculated:** Power rails carrying $2\,\text{A}$ or $5\,\text{A}$ get routed with standard $10\,\text{mil}$ or $12\,\text{mil}$ tracks, risking thermal runaway, voltage sag, or PCB delamination under load.
-- **Ground planes get fragmented:** Signal tracks cut across split reference planes, breaking the high-frequency current return path and creating unintended loop antennas that fail FCC/CE compliance.
-- **DRC errors are tedious to diagnose:** The ECAD design rule check reports 40 clearance errors, but resolving one by hand creates three new collisions elsewhere.
-- **Inherited or unfinished designs:** You inherit a partially completed board from another engineer with unknown netlist changes, half-finished routes, and no documentation of what remains to be done.
-- **Manufacturing release anxiety:** Just because a board has zero visual airwires does not mean it will work. Unverified copper slivers, missing thermal relief, or violation of fab house drill tolerances can ruin a production run.
+A printed circuit board is not a static 2D drawing. It is a high-density physical ecosystem governed by rigorous physical laws:
 
-DESK was created to solve these exact engineering challenges through automated physics calculations, deterministic priority scheduling, and fail-closed quality verification.
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        HOMEOSTATIC EQUILIBRIUM                         │
+├────────────────────────────────────────────────────────────────────────┤
+│  Electrical Continuity    ◄───►    Trace Ampacity & Thermal Limits     │
+│  Signal Integrity & EMI   ◄───►    Unbroken Copper Reference Planes    │
+│  Component Placement      ◄───►    Fabricator Clearances & Tolerances  │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+When an engineer inherits an unfinished or defective PCB, standard autorouters or automated scripts often cause catastrophic collateral damage: they indiscriminately rip up tuned traces, split continuous reference planes, or suppress design rules to make errors disappear.
+
+DESK approaches PCB engineering through the lens of biomimetic homeostasis: **maintaining the health, stability, and intent of the design while diagnosing and repairing defects.**
 
 ---
 
-## 3. What is DESK?
+## 3. Meet THE SENTINEL
 
-Think of **DESK** as an engineering workbench that connects directly to your ECAD environment:
+**THE SENTINEL** is the character persona and operational intelligence of DESK. It is not an autonomous black-box or a playful mascot; it is a sophisticated engineering guardian with six core behavioral traits:
 
-```text
+```
+                  ┌──────────────────────────────┐
+                  │        THE SENTINEL          │
+                  │   Core Character Persona     │
+                  └──────────────┬───────────────┘
+                                 │
+     ┌──────────────┬────────────┼────────────┬──────────────┐
+     ▼              ▼            ▼            ▼              ▼
+1. OBSERVANT   2. PROTECTIVE 3. DIAGNOSTIC 4. METHODICAL 5. SCEPTICAL 6. ADAPTIVE
+```
+
+1. **Observant:** Understands the board deeply before acting. It samples active ECAD windows, ingests netlists, and captures exact multi-domain baseline fingerprints down to the micro-via.
+2. **Protective:** Exhibits biological immune tolerance toward healthy, verified geometry. Existing high-speed differential pairs, analog layouts, and accepted tracks are locked as `PROTECTED`.
+3. **Diagnostic:** Identifies true physical root causes across 8 engineering domains rather than masking symptoms or deleting tracks.
+4. **Methodical:** Enforces a controlled repair lifecycle (Hemostasis $\to$ Inflammation $\to$ Proliferation $\to$ Remodeling). No mutation occurs without dependency planning.
+5. **Sceptical:** Never trusts an operation simply because an API returned success. It physically re-reads canvas geometry to confirm continuity and clearance independently.
+6. **Adaptive:** Measures host CPU pressure and memory headroom to throttle concurrency, running comfortably on a 2-core laptop or scaling across a 64-core workstation.
+
+---
+
+## 4. The Biological Foundations
+
+DESK builds its core architecture around three biological mechanisms:
+
+<p align="center">
+  <img src="assets/branding/desk-biological-architecture.svg" alt="DESK Biomimetic Architecture" width="950"/>
+</p>
+
+### A. The Immune System (Surveillance & Tolerance)
+The immune system defends the organism by eliminating pathogens while exhibiting rigorous **self-tolerance** toward healthy native tissue.
+- **Surveillance:** DESK continuously scans designs across 8 physical domains to discover unrouted airwires, polygon keepout violations, and trace ampacity shortfalls.
+- **Tolerance:** Verified component footprints and human-crafted routing are protected against automated modification.
+- *Core Principle:* **Never attack healthy engineering structures while attempting to repair defective ones.**
+
+### B. Wound Healing (Controlled Surgical Repair)
+When living tissue is damaged, recovery proceeds through four strictly controlled phases:
+
+| Biological Phase | Biological Role | DESK Engineering Operation |
+|---|---|---|
+| **1. Hemostasis** | Vasoconstriction and clot formation stabilize the wound site | **Baseline Capture:** Lock canvas mutex (`write_op`) and hash multi-domain baselines (`geometry_rev`, `stackup_rev`). |
+| **2. Inflammation** | Macrophages identify defects and clear debris | **8-Domain Audit:** Systematically inventory and categorize issues (`issue_inventory.json`). |
+| **3. Proliferation** | Cellular signaling directs targeted tissue regeneration | **Surgical Repair Planning:** Formulate minimal-change repairs and acquire cryptographic approval tokens (`RW-APR-XXXX`). |
+| **4. Remodeling** | Re-align fibers and test tensile physical strength | **Readback Verification:** Re-read physical geometry and evaluate 8 fail-closed quality gates. |
+
+### C. The Nervous System (Sensing, Coordination & Feedback)
+The nervous system samples sensory receptors, transmits action potentials, coordinates muscular movements, and receives proprioceptive feedback.
+- **Sensory Sensing:** Interrogates active EasyEDA Pro desktop and web instances via localhost bridge discovery.
+- **Coordination:** Dispatches tasks through an adaptive priority scheduler with bounded CPU and I/O queues.
+- **Proprioceptive Feedback:** Reads back physical canvas geometry after every mutation to ensure intended physical constraints were met.
+- *Core Principle:* **Every action must be informed by observation and followed by feedback.**
+
+---
+
+## 5. The Homeostatic Operating Loop
+
+DESK operates in a continuous, seven-stage closed engineering loop:
+
+<p align="center">
+  <img src="assets/branding/desk-homeostasis-loop.svg" alt="The Homeostatic Repair Loop" width="950"/>
+</p>
+
+1. **SENSE:** Interrogate the active ECAD window, identify the bound project, and ingest current schematic and board states.
+2. **UNDERSTAND:** Establish electrical, mechanical, and manufacturing constraints from design profiles and calculate IPC-2152 trace widths.
+3. **PROTECT:** Isolate verified geometry, nets, and footprints, marking them `PROTECTED` against involuntary alteration.
+4. **DIAGNOSE:** Audit defects across the 8 physical domains, classifying issues by severity (`CRITICAL`, `WARNING`, `INFO`).
+5. **REPAIR:** Create a dependency-aware surgical repair plan and execute minimal-change actions under single-writer locks with explicit human approval.
+6. **VERIFY:** Read back physical canvas geometry independently from CAD cache to confirm expected modifications and zero unintended collisions.
+7. **RESTORE HOMEOSTASIS:** Verify all 8 hard acceptance quality gates and prove that the design has reached stable electrical and manufacturing equilibrium.
+
+---
+
+## 6. How DESK Works (Supported Engineering Capabilities)
+
+DESK coordinates end-to-end electronics engineering across three primary workflows:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        THREE CORE WORKFLOWS                            │
+├────────────────────────┬───────────────────────┬───────────────────────┤
+│ Workflow A:            │ Workflow B:           │ Workflow C:           │
+│ Green-Field Design     │ Rework Mode           │ Read-Only Audit       │
+│ (`DESIGN_MODE`)        │ (`REWORK_MODE`)       │ (`AUDIT_MODE`)        │
+├────────────────────────┼───────────────────────┼───────────────────────┤
+│ From requirements and  │ Take an unfinished or │ Inspect layout for    │
+│ block specs to routed  │ DRC-failing PCB and   │ return-path splits,   │
+│ board and BOM.         │ execute repairs.      │ ampacity, and DRC.    │
+└────────────────────────┴───────────────────────┴───────────────────────┘
+```
+
+### 1. Schematic & Netlist Intelligence
+- **Functional Block Decomposition:** Decomposes complex circuits into subsystem blocks (Power, MCU, RF, Sensors).
+- **Power Tree Synthesis:** Maps voltage drops, quiescent currents, and regulator sequencing ($12\,\text{V} \to 5\,\text{V} \to 3.3\,\text{V}$).
+- **Electrical Rules Check (ERC):** Verifies netlist continuity, pin types, and detects floating inputs or missing pull-ups.
+
+### 2. Component Intelligence & BOM Sourcing
+- **Parametric Search:** Queries LCSC, Mouser, and JLCPCB for active components, prices, and stock levels.
+- **Lifecycle Auditing:** Identifies End-of-Life (EOL) and NRND parts before layout commitment.
+- **Automated PCBA BOM & Centroid:** Generates fabrication-ready BOMs (with LCSC C-codes) and CPL centroid coordinates.
+
+### 3. Physical Placement & Invariant Protection
+- **Mechanical Anchors:** Locks connectors (USB-C, headers), mounting holes, and edge components in fixed positions.
+- **Thermal Clustering:** Enforces adequate copper area and thermal relief for power converters and drivers.
+- **Decoupling Proximity:** Places decoupling capacitors adjacent to IC power pins for minimal loop inductance.
+
+### 4. IPC-2152 Trace Width Calculation
+- Trace widths are calculated directly from physical thermal formulas based on layer copper weight (1 oz / 2 oz), maximum continuous current, and allowed temperature rise ($\Delta T = 10^\circ\text{C}$).
+- Enforces: `trace_width = max(profile_class, IPC_2152_width, fabricator_minimum)`.
+
+### 5. 6-Stage Priority Net Routing
+- Priority-ordered net routing schedules critical nets before general signals:
+  1. Ground nets and reference returns.
+  2. High-speed and impedance-controlled differential pairs.
+  3. Power distribution rails.
+  4. Analog and sensitive sensor traces.
+  5. Low-speed digital communication buses.
+  6. Non-critical digital I/O lines.
+
+### 6. Ground Planes & Return Path Verification
+- 2D polygon intersection checks ensure continuous copper reference planes under signal lines, preventing split-plane EMI antennas.
+
+### 7. Rework Mode: 8-Domain Surgical Audit & Repair
+When auditing an existing board, DESK evaluates 8 distinct domains:
+- **Domain A:** Requirements & System Intent (voltage rails, interfaces).
+- **Domain B:** Schematic vs. PCB Netlist Consistency (unrouted airwires, net mismatches).
+- **Domain C:** Component Footprints & Geometry (courtyard collisions, pin numbering).
+- **Domain D:** Placement & Mechanical Constraints (board outline, hole clearances).
+- **Domain E:** Routing & Topology (IPC-2152 ampacity, trace necking).
+- **Domain F:** Power & Thermal Distribution (high-current trace drop, thermal relief).
+- **Domain G:** Copper Planes & Ground Integrity (plane splits, island antennas).
+- **Domain H:** Fabrication Rules & DRC (annular rings, solder mask dams, fab minimums).
+
+---
+
+## 7. Biology Meets Engineering: Architecture Mapping
+
+Every biomimetic concept maps directly to concrete, test-verified Python modules:
+
+| Biological System | EDA Responsibility | Source Module | Status |
+|---|---|---|---|
+| **Sensory Receptors** | EasyEDA window discovery and socket binding | [`desk/rework/connection.py`](desk/rework/connection.py)<br>[`desk/bridge.py`](desk/bridge.py) | `TESTED_OFFLINE` |
+| **Immune Tolerance** | Protect verified geometry and footprints | [`desk/rework/planner.py`](desk/rework/planner.py)<br>[`desk/snapshot.py`](desk/snapshot.py) | `TESTED_OFFLINE` |
+| **Immune Surveillance** | 8-Domain engineering defect audit | [`desk/rework/audit.py`](desk/rework/audit.py)<br>[`desk/drc_engine.py`](desk/drc_engine.py) | `TESTED_OFFLINE` |
+| **Hemostasis** | Canvas mutex lock and multi-domain baselining | [`desk/ops.py`](desk/ops.py)<br>[`desk/rework/baseline.py`](desk/rework/baseline.py) | `TESTED_OFFLINE` |
+| **Wound Healing** | Minimal-change surgical repair planning | [`desk/rework/planner.py`](desk/rework/planner.py)<br>[`desk/router.py`](desk/router.py) | `TESTED_OFFLINE` |
+| **Motor Action** | Mutex-locked execution with checkpoints | [`desk/rework/executor.py`](desk/rework/executor.py)<br>[`desk/runtime/checkpoints.py`](desk/runtime/checkpoints.py) | `TESTED_OFFLINE` |
+| **Proprioception** | Canvas geometry readback and verification | [`desk/rework/executor.py`](desk/rework/executor.py)<br>[`desk/adapters/easyeda_pcb_adapter.py`](desk/adapters/easyeda_pcb_adapter.py) | `TESTED_OFFLINE` |
+| **Homeostasis** | 8 Fail-closed hard acceptance quality gates | [`desk/quality.py`](desk/quality.py)<br>[`desk/rework/readiness.py`](desk/rework/readiness.py) | `TESTED_OFFLINE` |
+| **Nervous Coordination** | Task scheduler and telemetry streaming | [`desk/runtime/scheduler.py`](desk/runtime/scheduler.py)<br>[`desk/runtime/server.py`](desk/runtime/server.py) | `TESTED_OFFLINE` |
+| **Immunological Memory**| Append-only decision ledger and learning | [`desk/ledger.py`](desk/ledger.py)<br>[`desk/learn/`](desk/learn/) | `TESTED_OFFLINE` |
+
+*For complete architectural specifications, see [Biological to Engineering Mapping](docs/identity/BIOLOGICAL_TO_ENGINEERING_MAPPING.md).*
+
+---
+
+## 8. Working with EasyEDA Pro
+
+DESK is engineered to work alongside **EasyEDA Pro** (both Desktop client and Web browser).
+
+```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        HARDWARE ENGINEER                               │
-│            (Reviews constraints, inspects results, approves work)     │
+│           (Reviews constraints, inspects results, approves work)       │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
@@ -67,391 +237,139 @@ Think of **DESK** as an engineering workbench that connects directly to your ECA
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-### DESK vs. Your Existing ECAD Tools
-
-| Your Existing Tool | DESK's Role Alongside It |
-|---|---|
-| **EasyEDA Pro Schematic Editor** | Inspects netlists, verifies functional block decomposition, and validates power trees before layout begins. |
-| **EasyEDA Pro PCB Editor** | Analyzes component density, locks mechanical anchors, plans routing priorities, and synthesizes solid ground planes. |
-| **Component Datasheets & Sourcing** | Resolves Manufacturer Part Numbers (MPNs), verifies footprint pinouts, and checks LCSC stock and pricing. |
-| **Design Rule Check (DRC)** | Diagnoses collision causes, plans automated rip-up and rerouting, and enforces IPC-2221 electrical clearances. |
-| **Manufacturing Preparation** | Evaluates 8 non-negotiable physical gates to verify that the board is genuinely ready for fabrication. |
-
-DESK does **not** replace EasyEDA Pro—it supercharges it with engineering automation and rigorous verification.
+### The Role of the Engineer
+- **Human Authority:** DESK is an automated engineering assistant. It calculates geometry and flags violations, but **the human engineer holds final approval authority**.
+- **Cryptographic Approval:** In Rework Mode, mutations cannot execute without an explicit human approval token (`RW-APR-XXXX`) bound to that exact repair ID.
+- **Safety Quarantine:** Active client projects (`WATCH`, `BEEBOX`) are protected against automated mutation. Test mutations execute exclusively in disposable workspaces.
 
 ---
 
-## 4. What Can You Do with DESK?
+## 9. Local Mission Control (Telemetry Cockpit)
 
-### 4.1 Understand Your Electronics Design
-- **Functional Block Decomposition:** Organizes complex designs into clear subsystem blocks (e.g., Power Supply, MCU, RF Transceiver, Sensor Interface).
-- **Power Tree Analysis:** Automatically maps voltage regulators, input voltages, quiescent currents, and load requirements across domains ($12\,\text{V} \to 5\,\text{V} \to 3.3\,\text{V} \to 1.8\,\text{V}$).
-- **Netlist Integrity:** Verifies that every schematic pin is mapped to an authoritative net, flagging floating inputs or missing pull-up/pull-down resistors.
-
-### 4.2 Work with Electronic Components & BOMs
-- **Parametric Sourcing:** Searches electronic component databases (LCSC, JLCPCB SMT, Mouser, DigiKey) for active, in-stock parts.
-- **Lifecycle Risk Auditing:** Flags End-of-Life (EOL) or Not-Recommended-for-New-Designs (NRND) parts before you commit them to the board.
-- **Manufacturing BOM Generation:** Exports production-ready BOMs with accurate LCSC part numbers (C-codes) formatted for automated SMT pick-and-place assembly.
-
-### 4.3 Prepare PCB Component Placement
-- **Mechanical Anchor Locking:** Secures edge connectors (USB-C, barrel jacks, terminal blocks), mounting holes, and LEDs in fixed positions.
-- **Thermal Clustering:** Groups heat-generating components (LDOs, buck converters, MOSFETs) with adequate spacing and thermal copper dissipation zones.
-- **Decoupling Proximity:** Enforces placement of decoupling capacitors directly adjacent to IC power pins with minimal loop inductance.
-- **Footprint Invariant Protection:** Ensures placed and verified components are never accidentally shifted or rotated during subsequent operations.
-
-### 4.4 Plan and Complete PCB Connections (Routing)
-- **IPC-2152 Physical Track Width Sizing:** Dynamically calculates trace widths based on actual operating current ($I$), copper weight ($1\,\text{oz}$ or $2\,\text{oz}$), and maximum allowed temperature rise ($\Delta T = 10^\circ\text{C}$).
-- **6-Stage Routing Priority:** Routes critical connections first to avoid congestion:
-  1. *Stage 1:* Ground reference nets (`GND`, `AGND`, `PGND`).
-  2. *Stage 2:* Board-edge and connector interfaces (USB, power inputs).
-  3. *Stage 3:* High-speed critical signals (differential pairs, RF lines, clocks).
-  4. *Stage 4:* Sensitive feedback and analog sense lines.
-  5. *Stage 5:* High-current power distribution rails (`VBUS`, `3V3`, `5V`).
-  6. *Stage 6:* General digital interconnects and GPIOs.
-- **Pin Escape Routing:** Generates clean escape stubs for dense QFN and fine-pitch IC footprints.
-
-### 4.5 Ground and Power Copper Management
-- **Solid Reference Planes:** Generates stackup-driven ground planes with configurable board-edge setbacks.
-- **Power Polygons:** Synthesizes convex-hull copper pours around high-current switching nodes to minimize parasitic trace resistance.
-- **Thermal Relief Connections:** Automatically creates 4-spoke thermal relief for hand-solderable passive pads while maintaining solid copper for thermal power pads.
-- **Ground Via Stitching:** Places collision-free arrays of stitching vias between top and bottom ground planes to lower RF impedance and shield sensitive traces.
-- **Return Path Discontinuity Detection:** Scans beneath signal tracks to ensure return currents do not cross splits or cutouts in the reference ground plane.
-
-### 4.6 Check the PCB (Verification & DRC)
-- **Zero Unintended Shorts:** Ray-casting collision detection guarantees no tracks or copper zones cross different electrical nets.
-- **Zero Open Circuits:** Verifies that 100% of populated pins on routed nets are physically connected.
-- **IPC-2221 Clearances:** Validates voltage-dependent trace-to-trace and trace-to-pad clearances.
-- **Fabricator Rule Validation:** Checks drill diameters, annular ring widths, and copper-to-board-edge clearances against JLCPCB capability tiers.
-
-### 4.7 Observe Engineering Progress (Local Mission Control)
-When DESK runs, you do not have to guess what it is doing. Simply open your browser to:
-
-```
-http://127.0.0.1:49630
-```
-
-You will see the **Local Mission Control** cockpit:
-- **Active Project & Execution State:** Displays current board, elapsed duration, and running task.
-- **12-Stage Engineering Progress:** Visual workflow cards showing status (Completed, In Progress, Pending) from Requirements through DRC to Release.
-- **Live Activity Feed:** Real-time log of every net scheduled, track routed, or copper zone poured.
-- **Resource Monitor:** Host CPU and memory usage to ensure lightweight operation.
-
-### 4.8 Prepare Manufacturing Deliverables
-- **Fabrication Package:** Verified Gerber RS-274X archives and Excellon NC drill files.
-- **Pick-and-Place File:** Centroid coordinates $(X, Y, \text{Rotation}, \text{Layer})$ for automated assembly.
-- **Engineering Diagnostic Report:** Formal JSON and Markdown summary documenting all verified gates, layer stackups, and design metrics.
-
----
-
-## 5. How DESK Fits into Your Engineering Workflow
-
-```mermaid
-flowchart TD
-    subgraph Input["1. Engineering Requirements"]
-        REQ["Circuit Requirements & Netlist"]
-        PROF["Design Profile: Stackup & Current Limits"]
-    end
-
-    subgraph DESK_Core["2. DESK Deterministic Core"]
-        M1["Schematic & Netlist Verification"]
-        M2["Placement & Mechanical Constraints"]
-        M3["6-Stage Priority Routing"]
-        M4["Ground Planes & Via Stitching"]
-        M5["DRC Clearance & Collision Engine"]
-        M6["8 Fail-Closed Quality Gates"]
-    end
-
-    subgraph Telemetry["3. Local Mission Control"]
-        SRV["Cockpit Server (127.0.0.1:49630)"]
-        UI["Real-Time Dashboard & Logs"]
-    end
-
-    subgraph Output["4. Manufacturing Deliverables"]
-        GATES{"All 8 Quality Gates Pass?"}
-        GERBER["Production Gerbers & Drill Files"]
-        BOM["Procurement BOM (LCSC C-Codes)"]
-        BLOCKED["Blocked (Fail-Closed Diagnostic)"]
-    end
-
-    REQ --> PROF --> M1
-    M1 --> M2 --> M3 --> M4 --> M5 --> M6
-
-    M1 -.->|Telemetry| SRV
-    M2 -.->|Telemetry| SRV
-    M3 -.->|Telemetry| SRV
-    M4 -.->|Telemetry| SRV
-    M5 -.->|Telemetry| SRV
-    M6 -.->|Telemetry| SRV
-    SRV --> UI
-
-    M6 --> GATES
-    GATES -->|Pass - Score 80 or higher| GERBER
-    GATES -->|Pass| BOM
-    GATES -->|Fail - Blocked| BLOCKED
-```
-
----
-
-## 6. Choose What You Want to Do
-
-### Workflow A: Create a New Electronics Design (`DESIGN_MODE`)
-- **Status:** `AVAILABLE`
-- **When to Choose:** You have an idea or functional requirement and want to build a verified schematic and PCB from scratch.
-- **What You Provide:** High-level circuit requirements (operating voltage, interfaces, mechanical size) in `projects/<PROJECT>/REQUIREMENTS.md`.
-- **What DESK Does:** Synthesizes functional blocks, derives IPC-2152 trace constraints, schedules net routing, pours ground planes, and evaluates quality gates.
-
-### Workflow B: Continue an Unfinished PCB Project (`REWORK_MODE`)
-- **Status:** `AVAILABLE`
-- **When to Choose:** You have an existing EasyEDA Pro PCB that is partially routed or has outstanding DRC violations that need repair.
-- **What You Provide:** An active EasyEDA Pro board document.
-- **What DESK Does:** Captures an exact baseline snapshot of existing tracks and footprints, performs an 8-domain engineering audit, proposes a surgical minimal-change repair plan, and requests human approval before applying modifications with readback verification.
-
-### Workflow C: Inspect an Existing Project (`AUDIT_MODE`)
-- **Status:** `AVAILABLE`
-- **When to Choose:** You want to check an existing PCB layout for hidden return-path splits, trace ampacity violations, or fabrication risks without making any changes.
-- **What You Provide:** The project directory or PCB file.
-- **What DESK Does:** Runs offline geometry diagnostics and outputs a comprehensive engineering audit report. Strictly read-only; zero board modifications.
-
----
-
-## 7. What Do You Need Before Starting?
-
-### Hardware Engineer's Checklist
-
-| Prerequisite | Requirement | Notes |
-|---|---|---|
-| **Computer** | Windows 10/11, Linux, or macOS | Windows PowerShell is fully supported and recommended. |
-| **Python** | Python 3.9 or higher | **Zero external packages to install.** DESK uses 100% built-in Python standard libraries. |
-| **Git** | Standard Git client | Used to clone the DESK repository. |
-| **EasyEDA Pro** | EasyEDA Pro Desktop or Web Client | Recommended for viewing and editing boards. |
-| **Memory & CPU** | Any 2-core machine with $\ge 2\,\text{GB}$ RAM | DESK's core algorithms execute in milliseconds with $\le 50\,\text{MB}$ memory. |
-
----
-
-## 8. Install DESK
-
-### Windows PowerShell (Recommended)
-
-Open **PowerShell** and run:
-
-```powershell
-# 1. Clone the repository
-git clone https://github.com/NijoP/DESK.git
-
-# 2. Enter the DESK directory
-cd DESK
-
-# 3. Verify the installation (runs 303 automated checks in ~13 seconds)
-python -m unittest discover -s tests -p "test_*.py"
-```
-
-### Linux & macOS
-
-Open your terminal and run:
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/NijoP/DESK.git
-
-# 2. Enter the DESK directory
-cd DESK
-
-# 3. Verify the installation
-python3 -m unittest discover -s tests -p "test_*.py"
-```
-
-**That's it.** You do not need to run `pip install` or configure complex virtual environments. DESK is ready to use immediately.
-
----
-
-## 9. Your First DESK Session
-
-Here is how a hardware engineer uses DESK on an engineering project:
-
-### Step 1: Check Current Workbench Status
-Query the DESK telemetry engine from PowerShell:
-
-```powershell
-python desk.py status
-```
-
-*Expected terminal output:*
-```text
-==============================================================================
-                       DESK LOCAL MISSION CONTROL STATUS                      
-==============================================================================
-Project:    projects/WATCH
-Execution:  exec_idle [IDLE]
-Progress:   [..............................] 0.0%
-Stage:      None
-Duration:   0.0s | Warnings: 0
-
-ENGINEERING STAGES (M1-M6 WORKFLOW):
-  [ PENDING ] 1. Requirement Ingestion (Gate R)                     
-  [ PENDING ] 2. Schematic Intelligence (M1)                        
-  [ PENDING ] 3. Component Intelligence & BOM (Gate B)              
-  [ PENDING ] 4. Electrical Rules Verification (ERC)                
-  ...
-==============================================================================
-```
-
-### Step 2: Open the Local Mission Control Cockpit
-Start the local dashboard and launch your browser:
+DESK includes an integrated, zero-dependency telemetry server providing real-time in-browser monitoring of all engineering operations:
 
 ```powershell
 python desk.py dashboard
 ```
 
-Your browser opens to `http://127.0.0.1:49630`, displaying live project metrics, active stages, and real-time execution logs.
+- **URL:** [`http://127.0.0.1:49630`](http://127.0.0.1:49630)
+- **Zero Overhead:** Adds $\le +0.011\,\text{ms}$ execution latency with a lightweight memory footprint ($\approx 50\,\text{MB}$).
+- **Streaming Telemetry:** Real-time Server-Sent Events (SSE) stream the 12 canonical engineering stages, DRC convergence, active rework states, and gate evaluations.
 
-### Step 3: Run 6-Stage Autonomous Routing
-Execute priority-driven routing on a sample project:
+---
+
+## 10. Engineering Safety Guarantees
+
+Hardware engineers are rightly protective of their layout artwork. DESK implements strict safeguards:
+
+1. **Exact Baseline Capture:** Multi-domain SHA-256 hashes record every footprint, trace vertex, and copper boundary before any operation begins.
+2. **Single-Writer Canvas Mutex:** Reentrant canvas locks (`write_op`) prevent concurrent processes from colliding on active documents.
+3. **Atomic Rollback Checkpoints:** Checkpoints are stored before every atomic mutation, enabling instant rollback if verification fails.
+4. **Independent Readback:** Geometry is read back from the CAD engine to confirm physical truth rather than assuming success.
+5. **Fail-Closed Gate Architecture:** Missing verification evidence blocks manufacturing release; gates never pass on assumptions.
+
+---
+
+## 11. Quick Start
+
+### Hardware Engineer's Checklist
+- **Operating System:** Windows 10/11 (PowerShell recommended), Linux, or macOS.
+- **Python:** Python 3.9 or higher.
+- **Dependencies:** **Zero external pip packages.** DESK uses 100% Python standard library.
+- **Hardware:** Runs on any 2-core machine with $\ge 2\,\text{GB}$ RAM.
+
+### Installation & Verification
+
+#### Windows PowerShell (Recommended)
+```powershell
+# 1. Clone repository
+git clone https://github.com/NijoP/DESK.git
+
+# 2. Enter directory
+cd DESK
+
+# 3. Verify installation (runs 303 automated checks in ~13 seconds)
+python -m unittest discover -s tests -p "test_*.py"
+```
+
+#### Linux & macOS
+```bash
+git clone https://github.com/NijoP/DESK.git
+cd DESK
+python3 -m unittest discover -s tests -p "test_*.py"
+```
+
+### Essential CLI Commands
 
 ```powershell
-python tools/route.py projects/WATCH --passes 30
-```
+# Check workbench telemetry status
+python desk.py status
 
-Watch the terminal and browser update in real time as ground nets, high-speed lines, power distribution rails, and digital buses are calculated, routed, and checked against DRC constraints.
+# Launch Local Mission Control Cockpit
+python desk.py dashboard
+
+# Start Rework Mode on an existing project (captures baseline snapshot)
+python desk.py rework start projects/WATCH
+
+# Audit existing PCB across 8 physical domains
+python desk.py rework audit projects/WATCH
+
+# Review inventory of discovered issues
+python desk.py rework issues projects/WATCH
+
+# Generate dependency-aware surgical repair plan
+python desk.py rework plan projects/WATCH
+
+# Authorize a surgical repair (generates bound approval token)
+python desk.py rework approve projects/WATCH RP-0006
+
+# Execute surgical repair under mutex lock with readback verification
+python desk.py rework execute projects/WATCH RP-0006
+
+# Evaluate 8 hard quality gates and generate manufacturing readiness report
+python desk.py rework report projects/WATCH
+```
 
 ---
 
-## 10. How DESK Protects Your Engineering Work
+## 12. Project Status & Limitations
 
-Hardware engineers are rightly protective of their layout artwork. DESK implements strict safeguards to guarantee your designs are never damaged:
+An authoritative, evidence-based status of DESK capabilities verified by automated test suites:
 
-### 1. Before Any Changes Happen
-- **Exact Baseline Capture:** DESK hashes and records the precise coordinates of every existing component footprint, pad, trace, and copper zone.
-- **Read-Only Inspection First:** DESK never modifies a board without first auditing its current state and presenting issues to the user.
-
-### 2. Before Modifications Are Applied
-- **Human-in-the-Loop Approval:** In Rework Mode, DESK generates a proposed repair plan (e.g., *"Rip up track net 3V3 between U1.1 and C4.1 to resolve DRC clearance violation"*) and halts for user authorization before touching the board.
-- **Single-Writer Safety Lock:** A canvas mutex prevents multiple processes or accidental double-clicks from corrupting active EasyEDA Pro documents.
-
-### 3. After Modifications
-- **Live Readback Verification:** After sending an update, DESK reads back the actual canvas geometry from EasyEDA Pro to confirm that the changes match intended physical constraints.
-- **Quarantined Testing:** Production client schematics are strictly isolated from experimental routines; automated mutation tests run solely in disposable workspaces.
-
----
-
-## 11. What Happens When the Work is Finished?
-
-When an engineering pass completes, DESK classifies the design into one of **four clear readiness states**:
-
-```
-                       ┌─────────────────────────┐
-                       │  EXECUTION FINISHED     │
-                       └────────────┬────────────┘
-                                    │
-            ┌───────────────────────┴───────────────────────┐
-            ▼                                               ▼
-   [ All 8 Gates Pass ]                            [ Any Gate Fails ]
-            │                                               │
-   ┌────────┴────────┐                             ┌────────┴────────┐
-   ▼                 ▼                             ▼                 ▼
-READY FOR       CONDITIONALLY                 INCOMPLETE /       BLOCKED /
-MANUFACTURING   READY                         REWORK NEEDED      UNSAFE
-(100% verified  (Routing done,                (Unrouted nets     (Short circuit,
-Gerbers, BOM,   minor aesthetic               or open airwires   DRC collision,
-zero errors)    warnings)                     remain)            or stackup error)
-```
-
-1. **Ready for Manufacturing:** All 8 hard acceptance gates passed with fresh validation evidence. Gerbers, drill files, and BOM are generated and certified.
-2. **Conditionally Ready:** All critical physical and electrical rules pass, but minor non-critical warnings exist (e.g., silk-screen overlap or non-optimal testpoint spacing).
-3. **Incomplete / Rework Needed:** Some signal nets remain unrouted, or high-density areas require manual pin escape guidance.
-4. **Blocked / Unsafe:** A hard gate has failed (e.g., an unintended short circuit, power trace ampacity violation, or clearance collision). DESK strictly blocks manufacturing release until the physical violation is resolved.
-
----
-
-## 12. Current Capabilities & Development Status
-
-An honest, evidence-based status of DESK capabilities verified by automated test suites:
-
-| Engineering Capability | Current Status | How It Is Verified |
+| Engineering Capability | Current Status | Verification Evidence |
 |---|---|---|
-| **IPC-2152 Trace Width Sizing** | `AVAILABLE` | Tested against physical copper formulas (`test_profile_hardening.py`). |
-| **6-Stage Net Priority Scheduler** | `AVAILABLE` | Tested on multi-terminal netlists (`test_router_hardening.py`). |
-| **Copper Planes & Return Paths** | `AVAILABLE` | Ray-casting polygon intersection tests (`test_copper_geometry.py`). |
-| **8 Fail-Closed Quality Gates** | `AVAILABLE` | Verified to block unrouted/shorted nets (`test_quality_fail_closed.py`). |
-| **Local Mission Control (Cockpit)** | `AVAILABLE` | In-browser server tested on port 49630 (`test_server.py`). |
-| **Component Intelligence & BOM** | `AVAILABLE` | Parametric search & pricing tested (`test_component_intelligence.py`). |
-| **EasyEDA Pro TCP Bridge** | `AVAILABLE (OFFLINE TESTED)` | Fast port discovery tested; mutations quarantined (`test_bridge.py`). |
-| **Rework Mode (Existing Boards)** | `AVAILABLE` | 8-domain engineering audit, baseline snapshot, surgical repair planner & fail-closed release gates (`test_rework_*.py`). |
-| **Fabrication Release Packaging** | `AVAILABLE` | BOM and manufacturing output formatting tested. |
+| **IPC-2152 Trace Width Sizing** | `AVAILABLE (OFFLINE TESTED)` | Tested against physical copper formulas (`test_profile_hardening.py`). |
+| **6-Stage Net Priority Router** | `AVAILABLE (OFFLINE TESTED)` | Tested on multi-terminal netlists (`test_router_hardening.py`). |
+| **Copper Planes & Return Paths** | `AVAILABLE (OFFLINE TESTED)` | Ray-casting polygon intersection tests (`test_copper_geometry.py`). |
+| **8 Fail-Closed Quality Gates** | `AVAILABLE (OFFLINE TESTED)` | Verified to block unrouted/shorted nets (`test_quality_fail_closed.py`). |
+| **Local Mission Control Cockpit** | `AVAILABLE (OFFLINE TESTED)` | In-browser server tested on port 49630 (`test_server.py`). |
+| **Component Intelligence & BOM** | `AVAILABLE (OFFLINE TESTED)` | Parametric search & pricing tested (`test_component_intelligence.py`). |
+| **Rework Mode & 8-Domain Audit** | `AVAILABLE (OFFLINE TESTED)` | 8-domain audit, baseline snapshot, repair planner (`test_rework_*.py`, 25 tests). |
+| **EasyEDA Pro Official CLI & Safety**| `AVAILABLE (OFFLINE TESTED)` | Window discovery, session inspection, customer project barriers (`test_easyeda_pro_integration.py`). |
+| **EasyEDA Pro Live Bridge Mutation**| `IMPLEMENTED BUT NOT LIVE VERIFIED` | Adapter signatures implemented; live execution on production customer boards quarantined (`tools/live_disposable_test.py`). |
 
 ---
 
-## 13. Performance and Engineering Accuracy
+## 13. Contributing & Documentation
 
-DESK distinguishes between **mathematical calculation speed** and **full ECAD layout execution**:
+### Documentation Directory
+- [**Character Identity: THE SENTINEL**](docs/identity/DESK_CHARACTER_IDENTITY.md) — Comprehensive character persona and behavioral traits.
+- [**Biomimetic Design Philosophy**](docs/identity/BIOMIMETIC_DESIGN_PHILOSOPHY.md) — Detailed explanation of homeostasis, immunology, and wound healing in EDA.
+- [**Visual Identity Guide**](docs/identity/VISUAL_IDENTITY_GUIDE.md) — Visual standards, color palette, and asset usage.
+- [**Biological to Engineering Mapping**](docs/identity/BIOLOGICAL_TO_ENGINEERING_MAPPING.md) — Source-code-level verification of biological mechanisms.
+- [**README Validation Report**](docs/identity/README_VALIDATION_REPORT.md) — Verification of technical claims and links.
+- [**Rework Mode Architecture Series**](docs/rework/01_REWORK_MODE_OVERVIEW.md) — Complete 16-part technical specification for PCB recovery and surgical repair.
+- [**Local Mission Control Guide**](docs/local-dashboard.md) — How to operate the telemetry cockpit.
 
-- **Mathematical Geometry Calculations:** Core algorithms (IPC-2152 trace sizing, net scheduling, MST wire calculations, ray-casting copper checks) execute in **under 10 milliseconds** across all test scenarios.
-- **Full Board Routing & CAD Sync:** Complete multi-pass autorouting of a 4-layer controller board through Freerouting and EasyEDA Pro takes **several seconds**, depending on net count and complexity.
-- **Zero Host Overhead:** The Local Mission Control server adds **only $+0.011\,\text{ms}$** of overhead per operation, running within a compact $\approx 50\,\text{MB}$ memory footprint.
-
-All benchmarks are reproducible on your machine:
-```powershell
-python tools/benchmarks.py
-```
-
----
-
-## 14. Documentation: Find What You Need
-
-Detailed guides organized by your engineering task:
-
-### Getting Started & Basics
-- [**Getting Started Guide**](docs/getting-started.md) — Comprehensive walkthrough for new users.
-- [**Local Mission Control Guide**](docs/local-dashboard.md) — How to use the telemetry cockpit at `http://127.0.0.1:49630`.
-- [**Hardware Design Profiles**](docs/01_PHILOSOPHY.md) — How stackups and trace rules are defined.
-
-### PCB Layout & Verification
-- [**Autonomous Routing Architecture**](docs/05_ROUTING.md) — How the 6-stage priority scheduler routes nets.
-- [**Rework Mode Architecture & Operations**](docs/rework/01_REWORK_MODE_OVERVIEW.md) — Existing PCB recovery, 8-domain audit, surgical repair, and manufacturing readiness.
-- [**Execution Telemetry & Events**](docs/execution-events.md) — Complete event schema for the 12 engineering stages.
-- [**Safety Checklist for CAD Integration**](docs/LIVE_INTEGRATION_CHECKLIST.md) — Pre-flight checks before modifying live boards.
-- [**Capability Status Ledger**](docs/09_STATUS.md) — Authoritative, granular implementation tracking.
-
-### Agent Memory & Development
-- [**Backpass Continuous Learning**](docs/development_memory/00_ADOPTION_AUDIT.md) — How coding agents learn from past development sessions.
-
----
-
-## 15. Repository Structure
-
-| Directory | Engineering Purpose |
-|---|---|
-| [`desk/`](desk/) | Core engineering logic: trace sizing, router, copper planes, DRC, and telemetry. |
-| [`projects/`](projects/) | Engineering hardware projects (requirements, block diagrams, PCB files). |
-| [`library/`](library/) | Verified electronic components, footprints, and supplier mappings. |
-| [`tools/`](tools/) | Command-line engineering utilities (routing, linting, benchmarks, project creation). |
-| [`docs/`](docs/) | Engineering specifications, user guides, and architecture references. |
-| [`tests/`](tests/) | 303 automated verification tests validating physical and electrical rules. |
-
----
-
-## 16. Who is DESK For?
-
-- **PCB Design Engineers:** Who want to automate repetitive trace sizing, ground pouring, and DRC debugging while retaining full creative control.
-- **Hardware & Electronics Engineers:** Who want to verify that physical electrical constraints (current limits, impedance, return paths) are respected before fab release.
-- **Hardware Startups & Agile Teams:** Who need rapid turnaround from concept to verified prototype boards without sacrificing design quality.
-- **Engineering Students & Researchers:** Who want a transparent, zero-dependency workbench to learn and practice professional PCB engineering principles.
-
----
-
-## 17. Limitations & Professional Responsibilities
-
-- **Supported CAD:** DESK currently focuses on **EasyEDA Pro**. Support for KiCad and other ECAD formats is planned.
-- **Engineering Judgment Required:** DESK is an automated engineering assistant. It calculates traces from physical formulas and flags rule violations, but **the final design sign-off remains the professional responsibility of the human engineer**.
-- **Fabricator Tolerances:** Always verify that your selected PCB fabricator (e.g., JLCPCB, PCBWay, OSH Park) supports the minimum trace widths, clearances, and drill diameters specified in your project's design profile.
-
----
-
-## 18. Contributing & License
-
-We welcome contributions from electronics engineers and developers! To contribute:
+### Contributing
+We welcome contributions from electronics engineers and software developers:
 1. Ensure all code uses **100% Python standard library** (zero external pip packages).
 2. Base all trace width and clearance rules on physical equations or documented fabricator standards.
 3. Verify that all 303 automated tests pass (`python -m unittest discover -s tests -p "test_*.py"`).
 
-This project is licensed under the [MIT License](LICENSE).  
-Third-party notices and acknowledgments are documented in [NOTICE](NOTICE).
+---
+
+<p align="center">
+  <b>A healthy PCB is not merely a board without visible errors. It is a design whose intent, structure, and physical constraints remain intact.</b><br>
+  <b>DESK exists to protect that integrity.</b>
+</p>
