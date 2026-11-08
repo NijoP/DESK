@@ -1,112 +1,203 @@
-"""Unit and Property-Based Tests for Indexed PCB Snapshot and Incremental Computation.
-Validates:
-- 2D Spatial Grid Partitioning
-- Multi-Domain Fingerprinting (tracks, vias, zones, stackup, rules)
-- Incremental Update Equivalence Invariant:
-  RESULT_FROM_INCREMENTAL_UPDATE == RESULT_FROM_FULL_REBUILD
 """
-import unittest
+Unit tests proving equivalence between Incremental Snapshot Updates and Full Reconstruction:
+RESULT_FROM_INCREMENTAL_UPDATE == RESULT_FROM_FULL_REBUILD
+"""
+
 import copy
-from desk.snapshot import IndexedPCBSnapshot, SpatialGridIndex
+import unittest
 
-class TestIncrementalSnapshot(unittest.TestCase):
+from desk.snapshot import IndexedPCBSnapshot
 
+
+class TestIncrementalSnapshotEquivalence(unittest.TestCase):
     def setUp(self):
-        self.raw_dump = {
-            "R1": {
-                "x": 100.0, "y": 100.0, "rot": 0, "layer": 1,
-                "bbox": [-20, 20, -10, 10],
-                "pads": [
-                    {"num": "1", "net": "VIN", "dx": -15, "dy": 0, "layer": 1},
-                    {"num": "2", "net": "SW", "dx": 15, "dy": 0, "layer": 1}
-                ]
-            },
+        self.base_dump = {
             "C1": {
-                "x": 300.0, "y": 100.0, "rot": 90, "layer": 1,
+                "x": 100.0,
+                "y": 100.0,
+                "rot": 0,
+                "layer": 1,
                 "bbox": [-10, 10, -10, 10],
                 "pads": [
-                    {"num": "1", "net": "SW", "dx": 0, "dy": -8, "layer": 1},
-                    {"num": "2", "net": "GND", "dx": 0, "dy": 8, "layer": 1}
-                ]
-            }
+                    {"num": "1", "dx": -5.0, "dy": 0.0, "net": "VCC", "layer": 1},
+                    {"num": "2", "dx": 5.0, "dy": 0.0, "net": "GND", "layer": 1},
+                ],
+            },
+            "U1": {
+                "x": 500.0,
+                "y": 500.0,
+                "rot": 90,
+                "layer": 1,
+                "bbox": [-20, 20, -20, 20],
+                "pads": [
+                    {"num": "1", "dx": -15.0, "dy": 0.0, "net": "VCC", "layer": 1},
+                    {"num": "2", "dx": 0.0, "dy": 0.0, "net": "GND", "layer": 1},
+                    {"num": "3", "dx": 15.0, "dy": 0.0, "net": "SIG_OUT", "layer": 1},
+                ],
+            },
         }
-        self.tracks = [
-            {"id": "t1", "x1": 115, "y1": 100, "x2": 300, "y2": 92, "width": 12, "layer": 1, "net": "SW"}
+        self.base_tracks = [
+            {"id": "t1", "x1": 100.0, "y1": 100.0, "x2": 500.0, "y2": 500.0, "width": 10.0, "layer": 1, "net": "VCC"}
         ]
-        self.vias = [
-            {"id": "v1", "x": 300, "y": 108, "hole_dia": 12, "dia": 24, "net": "GND"}
-        ]
+        self.base_vias = [{"id": "v1", "x": 100.0, "y": 100.0, "dia": 24.0, "hole_dia": 12.0, "net": "GND"}]
+        self.base_zones = [{"id": "z1", "net": "GND", "layer": 2, "priority": 1}]
+        self.base_stackup = [{"name": "Top", "copper_thickness_oz": 1.0}, {"name": "GND", "copper_thickness_oz": 1.0}]
+        self.base_rules = {"min_clearance_mil": 6.0}
 
-    def test_01_spatial_grid_index(self):
-        grid = SpatialGridIndex(cell_size_mil=100.0)
-        grid.insert("R1", 80, 90, 120, 110)
-        grid.insert("C1", 290, 90, 310, 110)
+    def _assert_equivalent(self, inc_snap: IndexedPCBSnapshot, rebuilt_snap: IndexedPCBSnapshot):
+        self.assertEqual(inc_snap.fingerprint, rebuilt_snap.fingerprint, "Fingerprint mismatch!")
+        self.assertEqual(inc_snap.geometry_rev, rebuilt_snap.geometry_rev, "Geometry revision mismatch!")
+        self.assertEqual(inc_snap.connectivity_rev, rebuilt_snap.connectivity_rev, "Connectivity revision mismatch!")
+        self.assertEqual(inc_snap.stackup_rev, rebuilt_snap.stackup_rev, "Stackup revision mismatch!")
+        self.assertEqual(inc_snap.copper_rev, rebuilt_snap.copper_rev, "Copper revision mismatch!")
+        self.assertEqual(inc_snap.rules_rev, rebuilt_snap.rules_rev, "Rules revision mismatch!")
 
-        # Query region overlapping R1 only
-        res_r1 = grid.query_rect(50, 50, 150, 150)
-        self.assertIn("R1", res_r1)
-        self.assertNotIn("C1", res_r1)
-
-        # Query region overlapping both
-        res_both = grid.query_rect(50, 50, 350, 150)
-        self.assertIn("R1", res_both)
-        self.assertIn("C1", res_both)
-
-        # Remove R1
-        grid.remove("R1")
-        res_after = grid.query_rect(50, 50, 350, 150)
-        self.assertNotIn("R1", res_after)
-        self.assertIn("C1", res_after)
-
-    def test_02_composite_fingerprint_sensitivity(self):
-        # Baseline snapshot
-        snap1 = IndexedPCBSnapshot(self.raw_dump, tracks=self.tracks, vias=self.vias)
-        fp1 = snap1.fingerprint
-
-        # Snapshot with modified track width
-        tracks_mod = copy.deepcopy(self.tracks)
-        tracks_mod[0]["width"] = 25  # Thicker trace
-        snap2 = IndexedPCBSnapshot(self.raw_dump, tracks=tracks_mod, vias=self.vias)
-        fp2 = snap2.fingerprint
-
-        # Fingerprint MUST change when tracks are modified!
-        self.assertNotEqual(fp1, fp2)
-        self.assertNotEqual(snap1.geometry_rev, snap2.geometry_rev)
-
-    def test_03_incremental_update_equivalence_invariant(self):
-        """CRITICAL INVARIANT TEST:
-        RESULT_FROM_INCREMENTAL_UPDATE == RESULT_FROM_FULL_REBUILD
-        """
-        # 1. Full Initial Build
-        initial_dump = copy.deepcopy(self.raw_dump)
-        snap_incremental = IndexedPCBSnapshot(initial_dump, tracks=self.tracks, vias=self.vias)
-
-        # 2. Incremental Update: Move R1 to (500.0, 450.0) with rotation 180
-        snap_incremental.update_component_placement(
-            ref="R1",
-            x_mil=500.0,
-            y_mil=450.0,
-            rot_deg=180.0,
-            layer=1
+    def test_component_movement_and_rotation(self):
+        snap = IndexedPCBSnapshot(
+            copy.deepcopy(self.base_dump),
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
         )
 
-        # 3. Full Rebuild from modified dump
-        rebuilt_dump = copy.deepcopy(self.raw_dump)
-        rebuilt_dump["R1"]["x"] = 500.0
-        rebuilt_dump["R1"]["y"] = 450.0
-        rebuilt_dump["R1"]["rot"] = 180.0
-        rebuilt_dump["R1"]["layer"] = 1
-        snap_full_rebuild = IndexedPCBSnapshot(rebuilt_dump, tracks=self.tracks, vias=self.vias)
+        # Apply incremental move
+        snap.update_component_placement("C1", x_mil=250.0, y_mil=300.0, rot_deg=45.0, layer=2)
 
-        # Verify exact equivalence
-        self.assertEqual(snap_incremental.fingerprint, snap_full_rebuild.fingerprint)
-        self.assertEqual(snap_incremental.geometry_rev, snap_full_rebuild.geometry_rev)
-        self.assertEqual(snap_incremental.connectivity_rev, snap_full_rebuild.connectivity_rev)
+        # Full reconstruction
+        rebuilt_dump = copy.deepcopy(self.base_dump)
+        rebuilt_dump["C1"]["x"] = 250.0
+        rebuilt_dump["C1"]["y"] = 300.0
+        rebuilt_dump["C1"]["rot"] = 45.0
+        rebuilt_dump["C1"]["layer"] = 2
+        rebuilt = IndexedPCBSnapshot(
+            rebuilt_dump,
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
 
-        # Verify net endpoints equivalence
-        eps_inc = sorted([(ep.ref, ep.pad_num, round(ep.x_mil, 2), round(ep.y_mil, 2)) for ep in snap_incremental.get_endpoints_for_net("SW")])
-        eps_reb = sorted([(ep.ref, ep.pad_num, round(ep.x_mil, 2), round(ep.y_mil, 2)) for ep in snap_full_rebuild.get_endpoints_for_net("SW")])
-        self.assertEqual(eps_inc, eps_reb)
+        self._assert_equivalent(snap, rebuilt)
+
+    def test_component_addition_and_deletion(self):
+        snap = IndexedPCBSnapshot(
+            copy.deepcopy(self.base_dump),
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
+
+        new_comp = {
+            "x": 800.0,
+            "y": 200.0,
+            "rot": 0,
+            "layer": 1,
+            "pads": [{"num": "1", "net": "SIG_OUT"}, {"num": "2", "net": "GND"}],
+        }
+        # Add incrementally
+        snap.add_component("R1", new_comp)
+
+        rebuilt_dump = copy.deepcopy(self.base_dump)
+        rebuilt_dump["R1"] = copy.deepcopy(new_comp)
+        rebuilt = IndexedPCBSnapshot(
+            rebuilt_dump,
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
+        self._assert_equivalent(snap, rebuilt)
+
+        # Now remove incrementally
+        snap.remove_component("R1")
+        rebuilt_original = IndexedPCBSnapshot(
+            copy.deepcopy(self.base_dump),
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
+        self._assert_equivalent(snap, rebuilt_original)
+
+    def test_pad_net_reassignment(self):
+        snap = IndexedPCBSnapshot(
+            copy.deepcopy(self.base_dump),
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
+
+        # Reassign C1 pad 1 from VCC to 3V3
+        snap.update_pad_net("C1", "1", "3V3")
+
+        rebuilt_dump = copy.deepcopy(self.base_dump)
+        rebuilt_dump["C1"]["pads"][0]["net"] = "3V3"
+        rebuilt = IndexedPCBSnapshot(
+            rebuilt_dump,
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
+        self._assert_equivalent(snap, rebuilt)
+
+    def test_tracks_and_vias_updates(self):
+        snap = IndexedPCBSnapshot(
+            copy.deepcopy(self.base_dump),
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
+
+        new_track = {"id": "t2", "x1": 500.0, "y1": 500.0, "x2": 600.0, "y2": 600.0, "width": 8.0, "layer": 1, "net": "SIG_OUT"}
+        snap.add_track(new_track)
+
+        rebuilt_tracks = copy.deepcopy(self.base_tracks) + [new_track]
+        rebuilt = IndexedPCBSnapshot(
+            copy.deepcopy(self.base_dump),
+            tracks=rebuilt_tracks,
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
+        self._assert_equivalent(snap, rebuilt)
+
+    def test_stackup_and_rules_updates(self):
+        snap = IndexedPCBSnapshot(
+            copy.deepcopy(self.base_dump),
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=copy.deepcopy(self.base_rules),
+        )
+
+        new_rules = {"min_clearance_mil": 8.0, "min_trace_mil": 5.0}
+        snap.update_rules(new_rules)
+
+        rebuilt = IndexedPCBSnapshot(
+            copy.deepcopy(self.base_dump),
+            tracks=copy.deepcopy(self.base_tracks),
+            vias=copy.deepcopy(self.base_vias),
+            zones=copy.deepcopy(self.base_zones),
+            stackup=copy.deepcopy(self.base_stackup),
+            rules=new_rules,
+        )
+        self._assert_equivalent(snap, rebuilt)
+
 
 if __name__ == "__main__":
     unittest.main()

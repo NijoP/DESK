@@ -144,19 +144,31 @@ class QualityGateEvaluator:
                  routability_score: float = 1.0,
                  profile: Optional[DesignProfile] = None,
                  discontinuities_count: Optional[int] = 0,
-                 evidence_timestamp: Optional[float] = None) -> QualityReport:
+                 evidence_timestamp: Optional[float] = None,
+                 board_revision: Optional[str] = None,
+                 evidence_revision: Optional[str] = None,
+                 require_profile: bool = False) -> QualityReport:
         hard = HardAcceptanceGates()
         failures = []
         recommendations = []
         now = evidence_timestamp or time.time()
 
+        # Check evidence freshness / staleness against board revision
+        is_stale = bool(board_revision and evidence_revision and board_revision != evidence_revision)
+
         # 1. DRC Evidence Check (Fail-closed)
         short_count = 0
         clearance_count = 0
+        other_drc_count = 0
+
         if drc_violations is None:
             hard.zero_shorts = GateResult("zero_shorts", "UNKNOWN", timestamp=now, details="Missing DRC evidence: DRC check was not executed.")
             hard.zero_clearance_violations = GateResult("zero_clearance_violations", "UNKNOWN", timestamp=now, details="Missing DRC evidence: DRC check was not executed.")
             failures.append("Missing DRC evidence: DRC check was not executed.")
+        elif is_stale:
+            hard.zero_shorts = GateResult("zero_shorts", "STALE", timestamp=now, details=f"DRC evidence from revision {evidence_revision} is stale against board {board_revision}.")
+            hard.zero_clearance_violations = GateResult("zero_clearance_violations", "STALE", timestamp=now, details=f"DRC evidence from revision {evidence_revision} is stale against board {board_revision}.")
+            failures.append("DRC evidence is stale.")
         else:
             for v in drc_violations:
                 err_type = str(getattr(v, "error_type", "")).lower()
@@ -165,6 +177,8 @@ class QualityGateEvaluator:
                     short_count += 1
                 elif "clearance" in err_type or "clearance" in rule_name:
                     clearance_count += 1
+                else:
+                    other_drc_count += 1
 
             if short_count == 0:
                 hard.zero_shorts = GateResult("zero_shorts", "PASS", timestamp=now, details="0 short circuits verified.")
@@ -179,11 +193,14 @@ class QualityGateEvaluator:
                 failures.append("Hard clearance violations detected")
 
         # 2. Netlist Connectivity Evidence Check (Fail-closed)
-        critical_nets = critical_nets or []
         if unconnected_nets is None:
             hard.zero_unconnected_pads = GateResult("zero_unconnected_pads", "UNKNOWN", timestamp=now, details="Missing connectivity evidence: Netlist connectivity was not verified.")
             hard.all_critical_nets_connected = GateResult("all_critical_nets_connected", "UNKNOWN", timestamp=now, details="Missing connectivity evidence: Netlist connectivity was not verified.")
             failures.append("Missing connectivity evidence: Netlist connectivity was not verified.")
+        elif is_stale:
+            hard.zero_unconnected_pads = GateResult("zero_unconnected_pads", "STALE", timestamp=now, details="Connectivity evidence is stale.")
+            hard.all_critical_nets_connected = GateResult("all_critical_nets_connected", "STALE", timestamp=now, details="Critical nets evidence is stale.")
+            failures.append("Connectivity evidence is stale.")
         else:
             unconnected_count = len(unconnected_nets)
             if unconnected_count == 0:
@@ -192,18 +209,37 @@ class QualityGateEvaluator:
                 hard.zero_unconnected_pads = GateResult("zero_unconnected_pads", "FAIL", timestamp=now, details=f"Unconnected populated pads detected on nets: {unconnected_nets}", violations_count=unconnected_count)
                 failures.append(f"Unconnected populated pads detected on nets: {unconnected_nets}")
 
+            # Derive critical nets from profile if not explicitly passed
+            if critical_nets is None and profile is not None:
+                crit_set = set(profile.rf_nets)
+                for net_name, limit_a in profile.current_limits_A.items():
+                    if limit_a >= 1.0:
+                        crit_set.add(net_name)
+                critical_nets = sorted(crit_set)
+            elif critical_nets is None:
+                critical_nets = []
+
             unconnected_set = set(unconnected_nets)
             missing_critical = [n for n in critical_nets if n in unconnected_set]
-            if len(missing_critical) == 0:
-                hard.all_critical_nets_connected = GateResult("all_critical_nets_connected", "PASS", timestamp=now, details="All critical nets connected.")
-            else:
+
+            if len(missing_critical) > 0:
                 hard.all_critical_nets_connected = GateResult("all_critical_nets_connected", "FAIL", timestamp=now, details=f"Critical nets unconnected: {missing_critical}", violations_count=len(missing_critical))
                 failures.append(f"Critical nets unconnected: {missing_critical}")
+            elif unconnected_count > 0 and len(critical_nets) == 0:
+                # Unconnected nets exist and no critical nets specified -> cannot verify critical net status
+                hard.all_critical_nets_connected = GateResult("all_critical_nets_connected", "UNKNOWN", timestamp=now, details="Unconnected pads exist but critical nets list is unspecified.")
+                failures.append("Unconnected pads exist but critical nets list is unspecified.")
+            else:
+                hard.all_critical_nets_connected = GateResult("all_critical_nets_connected", "PASS", timestamp=now, details="All critical nets connected.")
 
         # 3. Copper Plane Continuity Check (Fail-closed)
         if discontinuities_count is None:
             hard.copper_zones_connected = GateResult("copper_zones_connected", "UNKNOWN", timestamp=now, details="Missing plane continuity evidence: Return-path continuity was not evaluated.")
             failures.append("Missing plane continuity evidence: Return-path continuity was not evaluated.")
+            discon_for_score = 5
+        elif is_stale:
+            hard.copper_zones_connected = GateResult("copper_zones_connected", "STALE", timestamp=now, details="Plane continuity evidence is stale.")
+            failures.append("Plane continuity evidence is stale.")
             discon_for_score = 5
         else:
             discon_for_score = discontinuities_count
@@ -225,18 +261,30 @@ class QualityGateEvaluator:
             else:
                 hard.valid_stackup = GateResult("valid_stackup", "FAIL", timestamp=now, details="Layer stackup is empty or invalid.")
                 failures.append("Layer stackup is empty or invalid.")
+        elif require_profile:
+            hard.valid_stackup = GateResult("valid_stackup", "UNKNOWN", timestamp=now, details="Missing DesignProfile: Stackup verification cannot be performed.")
+            failures.append("Missing DesignProfile: Stackup verification cannot be performed.")
         else:
             hard.valid_stackup = GateResult("valid_stackup", "PASS", timestamp=now, details="Default stackup accepted (profile omitted).")
 
         # 5. Electrical & Manufacturing Constraints Verification
-        if profile is not None:
+        if other_drc_count > 0:
+            hard.manufacturing_constraints_met = GateResult("manufacturing_constraints_met", "FAIL", timestamp=now, details=f"{other_drc_count} unclassified DRC violations detected.", violations_count=other_drc_count)
+            failures.append(f"{other_drc_count} unclassified DRC violations detected.")
+        elif profile is not None:
             mfg = profile.manufacturing
             if mfg and mfg.min_trace_width_mil > 0 and mfg.min_clearance_mil > 0 and mfg.min_drill_mil > 0:
                 hard.manufacturing_constraints_met = GateResult("manufacturing_constraints_met", "PASS", timestamp=now, details="Manufacturing thresholds respected.")
             else:
                 hard.manufacturing_constraints_met = GateResult("manufacturing_constraints_met", "FAIL", timestamp=now, details="Manufacturing constraints invalid or missing.")
                 failures.append("Manufacturing constraints invalid or missing.")
+        elif require_profile:
+            hard.manufacturing_constraints_met = GateResult("manufacturing_constraints_met", "UNKNOWN", timestamp=now, details="Missing DesignProfile: Manufacturing constraints cannot be verified.")
+            failures.append("Missing DesignProfile: Manufacturing constraints cannot be verified.")
+        else:
+            hard.manufacturing_constraints_met = GateResult("manufacturing_constraints_met", "PASS", timestamp=now, details="Default manufacturing constraints accepted.")
 
+        if profile is not None:
             has_invalid_elec = False
             for net, curr in profile.current_limits_A.items():
                 if curr < 0:
@@ -246,8 +294,10 @@ class QualityGateEvaluator:
                 hard.electrical_constraints_met = GateResult("electrical_constraints_met", "PASS", timestamp=now, details="Electrical constraints verified.")
             else:
                 hard.electrical_constraints_met = GateResult("electrical_constraints_met", "FAIL", timestamp=now, details="Electrical constraints violated (negative current limits).")
+        elif require_profile:
+            hard.electrical_constraints_met = GateResult("electrical_constraints_met", "UNKNOWN", timestamp=now, details="Missing DesignProfile: Electrical current constraints cannot be verified.")
+            failures.append("Missing DesignProfile: Electrical current constraints cannot be verified.")
         else:
-            hard.manufacturing_constraints_met = GateResult("manufacturing_constraints_met", "PASS", timestamp=now, details="Default manufacturing constraints accepted.")
             hard.electrical_constraints_met = GateResult("electrical_constraints_met", "PASS", timestamp=now, details="Default electrical constraints accepted.")
 
         failures.extend([f for f in hard.failed_gates() if f not in failures])

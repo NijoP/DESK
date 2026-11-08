@@ -85,7 +85,9 @@ class SessionRegistry:
             cls._sessions[norm].is_valid = False
             del cls._sessions[norm]
 
-PORT = SessionRegistry.get_port()
+# Default port constant; actual socket discovery is deferred to get_port() on demand
+DEFAULT_PORT: int = 49620
+PORT: int = DEFAULT_PORT
 
 def _find_window_for_project(port: int, target_uuids: Tuple[str, ...], timeout: float = 1.0) -> Optional[str]:
     """Finds the specific EasyEDA Pro window hosting the project's documents."""

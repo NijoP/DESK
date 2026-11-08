@@ -144,5 +144,51 @@ class TestQualityAndMfgVerification(unittest.TestCase):
         self.assertFalse(report.approved)
         self.assertFalse(report.hard_gates.electrical_constraints_met)
 
+    def test_11_unclassified_drc_fails_mfg(self):
+        # Violation with unclassified error type (e.g. "AnnularRing", "DrillTooClose") must fail manufacturing gate
+        v = DRCViolation(violation_id="V_ANNULAR", rule_name="AnnularRing", error_type="InsufficientCopperWeb", layer="Top")
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=[v],
+            unconnected_nets=[],
+            critical_nets=[],
+            routability_score=1.0,
+            discontinuities_count=0
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertFalse(report.hard_gates.manufacturing_constraints_met)
+        self.assertEqual(report.hard_gates.manufacturing_constraints_met.state, "FAIL")
+
+    def test_12_stale_evidence_fails_closed(self):
+        # Evidence from revision 'rev_old' on board 'rev_new' must be flagged STALE
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=[],
+            unconnected_nets=[],
+            critical_nets=[],
+            routability_score=1.0,
+            discontinuities_count=0,
+            board_revision="rev_new",
+            evidence_revision="rev_old"
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertEqual(report.hard_gates.zero_shorts.state, "STALE")
+
+    def test_13_require_profile_fails_closed_when_missing(self):
+        # Strict mode requires an explicit profile
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=[],
+            unconnected_nets=[],
+            critical_nets=[],
+            routability_score=1.0,
+            discontinuities_count=0,
+            require_profile=True
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertEqual(report.hard_gates.valid_stackup.state, "UNKNOWN")
+        self.assertEqual(report.hard_gates.manufacturing_constraints_met.state, "UNKNOWN")
+        self.assertEqual(report.hard_gates.electrical_constraints_met.state, "UNKNOWN")
+
 if __name__ == "__main__":
     unittest.main()

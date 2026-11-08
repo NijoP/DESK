@@ -251,13 +251,23 @@ class IndexedPCBSnapshot:
         return self.net_to_components.get(net, set())
 
     def update_component_placement(self, ref: str, x_mil: float, y_mil: float, rot_deg: float, layer: int):
-        """Incrementally updates a single component's coordinates and affected net endpoints."""
-        if ref not in self.ref_to_comp: return
+        """Incrementally updates a single component's coordinates, layer, and affected net endpoints."""
+        if ref not in self.ref_to_comp:
+            return
         comp = self.ref_to_comp[ref]
+        old_layer = comp.get("layer", 1)
         comp["x"] = x_mil
         comp["y"] = y_mil
         comp["rot"] = rot_deg
         comp["layer"] = layer
+
+        # Update layer_to_components
+        if old_layer in self.layer_to_components and ref in self.layer_to_components[old_layer]:
+            self.layer_to_components[old_layer].remove(ref)
+        if layer not in self.layer_to_components:
+            self.layer_to_components[layer] = []
+        if ref not in self.layer_to_components[layer]:
+            self.layer_to_components[layer].append(ref)
 
         rot_rad = math.radians(rot_deg)
         cos_a = math.cos(rot_rad)
@@ -270,7 +280,8 @@ class IndexedPCBSnapshot:
         for p in comp.get("pads", []):
             num = str(p.get("num", ""))
             net = p.get("net")
-            if not net or net not in self.net_to_endpoints: continue
+            if not net or net not in self.net_to_endpoints:
+                continue
             dx = p.get("dx", 0.0)
             dy = p.get("dy", 0.0)
             px = x_mil + dx * cos_a - dy * sin_a
@@ -282,8 +293,197 @@ class IndexedPCBSnapshot:
                     ep.layer = layer if ep.is_smd else 11
                     break
 
-        # Invalidate dependent graph and recalculate geometry revision
+        # Invalidate dependent graph and recalculate all domain revisions
         self.connectivity_graph = None
+        self._compute_all_revisions()
+
+    def add_component(self, ref: str, comp: Dict[str, Any]):
+        """Incrementally adds a new component and indexes its pads and geometry."""
+        from desk.component_intel import FootprintIntegrityEngine
+
+        self.raw_dump[ref] = comp
+        self.ref_to_comp[ref] = comp
+        p_id = comp.get("id")
+        if p_id:
+            self.id_to_comp[str(p_id)] = comp
+
+        pads = comp.get("pads", [])
+        self.comp_to_pads[ref] = pads
+
+        layer = comp.get("layer", 1)
+        if layer not in self.layer_to_components:
+            self.layer_to_components[layer] = []
+        if ref not in self.layer_to_components[layer]:
+            self.layer_to_components[layer].append(ref)
+
+        cx = comp.get("x", 0.0)
+        cy = comp.get("y", 0.0)
+        rot_deg = comp.get("rot", 0.0) or 0.0
+        rot_rad = math.radians(rot_deg)
+        cos_a = math.cos(rot_rad)
+        sin_a = math.sin(rot_rad)
+
+        bbox = comp.get("bbox", [-50, 50, -50, 50])
+        self.spatial_index.insert(ref, cx + bbox[0], cy + bbox[2], cx + bbox[1], cy + bbox[3])
+
+        for p in pads:
+            num = str(p.get("num", ""))
+            net = p.get("net") or ""
+            self.pad_lookup[(ref, num)] = p
+            if net:
+                if net not in self.net_to_endpoints:
+                    self.net_to_endpoints[net] = []
+                    self.net_to_components[net] = set()
+                self.net_to_components[net].add(ref)
+
+                dx = p.get("dx", 0.0)
+                dy = p.get("dy", 0.0)
+                px = cx + dx * cos_a - dy * sin_a
+                py = cy + dx * sin_a + dy * cos_a
+                is_smd = p.get("layer") not in (11, 12)
+
+                self.net_to_endpoints[net].append(NetEndpoint(
+                    ref=ref,
+                    pad_num=num,
+                    net=net,
+                    x_mil=px,
+                    y_mil=py,
+                    layer=layer if is_smd else 11,
+                    is_smd=is_smd,
+                ))
+
+        self.footprint_invariants[ref] = FootprintIntegrityEngine.extract_invariant(ref, comp)
+        self.connectivity_graph = None
+        self._compute_all_revisions()
+
+    def remove_component(self, ref: str):
+        """Incrementally removes a component, clearing pads and spatial indices."""
+        if ref not in self.ref_to_comp:
+            return
+        comp = self.ref_to_comp.pop(ref, {})
+        self.raw_dump.pop(ref, None)
+        self.comp_to_pads.pop(ref, None)
+        self.footprint_invariants.pop(ref, None)
+        self.spatial_index.remove(ref)
+
+        # Clear layer mapping
+        for layer_list in self.layer_to_components.values():
+            if ref in layer_list:
+                layer_list.remove(ref)
+
+        # Clear pad lookups and endpoints
+        for p in comp.get("pads", []):
+            num = str(p.get("num", ""))
+            self.pad_lookup.pop((ref, num), None)
+            net = p.get("net")
+            if net and net in self.net_to_endpoints:
+                self.net_to_endpoints[net] = [ep for ep in self.net_to_endpoints[net] if ep.ref != ref]
+                if not self.net_to_endpoints[net]:
+                    self.net_to_endpoints.pop(net, None)
+            if net and net in self.net_to_components:
+                self.net_to_components[net].discard(ref)
+                if not self.net_to_components[net]:
+                    self.net_to_components.pop(net, None)
+
+        self.connectivity_graph = None
+        self._compute_all_revisions()
+
+    def update_pad_net(self, ref: str, pad_num: str, new_net: str):
+        """Incrementally reassigns a pad's net connection."""
+        if (ref, pad_num) not in self.pad_lookup:
+            return
+        pad = self.pad_lookup[(ref, pad_num)]
+        old_net = pad.get("net") or ""
+        pad["net"] = new_net
+
+        # Remove old endpoint
+        if old_net and old_net in self.net_to_endpoints:
+            self.net_to_endpoints[old_net] = [
+                ep for ep in self.net_to_endpoints[old_net]
+                if not (ep.ref == ref and ep.pad_num == pad_num)
+            ]
+            if not self.net_to_endpoints[old_net]:
+                self.net_to_endpoints.pop(old_net, None)
+                self.net_to_components.pop(old_net, None)
+
+        # Add new endpoint
+        if new_net:
+            comp = self.ref_to_comp.get(ref, {})
+            cx = comp.get("x", 0.0)
+            cy = comp.get("y", 0.0)
+            rot_deg = comp.get("rot", 0.0) or 0.0
+            rot_rad = math.radians(rot_deg)
+            dx = pad.get("dx", 0.0)
+            dy = pad.get("dy", 0.0)
+            px = cx + dx * math.cos(rot_rad) - dy * math.sin(rot_rad)
+            py = cy + dx * math.sin(rot_rad) + dy * math.cos(rot_rad)
+            is_smd = pad.get("layer") not in (11, 12)
+            layer = comp.get("layer", 1)
+
+            if new_net not in self.net_to_endpoints:
+                self.net_to_endpoints[new_net] = []
+                self.net_to_components[new_net] = set()
+            self.net_to_components[new_net].add(ref)
+            self.net_to_endpoints[new_net].append(NetEndpoint(
+                ref=ref,
+                pad_num=pad_num,
+                net=new_net,
+                x_mil=px,
+                y_mil=py,
+                layer=layer if is_smd else 11,
+                is_smd=is_smd,
+            ))
+
+        self.connectivity_graph = None
+        self._compute_all_revisions()
+
+    def add_track(self, track_dict: Dict[str, Any]):
+        """Incrementally adds a routed track segment."""
+        self.tracks.append(track_dict)
+        self._compute_all_revisions()
+
+    def remove_track(self, track_idx_or_id: Any):
+        """Incrementally removes a track segment by index or ID."""
+        if isinstance(track_idx_or_id, int) and 0 <= track_idx_or_id < len(self.tracks):
+            self.tracks.pop(track_idx_or_id)
+        else:
+            self.tracks = [t for t in self.tracks if t.get("id") != track_idx_or_id]
+        self._compute_all_revisions()
+
+    def add_via(self, via_dict: Dict[str, Any]):
+        """Incrementally adds a via."""
+        self.vias.append(via_dict)
+        self._compute_all_revisions()
+
+    def remove_via(self, via_idx_or_id: Any):
+        """Incrementally removes a via by index or ID."""
+        if isinstance(via_idx_or_id, int) and 0 <= via_idx_or_id < len(self.vias):
+            self.vias.pop(via_idx_or_id)
+        else:
+            self.vias = [v for v in self.vias if v.get("id") != via_idx_or_id]
+        self._compute_all_revisions()
+
+    def update_zone(self, zone_dict: Dict[str, Any]):
+        """Incrementally adds or updates a copper zone."""
+        zid = zone_dict.get("id")
+        replaced = False
+        for i, z in enumerate(self.zones):
+            if z.get("id") == zid:
+                self.zones[i] = zone_dict
+                replaced = True
+                break
+        if not replaced:
+            self.zones.append(zone_dict)
+        self._compute_all_revisions()
+
+    def update_stackup(self, stackup: Any):
+        """Incrementally updates layer stackup."""
+        self.stackup = stackup
+        self._compute_all_revisions()
+
+    def update_rules(self, rules: Dict[str, Any]):
+        """Incrementally updates design rule constraints."""
+        self.rules = rules
         self._compute_all_revisions()
 
 

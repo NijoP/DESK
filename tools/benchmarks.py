@@ -233,25 +233,108 @@ def run_pipeline_benchmarks() -> Dict[str, Any]:
 
     return results
 
+def run_runtime_infrastructure_benchmarks() -> Dict[str, Any]:
+    from desk.runtime.scheduler import TaskScheduler, TASK_PURE_CPU
+    from desk.runtime.process_guard import ProcessGuard
+    from desk.snapshot import IndexedPCBSnapshot
+
+    results = {}
+
+    # 1. Scheduler Throughput & Latency (100 tasks)
+    sched = TaskScheduler(max_queue_depth=200)
+    task_times = []
+    t0 = time.perf_counter()
+    for i in range(100):
+        ts = time.perf_counter()
+        sched.execute(TASK_PURE_CPU, lambda: i * i)
+        task_times.append((time.perf_counter() - ts) * 1000.0)
+    sched_total_ms = (time.perf_counter() - t0) * 1000.0
+    task_times.sort()
+    results["01_scheduler_throughput_100tasks"] = {
+        "time_ms": round(sched_total_ms, 3),
+        "p50_ms": round(task_times[len(task_times) // 2], 3),
+        "p95_ms": round(task_times[int(len(task_times) * 0.95)], 3),
+        "throughput_tasks_per_sec": round(100.0 / (sched_total_ms / 1000.0), 1),
+    }
+    sched.shutdown(wait=False)
+
+    # 2. ProcessGuard Bounded Memory Streaming (200 KB emitted, capped at 4 KB)
+    proc_res = ProcessGuard.run_bounded(
+        [sys.executable, "-c", "import sys; sys.stdout.write('A' * 200000)"],
+        timeout_s=5.0,
+        max_buffer_bytes=4096,
+    )
+    results["02_process_guard_bounded_drain"] = {
+        "time_ms": proc_res.duration_ms,
+        "captured_bytes": len(proc_res.stdout),
+        "truncated": proc_res.truncated,
+        "bounded_verified": len(proc_res.stdout) <= 4096,
+    }
+
+    # 3. Snapshot Construction vs Incremental Update
+    large_dump = {
+        f"C{i}": {"x": float(i * 10), "y": float(i * 5), "rot": 0, "layer": 1, "pads": [{"num": "1", "net": "3V3"}, {"num": "2", "net": "GND"}]}
+        for i in range(100)
+    }
+    t0 = time.perf_counter()
+    snap = IndexedPCBSnapshot(large_dump)
+    full_build_ms = (time.perf_counter() - t0) * 1000.0
+
+    t0 = time.perf_counter()
+    snap.update_component_placement("C50", 123.0, 456.0, 90.0, 2)
+    incremental_ms = (time.perf_counter() - t0) * 1000.0
+
+    results["03_snapshot_full_vs_incremental"] = {
+        "time_ms": round(incremental_ms, 3),
+        "full_build_ms": round(full_build_ms, 3),
+        "speedup_factor": round(full_build_ms / max(0.0001, incremental_ms), 1),
+    }
+
+    # 4. Spatial Grid Index Scaling (1000 queries over 100 components)
+    query_times = []
+    for q in range(1000):
+        t0 = time.perf_counter()
+        snap.spatial_index.query_rect(q % 100, (q * 2) % 100, (q % 100) + 50, ((q * 2) % 100) + 50)
+        query_times.append((time.perf_counter() - t0) * 1000.0)
+    query_times.sort()
+    results["04_spatial_query_1000ops"] = {
+        "time_ms": round(sum(query_times), 3),
+        "p50_ms": round(query_times[len(query_times) // 2], 4),
+        "p95_ms": round(query_times[int(len(query_times) * 0.95)], 4),
+    }
+
+    return results
+
 if __name__ == "__main__":
-    print("=" * 70)
+    print("=" * 75)
     print("DESK PART A: MICRO-SCENARIO BENCHMARKS (10 Scenarios)")
-    print("=" * 70)
+    print("=" * 75)
     b_res = run_benchmarks()
     total_micro_ms = sum(v["time_ms"] for v in b_res.values())
     for name, data in b_res.items():
-        print(f"{name:<42} : {data['time_ms']:>8.3f} ms")
-    print("-" * 70)
-    print(f"Total Microbenchmark Time:                     : {total_micro_ms:>8.3f} ms")
+        print(f"{name:<45} : {data['time_ms']:>8.3f} ms")
+    print("-" * 75)
+    print(f"Total Microbenchmark Time:                        : {total_micro_ms:>8.3f} ms")
 
-    print("\n" + "=" * 70)
+    print("\n" + "=" * 75)
     print("DESK PART B: COMPLETE END-TO-END OFFLINE PIPELINES (5 Pipelines)")
-    print("=" * 70)
+    print("=" * 75)
     pipe_res = run_pipeline_benchmarks()
     total_pipe_ms = sum(v["time_ms"] for v in pipe_res.values())
     for name, data in pipe_res.items():
-        print(f"{name:<42} : {data['time_ms']:>8.3f} ms")
-    print("-" * 70)
-    print(f"Total Pipeline Benchmark Time:                 : {total_pipe_ms:>8.3f} ms")
-    print(f"Combined Total Execution Time:                 : {(total_micro_ms + total_pipe_ms):>8.3f} ms")
-    print("=" * 70)
+        print(f"{name:<45} : {data['time_ms']:>8.3f} ms")
+    print("-" * 75)
+    print(f"Total Pipeline Benchmark Time:                    : {total_pipe_ms:>8.3f} ms")
+
+    print("\n" + "=" * 75)
+    print("DESK PART C: RUNTIME INFRASTRUCTURE & BOUNDED BENCHMARKS")
+    print("=" * 75)
+    rt_res = run_runtime_infrastructure_benchmarks()
+    total_rt_ms = sum(v["time_ms"] for v in rt_res.values())
+    for name, data in rt_res.items():
+        p50_str = f" | p50: {data['p50_ms']:.3f} ms, p95: {data['p95_ms']:.3f} ms" if "p50_ms" in data else ""
+        print(f"{name:<45} : {data['time_ms']:>8.3f} ms{p50_str}")
+    print("-" * 75)
+    print(f"Total Runtime Benchmark Time:                     : {total_rt_ms:>8.3f} ms")
+    print(f"Combined Complete Execution Time:                 : {(total_micro_ms + total_pipe_ms + total_rt_ms):>8.3f} ms")
+    print("=" * 75)

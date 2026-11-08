@@ -18,6 +18,14 @@ class ExecutionBudget:
     batch_size_components: int
     throttle_on_memory_pressure: bool
 
+    @property
+    def concurrency_limit(self) -> int:
+        return self.max_parallel_pure_cpu
+
+    @property
+    def max_queue_depth(self) -> int:
+        return self.max_cache_entries
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
