@@ -20,12 +20,12 @@ REWORK_INTENT_PATTERNS = [
     re.compile(r"(?i)\bactivate\s+rework\s+mode\b"),
     re.compile(r"(?i)\brework\s+mode\b"),
     re.compile(r"(?i)\bi\s+want\s+to\s+rework\b"),
-    re.compile(r"(?i)\brework\s+(an?\s+)?existing\s+(pcb|board|project)\b"),
+    re.compile(r"(?i)\brework\s+(an?\s+)?(existing\s+|this\s+|my\s+)?(pcb|board|project)\b"),
     re.compile(r"(?i)\bcontinue\s+(my\s+)?unfinished\s+(easyeda\s+)?(pcb|board|project)\b"),
     re.compile(r"(?i)\btake\s+this\s+(pcb|board|project)\s+to\s+manufacturing\s+readiness\b"),
     re.compile(r"(?i)\baudit\s+this\s+existing\s+(pcb|board|project)\b"),
-    re.compile(r"(?i)\brepair\s+(an?\s+)?existing\s+(pcb|board|project)\b"),
-    re.compile(r"(?i)\brecover\s+(an?\s+)?existing\s+(pcb|board|project)\b"),
+    re.compile(r"(?i)\brepair\s+(an?\s+)?(existing\s+|this\s+|my\s+)?(pcb|board|project)\b"),
+    re.compile(r"(?i)\brecover\s+(an?\s+)?(existing\s+|this\s+|my\s+)?(pcb|board|project)\b"),
     re.compile(r"(?i)\bwhat\s+remains\s+(on|in)\s+this\s+(pcb|board|project)\b"),
 ]
 
