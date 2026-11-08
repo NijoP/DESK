@@ -62,3 +62,26 @@ Rework Mode enforces five non-negotiable categories:
 | **`AUDIT_ONLY`** | Read-only reconnaissance. Discovers issues and produces repair recommendations without writing to the PCB. Default policy. | NO |
 | **`GUIDED_REWORK`** | Explicit human approval required for every surgical repair operation (`RW-APR-XXXX`). | YES (Per-repair approval) |
 | **`SUPERVISED_REWORK`** | Batch approval of non-conflicting repairs with automated readback verification and rollback on error. | YES (Batch approval) |
+
+---
+
+## 5. Rework Mode Technical Documentation Series
+
+| Document | Title & Focus |
+|---|---|
+| [**00 Architecture Audit**](00_ARCHITECTURE_AUDIT.md) | Pre-implementation codebase analysis, gap discovery, and invariant mapping. |
+| [**01 Overview**](01_REWORK_MODE_OVERVIEW.md) | High-level system architecture, principles, and policy descriptions. |
+| [**02 Activation & Session**](02_ACTIVATION_AND_SESSION.md) | Natural-language intent recognition, session creation, and lifecycle states. |
+| [**03 EasyEDA Connection**](03_EASYEDA_CONNECTION.md) | Active window discovery, port probing, and project binding validation. |
+| [**04 Baseline & Identity**](04_BASELINE_AND_PROJECT_IDENTITY.md) | Multi-domain hashing, coordinate capture, and revision change detection. |
+| [**05 Engineering Audit**](05_ENGINEERING_AUDIT.md) | 8-domain defect inspection (clearances, return paths, unconnected pins). |
+| [**06 Issue Inventory**](06_ISSUE_INVENTORY.md) | Defect cataloging, severity tiers (`CRITICAL`, `ERROR`, `WARNING`), and IDs (`RW-0001..`). |
+| [**07 Repair Planning**](07_REPAIR_PLANNING.md) | Surgical minimal-change planning, dependency DAGs, and protected objects. |
+| [**08 Approval & Safety**](08_APPROVAL_AND_SAFETY.md) | Human-in-the-loop authorization tokens (`RW-APR-XXXX`) and safety fences. |
+| [**09 Repair Execution**](09_REPAIR_EXECUTION.md) | Single-writer serialized CAD mutations and timeout protection. |
+| [**10 Readback & Verification**](10_READBACK_AND_VERIFICATION.md) | Post-repair ECAD canvas readback, delta inspection, and evidence recording. |
+| [**11 Recovery & Restart**](11_RECOVERY_AND_RESTART.md) | Session reconciliation, crash recovery, and interrupted state handling. |
+| [**12 Mission Control**](12_MISSION_CONTROL.md) | Local telemetry cockpit integration, REST routes, and real-time SSE stream. |
+| [**13 Manufacturing Readiness**](13_MANUFACTURING_READINESS.md) | 8 fail-closed hard release gates and 100-point engineering scorecard. |
+| [**14 Troubleshooting**](14_TROUBLESHOOTING.md) | Common errors, port conflicts, window mismatches, and recovery procedures. |
+| [**15 Testing & Validation**](15_TESTING_AND_VALIDATION.md) | Comprehensive automated test matrix across all rework subsystems. |
