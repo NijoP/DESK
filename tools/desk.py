@@ -34,7 +34,7 @@ if not a or a[0] == "tools":
     sys.exit(0)
 
 if a[0] == "dashboard":
-    port = int(a[a.index("--port") + 1]) if "--port" in a else 49620
+    port = int(a[a.index("--port") + 1]) if "--port" in a else 49630
     proj = a[a.index("--project") + 1] if "--project" in a else "projects/WATCH"
     from desk.runtime.projection import get_execution_projection
     from desk.runtime.server import DeskServer
@@ -48,9 +48,10 @@ if a[0] == "dashboard":
     print(f"URL:     {url}")
     print(f"Project: {proj}")
     print(f"Mode:    Read-Only Event-Driven Monitoring (SSE)")
+    print(f"[DESK] Mission Control live at {url}")
     print(f"Press Ctrl+C to stop dashboard server.\n")
 
-    if "--no-open" not in a:
+    if "--open" in a or "--no-open" not in a:
         try:
             webbrowser.open(url)
         except Exception:
@@ -65,7 +66,7 @@ if a[0] == "dashboard":
         sys.exit(0)
 
 if a[0] == "serve":
-    port = int(a[a.index("--port") + 1]) if "--port" in a else 49620
+    port = int(a[a.index("--port") + 1]) if "--port" in a else 49630
     proj = a[a.index("--project") + 1] if "--project" in a else "projects/WATCH"
     from desk.runtime.projection import get_execution_projection
     from desk.runtime.server import DeskServer

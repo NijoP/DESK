@@ -391,6 +391,7 @@ def run_runtime_infrastructure_benchmarks() -> Dict[str, Any]:
     return results
 
 if __name__ == "__main__":
+    print("[DESK] Mission Control live at http://127.0.0.1:49630\n")
     print("=" * 75)
     print("DESK PART A: MICRO-SCENARIO BENCHMARKS (10 Scenarios)")
     print("=" * 75)

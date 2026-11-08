@@ -27,8 +27,8 @@ from desk.runtime.projection import ExecutionProjection, get_execution_projectio
 from desk.runtime.resource_profile import ResourceDetector
 
 DEFAULT_HOST = "127.0.0.1"
-DEFAULT_PORT = 49620
-MAX_PORT_ATTEMPTS = 15
+DEFAULT_PORT = 49630
+MAX_PORT_ATTEMPTS = 11
 SERVER_VERSION = "1.0.0"
 
 # Path traversal rejection regex
@@ -61,9 +61,26 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Last-Event-ID, Content-Type")
 
+    @staticmethod
+    def _sanitize_payload(obj: Any) -> Any:
+        """Recursively masks sensitive tokens and keys in JSON dictionaries."""
+        if isinstance(obj, dict):
+            sanitized = {}
+            for k, v in obj.items():
+                lower_k = str(k).lower()
+                if any(s in lower_k for s in ("secret", "token", "password", "api_key", "credential", "auth")):
+                    sanitized[k] = "[REDACTED]"
+                else:
+                    sanitized[k] = DeskRequestHandler._sanitize_payload(v)
+            return sanitized
+        elif isinstance(obj, list):
+            return [DeskRequestHandler._sanitize_payload(item) for item in obj]
+        return obj
+
     def _send_json(self, status_code: int, data: Any) -> None:
-        """Encodes and sends a JSON response."""
-        encoded = json.dumps(data, indent=2, default=str).encode("utf-8")
+        """Encodes and sends a JSON response with credential sanitization."""
+        sanitized_data = self._sanitize_payload(data)
+        encoded = json.dumps(sanitized_data, indent=2, default=str).encode("utf-8")
         self.send_response(status_code)
         self._send_security_headers("application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(encoded)))
@@ -75,6 +92,18 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         self.send_response(204)
         self._send_security_headers()
         self.end_headers()
+
+    def do_POST(self) -> None:
+        """Rejects state-mutating requests (strictly read-only dashboard)."""
+        self.send_error(405, "Method Not Allowed: Mission Control is strictly read-only")
+
+    def do_PUT(self) -> None:
+        """Rejects state-mutating requests."""
+        self.send_error(405, "Method Not Allowed: Mission Control is strictly read-only")
+
+    def do_DELETE(self) -> None:
+        """Rejects state-mutating requests."""
+        self.send_error(405, "Method Not Allowed: Mission Control is strictly read-only")
 
     def do_GET(self) -> None:
         """Routes GET requests to API handlers or the Mission Control dashboard."""
@@ -94,20 +123,22 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         # Route matching
         if path in {"", "/"}:
             self._handle_dashboard()
+        elif path in {"/api/status", "/api/v1/status"}:
+            self._handle_status()
+        elif path in {"/api/execution", "/api/v1/execution", "/api/executions", "/api/v1/executions"}:
+            self._handle_executions()
+        elif path in {"/api/events", "/api/v1/events"}:
+            self._handle_events(query)
+        elif path in {"/api/events/live", "/api/v1/events/stream"}:
+            self._handle_sse_stream(query)
         elif path == "/api/v1/health":
             self._handle_health()
-        elif path == "/api/v1/status":
-            self._handle_status()
         elif path == "/api/v1/projects":
             self._handle_projects()
         elif path == "/api/v1/metrics":
             self._handle_metrics()
-        elif path == "/api/v1/executions":
-            self._handle_executions()
         elif path.startswith("/api/v1/executions/"):
             self._handle_execution_subroutes(path, query)
-        elif path == "/api/v1/events/stream":
-            self._handle_sse_stream(query)
         else:
             self._send_json(404, {"error": f"Endpoint '{path}' not found"})
 
@@ -141,7 +172,27 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
     def _handle_status(self) -> None:
         """Returns the consolidated execution state projection."""
         projection = get_execution_projection()
-        self._send_json(200, projection.get_summary())
+        summary = projection.get_summary()
+        try:
+            from desk.bridge import SessionRegistry
+            summary["bridge"] = {
+                "port": SessionRegistry.get_port(),
+                "status": "CONFIGURED",
+            }
+        except Exception:
+            summary["bridge"] = {"port": 49620, "status": "UNKNOWN"}
+        self._send_json(200, summary)
+
+    def _handle_events(self, query: Dict[str, List[str]]) -> None:
+        """Returns paginated or full event stream of recent execution events."""
+        last_id = query.get("since", [None])[0] or query.get("last_event_id", [None])[0]
+        try:
+            limit = min(500, max(1, int(query.get("limit", [100])[0])))
+        except ValueError:
+            limit = 100
+        event_bus = get_event_bus()
+        events = event_bus.get_events_since(last_id, limit=limit)
+        self._send_json(200, [e.to_dict() for e in events])
 
     def _handle_projects(self) -> None:
         """Discovers available hardware projects under projects/."""

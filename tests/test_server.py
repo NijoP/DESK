@@ -37,12 +37,49 @@ class TestDeskServer(unittest.TestCase):
         except urllib.error.HTTPError as e:
             return e.code, e.read(), dict(e.headers)
 
-    def test_health_endpoint(self):
-        code, body, _ = self._fetch("/api/v1/health")
+    def test_unversioned_rest_endpoints(self):
+        # 1. /api/status
+        code, body, _ = self._fetch("/api/status")
         self.assertEqual(code, 200)
         data = json.loads(body.decode("utf-8"))
-        self.assertEqual(data["status"], "HEALTHY")
-        self.assertEqual(data["service"], "DESK Mission Control")
+        self.assertIn("status", data)
+        self.assertIn("bridge", data)
+        self.assertEqual(data["bridge"]["port"], 49620)
+
+        # 2. /api/execution
+        code, body, _ = self._fetch("/api/execution")
+        self.assertEqual(code, 200)
+        execs = json.loads(body.decode("utf-8"))
+        self.assertIsInstance(execs, list)
+        self.assertGreaterEqual(len(execs), 1)
+
+        # 3. /api/events
+        code, body, _ = self._fetch("/api/events")
+        self.assertEqual(code, 200)
+        events = json.loads(body.decode("utf-8"))
+        self.assertIsInstance(events, list)
+
+    def test_default_port_is_49630_avoiding_bridge(self):
+        from desk.runtime.server import DEFAULT_PORT
+        self.assertEqual(DEFAULT_PORT, 49630)
+
+    def test_credential_sanitization_in_json_responses(self):
+        from desk.runtime.server import DeskRequestHandler
+        test_obj = {
+            "token": "secret_token_12345",
+            "api_key": "sk-1234567890",
+            "user": "alice",
+            "nested": {
+                "password": "mypassword",
+                "normal": "value"
+            }
+        }
+        sanitized = DeskRequestHandler._sanitize_payload(test_obj)
+        self.assertEqual(sanitized["token"], "[REDACTED]")
+        self.assertEqual(sanitized["api_key"], "[REDACTED]")
+        self.assertEqual(sanitized["user"], "alice")
+        self.assertEqual(sanitized["nested"]["password"], "[REDACTED]")
+        self.assertEqual(sanitized["nested"]["normal"], "value")
 
     def test_status_endpoint(self):
         code, body, _ = self._fetch("/api/v1/status")

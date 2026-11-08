@@ -31,6 +31,7 @@ This index is the single source of truth for conditional skill resolution in DES
 | **manufacturing-verification** | `.agents/skills/manufacturing-verification/SKILL.md` | M5/M6 | `manufacturing`, `gerber`, `drc check`, `fab`, `drill`, `soldermask`, `release` | Scout / Ship |
 | **quality-gate-supervision** | `.agents/skills/quality-gate-supervision/SKILL.md` | M6 | `gate`, `quality`, `pass`, `fail`, `evidence`, `audit`, `sign-off` | Scout / Ship |
 | **execution-recovery** | `.agents/skills/execution-recovery/SKILL.md` | Runtime | `recover`, `rollback`, `checkpoint`, `restore`, `retry`, `abort` | Ship Task |
+| **rework-mode** | `.agents/skills/rework-mode/SKILL.md` | Rework | `rework`, `activate rework mode`, `continue unfinished`, `repair existing pcb`, `manufacturing readiness` | Ship / Scout |
 | **benchmark-performance** | `.agents/skills/benchmark-performance/SKILL.md` | Runtime | `benchmark`, `performance`, `profiling`, `latency`, `throughput`, `speed` | Scout Task |
 
 ---

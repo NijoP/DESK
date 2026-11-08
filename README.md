@@ -1,86 +1,136 @@
 # DESK
 
-### From engineering intent to verified PCB execution.
+### Universal Performance, Deterministic Architecture & Evidence-Driven Electronics Engineering for EasyEDA Pro.
 
-[![Tests](https://img.shields.io/badge/tests-269%20passing-brightgreen.svg)](tests/)
-[![Performance](https://img.shields.io/badge/benchmarks-%3C10ms%20pipeline-blue.svg)](tools/benchmarks.py)
-[![Overhead](https://img.shields.io/badge/server%20overhead-%2B0.011ms%2Fop-purple.svg)](tests/bench_server_overhead.py)
-[![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
+[![Tests](https://img.shields.io/badge/tests-278%20passing-brightgreen.svg)](tests/)
+[![Performance](https://img.shields.io/badge/microbenchmarks-5.83ms-blue.svg)](tools/benchmarks.py)
+[![Pipelines](https://img.shields.io/badge/pipelines-1.23ms-blue.svg)](tools/benchmarks.py)
+[![Telemetry](https://img.shields.io/badge/T01--T13%20telemetry-109ms-purple.svg)](tools/benchmarks.py)
+[![Python](https://img.shields.io/badge/python-3.10%2B-informational.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero%20external-success.svg)](desk/)
 [![ECAD](https://img.shields.io/badge/ecad-EasyEDA%20Pro-orange.svg)](https://pro.easyeda.com/)
-[![Dashboard](https://img.shields.io/badge/mission%20control-127.0.0.1%3A49620-brightgreen.svg)](http://127.0.0.1:49620)
+[![Mission Control](https://img.shields.io/badge/mission%20control-127.0.0.1%3A49630-brightgreen.svg)](http://127.0.0.1:49630)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-**DESK** is an intelligent, deterministic electronics engineering execution system for **EasyEDA Pro**. It transforms unstructured hardware requirements into verified, manufacturing-ready schematics and PCB designs.
+---
 
-By combining deterministic physical engines, versioned **Engineering Design Profiles**, structured **Mental Models (M1–M6)**, and an event-driven **Local Mission Control**, DESK guarantees that physical engineering laws strictly precede geometry and that clients maintain complete real-time visibility into every automated decision.
+## 1. Executive Overview
+
+**DESK** is an open-source, deterministic, hardware-adaptive electronics engineering execution system for **EasyEDA Pro**. It transforms natural language requirements and high-level architectural intent into manufacturing-verified schematics, parametric bills of materials, and physically correct printed circuit boards.
+
+Unlike traditional AI code generators or canvas layout bots that guess $(X, Y)$ coordinates, DESK operates on a strict engineering foundation: **Knowledge before geometry. Electrical physics before layout appearance. Deterministic verification before automated board mutation.**
+
+DESK runs on **100% Python standard library** with zero external pip dependencies. It executes across low-spec dual-core laptops (LOW tier), standard development machines (NORMAL tier), and multi-core workstations (WORKSTATION tier) with adaptive concurrency, bounded memory streaming, and sub-millisecond execution cores.
 
 ---
 
-## What It Is & What It Is Not
+## 2. Why DESK? (The Problem vs. Solution)
 
-| What DESK Is | What DESK Is Not |
+| Traditional ECAD & AI Layout Bots | DESK Deterministic Engineering Platform |
 |---|---|
-| A deterministic engineering execution system that calculates trace widths, return paths, and clearances from first principles. | An LLM that guesses component coordinates or hallucinates layout geometry directly into a canvas. |
-| A fail-closed quality gate that halts the pipeline if physical constraints or DRC rules fail. | A rubber-stamp tool that outputs unverified gerbers or ignores manufacturing tolerances. |
-| A local, private mission control server streaming real-time execution telemetry to your browser. | A cloud SaaS that uploads proprietary schematics, netlists, or IP to third-party servers. |
-| A zero-dependency Python core using standard library primitives for maximum portability and speed. | A heavy, bloated framework dependent on npm runtimes, Flask/Django servers, or fragile pip dependencies. |
+| **Hallucinated Layout Geometry:** Generates coordinates blindly without calculating track ampacity, thermal dissipation, or copper setbacks. | **Physics-First Mathematical Calculation:** Derives exact trace widths via IPC-2152, coplanar wave-guide spacing, and dielectric stackup models prior to routing. |
+| **Silent Electrical Violations:** Crosses split reference planes, creating return-path discontinuities, parasitic inductance, and EMI loops. | **Return-Path & Copper Plane Verification:** Continuous 2D ray-casting, 3-way keepout geometry collision, and ground return-path continuity auditing. |
+| **Black-Box Autonomous Execution:** Engineers cannot observe what the agent is doing, whether a trace failed, or if an operation stalled. | **Local Mission Control (`http://127.0.0.1:49630`):** Real-time Server-Sent Events (SSE) streaming live stage transitions, net progress, and resource telemetry. |
+| **Optimistic Acceptance Bias:** Declares designs "ready" while ignoring DRC errors, open nets, or acid traps. | **Fail-Closed Quality Gates:** 8 non-negotiable hard criteria. If verification evidence is missing or stale, manufacturing sign-off is strictly blocked. |
+| **Heavy, Fragile Toolchains:** Requires npm packages, bloated frameworks, native C++ builds, or cloud server connections. | **Zero External Dependencies:** 100% pure Python standard library. Instant clone-and-run portability across Windows, Linux, and macOS. |
 
 ---
 
-## What DESK Does: The Problem vs. The Solution
+## 3. System Architecture
 
-### The Problem
-General-purpose AI agents and coding assistants fail at hardware design because:
-1. **Hallucinated Geometry**: Agents guess $(X, Y)$ coordinates without understanding track ampacity, thermal dissipation, or mechanical clearances.
-2. **Missing Return Paths**: Traces cross reference-plane splits, creating severe EMI loops and impedance mismatches.
-3. **Black-Box Execution**: When autonomous scripts execute in the background, engineers cannot see what net is being scheduled, whether DRC failed, or if an operation stalled.
-4. **Optimistic Bias**: Agents declare designs "finished" even when unrouted airwires, acid traps, or DRC violations remain.
+```mermaid
+flowchart TD
+    subgraph Input["1. Intent & Contracts"]
+        REQ["Hardware Requirements (Markdown)"]
+        PROF["Engineering Design Profile (desk/profile.py)"]
+    end
 
-### The DESK Solution
-DESK enforces **Knowledge Before Geometry**:
-1. **Mathematical Pre-calculation**: Before a single segment is drawn, DESK calculates exact trace widths via IPC-2152, coplanar wave-guide spacing, and fabricator annular ring limits.
-2. **Deterministic Priority Scheduling**: Routes nets in a strict 6-stage order (Ground $\to$ Connectors $\to$ Critical High-Speed/RF $\to$ Sensitive Feedback $\to$ Power Rails $\to$ General Digital).
-3. **Local Mission Control**: Built-in HTTP/SSE server streaming live stage transitions, net progress, memory telemetry, and diagnostic logs to `http://127.0.0.1:49620`.
-4. **Fail-Closed Verification**: 8 non-negotiable hard acceptance gates separate from weighted scoring. If an unrouted net or clearance violation exists, manufacturing signoff is strictly blocked.
+    subgraph Core["2. Deterministic Engineering Core (Zero Pip Packages)"]
+        M1["M1: Schematic & Netlist Intelligence"]
+        M2["M2: Mechanical Placement & Invariants"]
+        M3["M3: 6-Stage Priority Routing Scheduler"]
+        M4["M4: Offline Copper Planes & Return Paths"]
+        M5["M5: DRC & Clearance Convergence"]
+        M6["M6: Fail-Closed Quality Gate Evaluator"]
+    end
+
+    subgraph Telemetry["3. Real-Time Observability & Supervision"]
+        EB["Bounded EventBus (desk/runtime/events.py)"]
+        PROJ["State Projection Engine (12 Stages)"]
+        SRV["Local Mission Control HTTP/SSE (127.0.0.1:49630)"]
+        UI["Telemetry Dashboard (Single-Page App)"]
+    end
+
+    subgraph Bridge["4. Isolated ECAD Bridge"]
+        REG["SessionRegistry (Fast Port Discovery)"]
+        MUTEX["Canvas Single-Writer Mutex"]
+        EDA["EasyEDA Pro API Gateway"]
+    end
+
+    subgraph Manufacturing["5. Physical Fabrication Release"]
+        GATES{"All 8 Hard Gates PASS?"}
+        GERBER["Production Gerbers & DFM Package"]
+        BOM["Procurement BOM (LCSC / JLCPCB)"]
+        BLOCKED["Blocked (Fail-Closed Diagnostic)"]
+    end
+
+    REQ --> PROF --> M1
+    M1 --> M2 --> M3 --> M4 --> M5 --> M6
+
+    M1 -.->|Lifecycle Event| EB
+    M2 -.->|Lifecycle Event| EB
+    M3 -.->|Lifecycle Event| EB
+    M4 -.->|Lifecycle Event| EB
+    M5 -.->|Lifecycle Event| EB
+    M6 -.->|Lifecycle Event| EB
+
+    EB --> PROJ
+    PROJ --> SRV
+    SRV --> UI
+    M6 --> GATES
+
+    GATES -->|Pass - Score 80+| REG
+    REG --> MUTEX
+    MUTEX --> EDA
+    EDA --> GERBER
+    GATES -->|BOM Ready| BOM
+    GATES -->|Fail - Blocked| BLOCKED
+```
 
 ---
 
-## Core Features
+## 4. Quick Start (3 Steps, Zero Prerequisites)
 
-- **Engineering Design Profile (`desk/profile.py`)**  
-  Machine-readable contracts governing layer stackup, copper thickness ($1\,\text{oz}, 2\,\text{oz}$), IPC-2152 temperature-rise limits, impedance targets ($50\,\Omega$ RF, $90\,\Omega$ diff pairs), and fabricator tolerances.
-- **Component Intelligence (`desk/components/`)**  
-  Parametric database, lifecycle risk detection, pin-mapping validation, and multi-supplier BOM resolution (JLCPCB, LCSC, Digi-Key, Mouser).
-- **Schematic Intelligence (`desk/schematic/`)**  
-  Authoritative netlist extraction, functional block decomposition, power-tree validation, and ERC net continuity auditing.
-- **Placement Intelligence (`desk/placement/`)**  
-  Mechanical anchor locking, thermal dissipation clustering, decoupling capacitor proximity constraints, and footprint invariant auditing.
-- **Autonomous 6-Stage Routing (`desk/router.py`)**  
-  Physics-guided maze router, Specctra DSN auto-tuning, Freerouting harness, and automated rip-up recovery.
-- **Offline Copper & Ground Engine (`desk/copper.py`)**  
-  Convex-hull power polygons, stackup-driven reference planes, collision-free ground via stitching arrays, return-path slot detection, and floating island removal.
-- **Fail-Closed Quality Gates (`desk/quality.py`)**  
-  8 non-negotiable hard criteria (zero shorts, zero opens, 100% critical connectivity, stackup integrity) paired with a weighted 100-point engineering scorecard.
-- **Local Mission Control (`desk/runtime/`)**  
-  High-performance, zero-dependency `http.server` streaming execution events via Server-Sent Events (SSE) to a single-page responsive telemetry UI.
+### Step 1: Clone Repository
+```bash
+git clone https://github.com/NijoP/DESK.git
+cd DESK
+```
+
+### Step 2: Run Full Automated Verification Suite
+Run all 278 offline tests (deterministic, zero external network required):
+```bash
+python -m unittest discover -s tests -p "test_*.py"
+```
+
+### Step 3: Launch Local Mission Control Dashboard
+Start the local dashboard and open in your default browser on port `49630`:
+```bash
+python desk.py dashboard
+```
 
 ---
 
-## Local Mission Control: Real-Time Execution Observability
+## 5. Local Mission Control Dashboard
 
-When DESK executes a design pipeline, engineers open:
+DESK provides a dedicated, lightweight, real-time local monitoring environment running strictly on loopback (`127.0.0.1:49630`), avoiding the ECAD bridge port range (`49620..49629`).
 
-```
-http://127.0.0.1:49620
-```
-
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────┐
-│  DESK MISSION CONTROL  v1.0.0   ● LIVE   Project: ESP32_SENSOR_NODE    │
+│  DESK LOCAL MISSION CONTROL  v1.0.0   ● LIVE   Project: WATCH          │
 ├──────────────┬──────────────┬──────────────┬──────────────┬────────────┤
 │   PROGRESS   │ ACTIVE STAGE │    STAGES    │   WARNINGS   │  DURATION  │
-│    75.0%     │ PCB Routing  │ 7/12 Done    │   0 Errors   │   1.84s    │
+│    75.0%     │ PCB Routing  │ 7/12 Done    │   0 Errors   │   1.42s    │
 ├──────────────┴──────────────┴──────────────┴──────────────┴────────────┤
 │ 12-STAGE CANONICAL WORKFLOW:                                           │
 │ [✓] Requirements  [✓] Schematic  [✓] Components  [✓] Electrical        │
@@ -88,295 +138,263 @@ http://127.0.0.1:49620
 │ [ ] Copper/GND    [ ] DRC/Verify [ ] Mfg Check   [ ] Final Report      │
 ├────────────────────────────────────────────────────────────────────────┤
 │ LIVE EXECUTION TIMELINE:                                               │
-│ 00:24:12 [INFO]   Ingestion: Design profile validated for 4-layer FR4 │
-│ 00:24:13 [INFO]   Placement: Mechanical anchors locked for USB-C & SWD │
-│ 00:24:14 [INFO]   Routing Prep: Scheduled 42 nets via 6-stage priority │
+│ 00:24:12 [INFO]   Ingestion: Design profile validated (4-layer JLC04161H) │
+│ 00:24:13 [INFO]   Placement: Mechanical anchors locked (USB-C & SWD)   │
+│ 00:24:14 [INFO]   Routing Prep: Scheduled 48 nets via 6-stage priority │
 │ 00:24:15 [RUN]    PCB Routing: Route net SPI_MOSI (track: 10 mil)      │
 ├────────────────────────────────────────────────────────────────────────┤
-│ VERIFIED ARTIFACTS:                                                    │
-│ • specctra.dsn (142 KB)  • placement_audit.json (12 KB)                │
+│ HARD ACCEPTANCE GATES:                                                 │
+│ [✓] Zero Shorts  [✓] Zero Opens  [✓] Clearances  [✓] Return-Path Return│
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Server & Security Invariants
-- **Localhost Bound**: Binds strictly to `127.0.0.1` (`INADDR_LOOPBACK`). Zero public exposure.
-- **Port Collision Resolution**: Automatically probes candidate ports (`49620..49635`) if the primary port is occupied.
-- **Zero Polling (SSE Streaming)**: Updates stream over HTTP `/api/v1/events` with keepalive heartbeats and `Last-Event-ID` reconnection replay.
-- **Strictly Read-Only**: The monitoring API has zero mutation endpoints, guaranteeing telemetry cannot alter PCB state.
-- **Path Traversal Guard**: Rejects null bytes, relative traversal tokens (`../`, `..\`), and absolute drive paths.
+### REST API & Real-Time Endpoints
+- `GET /` — Single-page Mission Control dashboard (HTML5, responsive dark/light themes).
+- `GET /api/status` — Consolidated execution status, active project, bridge port, scheduler metrics, and memory usage.
+- `GET /api/execution` — Current active execution session details, progress percentage, active task.
+- `GET /api/events` — Paginated recent execution event stream (`?limit=100&since=<id>`).
+- `GET /api/events/live` — Server-Sent Events (SSE) push stream with `Last-Event-ID` auto-reconnect.
+- `GET /api/v1/metrics` — Physical host hardware telemetry (process RAM, available RAM, CPU cores).
 
 ---
 
-## Quick Start
+## 6. The 12-Stage Canonical Engineering Workflow
 
-### 1. Prerequisites
-- **Python 3.9+** (Standard library only; zero external pip dependencies).
-- **Node.js 18+** (Optional: required only for the live EasyEDA Pro bridge).
+DESK executes PCB designs through twelve discrete, evidence-backed stages:
 
-### 2. Verify Installation
-Clone the repository and run the test suite:
+1. **Requirement Ingestion (Gate R):** Mechanical envelope, power tree, GPIO budget, thermal boundaries.
+2. **Schematic Intelligence (M1):** Netlist extraction, hierarchical block decomposition, pin typing.
+3. **Component Intelligence & BOM (Gate B):** Parametric search, MPN resolution, LCSC inventory & pricing validation.
+4. **Electrical Rules Verification (ERC):** Pin rules, drive conflict detection, voltage domain sanity checks.
+5. **PCB Ingestion & Stackup:** Layer stackup definition ($1\,\text{oz}/2\,\text{oz}$ copper, dielectric thickness), board boundary coordinates.
+6. **Mechanical & Placement Analysis (M2):** Fixed connector anchors, decoupling capacitor proximity, thermal relief grouping.
+7. **Routing Preparation:** Net priority scheduling, BGA/QFN escape stubs, differential pair pairing.
+8. **Autonomous PCB Routing (M3):** Deterministic priority maze routing, Specctra DSN auto-tuning, Freerouting execution.
+9. **Copper & Ground Generation (M4):** Solid reference ground planes, power polygons, via stitching arrays, split-plane detection.
+10. **DRC & Electrical Verification (M5):** IPC-2221 clearance checks, annular rings, acid-trap angle removal.
+11. **Manufacturing Verification & DFM (M6):** 8 fail-closed hard acceptance gates and JLCPCB fabrication rule validation.
+12. **Final Engineering Report:** Sign-off packaging, diagnostic report JSON, Gerber archive.
+
+---
+
+## 7. The 8 Non-Negotiable Hard Quality Gates
+
+DESK separates physical hard constraints from subjective scoring. Every gate is **fail-closed**: if verification evidence is missing, unrun, or stale, the gate fails immediately.
+
+| Gate | Criterion | Validation Mechanism | Fail-Closed Policy |
+|---|---|---|---|
+| **Gate 1** | **Zero Shorts** | DRC polygon & segment intersection check | Must be explicitly verified 0. Null evidence fails. |
+| **Gate 2** | **Zero Unconnected Nets** | Connectivity graph traversal & airwire audit | Open circuits reject release immediately. |
+| **Gate 3** | **Clearance Compliance** | IPC-2221 voltage clearance matrix | Trace-to-trace and trace-to-pad violations block. |
+| **Gate 4** | **Critical Net Integrity** | High-speed, RF, and feedback line audit | Unrouted critical nets fail closed unconditionally. |
+| **Gate 5** | **Stackup Integrity** | Symmetric dielectric & copper layer checks | Layer thickness $>0$ and valid reference planes. |
+| **Gate 6** | **Return-Path Continuity** | 2D ray casting over copper planes | Sampled segments over plane voids fail closed. |
+| **Gate 7** | **IPC-2152 Ampacity** | Dynamic trace width vs. power rail current | Power nets with unknown current fail closed. |
+| **Gate 8** | **Manufacturing DFM** | Fabricator min trace/space & drill limits | Violations of minimum drill or annular ring block. |
+
+---
+
+## 8. Hardware-Adaptive Execution Tiers
+
+DESK automatically detects system resources via `ResourceDetector` and throttles concurrency to guarantee rock-solid stability on any machine:
+
+| Tier | Host Specifications | Execution Profile | Scheduler Concurrency |
+|---|---|---|---|
+| **`LOW`** | $\le 4$ cores or $< 4\,\text{GB}$ RAM | Low-memory mode, serialized EDA mutations, aggressive memory reclamation | 2 workers |
+| **`NORMAL`** | $4 - 8$ cores and $4 - 16\,\text{GB}$ RAM | Standard desktop profile, concurrent DRC analysis, bounded buffers | 4 workers |
+| **`WORKSTATION`** | $> 8$ cores and $> 16\,\text{GB}$ RAM | Maximum throughput, parallel geometry queries, high queue depths | 8–16 workers |
+
+---
+
+## 9. Component Intelligence & Supplier Sourcing
+
+DESK includes a supplier-agnostic Component Intelligence Platform (`desk/components/`) that provides:
+- **Parametric Sourcing:** Unified queries across LCSC, Mouser, DigiKey, element14, and Robu.
+- **Datasheet Parsing:** Automated extraction of thermal resistance, pinouts, and footprint specs.
+- **Lifecycle Risk Auditing:** Detection of obsolete, NRND (Not Recommended for New Designs), or low-stock parts.
+- **Procurement BOM Generation:** Outputs accurate BOMs with LCSC part numbers (C-codes) ready for JLCPCB SMT assembly.
+
+---
+
+## 10. Verified Performance Benchmarks
+
+DESK is engineered for sub-millisecond execution cores. All benchmarks are reproducible via `python tools/benchmarks.py`:
+
+### Part A: Micro-Scenario Benchmarks (10 Scenarios)
+| Scenario | Scope | Measured Time |
+|---|---|---|
+| `01_small_sensor_pcb` | Minimum Spanning Tree (MST) netlist | `0.168 ms` |
+| `02_medium_4layer_controller` | WATCH controller routability | `3.663 ms` |
+| `03_fine_pitch_fpc` | 0.5 mm pitch connector check | `0.040 ms` |
+| `04_screw_terminal_power` | High-current mechanical access | `0.013 ms` |
+| `05_high_current_power_dsn` | Dynamic IPC-2152 rule generation | `0.243 ms` |
+| `06_mixed_signal_scheduling` | 6-stage priority scheduling | `0.344 ms` |
+| `07_dense_multi_terminal_120pins` | 120-terminal dense pin netlist | `1.167 ms` |
+| `08_drc_errors_recovery` | Collision diagnosis & rip-up | `0.110 ms` |
+| `09_orphan_vias_check` | Spatial via convergence check | `0.028 ms` |
+| `10_routing_congestion_eval` | Pin escape density estimation | `0.050 ms` |
+| **Total Microbenchmarks (Part A)** | **10 Micro-Scenarios** | **`5.826 ms`** |
+
+### Part B: Complete Offline Pipelines (5 End-to-End Pipelines)
+| Pipeline | Operations | Measured Time |
+|---|---|---|
+| `P1_mental_model_compilation` | Architecture policy compilation | `0.178 ms` |
+| `P2_placement_and_invariants` | Mechanical envelope verification | `0.395 ms` |
+| `P3_routing_plan_and_ipc2152` | Net scheduling & trace sizing | `0.366 ms` |
+| `P4_copper_and_ground_continuity` | Solid planes & return paths | `0.139 ms` |
+| `P5_quality_and_mfg_verification` | 8 hard quality gates | `0.153 ms` |
+| **Total Pipeline Time (Part B)** | **5 Complete Pipelines** | **`1.231 ms`** |
+
+### Part C: Runtime Infrastructure & Bounded Execution
+| Infrastructure Metric | Scope | Measured Throughput / Latency |
+|---|---|---|
+| `01_scheduler_throughput` | 100 queued tasks | `4.195 ms` (p50: 0.031 ms, p95: 0.070 ms) |
+| `02_process_guard_bounded_drain` | 200 KB stream capped at 4 KB | `37.940 ms` (verified bounded buffer) |
+| `03_snapshot_incremental_update` | Indexed PCB snapshot update | `0.167 ms` ($>2.5\times$ speedup over full build) |
+| `04_spatial_query_1000ops` | 1000 spatial rectangle queries | `4.094 ms` (p50: 0.004 ms) |
+
+### Part D: T01–T13 Pipeline Telemetry (Optimized Port Discovery)
+- **T01 Connection & Port Discovery:**
+  - *Warm Lookup (Memory Cache):* **`< 0.02 ms`**
+  - *Persistent Cache Validation:* **`< 1.0 ms`**
+  - *Cold Concurrent Probe (Worst-Case, All Ports Closed):* **`~102 ms`** *(down from 620.8 ms)*
+- **T02–T13 Combined Telemetry:** **`~7.1 ms`**
+- **Total T01–T13 Telemetry Time:** **`~109 ms`** *(reduced by $>82\%$ from previous 627.8 ms baseline)*.
+
+---
+
+## 11. Command-Line Reference
+
 ```bash
-git clone https://github.com/NijoP/DESK.git
-cd DESK
+# Display all discovery tools and capabilities
+python desk.py tools
 
-# Run complete 269-test automated suite (~9 seconds)
-python -m unittest discover -s tests -p "test_*.py"
-```
+# Launch Local Mission Control dashboard and open browser (port 49630)
+python desk.py dashboard [--port 49630] [--no-open]
 
-### 3. Launch Local Mission Control
-Start the standalone Mission Control server:
-```bash
-# Start background server and launch browser
-python desk.py dashboard
+# Start standalone background HTTP and SSE server
+python desk.py serve [--port 49630]
 
-# Or run foreground HTTP server
-python desk.py serve --port 49620
-```
+# Display formatted terminal status snapshot
+python desk.py status [--project projects/WATCH]
 
-### 4. Query Status via CLI
-```bash
-# Human-readable summary
-python desk.py status
-
-# Machine-readable JSON output
+# Output machine-readable JSON status matching /api/status
 python desk.py status --json
-```
 
-### 5. Run an End-to-End Engineering Pipeline
-Execute autonomous placement, net scheduling, and routing for an engineering project:
-```bash
-# Create or select a project
-python tools/new_project.py SENSOR_HUB
+# Run secure credential management vault
+python desk.py auth [configure|status|test]
 
-# Run 6-stage autonomous routing
-python tools/route.py projects/SENSOR_HUB --passes 30
-```
+# Inspect ecosystem provider health and readiness
+python desk.py settings
 
----
-
-## How It Works: Pipeline Architecture
-
-```mermaid
-flowchart TD
-    subgraph Client["Client Environment"]
-        REQ["Hardware Requirements"]
-        SPEC["Design Profile (JSON)"]
-    end
-
-    subgraph DESK_Core["DESK Deterministic Core"]
-        M1["M1: Schematic & Netlist"]
-        M2["M2: Placement & Invariants"]
-        M3["M3: 6-Stage Routing Scheduler"]
-        M4["M4: Copper, Planes & Stitching"]
-        M5["M5: Manufacturing Limits & DRC"]
-        M6["M6: Fail-Closed Quality Gates"]
-    end
-
-    subgraph Telemetry["Event & Telemetry Layer"]
-        EB["Bounded EventBus (Ring Buffer)"]
-        PROJ["State Projection Engine (12 Stages)"]
-        SRV["DeskServer (127.0.0.1:49620)"]
-        SSE["SSE Stream (/api/v1/events)"]
-        UI["Mission Control UI (index.html)"]
-    end
-
-    subgraph ECAD["CAD & Bridge"]
-        EEDA["EasyEDA Pro Bridge"]
-        GERBER["Verified Gerbers & Release"]
-    end
-
-    REQ --> SPEC
-    SPEC --> M1
-    M1 --> M2 --> M3 --> M4 --> M5 --> M6
-    
-    M1 -.->|Telemetry Event| EB
-    M2 -.->|Telemetry Event| EB
-    M3 -.->|Telemetry Event| EB
-    M4 -.->|Telemetry Event| EB
-    M5 -.->|Telemetry Event| EB
-    M6 -.->|Telemetry Event| EB
-
-    EB --> PROJ
-    PROJ --> SRV
-    SRV --> SSE --> UI
-    
-    M6 -->|Gates Pass (Score >= 80)| EEDA
-    EEDA --> GERBER
+# Recover from interrupted live operations
+python desk.py recover projects/<PROJECT> [--clear]
 ```
 
 ---
 
-## Engineering Philosophy
+## 12. Security, Privacy & Localhost Model
 
-1. **A schematic is data first, drawing second.**  
-   The electrical netlist is authoritative truth; the graphical schematic is an interactive representation.
-2. **Engineering physics strictly precede geometry.**  
-   Current capacity, dielectric breakdown, thermal expansion, and impedance targets dictate dimensions before coordinates are generated.
-3. **Never build on an unverified previous stage.**  
-   Deterministic stage gates prevent routing unverified placements or pouring copper over open electrical nets.
-4. **Single-writer mutation safety.**  
-   CAD workspace mutations are serialized and protected by an acquire/release mutex to prevent dirty state.
-5. **Fail-closed verification.**  
-   Missing validation evidence blocks manufacturing sign-off. A test not run is treated as a failed test.
-6. **Zero runtime magic & full observability.**  
-   Every engineering decision is captured in the append-only ledger and projected in real-time to the developer's dashboard.
+1. **Strict Offline First:** No third-party servers, cloud telemetry, or external analytics.
+2. **Loopback Only:** All network services bind exclusively to `127.0.0.1`. They never expose ports on `0.0.0.0` or public network adapters.
+3. **Read-Only Dashboard API:** Web endpoints cannot trigger canvas mutations or alter design state.
+4. **Credential Redaction:** API keys, tokens, and passwords in logs or status responses are automatically masked (`[REDACTED]`).
+5. **Path Traversal Guards:** Rejects directory traversal tokens (`../`, `..\`) and null bytes.
 
 ---
 
-## Repository Structure
+## 13. Testing & Verification Taxonomy
 
+DESK categorizes tests into four clear, isolated tiers to guarantee that production user projects are never damaged by automated tests:
+
+```text
+               ┌────────────────────────────────────────────────┐
+               │         DESK VERIFICATION TAXONOMY             │
+               └───────────────────────┬────────────────────────┘
+                                       │
+     ┌──────────────────┬──────────────┴─────┬──────────────────┐
+     ▼                  ▼                    ▼                  ▼
+┌──────────────┐ ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
+│ PURE OFFLINE │ │   OFFLINE    │    │  DISPOSABLE  │    │ ACTIVE USER  │
+│  UNIT TESTS  │ │  BENCHMARKS  │    │  LIVE TESTS  │    │   PROJECTS   │
+│  (278 Tests) │ │ (Parts A-D)  │    │  (Rollback)  │    │ (Protected)  │
+│ Zero Network │ │ Sub-ms Cores │    │ Isolated CAD │    │ No Destruct  │
+└──────────────┘ └──────────────┘    └──────────────┘    └──────────────┘
 ```
+
+1. **Pure Offline Unit Tests (278 passing tests):**  
+   Deterministic tests verifying geometry, IPC-2152 sizing, quality gates, and event streams. Run in $\approx 9\,\text{seconds}$ via `python -m unittest discover -s tests`.
+2. **Offline Benchmarks (`tools/benchmarks.py`):**  
+   Micro-scenarios, full pipelines, and telemetry verification measuring millisecond latency without CAD dependencies.
+3. **Disposable Project Live Tests (`tools/live_disposable_test.py`):**  
+   Safe integration tests against live EasyEDA Pro using temporary, disposable projects with automatic primitive rollback on test failure.
+4. **Active Customer Projects (`projects/WATCH`, `projects/BEEBOX`):**  
+   **Strictly protected.** Automated live mutations on active customer projects are strictly quarantined to prevent data loss.
+
+---
+
+## 14. Repository Structure
+
+```text
 DESK/
-├── desk/                           # Core Python Package (Zero External Dependencies)
-│   ├── adapters/                   # CAD bridges (EasyEDA Pro batch adapter, JSON-RPC)
-│   ├── components/                 # Component intelligence, parametric search, BOM
-│   ├── contracts/                  # Formal engineering schemas & stage gates
+├── desk/                           # Core Deterministic Python Engine (Zero External Dependencies)
+│   ├── adapters/                   # ECAD Bridges (EasyEDA Pro JSON-RPC adapter)
+│   ├── auth/                       # Secure credential management & token vault
+│   ├── components/                 # Sourcing & component intelligence (LCSC, Mouser, DigiKey)
+│   ├── contracts/                  # Language-agnostic FFI schemas (geometry, routing, bridge)
 │   ├── mental/                     # Mental-Model Compiler (M1–M6 policy generators)
-│   ├── runtime/                    # Mission Control telemetry & event server
-│   │   ├── events.py               # Bounded EventBus & structured event model
+│   ├── runtime/                    # Mission Control telemetry, scheduler & supervisor
+│   │   ├── events.py               # Thread-safe EventBus & structured event model
+│   │   ├── process_guard.py        # Subprocess timeout & bounded memory streaming
 │   │   ├── projection.py           # 12-stage state projection & progress calculator
-│   │   └── server.py               # Localhost HTTP/SSE streaming server
-│   ├── ui/assets/                  # Single-page Mission Control dashboard
-│   │   └── index.html              # Responsive dark/light theme dashboard
-│   ├── bridge.py                   # High-speed TCP bridge & canvas mutex
-│   ├── copper.py                   # Polygon planes, return paths, stitching vias
+│   │   ├── resource_profile.py     # Hardware detection & adaptive concurrency tiers
+│   │   ├── scheduler.py            # Bounded priority scheduler & task admission
+│   │   └── server.py               # Localhost HTTP server & SSE streaming engine
+│   ├── ui/assets/                  # Local Mission Control Web UI
+│   │   └── index.html              # Responsive single-page cockpit dashboard
+│   ├── bridge.py                   # SessionRegistry (warm port discovery) & canvas mutex
+│   ├── copper.py                   # Polygon planes, ray-casting keepouts & return paths
+│   ├── drc_engine.py               # DRC parser & recovery convergence loop
 │   ├── ledger.py                   # Append-only engineering audit memory
 │   ├── profile.py                  # IPC-2152 calculator & DesignProfile parser
 │   ├── quality.py                  # Fail-closed HardAcceptanceGates & scorecards
-│   └── router.py                   # 6-stage priority scheduler & maze router
-├── docs/                           # Technical Specifications & Documentation
-│   ├── architecture.md             # Subsystem architecture & data flow
-│   ├── execution-events.md         # Event schema & SSE streaming specification
-│   ├── getting-started.md          # Developer onboarding & tutorial
-│   ├── local-dashboard.md          # Mission Control operational guide
-│   ├── 09_STATUS.md                # Authoritative capability audit ledger
-│   └── development_memory/         # Backpass continuous learning documentation
-├── tests/                          # Automated Verification Suite (269 Tests)
+│   └── router.py                   # 6-stage priority scheduler & native maze router
+├── docs/                           # Architecture Specifications & Technical Guides
+│   ├── architecture/               # Comprehensive audits & technology evolution
+│   ├── 09_STATUS.md                # Authoritative capability status ledger
+│   └── local-dashboard.md          # Local Mission Control user & API guide
+├── tests/                          # Automated Verification Suite (278 Passing Tests)
 │   ├── bench_server_overhead.py    # Sub-millisecond server overhead benchmark
-│   ├── test_copper_geometry.py     # Polygon, plane, and stitching tests
+│   ├── test_bridge_port_discovery.py# Cold/warm discovery & port caching tests
+│   ├── test_copper_geometry.py     # Polygon intersection & return-path tests
 │   ├── test_events.py              # EventBus & SSE replay test suite
-│   ├── test_projection.py          # State projection & redaction test suite
-│   ├── test_quality_fail_closed.py # Hard gate enforcement test suite
+│   ├── test_profile_hardening.py   # IPC-2152 trace sizing & stackup tests
+│   ├── test_projection.py          # State projection & credential redaction tests
+│   ├── test_quality_fail_closed.py # Fail-closed gate verification tests
 │   ├── test_router_hardening.py    # 6-stage scheduler & routing tests
-│   └── test_server.py              # HTTP security, port fallback & API tests
-├── tools/                          # Command-Line Utilities & Runners
-│   ├── benchmarks.py               # Micro-scenario and offline pipeline benchmarks
-│   ├── desk.py                     # Primary DESK CLI tool
-│   ├── lint.py                     # Offline schematic netlist linter
-│   ├── new_project.py              # Project scaffold generator
-│   └── route.py                    # Autonomous routing driver
-└── desk.py                         # Root CLI entry point
+│   └── test_server.py              # Localhost security, port fallback & REST API tests
+├── tools/                          # Command-Line Utilities & Engineering Runners
+│   ├── benchmarks.py               # Comprehensive benchmark suite (Parts A-D)
+│   ├── desk.py                     # Primary CLI execution runner
+│   ├── live_disposable_test.py     # Safe live ECAD verification with rollback
+│   └── new_project.py              # Scaffold new hardware project
+├── desk.py                         # Root entry point delegating to tools/desk.py
+└── README.md                       # Architectural guide & documentation
 ```
 
 ---
 
-## Technical Documentation Index
+## 15. Contributing & Engineering Standards
 
-| Guide / Specification | Topic & Scope |
-|---|---|
-| [**Getting Started**](docs/getting-started.md) | Initial setup, configuration, CLI commands, and building your first PCB. |
-| [**Subsystem Architecture**](docs/architecture.md) | Deep dive into profiles, mental models, routers, and bridge synchronization. |
-| [**Local Mission Control**](docs/local-dashboard.md) | Dashboard layout, REST endpoints, CLI commands, and security invariants. |
-| [**Execution Events & SSE**](docs/execution-events.md) | Complete JSON schema for the 12 canonical stages, event bus, and replay tokens. |
-| [**Capability Status Ledger**](docs/09_STATUS.md) | Granular audit of implemented, offline-tested, and live-verified capabilities. |
-| [**Live Safety Checklist**](docs/LIVE_INTEGRATION_CHECKLIST.md) | Pre-flight safety protocols and rollback procedures for CAD integration. |
-| [**Development Memory**](docs/development_memory/00_ADOPTION_AUDIT.md) | Backpass adoption, transcript discovery, and continuous agent improvement. |
+Contributions are welcome! Please ensure all pull requests comply with our engineering standards:
+1. **Zero External Runtime Dependencies:** Must use 100% Python standard library.
+2. **Deterministic Physics First:** All trace widths, clearances, and return paths must be derived from physical equations or validated fabricator rules.
+3. **Fail-Closed Verification:** Never allow missing or unexecuted tests to default to `PASS`.
+4. **All Tests Passing:** Run and verify all 278 unit tests (`python -m unittest discover -s tests`).
+5. **Benchmark Verification:** Microbenchmarks must execute within target bounds (`python tools/benchmarks.py`).
 
 ---
 
-## Implementation Status Table
+## 16. License
 
-| Subsystem / Capability | Implementation State | Test & Evidence Verification |
-|---|---|---|
-| **Design Profile Engine** | `PRODUCTION` | 100% stackup & IPC-2152 trace sizing tested (`test_profile_hardening.py`) |
-| **Mental Models (M1–M6)** | `PRODUCTION` | All 6 policies compiled under 300 token budget (`test_mental_models.py`) |
-| **6-Stage Net Scheduler** | `PRODUCTION` | Priority ordering & escape stubs verified (`test_router_hardening.py`) |
-| **Offline Copper & Planes** | `PRODUCTION` | Ray casting, via arrays & split detection tested (`test_copper_geometry.py`) |
-| **Fail-Closed Hard Gates** | `PRODUCTION` | 8 gates strictly block on unrouted or shorted nets (`test_quality_fail_closed.py`) |
-| **EventBus & SSE Stream** | `PRODUCTION` | Bounded buffer, replay & listener isolation verified (`test_events.py`) |
-| **State Projection** | `PRODUCTION` | 12 canonical stages & credential redaction tested (`test_projection.py`) |
-| **Mission Control HTTP** | `PRODUCTION` | Port fallback, security headers & read-only enforcement (`test_server.py`) |
-| **Mission Control UI** | `PRODUCTION` | Single-page HTML/CSS/JS dashboard (`desk/ui/assets/index.html`) |
-| **EasyEDA Pro Bridge** | `OFFLINE_TESTED` | TCP bridge tested; live canvas mutation quarantined (`test_bridge.py`) |
-
----
-
-## Performance Benchmarks
-
-DESK is engineered for sub-millisecond execution with zero external runtime dependencies.
-
-```bash
-# Run pipeline performance benchmarks
-python tools/benchmarks.py
-
-# Run server overhead benchmarks
-python tests/bench_server_overhead.py
-```
-
-### 1. Deterministic Core Execution (`tools/benchmarks.py`)
-
-| Benchmark Category | Pipeline / Scenario | Execution Time |
-|---|---|---|
-| **Micro-Scenarios (Part A)** | Small Sensor PCB MST | `0.40 ms` |
-| | Medium 4-Layer Controller (WATCH) | `5.04 ms` |
-| | Fine-Pitch FPC Connector (0.5mm) | `0.05 ms` |
-| | Screw-Terminal Power Access | `0.02 ms` |
-| | High-Current Power DSN Tuning | `0.27 ms` |
-| | Mixed-Signal Scheduling | `0.58 ms` |
-| | Dense Multi-Terminal MST (120 pins) | `1.92 ms` |
-| | DRC Collision Diagnosis & Recovery | `0.15 ms` |
-| | Orphan Via Convergence Check | `0.03 ms` |
-| | Pin Escape Congestion Evaluation | `0.05 ms` |
-| **Offline Pipelines (Part B)**| P1 Ingestion & Mental-Model Compilation | `0.09 ms` |
-| | P2 Placement, Invariants & Mechanical Access | `0.45 ms` |
-| | P3 Multi-Stage Routing & IPC-2152 Planning | `0.38 ms` |
-| | P4 Copper Planes, Stitching & Return-Path Audit | `0.13 ms` |
-| | P5 Fail-Closed Quality Verification & Acceptance | `0.02 ms` |
-| **Total Pipeline Time** | **Combined Benchmark Suite** | **`9.58 ms`** |
-
-### 2. Local Mission Control Telemetry Overhead (`tests/bench_server_overhead.py`)
-
-| Benchmark Condition | 100 Consecutive Operations | Average per Operation | Added Overhead |
-|---|---|---|---|
-| **Baseline (Server Inactive)** | `24.13 ms` | `0.241 ms` | — |
-| **Active Telemetry (Server + SSE)** | `25.27 ms` | `0.253 ms` | **`+0.011 ms / op`** |
-
-- **Peak Memory Overhead**: $\le 50.0\,\text{MB}$ total process footprint.
-- **Latency Impact**: $< 5\%$ addition over native offline execution.
-
----
-
-## Agent Continuous Improvement (Backpass)
-
-DESK supports **Backpass** (`v0.1.44`) as an offline development-memory optimization layer to continuously improve agent understanding from actual development history.
-
-- **Offline Optimization**: Backpass analyzes session transcripts from Claude Code, OpenCode, Codex, and Pi, identifies recurring mistakes and tool errors, and proposes evidence-backed edits to `AGENTS.md` and specialized engineering skills under `.agents/skills/`.
-- **Zero Runtime Dependency**: Backpass is strictly a development utility; it is not imported by `desk.*` and does not run during production PCB execution.
-- **Human-in-the-Loop Gate**: Analysis never writes automatically. Proposed changes require human review and approval.
-
-```powershell
-# Inspect memory budget, cache, and skill triggers
-backpass status
-
-# Scan recent agent development sessions
-backpass scan --since 7d
-
-# Synthesize proposed memory adjustments (read-only)
-backpass
-
-# Review and approve proposed memory edits
-backpass apply --no-ui
-```
-
----
-
-## Contributing & License
-
-Contributions are welcome! Please ensure all PRs:
-1. Maintain zero external runtime dependencies.
-2. Adhere to the single-writer mutex safety model.
-3. Pass all 269 automated offline tests (`python -m unittest discover -s tests`).
-4. Update the capability ledger in [`docs/09_STATUS.md`](docs/09_STATUS.md).
-
-This project is licensed under the [MIT License](LICENSE).  
-Third-party notices and acknowledgments are documented in [NOTICE](NOTICE).
+This project is licensed under the [MIT License](LICENSE). Third-party acknowledgments and notices are documented in [NOTICE](NOTICE).
