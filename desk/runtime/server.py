@@ -131,6 +131,14 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
             self._handle_events(query)
         elif path in {"/api/events/live", "/api/v1/events/stream"}:
             self._handle_sse_stream(query)
+        elif path == "/api/rework/session":
+            self._handle_rework_session(query)
+        elif path == "/api/rework/issues":
+            self._handle_rework_issues(query)
+        elif path == "/api/rework/plan":
+            self._handle_rework_plan(query)
+        elif path == "/api/rework/history":
+            self._handle_rework_history(query)
         elif path == "/api/v1/health":
             self._handle_health()
         elif path == "/api/v1/projects":

@@ -15,6 +15,28 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional
 
+# Structured Rework Mode Event Types
+EVENT_REWORK_SESSION_STARTED = "rework.session.started"
+EVENT_REWORK_SESSION_CONNECTED = "rework.session.connected"
+EVENT_REWORK_IDENTITY_CONFIRMED = "rework.identity.confirmed"
+EVENT_REWORK_BASELINE_CAPTURED = "rework.baseline.captured"
+EVENT_REWORK_AUDIT_STARTED = "rework.audit.started"
+EVENT_REWORK_ISSUE_DETECTED = "rework.issue.detected"
+EVENT_REWORK_AUDIT_COMPLETED = "rework.audit.completed"
+EVENT_REWORK_PLAN_GENERATED = "rework.plan.generated"
+EVENT_REWORK_APPROVAL_REQUESTED = "rework.approval.requested"
+EVENT_REWORK_APPROVAL_GRANTED = "rework.approval.granted"
+EVENT_REWORK_APPROVAL_REJECTED = "rework.approval.rejected"
+EVENT_REWORK_REPAIR_STARTED = "rework.repair.started"
+EVENT_REWORK_REPAIR_COMPLETED = "rework.repair.completed"
+EVENT_REWORK_REPAIR_FAILED = "rework.repair.failed"
+EVENT_REWORK_READBACK_COMPLETED = "rework.readback.completed"
+EVENT_REWORK_VERIFICATION_COMPLETED = "rework.verification.completed"
+EVENT_REWORK_REVISION_CHANGED = "rework.revision.changed"
+EVENT_REWORK_SESSION_INTERRUPTED = "rework.session.interrupted"
+EVENT_REWORK_SESSION_RECOVERED = "rework.session.recovered"
+EVENT_REWORK_RELEASE_ASSESSED = "rework.release.assessed"
+
 
 @dataclass
 class Event:

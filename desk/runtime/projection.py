@@ -466,6 +466,24 @@ class ExecutionProjection:
                 end_t = self.completion_time or time.time()
                 duration = max(0.0, round(end_t - self.start_time, 2))
 
+            # Rework mode summary if available
+            rework_info = None
+            try:
+                from desk.rework import get_latest_rework_session
+                r_sess = get_latest_rework_session(self.project_id)
+                if r_sess:
+                    rework_info = {
+                        "session_id": r_sess.session_id,
+                        "state": r_sess.state,
+                        "policy": r_sess.policy,
+                        "detected_issues_count": r_sess.detected_issues_count,
+                        "approved_repairs_count": r_sess.approved_repairs_count,
+                        "completed_repairs_count": r_sess.completed_repairs_count,
+                        "active_repair_id": r_sess.active_repair_id,
+                    }
+            except Exception:
+                pass
+
             return {
                 "execution_id": self.execution_id,
                 "project_id": self.project_id,
@@ -483,6 +501,7 @@ class ExecutionProjection:
                 "warning_count": warning_count,
                 "stages": {s: self.stages[s].to_dict() for s in CANONICAL_STAGES},
                 "engineering_results": self.engineering_results,
+                "rework": rework_info,
                 "metrics": {
                     "process_ram_mb": hw["current_process_ram_mb"],
                     "available_ram_mb": hw["available_ram_mb"],
