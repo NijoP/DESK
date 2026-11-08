@@ -36,6 +36,17 @@ if len(a) >= 1 and a[0] == "mission":                  # project-independent mis
     intent = " ".join(a[1:])
     m_type = ShipBridge.classify_mission(intent)
     print(f"Mission: {m_type.value} | Intent: '{intent}'"); sys.exit(0)
+if len(a) >= 1 and a[0] == "part":                     # project-independent component intelligence query
+    from desk.component_intelligence.api import find_component
+    query = " ".join(a[1:])
+    res = find_component(query, limit=5)
+    if not res:
+        print(f"No component found matching '{query}'.")
+    else:
+        for r in res:
+            price_str = f"${r['best_unit_price']:.4f}" if r.get("best_unit_price") is not None else "N/A"
+            print(f"[{r['desk_id']}] {r['normalized_manufacturer']} {r['mpn']} ({r['package']}) - {r['description'][:60]} | Offers: {r.get('active_offers_count',0)} | Best Price: {price_str}")
+    sys.exit(0)
 if len(a) < 2: raise SystemExit(__doc__)
 proj, cmd, rest = a[0], a[1], a[2:]
 E = Engine(proj)

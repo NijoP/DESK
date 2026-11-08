@@ -1,6 +1,6 @@
 ---
 name: pcb-routing
-description: Procedural workflow for single-ended, high-speed, and general PCB trace routing.
+description: 6-stage net priority scheduling, trace widths, clearances, and via placement.
 triggers:
   - "route"
   - "routing"
@@ -8,7 +8,6 @@ triggers:
   - "trace"
   - "via"
   - "fanout"
-  - "clearance"
 inputs:
   net_names: list
   routing_layers: list
@@ -24,18 +23,45 @@ replay_safety: SAFE_IDEMPOTENT
 # PCB Routing Skill
 
 ## Purpose
-Coordinates deterministic track routing using IPC-2152 equations, net-class constraints, and impedance profiles.
+Coordinates deterministic net scheduling, escape routing, via transitions, and clearance enforcement across PCB routing layers.
 
-## Procedural Execution Checklist
+## When to Use
+- Planning or executing net routing on a placed board.
+- Configuring 6-stage priority scheduling in `desk/router.py`.
+- Resolving routing congestions, differential pair skew, or DRC clearance violations.
 
-1. **Calculate Trace Widths**:
-   - Determine current capacity and allowable temperature rise ($\Delta T = 10^\circ\text{C}$ or $20^\circ\text{C}$).
-   - Query `profile.trace_width(net_name, layer)` to compute exact width from layer copper weight (oz/ft²).
-2. **Layer Allocation**:
-   - High-speed and sensitive analog traces routed on Top layer with solid ground plane on Layer 2.
-   - Avoid routing across ground plane splits or voids.
-3. **Geometry Constraints**:
-   - Strict 45° chamfered bends (no 90° right angles to minimize acid traps and impedance discontinuities).
-   - Enforce net-class clearance rules against neighboring copper.
-4. **Invoke M3 Routing Engine**:
-   - Call `desk.router.route_nets(net_names, routing_layers, profile)`.
+## Required Inputs
+- Placed component footprints and pad coordinates.
+- Authoritative netlist specification.
+- Project `DesignProfile`.
+
+## Relevant DESK Modules
+- `desk/router.py`: 6-stage autonomous priority router.
+- `AutorouteEngine.class` / Freerouting Specctra DSN bridge.
+
+## Required Engineering Constraints
+- Net Priority Invariant: Stage 1 (GND) -> Stage 2 (Edge/Connectors) -> Stage 3 (High-Speed/RF) -> Stage 4 (Controls) -> Stage 5 (Power) -> Stage 6 (General).
+- Chamfered Bends: Strict 45° trace bends; 90° right angles are prohibited.
+- High-speed differential pairs must maintain continuous ground reference without crossing plane splits.
+
+## Recommended Workflow
+1. Verify component placement completion and locked mechanical anchors.
+2. Initialize routing scheduler: `router = Router(profile)`.
+3. Schedule nets into priority stages.
+4. Synthesize pin escape stubs from fine-pitch SMD components.
+5. Execute routing passes; perform rip-up and retry on congested channels.
+6. Verify 100% netlist connectivity and run DRC checks.
+
+## Validation Steps
+- Verify connectivity: `python tools/verify.py projects/<P> routing`.
+- Execute routing test suite: `python -m unittest tests/test_router.py`.
+
+## Failure Conditions & Recovery
+- Unrouted nets: Identify bottleneck clearance areas; report component displacement suggestions to Captain.
+- Stub/antenna detection: Purge floating track segments via DRC cleanup pass.
+
+## Expected Output
+- Fully routed copper tracks meeting clearance, impedance, and length constraints.
+
+## Documentation References
+- [Routing Specification](file:///docs/05_ROUTING.md)

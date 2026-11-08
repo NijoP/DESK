@@ -184,6 +184,55 @@ class OperationRegistry:
             }
         ))
 
+        # 5. Component Discovery (M1)
+        self.register(OperationDescriptor(
+            operation_id="find_component",
+            name="Find Component",
+            description="Discovers electronic components across local canonical database and active suppliers.",
+            schema_version="1.0.0",
+            deterministic=True,
+            resource_class=ResourceClass.LIGHT,
+            side_effect=False,
+            replay_policy=ReplayPolicy.SAFE_READ,
+            pipeline_stage="M1",
+            input_schema={"query": str},
+            handler=lambda query, limit=10: __import__("desk.component_intelligence.api", fromlist=["find_component"]).find_component(query, limit=limit)
+        ))
+
+        # 6. Component Verification (M1)
+        self.register(OperationDescriptor(
+            operation_id="verify_component",
+            name="Verify Component",
+            description="Executes fail-closed V1-V4 verification (Identity, Electrical, Physical, Procurement).",
+            schema_version="1.0.0",
+            deterministic=True,
+            resource_class=ResourceClass.LIGHT,
+            side_effect=False,
+            replay_policy=ReplayPolicy.SAFE_READ,
+            pipeline_stage="M1",
+            input_schema={"desk_id": str},
+            handler=lambda desk_id, operating_rail_v=0.0, operating_current_a=0.0: __import__("desk.component_intelligence.api", fromlist=["verify_component"]).verify_component(
+                desk_id, operating_rail_v=operating_rail_v, operating_current_a=operating_current_a
+            )
+        ))
+
+        # 7. Procurement BOM Optimization (M1)
+        self.register(OperationDescriptor(
+            operation_id="build_procurement_bom",
+            name="Build Procurement BOM",
+            description="Optimizes BOM sourcing, pricing tiers, and stock availability across suppliers.",
+            schema_version="1.0.0",
+            deterministic=True,
+            resource_class=ResourceClass.MEDIUM,
+            side_effect=False,
+            replay_policy=ReplayPolicy.SAFE_READ,
+            pipeline_stage="M1",
+            input_schema={"parts": list},
+            handler=lambda parts, batch_quantity=1: __import__("desk.component_intelligence.api", fromlist=["build_procurement_bom"]).build_procurement_bom(
+                parts, batch_quantity=batch_quantity
+            )
+        ))
+
 
 # Global singleton registry instance
 _GLOBAL_REGISTRY: Optional[OperationRegistry] = None

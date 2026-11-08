@@ -13,3 +13,6 @@ library/tools/backpass/
 library/tools/*.jar
 .desk_learn/
 library/api_signatures.json
+*.db
+*.db-wal
+*.db-shm

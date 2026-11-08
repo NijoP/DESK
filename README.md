@@ -210,6 +210,34 @@ To protect customer schematics and production boards, **live EasyEDA Pro testing
 
 ---
 
+## Agent Development Memory & Continuous Improvement (Backpass)
+
+DESK integrates **Backpass** (`v0.1.44`) as an offline development-memory optimization layer to continuously improve agent understanding from actual development history.
+
+- **Offline Optimization**: Backpass analyzes session transcripts from Claude Code, OpenCode, Codex, and Pi, identifies recurring mistakes and tool errors, and proposes evidence-backed edits to `AGENTS.md` and specialized engineering skills under `.agents/skills/`.
+- **Zero Runtime Dependency**: Backpass is strictly a development utility; it is not imported by `desk.*` and does not run during production PCB execution.
+- **Human-in-the-Loop Gate**: Analysis never writes automatically. Proposed changes require human review and approval.
+
+### Memory Optimization Workflow (Windows PowerShell)
+
+```powershell
+# 1. Inspect memory budget, cache, and skill triggers
+backpass status
+
+# 2. Scan recent agent sessions associated with DESK
+backpass scan --since 7d
+
+# 3. Run backward pass (collects samples, calculates loss, synthesizes edits - read-only)
+backpass
+
+# 4. Review and approve proposed memory edits
+backpass apply --no-ui
+```
+
+Comprehensive architecture, security, and workflow guides are available in [docs/development_memory/](docs/development_memory/).
+
+---
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
