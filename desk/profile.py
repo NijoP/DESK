@@ -146,26 +146,17 @@ class DesignProfile:
 
     def derive_trace_width_mil(self, net: str, is_inner: bool = False, layer_idx: Optional[int] = None) -> float:
         """Calculate IPC-2152 width using profile current, copper weight, and allowed temp rise."""
-        # 1. Net class override if explicitly set
-        for nc in self.net_classes.values():
-            if net in nc.nets and nc.min_width_mil > 0:
-                width = nc.min_width_mil
-                # Ensure it meets manufacturer minimum
-                return max(width, self.manufacturing.min_trace_width_mil)
+        min_width = self.manufacturing.min_trace_width_mil
 
-        # 2. Check if net is in RF profile
+        # 1. Check if net is in RF profile
         rf_dict = getattr(self, "rf_lines", {}) or getattr(self, "rf_nets", {})
         if net in rf_dict:
             rf_prof = rf_dict[net]
-            return max(rf_prof.trace_width_mil, self.manufacturing.min_trace_width_mil)
+            return max(rf_prof.trace_width_mil, min_width)
 
-        # 3. Derive from physical current limit
+        # 2. Derive physical current capacity from IPC-2152
         current_A = self.get_current_for_net(net)
-        min_width = self.manufacturing.min_trace_width_mil
-        if current_A <= 0.3:
-            return min_width
 
-        # IPC-2152 formula: Area ~= (I / (k * deltaT^0.44))^(1/0.725)
         # Determine actual copper thickness from stackup
         layer = None
         if layer_idx is not None and self.stackup:
@@ -187,9 +178,20 @@ class DesignProfile:
         cu_thick_mil = cu_oz * 1.37
         k = 0.024 if is_inner else 0.048
         delta_T = max(1.0, self.thermal.max_temperature_rise_c)
-        area_mil2 = (current_A / (k * (delta_T ** 0.44))) ** (1.0 / 0.725)
-        width_mil = area_mil2 / max(0.1, cu_thick_mil)
-        return round(max(min_width, width_mil), 1)
+        if current_A > 0.3:
+            area_mil2 = (current_A / (k * (delta_T ** 0.44))) ** (1.0 / 0.725)
+            ipc_width = area_mil2 / max(0.1, cu_thick_mil)
+        else:
+            ipc_width = min_width
+
+        # 3. Net class minimum width must NOT compromise current capacity
+        net_class_min = 0.0
+        for nc in self.net_classes.values():
+            if net in nc.nets and nc.min_width_mil > 0:
+                net_class_min = max(net_class_min, nc.min_width_mil)
+
+        final_width = max(ipc_width, net_class_min, min_width)
+        return round(final_width, 1)
 
     def derive_clearance_mil(self, net1: str, net2: str) -> float:
         """Profile-driven electrical clearance respecting manufacturer and voltage limits."""
