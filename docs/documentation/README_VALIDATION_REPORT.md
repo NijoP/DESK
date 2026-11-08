@@ -34,7 +34,7 @@ This report documents the validation of the newly redesigned `README.md` for **D
 - **Evaluation Findings:**
   1. *What do I need to run this?* **YES.** Section 7 provides a simple hardware checklist: Computer, Python 3.9+, Git, EasyEDA Pro.
   2. *Do I need to install complicated software packages?* **YES.** Section 7 and Section 8 clearly state: **Zero external packages to install.** No `pip install` required.
-  3. *Can I easily install and test it?* **YES.** Section 8 provides 3 exact, copy-and-paste commands for Windows PowerShell that verify 288 automated checks in ~11 seconds.
+  3. *Can I easily install and test it?* **YES.** Section 8 provides 3 exact, copy-and-paste commands for Windows PowerShell that verify 303 automated checks in ~13 seconds.
   4. *What does a real session look like?* **YES.** Section 9 guides the user step-by-step: checking status (`python desk.py status`), opening the browser cockpit (`python desk.py dashboard`), and running a sample route (`python tools/route.py`).
 
 ---
@@ -64,7 +64,7 @@ All commands documented in `README.md` were executed natively in Windows PowerSh
    ```powershell
    python -m unittest discover -s tests -p "test_*.py"
    ```
-   *Result:* Ran 288 tests in 11.115s. All 288 passed with zero errors (`OK`).
+   *Result:* Ran 303 tests in 13.168s. All 303 passed with zero errors (`OK`).
 
 2. **Telemetry Status Command:**
    ```powershell

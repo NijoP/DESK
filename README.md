@@ -4,7 +4,7 @@
 
 **From circuit requirements to PCB design, engineering verification and manufacturing preparation.**
 
-[![Tests](https://img.shields.io/badge/tests-288%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-303%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero%20external-success.svg)](desk/)
 [![ECAD](https://img.shields.io/badge/ecad-EasyEDA%20Pro-orange.svg)](https://pro.easyeda.com/)
@@ -241,7 +241,7 @@ git clone https://github.com/NijoP/DESK.git
 # 2. Enter the DESK directory
 cd DESK
 
-# 3. Verify the installation (runs 288 automated checks in ~10 seconds)
+# 3. Verify the installation (runs 303 automated checks in ~13 seconds)
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
@@ -424,7 +424,7 @@ Detailed guides organized by your engineering task:
 | [`library/`](library/) | Verified electronic components, footprints, and supplier mappings. |
 | [`tools/`](tools/) | Command-line engineering utilities (routing, linting, benchmarks, project creation). |
 | [`docs/`](docs/) | Engineering specifications, user guides, and architecture references. |
-| [`tests/`](tests/) | 288 automated verification tests validating physical and electrical rules. |
+| [`tests/`](tests/) | 303 automated verification tests validating physical and electrical rules. |
 
 ---
 
@@ -450,7 +450,7 @@ Detailed guides organized by your engineering task:
 We welcome contributions from electronics engineers and developers! To contribute:
 1. Ensure all code uses **100% Python standard library** (zero external pip packages).
 2. Base all trace width and clearance rules on physical equations or documented fabricator standards.
-3. Verify that all 288 automated tests pass (`python -m unittest discover -s tests -p "test_*.py"`).
+3. Verify that all 303 automated tests pass (`python -m unittest discover -s tests -p "test_*.py"`).
 
 This project is licensed under the [MIT License](LICENSE).  
 Third-party notices and acknowledgments are documented in [NOTICE](NOTICE).
