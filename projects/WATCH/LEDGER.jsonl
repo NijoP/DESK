@@ -139,3 +139,6 @@
 {"id": "L-0139", "ts": "2026-11-07T01:06:48", "type": "verified", "text": "live netlist == spec (3 parts); sheet 89 parts / 59 nets", "block": "13_VBUS_SENSE", "spec_hash": "b3347c77b201"}
 {"id": "L-0140", "ts": "2026-11-07T04:02:34", "type": "drc_convergence", "text": "DRC run: 0 violations. Unconnected: 0, Clearance: 0, Shorts: 0. Failed nets: 0. Status: APPROVED.", "source": "tools/drc.py"}
 {"id": "L-0141", "ts": "2026-11-07T04:05:03", "type": "release", "text": "release REV1: 5 files, all gates passed", "source": "release/REV1/MANIFEST.json"}
+{"id": "L-0142", "ts": "2026-11-07T13:43:45", "type": "verified", "text": "live netlist == spec (12 parts); sheet 89 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "30bb1c4fa57d"}
+{"id": "L-0143", "ts": "2026-11-07T13:51:16", "type": "drc_convergence", "text": "DRC run: 38 violations. Unconnected: 0, Clearance: 0, Shorts: 0. Failed nets: 0. Status: REWORK_REQUIRED.", "source": "tools/drc.py"}
+{"id": "L-0144", "ts": "2026-11-07T16:20:45", "type": "drc_convergence", "text": "DRC run: 351 violations. Unconnected: 0, Clearance: 0, Shorts: 0. Failed nets: 0. Status: REWORK_REQUIRED.", "source": "tools/drc.py"}

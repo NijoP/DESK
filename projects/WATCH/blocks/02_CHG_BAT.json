@@ -42,17 +42,15 @@
   },
   {
    "ref": "J2",
-   "mpn": "S2B-PH-SM4-TB",
-   "role": "2-pin JST PH 2.0mm LiPo battery connector with shield tabs",
+   "mpn": "BAT_WIREPAD_2P",
+   "role": "2-pad LiPo battery wire solder pads (BAT+ / BAT-)",
    "pins": {
     "1": "VBAT",
-    "2": "GND",
-    "3": "GND",
-    "4": "GND"
+    "2": "GND"
    },
    "nc": [],
-   "lcsc": "C295747",
-   "package": "JST-PH-2P-SMD"
+   "lcsc": "C9900017271",
+   "package": "BAT_WIREPAD_2P_P3.5"
   },
   {
    "ref": "R3",

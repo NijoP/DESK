@@ -216,23 +216,54 @@ RULE_WIDTH_RX = re.compile(r"\(rule\s*\(width\s+[\d\.]+\)\)")
 CLASS_BLOCK_RX = re.compile(r"\(class\s+([^\s]+)\s+'([^']+)'\s*\(rule\s*\(width\s+[\d\.]+\)\s*\(clearance\s+[\d\.]+\)\)", re.MULTILINE)
 
 class DSNTuningEngine:
-    """Tuning engine for EasyEDA DSN export: fixes boundaries, fine-pitch clearances, and class widths."""
+    """Tuning engine for EasyEDA DSN export: fixes boundaries, fine-pitch clearances, class widths, and removes duplicate pad vertices."""
 
     @staticmethod
     def tune_dsn(dsn_content: str, board_outline_mil: Tuple[float, float],
                  power_nets: Optional[Set[str]] = None,
                  fine_pitch_clearance_mil: float = 4.02,
-                 fine_pitch_width_mil: float = 5.0) -> str:
+                 fine_pitch_width_mil: float = 5.0,
+                 keepouts: Optional[List[Dict[str, Any]]] = None) -> str:
         power_nets = {n.upper() for n in (power_nets or set())}
         W_mil, H_mil = board_outline_mil
 
-        # 1. Update boundary to match true board dimension rectangle
-        new_boundary = (f"(boundary\n    (path signal 0 0 0 0 {W_mil:.2f} {H_mil:.2f} "
-                        f"{W_mil:.2f} {H_mil:.2f} 0 0 0)\n  )")
-        content = BOUNDARY_RX.sub(new_boundary, dsn_content, count=1)
+        # 0. Deduplicate consecutive duplicate coordinates in padstack polygons to prevent Freerouting infinite calculation loops
+        def clean_poly(m):
+            tokens = m.group(1).split()
+            if len(tokens) < 2:
+                return m.group(0)
+            layer, width, coords = tokens[0], tokens[1], tokens[2:]
+            pts = []
+            for i in range(0, len(coords)-1, 2):
+                pt = (coords[i], coords[i+1])
+                if not pts or pt != pts[-1]:
+                    pts.append(pt)
+            return f"(polygon {layer} {width} {' '.join(f'{x} {y}' for x, y in pts)})"
+        content = re.sub(r"\(polygon\s+([^\)]+)\)", clean_poly, dsn_content)
+
+        # 1. Update boundary to match true board dimension rectangle and profile-driven keepouts
+        boundary_parts = [f"(boundary\n    (path signal 0 0 0 0 {W_mil:.2f} {H_mil:.2f} {W_mil:.2f} {H_mil:.2f} 0 0 0)\n  )"]
+        if keepouts:
+            for ko in keepouts:
+                name = ko.get("name", "KEEPOUT")
+                rect = ko.get("rect_mil")
+                if not rect and ko.get("rect_mm"):
+                    rm = ko["rect_mm"]
+                    rect = (rm[0] * MIL, rm[1] * MIL, rm[2] * MIL, rm[3] * MIL)
+                if rect:
+                    x1, y1, x2, y2 = rect
+                    boundary_parts.append(
+                        f"    (keepout \"{name}\"\n"
+                        f"      (polygon signal 0 {x1:.2f} {y1:.2f} {x2:.2f} {y1:.2f} {x2:.2f} {y2:.2f} {x1:.2f} {y2:.2f})\n"
+                        f"    )"
+                    )
+        new_boundary = "\n".join(boundary_parts)
+        content = BOUNDARY_RX.sub(new_boundary, content, count=1)
 
         # 2. Tune default track width and clearance for fine pitch escape
         content = RULE_WIDTH_RX.sub(f"(rule (width {fine_pitch_width_mil}))", content)
+        content = re.sub(r"\(grid\s+wire\s+[\d\.]+\)", "(grid wire 1.25)", content)
+        content = re.sub(r"\(grid\s+via\s+[\d\.]+\)", "(grid via 1.25)", content)
 
         # 3. Inject power net class widths
         def power_repl(m):

@@ -36,6 +36,7 @@ elif cmd == "req": out = E.req(rest[0], **kw)
 elif cmd == "find": out = E.find(" ".join(rest), **kw)
 elif cmd == "doc": out = E.doc(" ".join(rest), **kw)
 elif cmd == "delta": out = E.delta(**kw)
+elif cmd == "policy": out = E.policy(rest[0], task_type=rest[1] if len(rest) > 1 else "general", **kw)
 elif cmd == "index": out = f"index: {E.ix.stats}, chunks: {sum(1 for _ in E.ix.chunks())}"
 else: raise SystemExit(__doc__)
 print(out)

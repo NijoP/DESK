@@ -251,9 +251,11 @@
  },
  "BAT_WIREPAD_2P": {
   "libraryUuid": "7db9ad37e8bc4e319ee58552cbf680c9",
-  "uuid": "9b2ed2158f3c71e9",
+  "uuid": "c91952353d4344669a08ab8ca8be8c08",
   "name": "BAT_WIREPAD_2P",
-  "footprint": ""
+  "footprint": "BAT_WIREPAD_2P_P3.5",
+  "lcsc": "C9900017271",
+  "mfr": "BAT_WIREPAD_2P"
  },
  "BQ24074RGTR": {
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",

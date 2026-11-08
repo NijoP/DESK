@@ -443,6 +443,29 @@ class Engine:
             _dump(now, served_f)
         return P.render()
 
+    def policy(self, model_id, task_type="general", budget=1200):
+        """Compile and serve compact mental-model policy (M1-M6) under budget."""
+        from desk.mental.compiler import PolicyCompiler
+        from desk.profile import DesignProfile
+
+        prof_path = os.path.join(self.project, "design_profile.json")
+        if os.path.exists(prof_path):
+            profile = DesignProfile.load(prof_path)
+        else:
+            plan_path = os.path.join(self.project, "placement.json")
+            plan = _json(plan_path, {})
+            board_mm = tuple(plan.get("board_mm", [50.0, 50.0]))
+            profile = DesignProfile(
+                project_id=os.path.basename(os.path.abspath(self.project)),
+                board_dimensions_mm=board_mm
+            )
+
+        compiled = PolicyCompiler.compile(model_id, task_type, profile)
+        P = Pack(f"POLICY {model_id} ({task_type})", budget)
+        P.add(0, f"Policy {compiled.policy_id}", compiled.to_compact_prompt())
+        P.add(1, "Output Schema", json.dumps(compiled.output_schema, indent=1))
+        return P.render()
+
 
 def _snippet(text, query, width=700):
     words = [w for w in re.findall(r"[a-z0-9+_.\-]+", query.lower()) if len(w) > 1]

@@ -43,8 +43,10 @@ plan = json.load(open(plan_path, encoding="utf-8")) if os.path.exists(plan_path)
 
 # Build net graph and ordered routing plan
 net_graph = RoutabilityEvaluator.build_connectivity_graph(dump)
+rules_dict = dict(plan)
+if plan.get("rules"): rules_dict.update(plan["rules"])
 routing_plan = RoutingPlanGenerator.generate_plan(
-    net_graph, dump, tuple(plan.get("board_mm", [50.0, 50.0])), rules=plan.get("rules")
+    net_graph, dump, tuple(plan.get("board_mm", [50.0, 50.0])), rules=rules_dict
 )
 
 print(f"Routing Strategy: Stackup {routing_plan.board_stackup}")
@@ -65,7 +67,7 @@ if recovery:
         rip_ids = rec_data.get("conflicting_tracks_to_ripup", [])
         if rip_ids:
             print(f"Recovery: Selectively ripping up {len(rip_ids)} conflicting tracks...")
-            check(ex(G + f'await eda.pcb_PrimitiveTrack.delete({json.dumps(rip_ids)}); return true;',
+            check(ex(G + f'for(const id of {json.dumps(rip_ids)}){{ try{{ await eda.pcb_PrimitiveLine.modify(id, {{net:""}}); }}catch(e){{}} }} await eda.pcb_PrimitiveLine.delete({json.dumps(rip_ids)}); return true;',
                      timeout=60, window_id=P.get("window_id")))
 
 # Export DSN
@@ -97,7 +99,7 @@ if not shutil.which("java"):
     raise SystemExit("STOP: java not found on PATH.")
 
 ses = os.path.join(wd, "desk_route.ses")
-cmd = ["java", "-jar", jar, "-de", tuned_dsn_path, "-do", ses, "-mp", str(passes), "--gui.enabled=false"]
+cmd = ["java", "-jar", jar, "-de", tuned_dsn_path, "-do", ses, "-mp", str(passes), "-mt", "1"]
 t0 = time.time()
 p = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
 with open(os.path.join(wd, "freerouting.log"), "w", encoding="utf-8") as f:
@@ -114,7 +116,7 @@ b64 = base64.b64encode(open(ses, "rb").read()).decode()
 with ops.write_op(proj, "route_import", "PCB") as rec:
     rec["dirty"] = True
     r = check(ex(G + 'const b=atob("%s"); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);'
-                     'const ok=await eda.pcb_Document.importAutoRouteSesFile(new File([u],"desk_route.ses")); return ok;' % b64,
+                     'const ok=await eda.pcb_Document.importAutoRouteSesFile(new File([u],"desk_route.ses")); await eda.pcb_Document.save(); return ok;' % b64,
                  timeout=600, window_id=P.get("window_id")))
 
 print("SES import:", r)
