@@ -125,25 +125,31 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
             self._handle_dashboard()
         elif path in {"/api/status", "/api/v1/status"}:
             self._handle_status()
+        elif path in {"/api/bridge", "/api/v1/bridge"}:
+            self._handle_bridge()
+        elif path in {"/api/sync", "/api/v1/sync"}:
+            self._handle_sync(query)
+        elif path in {"/api/project/select", "/api/v1/project/select"}:
+            self._handle_project_select(query)
         elif path in {"/api/execution", "/api/v1/execution", "/api/executions", "/api/v1/executions"}:
             self._handle_executions()
         elif path in {"/api/events", "/api/v1/events"}:
             self._handle_events(query)
         elif path in {"/api/events/live", "/api/v1/events/stream"}:
             self._handle_sse_stream(query)
-        elif path == "/api/rework/session":
+        elif path in {"/api/rework/session", "/api/v1/rework/session"}:
             self._handle_rework_session(query)
-        elif path == "/api/rework/issues":
+        elif path in {"/api/rework/issues", "/api/v1/rework/issues"}:
             self._handle_rework_issues(query)
-        elif path == "/api/rework/plan":
+        elif path in {"/api/rework/plan", "/api/v1/rework/plan"}:
             self._handle_rework_plan(query)
-        elif path == "/api/rework/history":
+        elif path in {"/api/rework/history", "/api/v1/rework/history"}:
             self._handle_rework_history(query)
         elif path == "/api/v1/health":
             self._handle_health()
-        elif path == "/api/v1/projects":
+        elif path in {"/api/projects", "/api/v1/projects"}:
             self._handle_projects()
-        elif path == "/api/v1/metrics":
+        elif path in {"/api/metrics", "/api/v1/metrics"}:
             self._handle_metrics()
         elif path.startswith("/api/v1/executions/"):
             self._handle_execution_subroutes(path, query)
@@ -177,18 +183,86 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
             "timestamp": time.time(),
         })
 
+    def _get_bridge_info(self) -> Dict[str, Any]:
+        """Probes and returns the active EasyEDA Pro socket connection state."""
+        try:
+            from desk.bridge import SessionRegistry
+            configured_port = SessionRegistry.get_port()
+            candidate_ports = list(range(49620, 49630))
+            active_port = SessionRegistry._probe_ports_concurrent(candidate_ports, timeout=0.02)
+            is_listening = active_port is not None
+            port = active_port or configured_port
+
+            window_id = None
+            proj_uuid = None
+            try:
+                from desk.rework import get_latest_rework_session
+                r_sess = get_latest_rework_session(get_execution_projection().project_id)
+                if r_sess:
+                    window_id = r_sess.window_id
+                    proj_uuid = r_sess.project_uuid
+            except Exception:
+                pass
+
+            return {
+                "port": port,
+                "configured_port": configured_port,
+                "actual_port": port,
+                "status": "LISTENING" if is_listening else "DISCONNECTED",
+                "listening": is_listening,
+                "candidate_ports": candidate_ports,
+                "mission_control_port": self.server.server_address[1] if self.server else 49630,
+                "active_window": window_id,
+                "project_uuid": proj_uuid,
+                "last_probe_ts": time.time(),
+                "instructions": (
+                    f"EasyEDA Pro bridge is listening on port {port}."
+                    if is_listening else
+                    f"EasyEDA Pro bridge is not listening on ports 49620..49629. Open EasyEDA Pro Desktop or run EasyEDA Pro API Gateway to establish live bridge."
+                )
+            }
+        except Exception as e:
+            return {
+                "port": 49620,
+                "configured_port": 49620,
+                "actual_port": 49620,
+                "status": "DISCONNECTED",
+                "listening": False,
+                "candidate_ports": list(range(49620, 49630)),
+                "mission_control_port": 49630,
+                "error": str(e)
+            }
+
+    def _handle_bridge(self) -> None:
+        """Returns the real-time probe status of the EasyEDA Pro bridge socket."""
+        self._send_json(200, self._get_bridge_info())
+
+    def _handle_sync(self, query: Dict[str, List[str]]) -> None:
+        """Forces an on-disk artifact re-scan and state projection update."""
+        projection = get_execution_projection()
+        proj_id = query.get("project", [None])[0]
+        projection.sync_from_project_artifacts(proj_id)
+        get_event_bus().emit("project.synced", project_id=projection.project_id, message="Project artifacts synchronized from disk")
+        summary = projection.get_summary()
+        summary["bridge"] = self._get_bridge_info()
+        self._send_json(200, summary)
+
+    def _handle_project_select(self, query: Dict[str, List[str]]) -> None:
+        """Switches active project and re-syncs state."""
+        proj_id = query.get("project", ["projects/WATCH"])[0]
+        projection = get_execution_projection()
+        projection.set_project(proj_id)
+        projection.sync_from_project_artifacts(proj_id)
+        get_event_bus().emit("project.switched", project_id=proj_id, message=f"Switched active project to {proj_id}")
+        summary = projection.get_summary()
+        summary["bridge"] = self._get_bridge_info()
+        self._send_json(200, summary)
+
     def _handle_status(self) -> None:
         """Returns the consolidated execution state projection."""
         projection = get_execution_projection()
         summary = projection.get_summary()
-        try:
-            from desk.bridge import SessionRegistry
-            summary["bridge"] = {
-                "port": SessionRegistry.get_port(),
-                "status": "CONFIGURED",
-            }
-        except Exception:
-            summary["bridge"] = {"port": 49620, "status": "UNKNOWN"}
+        summary["bridge"] = self._get_bridge_info()
         self._send_json(200, summary)
 
     def _handle_events(self, query: Dict[str, List[str]]) -> None:
@@ -206,17 +280,23 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         """Discovers available hardware projects under projects/."""
         projects_dir = "projects"
         results = []
+        current_pid = get_execution_projection().project_id
         if os.path.exists(projects_dir) and os.path.isdir(projects_dir):
             for d in os.listdir(projects_dir):
-                full_path = os.path.join(projects_dir, d)
+                full_path = os.path.join(projects_dir, d).replace("\\", "/")
                 if os.path.isdir(full_path):
                     has_req = os.path.exists(os.path.join(full_path, "REQUIREMENTS.md"))
                     has_state = os.path.exists(os.path.join(full_path, "state"))
+                    has_dump = os.path.exists(os.path.join(full_path, "state", "pcb_dump.json"))
+                    has_route = os.path.exists(os.path.join(full_path, "state", "route", "desk_route.ses"))
                     results.append({
-                        "project_id": full_path.replace("\\", "/"),
+                        "project_id": full_path,
                         "name": d,
+                        "is_active": full_path == current_pid,
                         "has_requirements": has_req,
                         "has_state": has_state,
+                        "has_pcb": has_dump,
+                        "has_route": has_route,
                     })
         self._send_json(200, results)
 
@@ -293,11 +373,19 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         try:
             from desk.rework import get_latest_rework_session
             session = get_latest_rework_session(proj_id)
-            if not session:
-                self._send_json(404, {"error": "No rework session found"})
-                return
-            path = os.path.join(session.project_path, "state", "rework", session.session_id, "issue_inventory.json")
-            if os.path.exists(path):
+            path = None
+            if session:
+                path = os.path.join(session.project_path, "state", "rework", session.session_id, "issue_inventory.json")
+            if not path or not os.path.exists(path):
+                # Search all rework subdirs
+                rw_dir = os.path.join(proj_id, "state", "rework")
+                if os.path.exists(rw_dir):
+                    for sub in os.listdir(rw_dir):
+                        candidate = os.path.join(rw_dir, sub, "issue_inventory.json")
+                        if os.path.exists(candidate):
+                            path = candidate
+                            break
+            if path and os.path.exists(path):
                 with open(path, "r", encoding="utf-8") as f:
                     issues = json.load(f)
                 self._send_json(200, issues)
@@ -312,10 +400,18 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         try:
             from desk.rework import get_latest_rework_session, RepairPlanner
             session = get_latest_rework_session(proj_id)
-            if not session:
-                self._send_json(404, {"error": "No rework session found"})
-                return
-            plan = RepairPlanner.load_plan(session.project_path, session.session_id)
+            plan = None
+            if session:
+                plan = RepairPlanner.load_plan(session.project_path, session.session_id)
+            if not plan:
+                rw_dir = os.path.join(proj_id, "state", "rework")
+                if os.path.exists(rw_dir):
+                    for sub in os.listdir(rw_dir):
+                        plan_path = os.path.join(rw_dir, sub, "repair_plan.json")
+                        if os.path.exists(plan_path):
+                            with open(plan_path, "r", encoding="utf-8") as f:
+                                self._send_json(200, json.load(f))
+                                return
             if plan:
                 self._send_json(200, plan.to_dict())
             else:

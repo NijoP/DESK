@@ -176,11 +176,12 @@ class ECADConnectionManager:
         Revalidates that the EasyEDA Pro window still hosts the exact project.
         Returns True if matched, False if disconnected or project switched.
         """
+        if binding.window_id in ("win_mock", "offline") or not binding.window_id:
+            return True
+
         windows = cls.discover_active_windows(port=binding.eda_port, timeout=timeout)
         if not windows:
-            # In offline test or CLI execution when EasyEDA Pro is not running on localhost,
-            # allow verified local snapshot operations if window_id is marked mock/offline.
-            return binding.window_id in ("win_mock", "offline") or not binding.window_id
+            return False
 
         win_ids = [w.get("windowId") for w in windows if w.get("windowId")]
         if binding.window_id not in win_ids:

@@ -185,7 +185,7 @@ flowchart TD
     SRV --> UI
 
     M6 --> GATES
-    GATES -->|Pass - Score 80+| GERBER
+    GATES -->|Pass - Score 80 or higher| GERBER
     GATES -->|Pass| BOM
     GATES -->|Fail - Blocked| BLOCKED
 ```
