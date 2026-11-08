@@ -236,10 +236,16 @@ def check(res: Any) -> Any:
     return res
 
 def guard(doc_uuid: str, open_doc: bool = True) -> str:
-    """JS prefix that (optionally) opens the document and verifies active document."""
-    o = f'await eda.dmt_EditorControl.openDocument("{doc_uuid}"); await new Promise(r=>setTimeout(r,600));' if open_doc else ""
-    return (o + f'const __D=await eda.dmt_SelectControl.getCurrentDocumentInfo();'
+    """JS prefix that verifies active document and only opens + delays if not already active."""
+    if not open_doc:
+        return (f'const __D=await eda.dmt_SelectControl.getCurrentDocumentInfo();'
                 f'if(!__D||__D.uuid!=="{doc_uuid}") return {{error:"WRONG SHEET", active:__D&&__D.uuid}};\n')
+    return (f'let __D=await eda.dmt_SelectControl.getCurrentDocumentInfo();'
+            f'if(!__D||__D.uuid!=="{doc_uuid}"){{'
+            f'await eda.dmt_EditorControl.openDocument("{doc_uuid}");'
+            f'await new Promise(r=>setTimeout(r,600));'
+            f'__D=await eda.dmt_SelectControl.getCurrentDocumentInfo();}}'
+            f'if(!__D||__D.uuid!=="{doc_uuid}") return {{error:"WRONG SHEET", active:__D&&__D.uuid}};\n')
 
 def load_project(path: str) -> Dict[str, Any]:
     p = os.path.join(path, "project.json")

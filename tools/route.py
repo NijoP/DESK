@@ -45,8 +45,19 @@ plan = json.load(open(plan_path, encoding="utf-8")) if os.path.exists(plan_path)
 net_graph = RoutabilityEvaluator.build_connectivity_graph(dump)
 rules_dict = dict(plan)
 if plan.get("rules"): rules_dict.update(plan["rules"])
+
+# Load design profile if present for IPC-2152 currents, diff-pairs, and RF constraints
+profile = None
+profile_path = os.path.join(proj, "design_profile.json")
+if os.path.exists(profile_path):
+    try:
+        from desk.profile import DesignProfile
+        profile = DesignProfile.load(profile_path)
+    except Exception as e:
+        print(f"Warning: Failed to load design profile: {e}")
+
 routing_plan = RoutingPlanGenerator.generate_plan(
-    net_graph, dump, tuple(plan.get("board_mm", [50.0, 50.0])), rules=rules_dict
+    net_graph, dump, tuple(plan.get("board_mm", [50.0, 50.0])), rules=rules_dict, profile=profile
 )
 
 print(f"Routing Strategy: Stackup {routing_plan.board_stackup}")

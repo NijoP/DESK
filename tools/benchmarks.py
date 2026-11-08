@@ -1,15 +1,12 @@
 """Comprehensive Benchmark Suite for DESK Performance Engineering.
-Executes benchmarks across the 10 representative PCB scenarios from Part 11:
-1. Small two-layer sensor PCB
-2. Medium four-layer controller PCB (WATCH)
-3. Fine-pitch FPC connector PCB
-4. Screw-terminal power PCB
-5. High-current power PCB
-6. Mixed-signal board
-7. Dense multi-terminal net board (100+ pins)
-8. PCB with several DRC errors
-9. PCB with orphan vias
-10. PCB with routing congestion
+Executes benchmarks across:
+Part A: 10 representative PCB micro-scenarios
+Part B: 5 complete end-to-end offline engineering pipelines:
+  P1: Ingestion & Mental-Model Compilation
+  P2: Placement Invariants & Mechanical Access Verification
+  P3: Multi-Stage Priority Routing Plan & IPC-2152 Sizing
+  P4: Copper Planes, Power Polygons, Stitching & Return-Path Audit
+  P5: Fail-Closed Quality Verification & Acceptance Gates
 """
 import sys
 import os
@@ -24,8 +21,12 @@ sys.path.insert(0, ROOT)
 from desk.models import NetEndpoint, ComponentRequirement, DRCViolation
 from desk.routability import _compute_fast_mst, RoutabilityEvaluator, PlacementAcceptanceGate
 from desk.component_intel import ComponentIntelligenceExtractor, FootprintIntegrityEngine
-from desk.router import DSNTuningEngine, RoutingPriorityScheduler
+from desk.router import DSNTuningEngine, RoutingPriorityScheduler, RoutingPlanGenerator
 from desk.drc_engine import DRCParser, RecoveryPlanner, DRCConvergenceLoop
+from desk.profile import DesignProfile, LayerStackup, DiffPairProfile, RFProfile, NetClassProfile
+from desk.mental.compiler import PolicyCompiler
+from desk.copper import CopperPlaneEngine, ConnectionRuleResolver, CopperZoneRevisionTracker, CopperZoneSpec
+from desk.quality import QualityGateEvaluator
 from desk import placement
 
 MIL = 39.37007874
@@ -112,14 +113,145 @@ def run_benchmarks() -> Dict[str, Any]:
 
     return results
 
+def run_pipeline_benchmarks() -> Dict[str, Any]:
+    """Benchmarks complete offline engineering pipelines end-to-end."""
+    results = {}
+
+    stackup = [
+        LayerStackup(1, "Top", "signal", copper_thickness_oz=1.0),
+        LayerStackup(2, "Inner1_GND", "plane", copper_thickness_oz=1.0),
+        LayerStackup(3, "Inner2_PWR", "plane", copper_thickness_oz=1.0),
+        LayerStackup(4, "Bottom", "signal", copper_thickness_oz=1.0),
+    ]
+    profile = DesignProfile(
+        project_id="BENCH_PIPELINE",
+        board_dimensions_mm=(70.0, 50.0),
+        layer_count=4,
+        stackup=stackup,
+        voltage_rails={"VIN": 12.0, "3V3": 3.3, "1V8": 1.8},
+        current_limits_A={"VIN": 4.0, "SW": 4.0, "3V3": 1.0, "1V8": 0.5},
+        diff_pairs={"USB": DiffPairProfile("USB", "USB_DP", "USB_DN", 90.0)},
+        rf_lines={"RF_ANT": RFProfile("RF_ANT", frequency_hz=2.4e9, trace_width_mil=12.0, ground_clearance_mil=8.0)}
+    )
+
+    dump = {}
+    for i in range(1, 25):
+        dump[f"R{i}"] = {
+            "x": (i % 5) * 150.0, "y": (i // 5) * 120.0, "rot": 0, "layer": 1,
+            "pads": [{"num": "1", "net": f"NET_{i}"}, {"num": "2", "net": "GND"}]
+        }
+    dump["U1"] = {
+        "x": 400.0, "y": 400.0, "rot": 0, "layer": 1,
+        "pads": [
+            {"num": "1", "net": "VIN"}, {"num": "2", "net": "SW"}, {"num": "3", "net": "GND"},
+            {"num": "4", "net": "3V3"}, {"num": "5", "net": "USB_DP"}, {"num": "6", "net": "USB_DN"},
+            {"num": "7", "net": "RF_ANT"}, {"num": "8", "net": "GND"}
+        ]
+    }
+    dump["Q1"] = {
+        "x": 550.0, "y": 400.0, "rot": 0, "layer": 1,
+        "pads": [{"num": "D", "net": "VIN"}, {"num": "S", "net": "SW"}, {"num": "G", "net": "GATE"}]
+    }
+
+    # Pipeline 1: Ingestion & Mental Model Compilation across all 6 models
+    t0 = time.perf_counter()
+    pack_m1 = PolicyCompiler.compile("M1_SCHEMATIC", "requirement_audit", profile)
+    pack_m2 = PolicyCompiler.compile("M2_PLACEMENT", "placement_policy", profile)
+    pack_m3 = PolicyCompiler.compile("M3_ROUTING", "net_routing", profile, {"nets": ["VIN", "SW", "USB_DP", "RF_ANT"]})
+    pack_m4 = PolicyCompiler.compile("M4_COPPER_GROUND", "plane_definition", profile)
+    pack_m5 = PolicyCompiler.compile("M5_ELECTRICAL_MFG", "design_rules", profile)
+    pack_m6 = PolicyCompiler.compile("M6_VERIFICATION_REVIEW", "hard_acceptance_gates", profile)
+    results["P1_mental_model_compilation"] = {
+        "time_ms": round((time.perf_counter() - t0) * 1000, 3),
+        "total_rules_compiled": sum(len(p.compact_rules) for p in (pack_m1, pack_m2, pack_m3, pack_m4, pack_m5, pack_m6))
+    }
+
+    # Pipeline 2: Placement Invariants & Mechanical Access Verification
+    t0 = time.perf_counter()
+    reqs = {
+        "U1": ComponentRequirement(ref="U1", mpn="IC_MCU", width_mm=7.0, height_mm=7.0, electrical_role="mcu"),
+        "Q1": ComponentRequirement(ref="Q1", mpn="MOS_PWR", width_mm=5.0, height_mm=6.0, electrical_role="mosfet")
+    }
+    access_errs = RoutabilityEvaluator.verify_mechanical_access(dump, {"U1": [20.0, 20.0, 0, "T"], "Q1": [35.0, 20.0, 0, "T"]}, reqs, (70.0, 50.0))
+    reqs_all = ComponentIntelligenceExtractor.extract_all(dump)
+    results["P2_placement_and_invariants"] = {
+        "time_ms": round((time.perf_counter() - t0) * 1000, 3),
+        "access_violations": len(access_errs),
+        "extracted_requirements": len(reqs_all)
+    }
+
+    # Pipeline 3: Multi-Stage Priority Routing Plan & IPC-2152 Sizing
+    t0 = time.perf_counter()
+    net_graph = RoutabilityEvaluator.build_connectivity_graph(dump)
+    routing_plan = RoutingPlanGenerator.generate_plan(
+        net_graph, dump, (70.0, 50.0), profile=profile
+    )
+    results["P3_routing_plan_and_ipc2152"] = {
+        "time_ms": round((time.perf_counter() - t0) * 1000, 3),
+        "scheduled_nets": sum(len(nets) for nets in routing_plan.stage_nets.values()),
+        "vin_width_mil": routing_plan.net_constraints["VIN"].min_width_mil,
+        "rf_width_mil": routing_plan.net_constraints["RF_ANT"].min_width_mil
+    }
+
+    # Pipeline 4: Copper Planes, Power Polygons, Stitching & Return-Path Audit
+    t0 = time.perf_counter()
+    gnd_planes = CopperPlaneEngine.generate_ground_planes((70.0, 50.0), profile)
+    sw_pads = [{"ref": "Q1", "net": "SW", "x_mm": 20.0, "y_mm": 15.0}, {"ref": "U1", "net": "SW", "x_mm": 25.0, "y_mm": 18.0}]
+    pwr_poly = CopperPlaneEngine.plan_power_polygons("SW", 1, "Top", sw_pads, (70.0, 50.0), profile)
+    vias = CopperPlaneEngine.synthesize_stitching_vias((70.0, 50.0), [(20.0, 15.0, 2.0)], grid_spacing_mm=5.0)
+    crit_tracks = [{"net": "RF_ANT", "layer": 1, "start_mm": (10.0, 10.0), "end_mm": (40.0, 10.0)}]
+    discon = CopperPlaneEngine.evaluate_return_path_continuity(crit_tracks, gnd_planes, profile.stackup)
+    tracker = CopperZoneRevisionTracker()
+    for gp in gnd_planes:
+        tracker.register_zone(gp, profile.profile_hash)
+    if pwr_poly:
+        tracker.register_zone(pwr_poly, profile.profile_hash)
+    results["P4_copper_and_ground_continuity"] = {
+        "time_ms": round((time.perf_counter() - t0) * 1000, 3),
+        "gnd_planes": len(gnd_planes),
+        "power_polygons": 1 if pwr_poly else 0,
+        "stitching_vias": len(vias.via_locations),
+        "discontinuities": len(discon)
+    }
+
+    # Pipeline 5: Fail-Closed Quality Verification & Acceptance Gates
+    t0 = time.perf_counter()
+    q_report = QualityGateEvaluator.evaluate(
+        drc_violations=[],
+        unconnected_nets=[],
+        critical_nets=["RF_ANT", "USB_DP"],
+        routability_score=0.92,
+        profile=profile,
+        discontinuities_count=len(discon)
+    )
+    results["P5_quality_and_mfg_verification"] = {
+        "time_ms": round((time.perf_counter() - t0) * 1000, 3),
+        "hard_gates_passed": q_report.hard_gates_passed,
+        "total_score": q_report.total_score,
+        "approved": q_report.approved
+    }
+
+    return results
+
 if __name__ == "__main__":
+    print("=" * 70)
+    print("DESK PART A: MICRO-SCENARIO BENCHMARKS (10 Scenarios)")
+    print("=" * 70)
     b_res = run_benchmarks()
-    print("=" * 65)
-    print("DESK PERFORMANCE BENCHMARKS (10 Representative Scenarios)")
-    print("=" * 65)
-    total_ms = sum(v["time_ms"] for v in b_res.values())
+    total_micro_ms = sum(v["time_ms"] for v in b_res.values())
     for name, data in b_res.items():
-        print(f"{name:<38} : {data['time_ms']:>8.3f} ms")
-    print("-" * 65)
-    print(f"Total Computation Time across 10 Scenarios: {total_ms:>8.3f} ms")
-    print("=" * 65)
+        print(f"{name:<42} : {data['time_ms']:>8.3f} ms")
+    print("-" * 70)
+    print(f"Total Microbenchmark Time:                     : {total_micro_ms:>8.3f} ms")
+
+    print("\n" + "=" * 70)
+    print("DESK PART B: COMPLETE END-TO-END OFFLINE PIPELINES (5 Pipelines)")
+    print("=" * 70)
+    pipe_res = run_pipeline_benchmarks()
+    total_pipe_ms = sum(v["time_ms"] for v in pipe_res.values())
+    for name, data in pipe_res.items():
+        print(f"{name:<42} : {data['time_ms']:>8.3f} ms")
+    print("-" * 70)
+    print(f"Total Pipeline Benchmark Time:                 : {total_pipe_ms:>8.3f} ms")
+    print(f"Combined Total Execution Time:                 : {(total_micro_ms + total_pipe_ms):>8.3f} ms")
+    print("=" * 70)

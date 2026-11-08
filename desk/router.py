@@ -110,27 +110,30 @@ class TraceWidthCalculator:
     """Calculates IPC-2152 trace widths based on current capacity and layer placement."""
 
     @staticmethod
-    def get_width_mil(net_name: str, current_A: float = 0.2, is_inner: bool = False,
-                      min_signal_width_mil: float = 5.0, max_power_width_mil: float = 40.0,
+    def get_width_mil(net_name: str, current_A: Optional[float] = None, is_inner: bool = False,
+                      layer_idx: Optional[int] = None,
+                      min_signal_width_mil: float = 5.0, max_power_width_mil: float = 120.0,
                       profile: Optional[Any] = None) -> float:
         if profile and hasattr(profile, "derive_trace_width_mil"):
-            return profile.derive_trace_width_mil(net_name, is_inner=is_inner)
+            return profile.derive_trace_width_mil(net_name, is_inner=is_inner, layer_idx=layer_idx)
         net_u = net_name.upper()
-        # High power / supply nets default to thicker traces
-        if re.search(r"VBUS|VBAT|VSYS|12V", net_u):
-            current_A = max(current_A, 1.5)
-        elif re.search(r"3V3|5V|VCC|VDD", net_u):
-            current_A = max(current_A, 0.8)
+        if current_A is None:
+            if re.search(r"VBUS|VBAT|VSYS|12V|PWR|VIN", net_u):
+                current_A = 2.0
+            elif re.search(r"3V3|5V|VCC|VDD", net_u):
+                current_A = 1.0
+            else:
+                current_A = 0.2
 
         if current_A <= 0.3:
             return min_signal_width_mil
 
         # IPC-2152 simplified: Area ~= (I / (k * deltaT^0.44))^(1/0.725)
-        # For 1 oz copper (1.37 mil thick), width ~= Area / 1.37
+        cu_oz = 0.5 if is_inner else 1.0
         k = 0.024 if is_inner else 0.048
         delta_T = 10.0  # 10 deg C temp rise
         area_mil2 = (current_A / (k * (delta_T ** 0.44))) ** (1.0 / 0.725)
-        width_mil = area_mil2 / 1.37
+        width_mil = area_mil2 / (cu_oz * 1.37)
         return round(min(max_power_width_mil, max(min_signal_width_mil, width_mil)), 1)
 
 class NativeMazeRouter:
@@ -297,42 +300,91 @@ class RoutingPlanGenerator:
         stackup = StackupManager.detect_stackup(dump, rules, profile=profile)
         diff_p = dict(rules.get("diff_pairs") or {})
         high_c = dict(rules.get("high_current") or {})
+        explicit_stage3 = list(rules.get("critical_nets") or [])
+        explicit_stage5 = list(rules.get("power_nets") or [])
+
         if profile:
             if hasattr(profile, "diff_pairs"):
                 for dp_name, dp in profile.diff_pairs.items():
                     diff_p[dp_name] = (dp.pos_net, dp.neg_net)
+            if hasattr(profile, "rf_nets"):
+                for rf_net in profile.rf_nets:
+                    if rf_net not in explicit_stage3:
+                        explicit_stage3.append(rf_net)
             if hasattr(profile, "current_limits_A"):
                 for n, c in profile.current_limits_A.items():
                     if c > 0.3: high_c[n] = c
+            if hasattr(profile, "voltage_rails"):
+                for n in profile.voltage_rails:
+                    if n not in explicit_stage5 and not re.search(r"^(GND|VSS|AGND|DGND|PGND)$", n, re.I):
+                        explicit_stage5.append(n)
+
+        sched_rules = dict(rules)
+        sched_rules["critical_nets"] = explicit_stage3
+        sched_rules["power_nets"] = explicit_stage5
+
         stages = RoutingPriorityScheduler.schedule_nets(
             net_graph.nets,
-            diff_pairs=rules.get("diff_pairs"),
-            high_current=rules.get("high_current"),
-            rules=rules
+            diff_pairs=diff_p,
+            high_current=high_c,
+            rules=sched_rules
         )
 
         constraints: Dict[str, RoutingConstraint] = {}
         power_set = {n.upper() for n in stages.get(1, []) + stages.get(5, [])}
 
         for net_name in net_graph.nets:
-            is_pwr = net_name.upper() in power_set
+            is_pwr = net_name.upper() in power_set or net_name in high_c
             tier = 6
             for s_num, s_nets in stages.items():
                 if net_name in s_nets:
                     tier = s_num
                     break
 
+            current_A = None
+            if profile and hasattr(profile, "get_current_for_net"):
+                current_A = profile.get_current_for_net(net_name)
+            elif net_name in high_c:
+                current_A = high_c[net_name]
+            elif is_pwr:
+                current_A = 1.0
+
+            # Target layer preferences
+            pref_layers = [1, 2] if len(stackup) == 2 else [1, 4, 3, 2]
+            if profile and hasattr(profile, "net_classes"):
+                for nc in profile.net_classes.values():
+                    if net_name in nc.nets and nc.target_layers:
+                        pref_layers = list(nc.target_layers)
+                        break
+
+            primary_layer = pref_layers[0] if pref_layers else 1
+            is_inner = False
+            if len(stackup) >= 4 and primary_layer in (2, 3):
+                is_inner = True
+
             width = TraceWidthCalculator.get_width_mil(
                 net_name,
-                current_A=1.0 if is_pwr else 0.2,
-                is_inner=("Inner" in stackup[0])
+                current_A=current_A,
+                is_inner=is_inner,
+                layer_idx=primary_layer,
+                profile=profile
             )
+
+            if profile and hasattr(profile, "derive_clearance_mil"):
+                clearance = profile.derive_clearance_mil(net_name, "GND")
+            else:
+                clearance = 4.02 if not is_pwr else 6.0
+
+            if profile and hasattr(profile, "rf_nets") and net_name in profile.rf_nets:
+                rf_cfg = profile.rf_nets[net_name]
+                clearance = max(clearance, rf_cfg.ground_clearance_mil)
+                width = max(width, rf_cfg.trace_width_mil)
 
             constraints[net_name] = RoutingConstraint(
                 net=net_name,
                 min_width_mil=width,
-                clearance_mil=4.02 if not is_pwr else 6.0,
-                target_layer_preference=[1, 2] if len(stackup) == 2 else [1, 4, 3, 2],
+                clearance_mil=clearance,
+                target_layer_preference=pref_layers,
                 priority_tier=tier
             )
 

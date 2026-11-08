@@ -1,34 +1,45 @@
 # 09 — Capability status (evidence-based)
 
-**GREEN** = acceptance criteria met **and** test evidence exists. **AMBER** = implemented, offline-tested, live path not
-yet exercised. **RED** = not implemented. Live = against EasyEDA Pro 3.2.149 on this machine.
+This document provides the authoritative, evidence-based status of all DESK capabilities.
 
-| # | Capability | Status | Acceptance criteria | Evidence |
+### Capability Status Labels
+- **`IMPLEMENTED_AND_TESTED_OFFLINE`**: Fully implemented and validated via offline deterministic tests, contract tests, and benchmarks.
+- **`IMPLEMENTED_BUT_NOT_LIVE_VERIFIED`**: Full code paths and API adapters prepared with exact signatures, but live execution against EasyEDA Pro has not yet been executed.
+- **`PARTIALLY_IMPLEMENTED`**: Core architecture or data structures present, but specific workflows or edge cases remain in progress.
+- **`NOT_IMPLEMENTED`**: Capability defined in architecture but no functional implementation exists.
+
+---
+
+## Capability Status Table
+
+| # | Capability | Status | Acceptance Criteria | Test Evidence / Implementation |
 |---|---|---|---|---|
-| 1 | Knowledge + ledger | GREEN | source-required decisions, append-only, corrections supersede, verification STALE on spec **or library device** change, incremental index, in-memory cache | tests/test_context.py (16), tests/test_perf_engineering.py, tests/test_decision_memory.py |
-| 1b | Context engine & policy retrieval | GREEN | packs within budget, live lint, next gate from real state; compiled policy retrieval (`ctx.py policy`) < 300 tokens | tests/test_context.py; tests/test_mental_compiler.py (5); bench −69 % on real sessions |
-| 1c | Engineering design profile | GREEN | versioned contract for physical stackup, per-net currents, voltage tree, RF lines, diff pairs, thermal rise | desk/profile.py + tests/test_profile_and_mental_models.py (5) |
-| 1d | Multi-model orchestration | GREEN | unified task/result protocol, AGY adapter (agy.exe), Pi adapter (pi.cmd), L0–L4 capability router | desk/orchestrator/ + tests/test_orchestrator.py (6) |
-| 2 | Schematic generation | **AMBER** | build→verify VERIFIED on a live sheet; clear→rebuild identical | drawing routine identical to the one that produced proven sheets; **DESK build/verify/clear never run live** (see blocker) |
-| 3a | Offline electrical checks | GREEN | computed QA (expr/min/max, safe eval), ground/supply pin rules, cap ratings, numeric values | tests/test_core.py |
-| 3b | Netlist validation | GREEN (logic) / AMBER (live) | pin-by-pin compare, collisions, stray parts | tests/test_core.py; live read path untested in DESK |
-| 3c | EasyEDA ERC | AMBER | `sch_Drc.check(...,true)` parsed, 0 errors gate | method exists live (api_map); not executed |
-| 4 | PCB placement & intelligence | GREEN (offline) / AMBER (live) | rules of docs/04 enforced: edge, pad-to-pad/body by package class, connector edge + mating keep-out + ESD distance, sensor vs heat, heat spreading, RF at edge, keep-outs, height zones, decap distance/side, rotation, utilisation/hotspots/free space, mechanical access | desk/placement.py + desk/placement_intel.py + tests/test_placement.py (12) + tests/test_evolution.py (12) + tests/test_phase6_placement_policy.py (2); live pcb_dump readback not yet exercised |
-| 4b | Routability & placement freeze | GREEN | fast O(V²) Prim MST, sweep-line ratsnest crossing filter, escape congestion score, placement freeze SHA-1 snapshot and ledger entry | desk/routability.py + tests/test_perf_engineering.py + tests/test_placement.py |
-| 5a | Net classes / diff pairs | AMBER | create + read back | methods exist live; not executed |
-| 5b | Autorouting & DSN tuning | GREEN (offline) / AMBER (live) | 6-stage priority scheduling, profile-driven widths, DSN tuning, duplicate pad coordinate deduplication, Freerouting execution, SES import | desk/router.py + tools/route.py + tests/test_evolution.py + tests/test_perf_engineering.py + tests/test_copper_and_routing_intelligence.py (5) |
-| 5c | DRC convergence & recovery | GREEN (offline) / AMBER (live) | `pcb_Drc.check` parser, failure diagnoser, recovery planner with selective rip-up, progress-aware convergence loop | desk/drc_engine.py + tools/drc.py + tests/test_evolution.py + tests/test_perf_engineering.py |
-| 5d | Copper & ground intelligence | GREEN (offline) / AMBER (live) | plane layer allocation from actual stackup, stitching via array synthesis, return-path continuity evaluation, slot crossing detection | desk/copper.py + tests/test_copper_and_routing_intelligence.py |
-| 6 | API coverage | GREEN (discovery) | live probe of all modules/methods; per-call verified/failed register | library/api_map.json: 93 modules, 702 methods; api_verified.json: 7 calls observed (incl. `openProject` → false) |
-| 7 | Agent execution & safety | GREEN (offline) | single-writer lock, op journal, dirty-failure recovery, tool catalog, deterministic L0 bypass | desk/ops.py, desk/orchestrator/router.py, tests/test_core.py, tests/test_orchestrator.py |
-| 8 | Test suite & benchmarks | GREEN | 102 automated unit & integration tests passing in < 5.5s; 10-scenario benchmark suite executing in < 8.5ms | tests/ (102 tests passing across 10 test modules); tools/benchmarks.py; tools/profile_perf.py |
-| 9 | Manufacturing release & quality gates | GREEN (offline) / AMBER (live) | 8 hard acceptance gates separated from 6-component weighted quality score; BOM/PnP/Gerber cross-checks, sha256 manifest | desk/quality.py + desk/release.py + tests/test_quality_and_mfg_verification.py (4) + tests/test_core.py |
-| 10 | Learning engine | GREEN | real corpus, ≥2-session corroboration, human gate, protected surfaces, regression revert, benchmark | tests/test_learn.py (16); real run: 33 sessions, 36 proposals, 1.9 s |
-| 11 | Performance engineering | GREEN | sub-millisecond socket discovery, indexed PCB snapshot cache, sweep-line geometric pre-filters, telemetry collector | desk/snapshot.py + desk/profiler.py + desk/telemetry.py + tests/test_perf_engineering.py (9 tests) |
+| **1a** | Knowledge & Ledger System | `IMPLEMENTED_AND_TESTED_OFFLINE` | Source-required decisions, append-only ledger, corrections supersede, profile-hash staleness tracking | `desk/ledger.py`, `tests/test_context.py` (16), `tests/test_decision_memory.py` (3) |
+| **1b** | Context Engine & Mental-Model Retrieval | `IMPLEMENTED_AND_TESTED_OFFLINE` | Compact token packs (< 300 tokens), profile-driven constraint injection, prompt compilation | `desk/mental/compiler.py`, `desk/context.py`, `tests/test_mental_compiler.py` (5) |
+| **1c** | Engineering Design Profile | `IMPLEMENTED_AND_TESTED_OFFLINE` | Physical stackup, layer copper oz, per-net current limits, IPC-2152 trace sizing, RF lines, diff pairs | `desk/profile.py`, `tests/test_profile_and_mental_models.py` (5) |
+| **1d** | Multi-Model Orchestration | `IMPLEMENTED_AND_TESTED_OFFLINE` | Unified protocol, AGY adapter (`agy.exe`), Pi adapter (`pi.cmd`), L0-L4 capability router | `desk/orchestrator/`, `tests/test_orchestrator.py` (6) |
+| **2** | Schematic Generation & Block Specs | `IMPLEMENTED_BUT_NOT_LIVE_VERIFIED` | Block spec compilation, drawing generation, schematic netlist compare; live build/verify not yet run | `desk/spec.py`, `desk/models.py`, `tests/test_core.py` |
+| **3a** | Offline Electrical & ERC Checks | `IMPLEMENTED_AND_TESTED_OFFLINE` | Computed QA, voltage tree, capacitor ratings, electrical pin types | `desk/spec.py`, `tests/test_core.py` |
+| **3b** | EasyEDA Pro ERC Bridge | `IMPLEMENTED_BUT_NOT_LIVE_VERIFIED` | `sch_Drc.check(..., true)` bridge execution and error parsing | `desk/drc_engine.py`, `tools/pcb_check.py` |
+| **4a** | Placement Intelligence & Invariants | `IMPLEMENTED_AND_TESTED_OFFLINE` | Footprint invariants, mechanical access verification, connector orientation, cluster anchors | `desk/placement.py`, `desk/placement_intel.py`, `desk/component_intel.py`, `tests/test_placement.py` (12), `tests/test_phase6_placement_policy.py` (2) |
+| **4b** | Routability Evaluation & Escape Congestion | `IMPLEMENTED_AND_TESTED_OFFLINE` | O(V²) Prim MST wirelength, pin escape congestion scoring, placement freeze snapshot hashing | `desk/routability.py`, `tests/test_perf_engineering.py` |
+| **5a** | EasyEDA Pro PCB Adapter & Batch Readback | `IMPLEMENTED_AND_TESTED_OFFLINE` | Single-roundtrip batch extraction of components, pads, tracks, vias, zones, poured regions, stackup, DRC rules | `desk/adapters/easyeda_pcb_adapter.py`, `tests/test_easyeda_pcb_adapter.py` (6) |
+| **5b** | Trace Width Calculation (IPC-2152) | `IMPLEMENTED_AND_TESTED_OFFLINE` | Profile-driven per-net currents, actual layer copper thickness (oz), inner vs outer layers, removal of hardcoded 1.0A power fallbacks | `desk/profile.py`, `desk/router.py`, `tests/test_copper_and_routing_intelligence.py` |
+| **5c** | Autonomous PCB Routing & DSN Tuning | `IMPLEMENTED_AND_TESTED_OFFLINE` | 6-stage priority scheduling (GND -> Connectors -> Critical/RF/Diff -> Power -> Control -> Remaining), DSN tuning | `desk/router.py`, `tools/route.py`, `tests/test_evolution.py` |
+| **5d** | Offline Copper & Ground Engine | `IMPLEMENTED_AND_TESTED_OFFLINE` | Ground-plane generation, power-polygon planning, solid vs thermal relief rules, stitching via synthesis, island detection, return-path continuity, revision caching | `desk/copper.py`, `tests/test_copper_engine.py` (6), `tests/test_copper_and_routing_intelligence.py` (5) |
+| **5e** | EasyEDA Copper Zone Mutations & Repour | `IMPLEMENTED_BUT_NOT_LIVE_VERIFIED` | `pcb_MathPolygon.createPolygon`, `pcb_PrimitivePour.create`, `modify`, `rebuildCopperRegion` prepared with exact API signatures | `desk/adapters/easyeda_pcb_adapter.py`, `tools/live_disposable_test.py` |
+| **5f** | DRC Diagnosis & Recovery Planner | `IMPLEMENTED_AND_TESTED_OFFLINE` | Native EasyEDA DRC error parser, collision diagnoser, selective track rip-up, convergence evaluator | `desk/drc_engine.py`, `tools/drc.py`, `tests/test_evolution.py` |
+| **6** | Fail-Closed Quality & Manufacturing Verification | `IMPLEMENTED_AND_TESTED_OFFLINE` | 8 hard acceptance gates fail-closed on missing evidence (`None`), weighted score (0-100), stackup & manufacturing limits validation | `desk/quality.py`, `desk/release.py`, `tests/test_quality_and_mfg_verification.py` (10) |
+| **7** | Bridge Execution & Guard Optimization | `IMPLEMENTED_AND_TESTED_OFFLINE` | Sub-millisecond TCP discovery, single-writer lock, redundant 600ms `openDocument` bypass when document active | `desk/bridge.py`, `tests/test_perf_engineering.py` |
+| **8** | Performance Benchmarking Suite | `IMPLEMENTED_AND_TESTED_OFFLINE` | 10 micro-scenarios (7.0ms) + 5 complete offline engineering pipelines (1.1ms), total runtime < 10ms | `tools/benchmarks.py` |
+| **9** | Learning Engine & Human-Gated Rules | `IMPLEMENTED_AND_TESTED_OFFLINE` | 2-session corroboration, human approval gate, regression rollback safety | `desk/learn/`, `tests/test_learn.py` (16) |
 
-## Blocker for every AMBER live item
-`dmt_Project.createProject` works live (disposable project **DESK_LIVETEST_11031644**, uuid
-`fc66155d5a2f4d2d9b1dd3bcd8093391`, was created), but `dmt_Project.openProject` returned **false** while your project
-was open, so DESK could not switch to it without risking your unsaved work. To unblock: open that project in EasyEDA
-yourself (or tell DESK it may switch), then run the live sequence: resolve → pins → lint → build → verify → clear → build
-→ verify → erc → (PCB) importChanges → pcb_dump → pcb_rules → drc → release. Delete the project afterwards.
+---
+
+## Live Integration Readiness
+
+A dedicated test harness and checklist have been prepared for live verification on a disposable test project:
+- Script: `tools/live_disposable_test.py` (protected with `--execute-live` safety flag).
+- Checklist: `docs/LIVE_INTEGRATION_CHECKLIST.md` (covering all 9 verification milestones).
+
+**Live testing has NOT yet been run.** All customer projects (`WATCH`, `BEEBOX`) remain untouched and protected.

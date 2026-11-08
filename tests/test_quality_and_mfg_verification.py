@@ -3,6 +3,7 @@
 import unittest
 from desk.quality import QualityGateEvaluator, HardAcceptanceGates, WeightedQualityScore
 from desk.models import DRCViolation
+from desk.profile import DesignProfile, LayerStackup, ManufacturerProfile
 
 class TestQualityAndMfgVerification(unittest.TestCase):
 
@@ -59,6 +60,89 @@ class TestQualityAndMfgVerification(unittest.TestCase):
         )
         # 25 + 16 + 13.5 + 18 + 10 + 10 = 92.5
         self.assertEqual(scores.compute_total(), 92.5)
+
+    def test_05_missing_drc_evidence_fails_closed(self):
+        # If DRC was never executed, drc_violations is None -> fail-closed!
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=None,
+            unconnected_nets=[],
+            critical_nets=[],
+            routability_score=1.0,
+            discontinuities_count=0
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertFalse(report.hard_gates.zero_shorts)
+        self.assertTrue(any("Missing DRC evidence" in f for f in report.failures))
+
+    def test_06_missing_connectivity_evidence_fails_closed(self):
+        # Missing netlist connectivity check -> fail-closed!
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=[],
+            unconnected_nets=None,
+            critical_nets=[],
+            routability_score=1.0,
+            discontinuities_count=0
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertFalse(report.hard_gates.zero_unconnected_pads)
+        self.assertTrue(any("Missing connectivity evidence" in f for f in report.failures))
+
+    def test_07_missing_continuity_evidence_fails_closed(self):
+        # Missing plane continuity check -> fail-closed!
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=[],
+            unconnected_nets=[],
+            critical_nets=[],
+            routability_score=1.0,
+            discontinuities_count=None
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertFalse(report.hard_gates.copper_zones_connected)
+        self.assertTrue(any("Missing plane continuity evidence" in f for f in report.failures))
+
+    def test_08_invalid_stackup_fails(self):
+        profile = DesignProfile(project_id="INV_STACK")
+        profile.stackup = []  # Empty stackup
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=[],
+            unconnected_nets=[],
+            critical_nets=[],
+            profile=profile,
+            discontinuities_count=0
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertFalse(report.hard_gates.valid_stackup)
+
+    def test_09_invalid_manufacturing_limits_fails(self):
+        profile = DesignProfile(project_id="INV_MFG")
+        profile.manufacturing = ManufacturerProfile(min_trace_width_mil=0.0)
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=[],
+            unconnected_nets=[],
+            critical_nets=[],
+            profile=profile,
+            discontinuities_count=0
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertFalse(report.hard_gates.manufacturing_constraints_met)
+
+    def test_10_negative_current_limit_fails_electrical(self):
+        profile = DesignProfile(project_id="INV_ELEC", current_limits_A={"VBAT": -2.0})
+        report = QualityGateEvaluator.evaluate(
+            drc_violations=[],
+            unconnected_nets=[],
+            critical_nets=[],
+            profile=profile,
+            discontinuities_count=0
+        )
+        self.assertFalse(report.hard_gates_passed)
+        self.assertFalse(report.approved)
+        self.assertFalse(report.hard_gates.electrical_constraints_met)
 
 if __name__ == "__main__":
     unittest.main()

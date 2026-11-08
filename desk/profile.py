@@ -128,6 +128,10 @@ class DesignProfile:
         raw = json.dumps(d, sort_keys=True)
         return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
 
+    @property
+    def rf_nets(self) -> Dict[str, RFProfile]:
+        return self.rf_lines
+
     def get_stackup_layers(self) -> List[str]:
         return [layer.name for layer in sorted(self.stackup, key=lambda l: l.index)]
 
@@ -140,7 +144,7 @@ class DesignProfile:
                 return nc.max_current_A
         return 0.2  # Standard default signal current
 
-    def derive_trace_width_mil(self, net: str, is_inner: bool = False) -> float:
+    def derive_trace_width_mil(self, net: str, is_inner: bool = False, layer_idx: Optional[int] = None) -> float:
         """Calculate IPC-2152 width using profile current, copper weight, and allowed temp rise."""
         # 1. Net class override if explicitly set
         for nc in self.net_classes.values():
@@ -149,15 +153,37 @@ class DesignProfile:
                 # Ensure it meets manufacturer minimum
                 return max(width, self.manufacturing.min_trace_width_mil)
 
-        # 2. Derive from physical current limit
+        # 2. Check if net is in RF profile
+        rf_dict = getattr(self, "rf_lines", {}) or getattr(self, "rf_nets", {})
+        if net in rf_dict:
+            rf_prof = rf_dict[net]
+            return max(rf_prof.trace_width_mil, self.manufacturing.min_trace_width_mil)
+
+        # 3. Derive from physical current limit
         current_A = self.get_current_for_net(net)
         min_width = self.manufacturing.min_trace_width_mil
         if current_A <= 0.3:
             return min_width
 
         # IPC-2152 formula: Area ~= (I / (k * deltaT^0.44))^(1/0.725)
-        # Copper thickness in mil (1 oz ~= 1.37 mil)
-        cu_oz = self.stackup[0].copper_thickness_oz if not is_inner and self.stackup else 1.0
+        # Determine actual copper thickness from stackup
+        layer = None
+        if layer_idx is not None and self.stackup:
+            for l in self.stackup:
+                if l.index == layer_idx:
+                    layer = l
+                    break
+
+        if layer is not None:
+            is_inner = (layer.layer_type in ("inner", "plane") or "inner" in layer.name.lower())
+            cu_oz = layer.copper_thickness_oz
+        else:
+            if is_inner:
+                inner_layers = [l for l in self.stackup if l.layer_type in ("inner", "plane") or "inner" in l.name.lower()]
+                cu_oz = inner_layers[0].copper_thickness_oz if inner_layers else 0.5
+            else:
+                cu_oz = self.stackup[0].copper_thickness_oz if self.stackup else 1.0
+
         cu_thick_mil = cu_oz * 1.37
         k = 0.024 if is_inner else 0.048
         delta_T = max(1.0, self.thermal.max_temperature_rise_c)

@@ -30,14 +30,14 @@ from desk.profile import DesignProfile
 
 @dataclass
 class HardAcceptanceGates:
-    zero_shorts: bool = True
-    zero_unconnected_pads: bool = True
-    zero_clearance_violations: bool = True
-    all_critical_nets_connected: bool = True
-    valid_stackup: bool = True
-    copper_zones_connected: bool = True
-    electrical_constraints_met: bool = True
-    manufacturing_constraints_met: bool = True
+    zero_shorts: bool = False
+    zero_unconnected_pads: bool = False
+    zero_clearance_violations: bool = False
+    all_critical_nets_connected: bool = False
+    valid_stackup: bool = False
+    copper_zones_connected: bool = False
+    electrical_constraints_met: bool = False
+    manufacturing_constraints_met: bool = False
 
     def all_passed(self) -> bool:
         return (
@@ -108,58 +108,97 @@ class QualityGateEvaluator:
     """Evaluates comprehensive board readiness by combining hard gates and weighted scores."""
 
     @staticmethod
-    def evaluate(drc_violations: List[Any],
-                 unconnected_nets: List[str],
-                 critical_nets: List[str],
+    def evaluate(drc_violations: Optional[List[Any]] = None,
+                 unconnected_nets: Optional[List[str]] = None,
+                 critical_nets: Optional[List[str]] = None,
                  routability_score: float = 1.0,
                  profile: Optional[DesignProfile] = None,
-                 discontinuities_count: int = 0) -> QualityReport:
+                 discontinuities_count: Optional[int] = 0) -> QualityReport:
         hard = HardAcceptanceGates()
         failures = []
         recommendations = []
 
-        # 1. Evaluate Hard Gates
+        # 1. DRC Evidence Check (Fail-closed)
         short_count = 0
         clearance_count = 0
-        unconnected_count = len(unconnected_nets)
+        if drc_violations is None:
+            failures.append("Missing DRC evidence: DRC check was not executed.")
+        else:
+            for v in drc_violations:
+                err_type = str(getattr(v, "error_type", "")).lower()
+                rule_name = str(getattr(v, "rule_name", "")).lower()
+                if "short" in err_type or "short" in rule_name:
+                    short_count += 1
+                elif "clearance" in err_type or "clearance" in rule_name:
+                    clearance_count += 1
 
-        for v in drc_violations:
-            err_type = str(getattr(v, "error_type", "")).lower()
-            rule_name = str(getattr(v, "rule_name", "")).lower()
-            if "short" in err_type or "short" in rule_name:
-                short_count += 1
-            elif "clearance" in err_type or "clearance" in rule_name:
-                clearance_count += 1
+            hard.zero_shorts = (short_count == 0)
+            hard.zero_clearance_violations = (clearance_count == 0)
 
-        if short_count > 0:
-            hard.zero_shorts = False
-        if clearance_count > 0:
-            hard.zero_clearance_violations = False
-        if unconnected_count > 0:
-            hard.zero_unconnected_pads = False
+        # 2. Netlist Connectivity Evidence Check (Fail-closed)
+        critical_nets = critical_nets or []
+        if unconnected_nets is None:
+            failures.append("Missing connectivity evidence: Netlist connectivity was not verified.")
+        else:
+            unconnected_count = len(unconnected_nets)
+            hard.zero_unconnected_pads = (unconnected_count == 0)
 
-        # Critical nets check
-        unconnected_set = set(unconnected_nets)
-        missing_critical = [n for n in critical_nets if n in unconnected_set]
-        if missing_critical:
-            hard.all_critical_nets_connected = False
-            failures.append(f"Critical nets unconnected: {missing_critical}")
+            unconnected_set = set(unconnected_nets)
+            missing_critical = [n for n in critical_nets if n in unconnected_set]
+            hard.all_critical_nets_connected = (len(missing_critical) == 0)
+            if missing_critical:
+                failures.append(f"Critical nets unconnected: {missing_critical}")
 
-        # Copper plane continuity
-        if discontinuities_count > 0:
-            hard.copper_zones_connected = False
-            failures.append(f"{discontinuities_count} return-path discontinuities / slot crossings detected.")
+        # 3. Copper Plane Continuity Check (Fail-closed)
+        if discontinuities_count is None:
+            failures.append("Missing plane continuity evidence: Return-path continuity was not evaluated.")
+            discon_for_score = 5
+        else:
+            discon_for_score = discontinuities_count
+            hard.copper_zones_connected = (discontinuities_count == 0)
+            if discontinuities_count > 0:
+                failures.append(f"{discontinuities_count} return-path discontinuities / slot crossings detected.")
 
-        failures.extend(hard.failed_gates())
+        # 4. Stackup Verification
+        if profile is not None:
+            if profile.stackup and len(profile.stackup) >= 2:
+                copper_layers = [l for l in profile.stackup if l.copper_thickness_oz > 0]
+                if len(copper_layers) >= 2:
+                    hard.valid_stackup = True
+                else:
+                    failures.append("Stackup has insufficient copper layers (< 2 with thickness > 0).")
+            else:
+                failures.append("Layer stackup is empty or invalid.")
+        else:
+            hard.valid_stackup = True
+
+        # 5. Electrical & Manufacturing Constraints Verification
+        if profile is not None:
+            mfg = profile.manufacturing
+            if mfg and mfg.min_trace_width_mil > 0 and mfg.min_clearance_mil > 0 and mfg.min_drill_mil > 0:
+                hard.manufacturing_constraints_met = True
+            else:
+                failures.append("Manufacturing constraints invalid or missing.")
+
+            has_invalid_elec = False
+            for net, curr in profile.current_limits_A.items():
+                if curr < 0:
+                    has_invalid_elec = True
+                    failures.append(f"Invalid negative current limit on net {net}: {curr}A")
+            if not has_invalid_elec:
+                hard.electrical_constraints_met = True
+        else:
+            hard.manufacturing_constraints_met = True
+            hard.electrical_constraints_met = True
+
+        failures.extend([f for f in hard.failed_gates() if f not in failures])
 
         # 2. Compute Weighted Scores
         scores = WeightedQualityScore()
-        # Electrical correctness penalised by shorts or clearance issues
-        scores.electrical_correctness = max(0.0, 100.0 - (short_count * 25.0) - (clearance_count * 5.0))
-        # Routing quality
+        drc_penalty = (short_count * 25.0) + (clearance_count * 5.0) if drc_violations is not None else 50.0
+        scores.electrical_correctness = max(0.0, 100.0 - drc_penalty)
         scores.routing_quality = max(0.0, round(routability_score * 100.0, 1))
-        # RF and power constraints
-        scores.rf_and_power = max(0.0, 100.0 - (discontinuities_count * 20.0))
+        scores.rf_and_power = max(0.0, 100.0 - (discon_for_score * 20.0))
 
         total_score = scores.compute_total()
 
