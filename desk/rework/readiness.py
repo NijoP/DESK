@@ -106,7 +106,7 @@ class ManufacturingReadinessEngine:
             details={
                 "drc_violations_count": len(drc_violations or []),
                 "unconnected_nets_count": len(unconnected_nets or []),
-                "quality_scorecard": asdict(q_report.scorecard),
+                "quality_scorecard": asdict(q_report.score_breakdown),
             },
         )
 
