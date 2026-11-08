@@ -25,6 +25,17 @@ a = [x for x in a if x != "--full"]
 if len(a) >= 1 and a[0] == "api":                      # project-independent
     from desk.context import api_lookup
     print(api_lookup(" ".join(a[1:]), **({"budget": int(budget)} if budget else {}))); sys.exit(0)
+if len(a) >= 1 and a[0] == "skill":                    # project-independent skill resolver
+    from desk.skills import get_skill_registry
+    reg = get_skill_registry()
+    query = " ".join(a[1:])
+    ctx = reg.get_skill_context(query)
+    print(ctx if ctx else f"No skill found matching '{query}'."); sys.exit(0)
+if len(a) >= 1 and a[0] == "mission":                  # project-independent mission classifier
+    from desk.ship import ShipBridge
+    intent = " ".join(a[1:])
+    m_type = ShipBridge.classify_mission(intent)
+    print(f"Mission: {m_type.value} | Intent: '{intent}'"); sys.exit(0)
 if len(a) < 2: raise SystemExit(__doc__)
 proj, cmd, rest = a[0], a[1], a[2:]
 E = Engine(proj)
