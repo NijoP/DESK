@@ -1,5 +1,7 @@
 """DESK entry point for agents: discover tools cheaply and recover from interrupted live writes.
   python tools/desk.py tools                         one line per tool (what it does) - read this, not the tool sources
+  python tools/desk.py auth [configure|status|test]  secure credential vault management
+  python tools/desk.py settings                      ecosystem provider health and readiness dashboard
   python tools/desk.py recover projects/<P>          list unfinished/dirty live operations and how to resolve each
   python tools/desk.py recover projects/<P> --clear  resolve dirty builds by running tools/clear_block.py for them (live)
   python tools/desk.py recover projects/<P> --mark-resolved <op_id> --reason "checked by hand"
@@ -17,6 +19,14 @@ if not a or a[0] == "tools":
         with open(f, encoding="utf-8") as h:
             doc = ast.get_docstring(ast.parse(h.read())) or ""
         print(f"{n:16s} {doc.splitlines()[0] if doc else ''}"[:150])
+    sys.exit(0)
+if a[0] == "auth":
+    from desk.auth.cli import run_auth_cli
+    run_auth_cli(a[1:])
+    sys.exit(0)
+if a[0] == "settings":
+    from desk.ui.settings import run_settings_cli
+    run_settings_cli()
     sys.exit(0)
 if a[0] == "recover":
     proj = a[1]; pend = ops.pending(proj)

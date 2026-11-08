@@ -19,6 +19,7 @@ from desk.component_intelligence.storage.database import DatabaseManager
 from desk.component_intelligence.storage.repository import ComponentRepository
 from desk.component_intelligence.suppliers.models import SupplierOffer
 from desk.component_intelligence.suppliers.providers.lcsc.provider import LcscSupplierProvider
+from desk.component_intelligence.suppliers.providers.mouser.provider import MouserSupplierProvider
 from desk.component_intelligence.suppliers.registry import SupplierRegistry
 from desk.component_intelligence.verification.engine import ComponentVerificationEngine
 
@@ -43,9 +44,12 @@ def get_supplier_registry() -> SupplierRegistry:
     global _SUPPLIER_REGISTRY
     if _SUPPLIER_REGISTRY is None:
         _SUPPLIER_REGISTRY = SupplierRegistry.get_instance()
-        # Register LCSC as the first commercial provider
+        # Register LCSC as the primary commercial provider
         if not _SUPPLIER_REGISTRY.get_provider("lcsc"):
             _SUPPLIER_REGISTRY.register(LcscSupplierProvider())
+        # Register Mouser as an extensible secondary commercial provider
+        if not _SUPPLIER_REGISTRY.get_provider("mouser"):
+            _SUPPLIER_REGISTRY.register(MouserSupplierProvider())
     return _SUPPLIER_REGISTRY
 
 

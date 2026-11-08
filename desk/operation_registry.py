@@ -233,6 +233,59 @@ class OperationRegistry:
             )
         ))
 
+        # 8. Multi-Supplier Catalog Search (M1)
+        self.register(OperationDescriptor(
+            operation_id="supplier_search",
+            name="Search Supplier Catalogs",
+            description="Queries configured commercial distributor catalogs (LCSC, Mouser) for matching components.",
+            schema_version="1.0.0",
+            deterministic=True,
+            resource_class=ResourceClass.LIGHT,
+            side_effect=False,
+            replay_policy=ReplayPolicy.SAFE_READ,
+            pipeline_stage="M1",
+            input_schema={"query": str},
+            handler=lambda query, limit=10: [
+                o.to_dict() for o in __import__("desk.component_intelligence.api", fromlist=["get_supplier_registry"]).get_supplier_registry().search_all(query, limit_per_supplier=limit)
+            ]
+        ))
+
+        # 9. Manufacturing & PCBA Quotation (M6)
+        self.register(OperationDescriptor(
+            operation_id="manufacturing_quote",
+            name="Calculate Manufacturing Quote",
+            description="Calculates realistic JLCPCB PCB fabrication and PCBA SMT assembly costs with DFM verification.",
+            schema_version="1.0.0",
+            deterministic=True,
+            resource_class=ResourceClass.LIGHT,
+            side_effect=False,
+            replay_policy=ReplayPolicy.SAFE_READ,
+            pipeline_stage="M6",
+            input_schema={"width_mm": (int, float), "height_mm": (int, float)},
+            handler=lambda width_mm, height_mm, layer_count=2, quantity=5, bom_components=None: __import__("desk.manufacturing.jlcpcb", fromlist=["JLCPCBClient"]).JLCPCBClient(use_mock=True).get_quote(
+                width_mm=width_mm,
+                height_mm=height_mm,
+                layer_count=layer_count,
+                quantity=quantity,
+                bom_components=bom_components,
+            )
+        ))
+
+        # 10. EDA Project Offline Inspection (M2)
+        self.register(OperationDescriptor(
+            operation_id="eda_inspect_project",
+            name="Inspect EDA Project",
+            description="Safely inspects project files, safety locks, and structure without mutating state.",
+            schema_version="1.0.0",
+            deterministic=True,
+            resource_class=ResourceClass.LIGHT,
+            side_effect=False,
+            replay_policy=ReplayPolicy.SAFE_READ,
+            pipeline_stage="M2",
+            input_schema={"project_path": str},
+            handler=lambda project_path: __import__("desk.eda.easyeda_pro", fromlist=["get_easyeda_manager"]).get_easyeda_manager().inspect_project_offline(project_path)
+        ))
+
 
 # Global singleton registry instance
 _GLOBAL_REGISTRY: Optional[OperationRegistry] = None
