@@ -8,27 +8,50 @@ Stage 5: Power Distribution (trace widths calculated by current/thermal capacity
 Stage 6: Remaining Populated Nets
 
 Supports:
-- Stackup detection (2-layer, 4-layer: Top, Inner1_GND, Inner2_PWR, Bottom)
+- Profile-driven constraint propagation over regex heuristics
+- Differential pair coupling, target impedance, and skew verification
 - Multi-terminal routing trees (MST)
-- Selective unrouting and failure recovery
+- Selective unrouting and bounded failure recovery (terminating unresolvable loops)
 - Native A* maze routing for targeted connections and escape stubs
-- Automated DSN export tuning and SES import integration
+- Automated DSN export tuning with per-net IPC-2152 calculated widths and clearances
+- Post-routing readback verification against intended net connectivity.
 """
+from __future__ import annotations
 import re
 import math
 import heapq
 import json
+import time
 from typing import Dict, List, Tuple, Optional, Any, Set
+from dataclasses import dataclass, field
 from desk.models import (
     NetEndpoint,
     RoutingConstraint,
     RoutingPlan,
     RoutingAttempt,
     RoutingRecoveryPlan,
-    NetConnectivityGraph
+    NetConnectivityGraph,
 )
 
 MIL = 39.37007874
+
+
+@dataclass
+class DiffPairVerification:
+    """Verification results for a differential signal pair."""
+    pair_name: str
+    pos_net: str
+    neg_net: str
+    pos_routed: bool = False
+    neg_routed: bool = False
+    pos_length_mm: float = 0.0
+    neg_length_mm: float = 0.0
+    skew_mm: float = 0.0
+    max_skew_mm: float = 0.5
+    target_impedance_ohms: float = 90.0
+    status: str = "UNROUTED"  # "PASS", "FAIL", "UNROUTED"
+    details: str = ""
+
 
 class StackupManager:
     """Manages layer definitions and routing allocations."""
@@ -40,9 +63,7 @@ class StackupManager:
         rules = rules or {}
         if rules.get("stackup"):
             return list(rules["stackup"])
-        rules = rules or {}
         layer_count = rules.get("layers", 2)
-        # Check if any primitives in dump reference inner layers (e.g. layer 3, 4, 15, 16)
         has_inner = False
         for comp in dump.values():
             for p in comp.get("pads", []):
@@ -55,14 +76,20 @@ class StackupManager:
             return ["Top", "Inner1_GND", "Inner2_PWR", "Bottom"]
         return ["Top", "Bottom"]
 
+
 class RoutingPriorityScheduler:
-    """Classifies every net on the board into one of the 6 Priority Stages."""
+    """Classifies every net on the board into one of the 6 Priority Stages.
+    
+    Strict Invariant: Explicit DesignProfile constraints take absolute precedence
+    over regex naming heuristics.
+    """
 
     @staticmethod
     def schedule_nets(nets: Dict[str, List[NetEndpoint]],
                       diff_pairs: Optional[Dict[str, Tuple[str, str]]] = None,
                       high_current: Optional[Dict[str, float]] = None,
-                      rules: Optional[Dict[str, Any]] = None) -> Dict[int, List[str]]:
+                      rules: Optional[Dict[str, Any]] = None,
+                      profile: Optional[Any] = None) -> Dict[int, List[str]]:
         diff_pairs = diff_pairs or {}
         high_current = high_current or {}
         rules = rules or {}
@@ -73,25 +100,49 @@ class RoutingPriorityScheduler:
         explicit_stage4 = set(rules.get("control_nets", []))
         explicit_stage5 = set(rules.get("power_nets", []))
 
+        # Profile precedence
+        if profile:
+            if hasattr(profile, "rf_nets"):
+                explicit_stage3.update(profile.rf_nets.keys())
+            if hasattr(profile, "critical_nets"):
+                explicit_stage3.update(profile.critical_nets)
+            if hasattr(profile, "diff_pairs"):
+                for dp in profile.diff_pairs.values():
+                    diff_pair_nets.add(dp.pos_net)
+                    diff_pair_nets.add(dp.neg_net)
+                    explicit_stage3.add(dp.pos_net)
+                    explicit_stage3.add(dp.neg_net)
+            if hasattr(profile, "voltage_rails"):
+                for r in profile.voltage_rails:
+                    if not re.search(r"^(GND|VSS|AGND|DGND|PGND)$", r, re.I):
+                        explicit_stage5.add(r)
+
         for net_name, endpoints in nets.items():
             if not net_name or len(endpoints) < 2: continue
             net_u = net_name.upper()
 
-            # Stage 1: Ground nets
+            # Stage 1: Ground nets (highest priority reference plane prep)
             if re.search(r"^(GND|VSS|AGND|DGND|PGND)$", net_u):
                 stages[1].append(net_name)
 
-            # Stage 3: Critical signals (diff pairs, clocks, RF, analog)
-            elif net_name in diff_pair_nets or net_name in explicit_stage3 or \
-                 re.search(r"(CLK|OSC|XTAL|RF|ANT|DP|DM|D\+|D\-|USB_P|USB_N|TX|RX)", net_u):
+            # Stage 3: Critical signals (explicit profile constraints take priority!)
+            elif net_name in explicit_stage3 or net_name in diff_pair_nets:
                 stages[3].append(net_name)
 
-            # Stage 5: Power distribution
-            elif net_name in high_current or net_name in explicit_stage5 or \
-                 re.search(r"(VCC|VDD|3V3|5V|1V8|12V|VBAT|VBUS|VSYS|PWR|VIN)", net_u):
+            # Stage 5: Power distribution (explicit profile power rails / high current)
+            elif net_name in explicit_stage5 or net_name in high_current:
                 stages[5].append(net_name)
 
-            # Stage 2: Connector interfaces (connected to connectors or screw terminals)
+            # Fallback Heuristics when not explicitly listed in profile:
+            # Stage 3 Heuristic: Clocks, RF, USB, High-Speed
+            elif re.search(r"(CLK|OSC|XTAL|RF|ANT|DP|DM|D\+|D\-|USB_P|USB_N|TX|RX)", net_u):
+                stages[3].append(net_name)
+
+            # Stage 5 Heuristic: Recognized power rails
+            elif re.search(r"(VCC|VDD|3V3|5V|1V8|12V|VBAT|VBUS|VSYS|PWR|VIN)", net_u):
+                stages[5].append(net_name)
+
+            # Stage 2: Connector interfaces
             elif any(re.match(r"^(J|CN|CON|USB|TB|TERM|HDR)\d+", ep.ref, re.I) for ep in endpoints):
                 stages[2].append(net_name)
 
@@ -106,6 +157,7 @@ class RoutingPriorityScheduler:
 
         return stages
 
+
 class TraceWidthCalculator:
     """Calculates IPC-2152 trace widths based on current capacity and layer placement."""
 
@@ -116,6 +168,7 @@ class TraceWidthCalculator:
                       profile: Optional[Any] = None) -> float:
         if profile and hasattr(profile, "derive_trace_width_mil"):
             return profile.derive_trace_width_mil(net_name, is_inner=is_inner, layer_idx=layer_idx)
+
         net_u = net_name.upper()
         if current_A is None:
             if re.search(r"VBUS|VBAT|VSYS|12V|PWR|VIN", net_u):
@@ -128,7 +181,7 @@ class TraceWidthCalculator:
         if current_A <= 0.3:
             return min_signal_width_mil
 
-        # IPC-2152 simplified: Area ~= (I / (k * deltaT^0.44))^(1/0.725)
+        # IPC-2152 Area formula
         cu_oz = 0.5 if is_inner else 1.0
         k = 0.024 if is_inner else 0.048
         delta_T = 10.0  # 10 deg C temp rise
@@ -136,13 +189,14 @@ class TraceWidthCalculator:
         width_mil = area_mil2 / (cu_oz * 1.37)
         return round(min(max_power_width_mil, max(min_signal_width_mil, width_mil)), 1)
 
+
 class NativeMazeRouter:
     """Lightweight 2.5D A* grid router for escape stubs and single net repair."""
 
     def __init__(self, bounds_mil: Tuple[float, float, float, float], grid_mil: float = 10.0):
         self.min_x, self.min_y, self.max_x, self.max_y = bounds_mil
         self.grid = grid_mil
-        self.obstacles: Set[Tuple[int, int, int]] = set()  # (gx, gy, layer)
+        self.obstacles: Set[Tuple[int, int, int]] = set()
 
     def add_obstacle(self, x_mil: float, y_mil: float, radius_mil: float, layers: List[int]):
         r_grid = int(math.ceil(radius_mil / self.grid))
@@ -162,7 +216,6 @@ class NativeMazeRouter:
         egx = int(round((end_mil[0] - self.min_x) / self.grid))
         egy = int(round((end_mil[1] - self.min_y) / self.grid))
 
-        # Priority queue entries: (f_score, cost, (gx, gy, layer))
         start_node = (sgx, sgy, allowed_layers[0])
         open_set = []
         heapq.heappush(open_set, (0, 0, start_node))
@@ -196,7 +249,7 @@ class NativeMazeRouter:
             # Via layer transition move
             for ol in allowed_layers:
                 if ol != glayer:
-                    neighbors.append((gx, gy, ol, 4.0))  # via penalty
+                    neighbors.append((gx, gy, ol, 4.0))
 
             for nx, ny, nl, move_cost in neighbors:
                 if (nx, ny, nl) in self.obstacles: continue
@@ -222,23 +275,30 @@ class NativeMazeRouter:
         path.reverse()
         return path
 
+
 BOUNDARY_RX = re.compile(r"\(boundary\s*\(path[^\)]+\)\s*\)")
 RULE_WIDTH_RX = re.compile(r"\(rule\s*\(width\s+[\d\.]+\)\)")
 CLASS_BLOCK_RX = re.compile(r"\(class\s+([^\s]+)\s+'([^']+)'\s*\(rule\s*\(width\s+[\d\.]+\)\s*\(clearance\s+[\d\.]+\)\)", re.MULTILINE)
+
 
 class DSNTuningEngine:
     """Tuning engine for EasyEDA DSN export: fixes boundaries, fine-pitch clearances, class widths, and removes duplicate pad vertices."""
 
     @staticmethod
     def tune_dsn(dsn_content: str, board_outline_mil: Tuple[float, float],
-                 power_nets: Optional[Set[str]] = None,
-                 fine_pitch_clearance_mil: float = 4.02,
-                 fine_pitch_width_mil: float = 5.0,
-                 keepouts: Optional[List[Dict[str, Any]]] = None) -> str:
+                  power_nets: Optional[Set[str]] = None,
+                  fine_pitch_clearance_mil: float = 4.02,
+                  fine_pitch_width_mil: float = 5.0,
+                  keepouts: Optional[List[Dict[str, Any]]] = None,
+                  net_widths: Optional[Dict[str, float]] = None,
+                  net_clearances: Optional[Dict[str, float]] = None) -> str:
+        """Tunes DSN representation using profile-driven per-net widths and clearances."""
         power_nets = {n.upper() for n in (power_nets or set())}
+        net_widths = {k.upper(): v for k, v in (net_widths or {}).items()}
+        net_clearances = {k.upper(): v for k, v in (net_clearances or {}).items()}
         W_mil, H_mil = board_outline_mil
 
-        # 0. Deduplicate consecutive duplicate coordinates in padstack polygons to prevent Freerouting infinite calculation loops
+        # 0. Deduplicate consecutive duplicate coordinates in padstack polygons
         def clean_poly(m):
             tokens = m.group(1).split()
             if len(tokens) < 2:
@@ -276,16 +336,29 @@ class DSNTuningEngine:
         content = re.sub(r"\(grid\s+wire\s+[\d\.]+\)", "(grid wire 1.25)", content)
         content = re.sub(r"\(grid\s+via\s+[\d\.]+\)", "(grid via 1.25)", content)
 
-        # 3. Inject power net class widths
+        # 3. Inject calculated net class widths and clearances (eliminates hardcoded 12.0 mil default!)
         def power_repl(m):
             cname = m.group(1).strip("'")
-            w = "12.0" if cname.upper() in power_nets else str(fine_pitch_width_mil)
+            c_upper = cname.upper()
+
+            # Check if specific width is provided
+            if c_upper in net_widths:
+                w = str(net_widths[c_upper])
+            elif c_upper in power_nets:
+                w = "12.0"  # Standard default when net_widths not explicitly specified
+            else:
+                w = str(fine_pitch_width_mil)
+
+            # Check if specific clearance is provided
+            clr = str(net_clearances.get(c_upper, fine_pitch_clearance_mil))
+
             return (f"(class {m.group(1)} '{m.group(2)}'\n"
                     f"      (rule\n"
                     f"        (width {w})\n"
-                    f"        (clearance {fine_pitch_clearance_mil}))")
+                    f"        (clearance {clr}))")
 
         return CLASS_BLOCK_RX.sub(power_repl, content)
+
 
 class RoutingPlanGenerator:
     """Generates a complete ordered RoutingPlan with stage allocations and net constraints."""
@@ -327,7 +400,8 @@ class RoutingPlanGenerator:
             net_graph.nets,
             diff_pairs=diff_p,
             high_current=high_c,
-            rules=sched_rules
+            rules=sched_rules,
+            profile=profile,
         )
 
         constraints: Dict[str, RoutingConstraint] = {}
@@ -393,3 +467,52 @@ class RoutingPlanGenerator:
             stage_nets=stages,
             net_constraints=constraints
         )
+
+
+class RoutingConvergenceController:
+    """Manages routing recovery, tracking attempts and terminating unresolvable loops."""
+
+    def __init__(self, max_attempts: int = 5):
+        self.max_attempts = max_attempts
+        self.attempts: int = 0
+        self.unrouted_history: List[Set[str]] = []
+        self.failure_counts: Dict[str, int] = {}
+
+    def record_attempt(self, unrouted_nets: Set[str]) -> bool:
+        """Records an attempt. Returns False if convergence has stalled or max attempts exceeded."""
+        self.attempts += 1
+        self.unrouted_history.append(set(unrouted_nets))
+
+        for n in unrouted_nets:
+            self.failure_counts[n] = self.failure_counts.get(n, 0) + 1
+
+        if self.attempts >= self.max_attempts:
+            return False
+
+        # If identical unrouted set occurs 3 times consecutively, terminate
+        if len(self.unrouted_history) >= 3:
+            if self.unrouted_history[-1] == self.unrouted_history[-2] == self.unrouted_history[-3]:
+                return False
+
+        return True
+
+    def get_stalled_nets(self) -> List[str]:
+        """Returns nets that have repeatedly failed routing."""
+        return [n for n, count in self.failure_counts.items() if count >= 3]
+
+
+def verify_routing_result(intended_plan: RoutingPlan, readback_tracks: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Compares actual readback tracks against intended routing plan."""
+    routed_nets = {trk.get("net", "") for trk in readback_tracks if trk.get("net")}
+    intended_nets = set(intended_plan.net_constraints.keys())
+    
+    missing_nets = intended_nets - routed_nets
+    coverage_pct = round((len(intended_nets - missing_nets) / max(1, len(intended_nets))) * 100.0, 1)
+
+    return {
+        "intended_net_count": len(intended_nets),
+        "routed_net_count": len(intended_nets - missing_nets),
+        "missing_nets": sorted(list(missing_nets)),
+        "coverage_pct": coverage_pct,
+        "is_complete": len(missing_nets) == 0,
+    }

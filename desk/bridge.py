@@ -10,6 +10,7 @@ import time
 import urllib.request
 import io
 import socket
+import select
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, asdict
 
@@ -33,34 +34,138 @@ class SessionRegistry:
     _sessions: Dict[str, BridgeSession] = {}
     _discovered_port: Optional[int] = None
     _last_port_check: float = 0.0
+    _cache_ttl: float = 60.0
 
     @classmethod
-    def get_port(cls, timeout: float = 0.05) -> int:
-        """Fast port discovery using direct TCP socket connect (sub-millisecond)."""
+    def _get_cache_path(cls) -> str:
+        return os.path.join(os.path.expanduser("~/.desk"), "bridge_endpoint.json")
+
+    @classmethod
+    def _read_persistent_cache(cls) -> Optional[int]:
+        try:
+            path = cls._get_cache_path()
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                ts = data.get("timestamp", 0)
+                if time.time() - ts < cls._cache_ttl:
+                    return int(data.get("port", 49620))
+        except Exception:
+            pass
+        return None
+
+    @classmethod
+    def _write_persistent_cache(cls, port: int) -> None:
+        try:
+            path = cls._get_cache_path()
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump({"port": port, "timestamp": time.time(), "pid": os.getpid()}, f)
+        except Exception:
+            pass
+
+    @classmethod
+    def _probe_single_port(cls, port: int, timeout: float = 0.015) -> bool:
+        """Fast non-blocking or short-timeout direct check on a single port."""
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(timeout)
+            res = s.connect_ex(("127.0.0.1", port))
+            s.close()
+            return res == 0
+        except OSError:
+            return False
+
+    @classmethod
+    def _probe_ports_concurrent(cls, ports: List[int], timeout: float = 0.03) -> Optional[int]:
+        """Probes multiple ports concurrently using non-blocking sockets and select."""
+        sockets = []
+        try:
+            for p in ports:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.setblocking(False)
+                s.connect_ex(("127.0.0.1", p))
+                sockets.append((p, s))
+
+            r, w, x = select.select([], [s for _, s in sockets], [], timeout)
+            for p, s in sockets:
+                if s in w:
+                    try:
+                        err = s.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
+                        if err == 0:
+                            return p
+                    except OSError:
+                        pass
+        except Exception:
+            pass
+        finally:
+            for _, s in sockets:
+                try:
+                    s.close()
+                except OSError:
+                    pass
+        return None
+
+    @classmethod
+    def get_port(cls, timeout: float = 0.03, force_probe: bool = False) -> int:
+        """
+        Fast, hardware-adaptive port discovery with multi-tier caching:
+        1. Explicit EDA_PORT environment variable (0ms)
+        2. In-memory validated cache (0ms)
+        3. Persistent disk cache validation (sub-millisecond)
+        4. Priority check of default port 49620 (< 2ms if running)
+        5. Concurrent non-blocking probe across 49620..49629 (< 35ms worst-case)
+        """
+        # 1. Environment variable override
         if os.environ.get("EDA_PORT"):
             return int(os.environ["EDA_PORT"])
-        
-        # Cache discovered port for 60 seconds unless invalidated
+
         now = time.time()
-        if cls._discovered_port and (now - cls._last_port_check < 60.0):
+        # 2. In-memory cache
+        if not force_probe and cls._discovered_port and (now - cls._last_port_check < cls._cache_ttl):
             return cls._discovered_port
 
-        for p in range(49620, 49630):
-            try:
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(timeout)
-                res = s.connect_ex(("127.0.0.1", p))
-                s.close()
-                if res == 0:
-                    cls._discovered_port = p
+        # 3. Persistent disk cache check
+        if not force_probe:
+            cached_port = cls._read_persistent_cache()
+            if cached_port:
+                if cls._probe_single_port(cached_port, timeout=0.015):
+                    cls._discovered_port = cached_port
                     cls._last_port_check = now
-                    return p
-            except OSError:
-                pass
-        
+                    return cached_port
+
+        # 4. Fast direct probe of default port (49620)
+        if cls._probe_single_port(49620, timeout=0.015):
+            cls._discovered_port = 49620
+            cls._last_port_check = now
+            cls._write_persistent_cache(49620)
+            return 49620
+
+        # 5. Concurrent non-blocking probe across candidates (49621..49629)
+        candidate_ports = [p for p in range(49621, 49630)]
+        found_port = cls._probe_ports_concurrent(candidate_ports, timeout=timeout)
+        if found_port is not None:
+            cls._discovered_port = found_port
+            cls._last_port_check = now
+            cls._write_persistent_cache(found_port)
+            return found_port
+
+        # Fallback to default port and cache to prevent repetitive scanning
         cls._discovered_port = 49620
         cls._last_port_check = now
         return 49620
+
+    @classmethod
+    def invalidate_port_cache(cls) -> None:
+        """Invalidates both in-memory and persistent port cache."""
+        cls._discovered_port = None
+        cls._last_port_check = 0.0
+        try:
+            path = cls._get_cache_path()
+            if os.path.exists(path):
+                os.remove(path)
+        except OSError:
+            pass
 
     @classmethod
     def get_session(cls, project_path: Optional[str] = None) -> Optional[BridgeSession]:
@@ -75,10 +180,10 @@ class SessionRegistry:
         cls._sessions[norm] = session
 
     @classmethod
-    def invalidate_session(cls, project_path: Optional[str]):
+    def invalidate_session(cls, project_path: Optional[str] = None):
         if not project_path:
             cls._sessions.clear()
-            cls._discovered_port = None
+            cls.invalidate_port_cache()
             return
         norm = os.path.abspath(project_path)
         if norm in cls._sessions:

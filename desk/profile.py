@@ -1,33 +1,45 @@
 """Engineering Design Profile Engine for DESK.
 Captures versioned, profile-driven engineering constraints:
 - Functional and electrical requirements
-- Voltage rails and per-net current limits (eliminating regex guessing)
-- Actual layer stackup, copper thickness, and dielectric constants
+- Voltage rails and per-net current limits with explicit confidence (VERIFIED, ESTIMATED, UNKNOWN)
+- Actual layer stackup, copper thickness, dielectric thickness, loss tangent, and reference layers
 - Switching frequencies, RF lines, and differential pairs
 - Thermal constraints and environmental ratings
-- Manufacturer design rules and process tolerances
+- Manufacturer design rules, process tolerances, and layer-specific capabilities
 - Fine-grained change tracking and domain-specific cache invalidation.
 
 Zero external dependencies (pure Python standard library).
 """
+from __future__ import annotations
 import os
 import json
 import math
 import hashlib
+import re
 from typing import Dict, List, Tuple, Optional, Any, Set
 from dataclasses import dataclass, field, asdict
 
 MIL = 39.37007874
 
+
+class CurrentConfidence:
+    VERIFIED = "VERIFIED"     # Explicitly declared in current_limits_A, net_class, or datasheet
+    ESTIMATED = "ESTIMATED"   # Derived from rail heuristics
+    UNKNOWN = "UNKNOWN"       # High-current/power rail with unverified current limits
+
+
 @dataclass
 class LayerStackup:
     index: int
     name: str
-    layer_type: str  # "signal", "plane", "dielectric"
-    copper_thickness_oz: float = 1.0  # 1.0 oz ~= 1.37 mil (35 um)
+    layer_type: str                         # "signal", "plane", "dielectric"
+    copper_thickness_oz: float = 1.0        # 1.0 oz ~= 1.37 mil (35 um)
     thickness_mil: float = 1.37
-    dielectric_er: float = 4.4        # FR-4 default
+    dielectric_thickness_mil: float = 6.0   # Prepreg / core thickness
+    dielectric_er: float = 4.4              # FR-4 default
     loss_tangent: float = 0.02
+    reference_layer_idx: Optional[int] = None  # Explicit reference plane for impedance control
+
 
 @dataclass
 class NetClassProfile:
@@ -40,16 +52,19 @@ class NetClassProfile:
     max_current_A: float = 0.2
     target_layers: List[int] = field(default_factory=lambda: [1, 2])
 
+
 @dataclass
 class DiffPairProfile:
     name: str
     pos_net: str
     neg_net: str
-    target_impedance_ohms: float = 90.0  # e.g., 90 ohm for USB, 100 ohm for PCIe/Ethernet
+    target_impedance_ohms: float = 90.0  # 90 ohm for USB, 100 ohm for PCIe/Ethernet
     tolerance_pct: float = 10.0
     trace_width_mil: float = 5.0
     pair_spacing_mil: float = 5.0
     max_length_diff_mm: float = 0.5
+    reference_layer: Optional[int] = None
+
 
 @dataclass
 class RFProfile:
@@ -61,6 +76,7 @@ class RFProfile:
     ground_clearance_mil: float = 8.0
     reference_layer: int = 2
 
+
 @dataclass
 class ThermalProfile:
     max_ambient_temp_c: float = 40.0
@@ -68,15 +84,48 @@ class ThermalProfile:
     max_temperature_rise_c: float = 10.0
     airflow_lfm: float = 0.0
 
+
 @dataclass
 class ManufacturerProfile:
     name: str = "jlcpcb_standard_2layer"
+    version: str = "2026.1"
     min_trace_width_mil: float = 5.0
     min_clearance_mil: float = 4.02
     min_drill_mil: float = 12.0
     min_via_annular_ring_mil: float = 5.0
     copper_to_edge_mil: float = 12.0
     max_aspect_ratio: float = 8.0
+    impedance_control_available: bool = True
+    layer_capabilities: Dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def get_preset(cls, preset_name: str) -> "ManufacturerProfile":
+        norm = preset_name.lower()
+        if "4layer" in norm or "4l" in norm:
+            return cls(
+                name="jlcpcb_standard_4layer",
+                version="2026.1",
+                min_trace_width_mil=3.5,
+                min_clearance_mil=3.5,
+                min_drill_mil=8.0,
+                min_via_annular_ring_mil=4.0,
+                copper_to_edge_mil=10.0,
+                max_aspect_ratio=10.0,
+                impedance_control_available=True,
+            )
+        elif "pcbway" in norm:
+            return cls(
+                name="pcbway_standard",
+                version="2026.1",
+                min_trace_width_mil=4.0,
+                min_clearance_mil=4.0,
+                min_drill_mil=8.0,
+                min_via_annular_ring_mil=4.5,
+                copper_to_edge_mil=10.0,
+                max_aspect_ratio=8.0,
+            )
+        return cls()
+
 
 @dataclass
 class DesignProfile:
@@ -109,15 +158,15 @@ class DesignProfile:
         """Initialise physical stackup based on layer count."""
         if self.layer_count == 4:
             self.stackup = [
-                LayerStackup(1, "Top", "signal", copper_thickness_oz=1.0, thickness_mil=1.37),
-                LayerStackup(2, "Inner1_GND", "plane", copper_thickness_oz=1.0, thickness_mil=1.37),
-                LayerStackup(3, "Inner2_PWR", "plane", copper_thickness_oz=1.0, thickness_mil=1.37),
-                LayerStackup(4, "Bottom", "signal", copper_thickness_oz=1.0, thickness_mil=1.37),
+                LayerStackup(1, "Top", "signal", copper_thickness_oz=1.0, thickness_mil=1.37, dielectric_thickness_mil=6.0, reference_layer_idx=2),
+                LayerStackup(2, "Inner1_GND", "plane", copper_thickness_oz=1.0, thickness_mil=1.37, dielectric_thickness_mil=40.0, reference_layer_idx=None),
+                LayerStackup(3, "Inner2_PWR", "plane", copper_thickness_oz=1.0, thickness_mil=1.37, dielectric_thickness_mil=6.0, reference_layer_idx=None),
+                LayerStackup(4, "Bottom", "signal", copper_thickness_oz=1.0, thickness_mil=1.37, dielectric_thickness_mil=6.0, reference_layer_idx=3),
             ]
         else:
             self.stackup = [
-                LayerStackup(1, "Top", "signal", copper_thickness_oz=1.0, thickness_mil=1.37),
-                LayerStackup(2, "Bottom", "signal", copper_thickness_oz=1.0, thickness_mil=1.37),
+                LayerStackup(1, "Top", "signal", copper_thickness_oz=1.0, thickness_mil=1.37, dielectric_thickness_mil=60.0, reference_layer_idx=2),
+                LayerStackup(2, "Bottom", "signal", copper_thickness_oz=1.0, thickness_mil=1.37, dielectric_thickness_mil=60.0, reference_layer_idx=1),
             ]
 
     def compute_hash(self) -> str:
@@ -135,14 +184,41 @@ class DesignProfile:
     def get_stackup_layers(self) -> List[str]:
         return [layer.name for layer in sorted(self.stackup, key=lambda l: l.index)]
 
-    def get_current_for_net(self, net: str) -> float:
-        """Explicit current limit from profile, falling back to net-class or standard default."""
+    def get_net_current_status(self, net: str) -> Tuple[float, str]:
+        """Distinguish VERIFIED, ESTIMATED, and UNKNOWN electrical current limits.
+        
+        Eliminates unsafe silent defaults where high-current power nets inherit signal ratings.
+        """
+        # 1. Explicit verified current limit in profile
         if net in self.current_limits_A:
-            return self.current_limits_A[net]
+            return self.current_limits_A[net], CurrentConfidence.VERIFIED
+
+        # 2. Explicit net class current limit
         for nc in self.net_classes.values():
             if net in nc.nets:
-                return nc.max_current_A
-        return 0.2  # Standard default signal current
+                return nc.max_current_A, CurrentConfidence.VERIFIED
+
+        # 3. Known power / battery / motor net names without explicit limit -> UNKNOWN
+        net_u = net.upper()
+        is_power_pattern = bool(re.search(r"(VCC|VDD|VBAT|VBUS|VSYS|VIN|12V|5V|3V3|PWR|MOTOR|COIL|HEATER)", net_u))
+        if is_power_pattern:
+            return 0.0, CurrentConfidence.UNKNOWN
+
+        # 4. Standard generic signal net -> ESTIMATED 0.2A
+        return 0.2, CurrentConfidence.ESTIMATED
+
+    def get_current_for_net(self, net: str, allow_unknown_default: bool = True) -> float:
+        """Returns current limit for a net. Fails closed on UNKNOWN high-current rails if strict."""
+        curr, confidence = self.get_net_current_status(net)
+        if confidence == CurrentConfidence.UNKNOWN:
+            if not allow_unknown_default:
+                raise ValueError(
+                    f"Unsafe electrical assumption: Net '{net}' is a power rail with UNKNOWN current capacity. "
+                    f"An explicit current limit in 'current_limits_A' is required."
+                )
+            # Safe default for unknown power nets is 1.0A (conservative sizing rather than 0.2A)
+            return 1.0
+        return curr
 
     def derive_trace_width_mil(self, net: str, is_inner: bool = False, layer_idx: Optional[int] = None) -> float:
         """Calculate IPC-2152 width using profile current, copper weight, and allowed temp rise."""

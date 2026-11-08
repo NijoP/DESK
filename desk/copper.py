@@ -4,13 +4,14 @@ Manages:
 - Power distribution polygon zones and zone priority hierarchy
 - Solid vs. thermal relief pad connection rules
 - Grid-based ground stitching via array synthesis
-- Return-path continuity verification & reference discontinuity detection
+- Return-path continuity verification & reference discontinuity detection using true polygon containment
 - Unconnected copper island detection and edge setback enforcement
-- Polygon boundary and keepout compliance checks
+- Robust 2D computational geometry: segment-segment intersection, rect-polygon intersection, keepout containment
 - Copper zone revision tracking, caching, and invalidation.
 
 Zero external dependencies (pure Python standard library).
 """
+from __future__ import annotations
 import math
 import json
 import hashlib
@@ -21,12 +22,61 @@ from desk.profile import DesignProfile, LayerStackup
 
 MIL = 39.37007874
 
+
+def _orientation(p: Tuple[float, float], q: Tuple[float, float], r: Tuple[float, float]) -> int:
+    """Returns orientation of ordered triplet (p, q, r):
+    0 -> Collinear
+    1 -> Clockwise
+    2 -> Counterclockwise
+    """
+    val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
+    if abs(val) < 1e-9:
+        return 0
+    return 1 if val > 0 else 2
+
+
+def _on_segment(p: Tuple[float, float], q: Tuple[float, float], r: Tuple[float, float]) -> bool:
+    """Checks if point q lies on line segment pr."""
+    return (
+        q[0] <= max(p[0], r[0]) + 1e-9
+        and q[0] >= min(p[0], r[0]) - 1e-9
+        and q[1] <= max(p[1], r[1]) + 1e-9
+        and q[1] >= min(p[1], r[1]) - 1e-9
+    )
+
+
+def segments_intersect(
+    p1: Tuple[float, float],
+    q1: Tuple[float, float],
+    p2: Tuple[float, float],
+    q2: Tuple[float, float],
+) -> bool:
+    """Robust 2D line segment intersection test using cross-product orientation."""
+    o1 = _orientation(p1, q1, p2)
+    o2 = _orientation(p1, q1, q2)
+    o3 = _orientation(p2, q2, p1)
+    o4 = _orientation(p2, q2, q1)
+
+    # General case
+    if o1 != o2 and o3 != o4:
+        return True
+
+    # Special Cases: collinear points on segment
+    if o1 == 0 and _on_segment(p1, p2, q1): return True
+    if o2 == 0 and _on_segment(p1, q2, q1): return True
+    if o3 == 0 and _on_segment(p2, p1, q2): return True
+    if o4 == 0 and _on_segment(p2, q1, q2): return True
+
+    return False
+
+
 @dataclass
 class ConnectionConfig:
     connection_type: str = "thermal_relief"  # "solid" | "thermal_relief"
     spoke_count: int = 4
     spoke_width_mil: float = 12.0
     clearance_mil: float = 8.0
+
 
 @dataclass
 class CopperZoneSpec:
@@ -45,6 +95,7 @@ class CopperZoneSpec:
     poured_area_mm2: float = 0.0
     status: str = "PLANNED"               # "PLANNED", "POURED", "STALE", "NOT_LIVE_VERIFIED"
 
+
 @dataclass
 class StitchingViaArray:
     net: str = "GND"
@@ -54,6 +105,7 @@ class StitchingViaArray:
     from_layer: int = 1
     to_layer: int = 2
     via_locations: List[Tuple[float, float]] = field(default_factory=list) # (x_mm, y_mm)
+
 
 @dataclass
 class ReturnPathDiscontinuity:
@@ -65,6 +117,7 @@ class ReturnPathDiscontinuity:
     discontinuity_type: str                # "plane_split", "missing_reference", "slot_crossing"
     severity: str = "ERROR"                # "ERROR", "WARNING"
     recommendation: str = ""
+
 
 class ConnectionRuleResolver:
     """Resolves thermal relief vs solid copper connection rules per net, component, and pin function."""
@@ -95,8 +148,9 @@ class ConnectionRuleResolver:
             clearance_mil=8.0
         )
 
+
 class CopperPlaneEngine:
-    """Automated generation, synthesis, polygon planning, and verification of copper zones and planes."""
+    """Automated generation, synthesis, polygon planning, and computational verification of copper zones."""
 
     @staticmethod
     def generate_ground_planes(board_dims_mm: Tuple[float, float],
@@ -113,7 +167,6 @@ class CopperPlaneEngine:
 
         zones = []
         for l in profile.stackup:
-            # Allocate ground plane to dedicated plane layers or bottom layer on 2-layer boards
             is_plane_candidate = (l.layer_type == "plane" and "GND" in l.name.upper()) or \
                                  (profile.layer_count == 2 and l.index == 2)
             if is_plane_candidate:
@@ -187,17 +240,24 @@ class CopperPlaneEngine:
             status="PLANNED"
         )
 
-    @staticmethod
-    def check_polygon_boundary(zone: CopperZoneSpec,
+    @classmethod
+    def check_polygon_boundary(cls, zone: CopperZoneSpec,
                                board_dims_mm: Tuple[float, float],
                                edge_setback_mm: float = 0.3,
                                keepouts: Optional[List[Dict[str, Any]]] = None) -> List[str]:
-        """Validates that a zone strictly complies with board boundaries and keepout constraints."""
+        """Validates that a zone strictly complies with board boundaries and keepout constraints.
+        
+        Uses full 2D geometric intersection:
+        1. Boundary setback checks.
+        2. Keepout edge-segment intersections.
+        3. Keepout rectangle fully contained within zone.
+        4. Zone vertices penetrating keepout.
+        """
         violations = []
         W, H = board_dims_mm
         keepouts = keepouts or []
 
-        # Check vertex containment within setback outline
+        # 1. Check vertex containment within setback outline
         for idx, (x, y) in enumerate(zone.points_mm):
             if x < (edge_setback_mm - 1e-3) or x > (W - edge_setback_mm + 1e-3) or \
                y < (edge_setback_mm - 1e-3) or y > (H - edge_setback_mm + 1e-3):
@@ -205,20 +265,70 @@ class CopperPlaneEngine:
                     f"Zone {zone.zone_id} vertex {idx} ({x:.2f}, {y:.2f}) violates board edge setback of {edge_setback_mm:.2f}mm."
                 )
 
-        # Check keepout collisions
+        # 2. Robust Keepout Collision Check
+        z_pts = zone.points_mm
+        n_z = len(z_pts)
+
         for ko in keepouts:
-            ko_rect = ko.get("rect_mm")
             ko_layer = ko.get("layer")
             if ko_layer is not None and ko_layer != zone.layer:
                 continue
-            if ko_rect and len(ko_rect) == 4:
-                kx1, ky1, kx2, ky2 = ko_rect
-                for x, y in zone.points_mm:
-                    if kx1 <= x <= kx2 and ky1 <= y <= ky2:
+
+            ko_rect = ko.get("rect_mm")
+            if not ko_rect and ko.get("rect_mil"):
+                rm = ko["rect_mil"]
+                ko_rect = (rm[0] / MIL, rm[1] / MIL, rm[2] / MIL, rm[3] / MIL)
+
+            if not ko_rect or len(ko_rect) != 4:
+                continue
+
+            kx1, ky1, kx2, ky2 = ko_rect
+            ko_name = ko.get("name", "KEEPOUT")
+
+            # A. Check if any zone vertex is inside keepout
+            collision_detected = False
+            for x, y in z_pts:
+                if (kx1 <= x <= kx2) and (ky1 <= y <= ky2):
+                    violations.append(
+                        f"Zone {zone.zone_id} penetrates keepout '{ko_name}' at vertex ({x:.2f}, {y:.2f})."
+                    )
+                    collision_detected = True
+                    break
+            if collision_detected:
+                continue
+
+            # B. Check if keepout is entirely engulfed inside zone (keepout corners inside polygon)
+            ko_corners = [(kx1, ky1), (kx2, ky1), (kx2, ky2), (kx1, ky2)]
+            for cx, cy in ko_corners:
+                if cls.point_in_polygon(cx, cy, z_pts):
+                    violations.append(
+                        f"Zone {zone.zone_id} engulfs keepout '{ko_name}' (corner at {cx:.2f}, {cy:.2f} lies inside zone)."
+                    )
+                    collision_detected = True
+                    break
+            if collision_detected:
+                continue
+
+            # C. Check if any polygon edge intersects any keepout boundary edge
+            ko_edges = [
+                ((kx1, ky1), (kx2, ky1)),
+                ((kx2, ky1), (kx2, ky2)),
+                ((kx2, ky2), (kx1, ky2)),
+                ((kx1, ky2), (kx1, ky1)),
+            ]
+            for i in range(n_z):
+                p1 = z_pts[i]
+                p2 = z_pts[(i + 1) % n_z]
+                for kp1, kp2 in ko_edges:
+                    if segments_intersect(p1, p2, kp1, kp2):
                         violations.append(
-                            f"Zone {zone.zone_id} penetrates keepout '{ko.get('name', 'KEEPOUT')}' at ({x:.2f}, {y:.2f})."
+                            f"Zone {zone.zone_id} edge ({p1[0]:.2f},{p1[1]:.2f})-({p2[0]:.2f},{p2[1]:.2f}) "
+                            f"intersects keepout '{ko_name}' boundary."
                         )
+                        collision_detected = True
                         break
+                if collision_detected:
+                    break
 
         return violations
 
@@ -316,12 +426,11 @@ class CopperPlaneEngine:
             y_coords.append(round(y, 2))
             y += grid_spacing_mm
 
-        # Filter candidate positions against obstacles and keepouts
         for cx in x_coords:
             for cy in y_coords:
                 collision = False
                 for ox, oy, orad in obstacles:
-                    if math.hypot(cx - ox, cy - oy) < (orad + 0.6): # 0.6mm safety clearance
+                    if math.hypot(cx - ox, cy - oy) < (orad + 0.6):
                         collision = True
                         break
                 if collision: continue
@@ -343,11 +452,15 @@ class CopperPlaneEngine:
             via_locations=vias
         )
 
-    @staticmethod
-    def evaluate_return_path_continuity(critical_tracks: List[Dict[str, Any]],
+    @classmethod
+    def evaluate_return_path_continuity(cls,
+                                        critical_tracks: List[Dict[str, Any]],
                                         planes: List[CopperZoneSpec],
                                         stackup: List[LayerStackup]) -> List[ReturnPathDiscontinuity]:
-        """Verifies that high-speed / RF / differential tracks have unbroken ground planes beneath them."""
+        """Verifies that high-speed / RF / differential tracks have unbroken ground planes beneath them.
+        
+        Performs true polygon containment testing along sampled track points rather than bounding box approximation.
+        """
         discontinuities = []
         plane_by_layer = {p.layer: p for p in planes if p.is_ground_plane}
 
@@ -356,7 +469,7 @@ class CopperPlaneEngine:
             if l.layer_type == "signal":
                 closest_plane = None
                 for candidate in stackup:
-                    if candidate.layer_type == "plane" or "GND" in candidate.name:
+                    if candidate.layer_type == "plane" or "GND" in candidate.name.upper():
                         if closest_plane is None or abs(candidate.index - l.index) < abs(closest_plane.index - l.index):
                             closest_plane = candidate
                 if closest_plane:
@@ -383,23 +496,27 @@ class CopperPlaneEngine:
             else:
                 plane = plane_by_layer[expected_ref]
                 pts = plane.points_mm
-                if len(pts) >= 4:
-                    px_min = min(p[0] for p in pts)
-                    px_max = max(p[0] for p in pts)
-                    py_min = min(p[1] for p in pts)
-                    py_max = max(p[1] for p in pts)
-                    if not (px_min <= x1 <= px_max and py_min <= y1 <= py_max and
-                            px_min <= x2 <= px_max and py_min <= y2 <= py_max):
-                        discontinuities.append(ReturnPathDiscontinuity(
-                            net=net,
-                            track_start_mm=(x1, y1),
-                            track_end_mm=(x2, y2),
-                            layer=s_layer,
-                            reference_layer=expected_ref,
-                            discontinuity_type="slot_crossing",
-                            severity="ERROR",
-                            recommendation=f"Net {net} crosses beyond ground plane boundary on layer {expected_ref}."
-                        ))
+
+                # Test 5 sample points along the track for true polygon containment
+                track_supported = True
+                for step in (0.0, 0.25, 0.5, 0.75, 1.0):
+                    sx = x1 + step * (x2 - x1)
+                    sy = y1 + step * (y2 - y1)
+                    if not cls.point_in_polygon(sx, sy, pts):
+                        track_supported = False
+                        break
+
+                if not track_supported:
+                    discontinuities.append(ReturnPathDiscontinuity(
+                        net=net,
+                        track_start_mm=(x1, y1),
+                        track_end_mm=(x2, y2),
+                        layer=s_layer,
+                        reference_layer=expected_ref,
+                        discontinuity_type="slot_crossing",
+                        severity="ERROR",
+                        recommendation=f"Net {net} crosses beyond ground plane polygon on layer {expected_ref}."
+                    ))
 
         return discontinuities
 
@@ -444,7 +561,7 @@ class CopperZoneRevisionTracker:
             self._zones[zone_id]["poured"] = True
             self._zones[zone_id]["is_stale"] = False
             self._zones[zone_id]["zone"].poured_area_mm2 = poured_area_mm2
-            self._zones[zone_id]["zone"].status = "NOT_LIVE_VERIFIED"  # Offline poured model only
+            self._zones[zone_id]["zone"].status = "NOT_LIVE_VERIFIED"
 
     def invalidate_zones(self, affected_nets: Set[str], affected_layers: Optional[Set[int]] = None):
         """Invalidates zones matching affected nets or layers."""

@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DESK Local Mission Control</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --card-border: #30363d;
+      --header-bg: #161b22;
+      --text-main: #c9d1d9;
+      --text-muted: #8b949e;
+      --text-bright: #f0f6fc;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-yellow: #d29922;
+      --accent-red: #f85149;
+      --accent-purple: #bc8cff;
+      --accent-cyan: #39c5cf;
+      --progress-bg: #21262d;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    [data-theme="light"] {
+      --bg: #f6f8fa;
+      --card-bg: #ffffff;
+      --card-border: #d0d7de;
+      --header-bg: #ffffff;
+      --text-main: #24292f;
+      --text-muted: #57606a;
+      --text-bright: #0969da;
+      --accent-blue: #0969da;
+      --accent-green: #1a7f37;
+      --accent-yellow: #9a6700;
+      --accent-red: #cf222e;
+      --accent-purple: #8250df;
+      --accent-cyan: #1b7c83;
+      --progress-bg: #eaeef2;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    /* Header */
+    header {
+      background-color: var(--header-bg);
+      border-bottom: 1px solid var(--card-border);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-logo {
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: 1px;
+      color: var(--accent-blue);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+    .badge-primary { background: rgba(88, 166, 255, 0.15); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+    .badge-green { background: rgba(63, 185, 80, 0.15); color: var(--accent-green); border: 1px solid var(--accent-green); }
+    .badge-yellow { background: rgba(210, 153, 34, 0.15); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+    .badge-red { background: rgba(248, 81, 73, 0.15); color: var(--accent-red); border: 1px solid var(--accent-red); }
+    .badge-gray { background: rgba(139, 148, 158, 0.15); color: var(--text-muted); border: 1px solid var(--card-border); }
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+    }
+    .header-meta span { color: var(--text-muted); }
+    .header-meta strong { color: var(--text-bright); font-family: var(--font-mono); }
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .theme-toggle:hover { background: var(--progress-bg); }
+
+    /* Main Container */
+    main {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .metric-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+    .metric-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-bright);
+      font-family: var(--font-mono);
+    }
+    .metric-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Overall Progress Bar */
+    .progress-bar-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .progress-track {
+      background: var(--progress-bg);
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Split Panes */
+    .layout-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 1024px) {
+      .layout-row { grid-template-columns: 1fr; }
+    }
+
+    /* Panel Card */
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--card-border);
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .panel-body {
+      padding: 12px 14px;
+      overflow-y: auto;
+    }
+
+    /* Stages Grid */
+    .stages-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .stage-item {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s;
+    }
+    .stage-item.running {
+      border-color: var(--accent-blue);
+      background: rgba(88, 166, 255, 0.04);
+    }
+    .stage-item.completed {
+      border-color: rgba(63, 185, 80, 0.4);
+    }
+    .stage-item.failed {
+      border-color: var(--accent-red);
+      background: rgba(248, 81, 73, 0.05);
+    }
+    .stage-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .stage-name {
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+    .stage-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .stage-duration {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Timeline Feed */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 480px;
+    }
+    .timeline-entry {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--card-border);
+      font-size: 12px;
+    }
+    .timeline-time {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      font-size: 11px;
+      min-width: 65px;
+    }
+    .timeline-msg {
+      flex: 1;
+      color: var(--text-main);
+      word-break: break-word;
+    }
+
+    /* Results Table */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .results-table th, .results-table td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .results-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+    }
+    .results-table td.mono {
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* Log Stream Panel */
+    .log-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .log-filter-btn {
+      background: var(--progress-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .log-filter-btn.active {
+      color: var(--text-bright);
+      border-color: var(--accent-blue);
+      background: rgba(88, 166, 255, 0.15);
+    }
+    .search-box {
+      background: var(--progress-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      outline: none;
+    }
+    .log-stream {
+      background: #05070a;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-line {
+      display: flex;
+      gap: 8px;
+    }
+    .log-line.ERROR { color: var(--accent-red); }
+    .log-line.WARNING { color: var(--accent-yellow); }
+    .log-line.INFO { color: var(--text-main); }
+    .log-line.DEBUG { color: var(--text-muted); }
+
+    /* Action Buttons */
+    .btn {
+      background: var(--progress-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn:hover { background: rgba(255, 255, 255, 0.08); }
+
+    .pulse {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 0 rgba(63, 185, 80, 0.7);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(63, 185, 80, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); }
+    }
+    .pulse-blue { background: var(--accent-blue); animation-name: pulse-blue; }
+    @keyframes pulse-blue {
+      0% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(88, 166, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        DESK
+      </div>
+      <span class="badge badge-primary">Mission Control v1.0</span>
+      <span class="badge badge-gray" id="project-badge">projects/WATCH</span>
+    </div>
+    <div class="header-meta">
+      <div>Status: <span class="badge badge-gray" id="exec-status">IDLE</span></div>
+      <div>Connection: <span id="conn-indicator"><span class="pulse"></span> <strong>LIVE SSE</strong></span></div>
+      <div>Server: <strong id="server-addr">127.0.0.1:49620</strong></div>
+      <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Overview Metrics -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-title">Overall Progress</span>
+        <span class="metric-value" id="metric-progress">0.0%</span>
+        <span class="metric-sub" id="metric-stage-desc">Standing by</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-title">Active Stage</span>
+        <span class="metric-value" style="font-size: 16px;" id="metric-current-stage">None</span>
+        <span class="metric-sub" id="metric-duration">0.0s elapsed</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-title">Stage Statuses</span>
+        <span class="metric-value" style="font-size: 18px;">
+          <span style="color:var(--accent-green);" id="cnt-completed">0</span> /
+          <span style="color:var(--text-muted);" id="cnt-pending">12</span> /
+          <span style="color:var(--accent-red);" id="cnt-failed">0</span>
+        </span>
+        <span class="metric-sub">Completed / Pending / Failed</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-title">Process RAM</span>
+        <span class="metric-value" id="metric-ram">0.0 MB</span>
+        <span class="metric-sub" id="metric-sys-ram">Avail: 0 MB</span>
+      </div>
+      <div class="metric-card">
+        <span class="metric-title">CPU & Hardware</span>
+        <span class="metric-value" id="metric-cpu">0 Cores</span>
+        <span class="metric-sub" id="metric-tier">Tier: NORMAL</span>
+      </div>
+    </section>
+
+    <!-- Overall Progress Bar -->
+    <section class="progress-bar-container">
+      <div class="progress-header">
+        <strong id="active-task-desc">Ready for engineering execution</strong>
+        <span class="metric-sub" id="last-checkpoint-txt">Last checkpoint: None</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-bar-fill"></div>
+      </div>
+    </section>
+
+    <!-- 2-Column Main Section -->
+    <section class="layout-row">
+      <!-- Left Column: Engineering Stages Workflow -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Engineering Stages (M1–M6 Workflow)</span>
+          <span class="metric-sub" id="pipeline-status-sub">12 Canonical Stages</span>
+        </div>
+        <div class="panel-body">
+          <div class="stages-list" id="stages-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Execution Timeline -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Execution Activity Timeline</span>
+          <span class="metric-sub" id="timeline-count">0 events</span>
+        </div>
+        <div class="panel-body">
+          <div class="timeline" id="timeline-feed">
+            <div class="timeline-entry">
+              <span class="timeline-time">--:--:--</span>
+              <span class="timeline-msg">Standing by for execution events.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results and Diagnostics Row -->
+    <section class="layout-row">
+      <!-- Left: Real Engineering Results -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Engineering Execution Evidence & Acceptance</span>
+          <span class="badge badge-gray" id="acceptance-badge">PENDING</span>
+        </div>
+        <div class="panel-body">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Artifact Metric</th>
+                <th>Measured Value</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="results-table-body">
+              <tr><td>Components Processed</td><td class="mono" id="res-components">0</td><td><span class="badge badge-gray">PENDING</span></td></tr>
+              <tr><td>Nets Analyzed</td><td class="mono" id="res-nets">0</td><td><span class="badge badge-gray">PENDING</span></td></tr>
+              <tr><td>Routed Tracks Generated</td><td class="mono" id="res-tracks">0</td><td><span class="badge badge-gray">PENDING</span></td></tr>
+              <tr><td>Vias Generated</td><td class="mono" id="res-vias">0</td><td><span class="badge badge-gray">PENDING</span></td></tr>
+              <tr><td>Copper Zones Synthesized</td><td class="mono" id="res-copper">0</td><td><span class="badge badge-gray">PENDING</span></td></tr>
+              <tr><td>DRC Violations</td><td class="mono" id="res-drc">0</td><td id="res-drc-status"><span class="badge badge-gray">NOT_RUN</span></td></tr>
+              <tr><td>Unconnected Populated Nets</td><td class="mono" id="res-unconnected">0</td><td id="res-unconn-status"><span class="badge badge-gray">NOT_RUN</span></td></tr>
+              <tr><td>8 Fail-Closed Hard Gates</td><td class="mono" id="res-gates">0/8 Passed</td><td id="res-gates-status"><span class="badge badge-gray">NOT_RUN</span></td></tr>
+              <tr><td>JLCPCB DFM & Fabrication Quote</td><td class="mono" id="res-quote">N/A</td><td id="res-quote-status"><span class="badge badge-gray">NOT_RUN</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Right: Real-Time Diagnostic Logs -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Diagnostic Log Stream</span>
+          <div class="log-controls">
+            <button class="log-filter-btn active" onclick="setLogFilter('ALL', this)">ALL</button>
+            <button class="log-filter-btn" onclick="setLogFilter('INFO', this)">INFO</button>
+            <button class="log-filter-btn" onclick="setLogFilter('WARNING', this)">WARN</button>
+            <button class="log-filter-btn" onclick="setLogFilter('ERROR', this)">ERR</button>
+            <input type="text" class="search-box" id="log-search" placeholder="Filter logs..." oninput="renderLogs()">
+            <button class="btn" onclick="copyLogs()">Copy</button>
+            <button class="btn" onclick="downloadReport()">Report</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="log-stream" id="log-stream">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    let state = {
+      execution_id: "",
+      project_id: "projects/WATCH",
+      status: "IDLE",
+      overall_progress: 0.0,
+      current_stage: "",
+      current_activity: "Ready for operations.",
+      stages: {},
+      metrics: {},
+      engineering_results: {},
+      timeline: [],
+      logs: []
+    };
+    let activeLogFilter = "ALL";
+    let lastEventId = null;
+    let sseSource = null;
+
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute("data-theme");
+      const next = cur === "light" ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("desk_theme", next);
+    }
+    const savedTheme = localStorage.getItem("desk_theme") || "dark";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+
+    function initSSE() {
+      const connInd = document.getElementById("conn-indicator");
+      if (sseSource) {
+        sseSource.close();
+      }
+
+      const streamUrl = "/api/v1/events/stream" + (lastEventId ? ("?last_event_id=" + encodeURIComponent(lastEventId)) : "");
+      sseSource = new EventSource(streamUrl);
+
+      sseSource.onopen = function() {
+        connInd.innerHTML = '<span class="pulse"></span> <strong>LIVE SSE</strong>';
+      };
+
+      sseSource.onmessage = function(msg) {
+        try {
+          const ev = JSON.parse(msg.data);
+          if (ev.event_id) lastEventId = ev.event_id;
+          // Refresh state from full status endpoint
+          fetchStatus();
+        } catch(e) {}
+      };
+
+      sseSource.onerror = function() {
+        connInd.innerHTML = '<span class="badge badge-yellow">RECONNECTING</span>';
+        setTimeout(initSSE, 3000);
+      };
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch("/api/v1/status");
+        if (!res.ok) return;
+        const data = await res.json();
+        state = Object.assign(state, data);
+        render();
+      } catch (err) {}
+    }
+
+    async function fetchTimeline() {
+      try {
+        const res = await fetch("/api/v1/executions/" + state.execution_id + "/events?limit=50");
+        if (res.ok) {
+          state.timeline = await res.json();
+          renderTimeline();
+        }
+      } catch(e) {}
+    }
+
+    async function fetchLogs() {
+      try {
+        const res = await fetch("/api/v1/executions/" + state.execution_id + "/logs?limit=200");
+        if (res.ok) {
+          state.logs = await res.json();
+          renderLogs();
+        }
+      } catch(e) {}
+    }
+
+    function render() {
+      // Header
+      document.getElementById("project-badge").textContent = state.project_id || "projects/WATCH";
+      const statusBadge = document.getElementById("exec-status");
+      statusBadge.textContent = state.status;
+      statusBadge.className = "badge " + (
+        state.status === "RUNNING" ? "badge-primary" :
+        state.status === "COMPLETED" ? "badge-green" :
+        state.status === "FAILED" ? "badge-red" :
+        state.status === "INTERRUPTED" ? "badge-yellow" : "badge-gray"
+      );
+
+      // Metrics
+      const prog = Number(state.overall_progress || 0).toFixed(1);
+      document.getElementById("metric-progress").textContent = prog + "%";
+      document.getElementById("progress-bar-fill").style.width = prog + "%";
+      document.getElementById("metric-current-stage").textContent = state.current_stage_name || "None";
+      document.getElementById("metric-stage-desc").textContent = state.current_activity || "Standing by";
+      document.getElementById("active-task-desc").textContent = state.current_activity || "Standing by";
+      document.getElementById("metric-duration").textContent = (state.duration_s || 0).toFixed(1) + "s elapsed";
+      document.getElementById("last-checkpoint-txt").textContent = "Last checkpoint: " + (state.last_checkpoint || "None");
+
+      // Stage counts
+      document.getElementById("cnt-completed").textContent = state.completed_stages || 0;
+      document.getElementById("cnt-pending").textContent = state.pending_stages || 0;
+      document.getElementById("cnt-failed").textContent = state.failed_stages || 0;
+
+      // Hardware metrics
+      if (state.metrics) {
+        document.getElementById("metric-ram").textContent = (state.metrics.process_ram_mb || 0) + " MB";
+        document.getElementById("metric-sys-ram").textContent = "Avail: " + (state.metrics.available_ram_mb || 0) + " MB";
+        document.getElementById("metric-cpu").textContent = (state.metrics.logical_cores || 0) + " Cores";
+        document.getElementById("metric-tier").textContent = "Tier: " + (state.metrics.resource_tier || "NORMAL");
+      }
+
+      // Stages list
+      renderStages();
+      // Results
+      renderResults();
+    }
+
+    function renderStages() {
+      const container = document.getElementById("stages-container");
+      if (!state.stages || Object.keys(state.stages).length === 0) return;
+
+      let html = "";
+      for (const [sid, s] of Object.entries(state.stages)) {
+        const isRunning = s.status === "RUNNING";
+        const isDone = s.status === "COMPLETED";
+        const isFailed = s.status === "FAILED";
+        const isInterrupted = s.status === "INTERRUPTED";
+
+        const badgeClass = isDone ? "badge-green" : isRunning ? "badge-primary" : isFailed ? "badge-red" : isInterrupted ? "badge-yellow" : "badge-gray";
+        const pulseHtml = isRunning ? '<span class="pulse pulse-blue" style="margin-right:6px;"></span>' : '';
+
+        html += `
+          <div class="stage-item ${isRunning ? 'running' : ''} ${isDone ? 'completed' : ''} ${isFailed ? 'failed' : ''}">
+            <div>${pulseHtml}<span class="badge ${badgeClass}">${s.status}</span></div>
+            <div class="stage-info">
+              <div class="stage-name">${s.display_name}</div>
+              <div class="stage-desc">${s.current_activity || s.output_summary || "Awaiting task admission"}</div>
+            </div>
+            <div class="stage-duration">${s.duration_s ? s.duration_s + "s" : ""}</div>
+            <div style="font-family:var(--font-mono); font-weight:600; color:var(--text-bright);">
+              ${s.progress !== null && s.progress !== undefined ? s.progress + "%" : (isRunning ? "RUNNING" : "")}
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    function renderResults() {
+      const r = state.engineering_results || {};
+      document.getElementById("res-components").textContent = r.components_processed || 0;
+      document.getElementById("res-nets").textContent = r.nets_analyzed || 0;
+      document.getElementById("res-tracks").textContent = r.tracks_generated || 0;
+      document.getElementById("res-vias").textContent = r.vias_generated || 0;
+      document.getElementById("res-copper").textContent = r.copper_zones_processed || 0;
+      document.getElementById("res-drc").textContent = r.drc_violations || 0;
+      document.getElementById("res-unconnected").textContent = r.unconnected_nets || 0;
+
+      // Acceptance badge
+      const acc = document.getElementById("acceptance-badge");
+      acc.textContent = r.final_acceptance_state || "PENDING";
+      acc.className = "badge " + (r.final_acceptance_state === "ACCEPTED" ? "badge-green" : r.final_acceptance_state === "BLOCKED" ? "badge-red" : "badge-gray");
+
+      // DRC badge
+      const drcBadge = document.getElementById("res-drc-status");
+      if ((r.drc_violations || 0) === 0 && state.stages.drc_verification?.status === "COMPLETED") {
+        drcBadge.innerHTML = '<span class="badge badge-green">PASS</span>';
+      } else if ((r.drc_violations || 0) > 0) {
+        drcBadge.innerHTML = '<span class="badge badge-red">FAIL</span>';
+      }
+
+      // Hard gates
+      if (r.quality_gates) {
+        const passedCount = Object.values(r.quality_gates).filter(v => v === "PASS").length;
+        document.getElementById("res-gates").textContent = passedCount + "/8 Passed";
+        const gatesStatus = document.getElementById("res-gates-status");
+        gatesStatus.innerHTML = passedCount === 8 ? '<span class="badge badge-green">VERIFIED</span>' : (passedCount > 0 ? '<span class="badge badge-yellow">IN_PROGRESS</span>' : '<span class="badge badge-gray">NOT_RUN</span>');
+      }
+
+      // Quote
+      if (r.manufacturing_quote) {
+        document.getElementById("res-quote").textContent = "$" + (r.manufacturing_quote.total_usd || 0).toFixed(2);
+        document.getElementById("res-quote-status").innerHTML = '<span class="badge badge-green">QUOTED</span>';
+      }
+    }
+
+    function renderTimeline() {
+      const feed = document.getElementById("timeline-feed");
+      document.getElementById("timeline-count").textContent = state.timeline.length + " events";
+      if (!state.timeline.length) return;
+
+      let html = "";
+      for (const t of state.timeline) {
+        const badgeClass = t.severity === "ERROR" ? "badge-red" : t.severity === "WARNING" ? "badge-yellow" : "badge-gray";
+        html += `
+          <div class="timeline-entry">
+            <span class="timeline-time">${t.time_str || "--:--:--"}</span>
+            <span class="badge ${badgeClass}" style="margin-right:6px;">${t.stage || "SYS"}</span>
+            <span class="timeline-msg">${t.message}</span>
+          </div>
+        `;
+      }
+      feed.innerHTML = html;
+    }
+
+    function setLogFilter(level, btn) {
+      activeLogFilter = level;
+      document.querySelectorAll(".log-filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      renderLogs();
+    }
+
+    function renderLogs() {
+      const stream = document.getElementById("log-stream");
+      const search = (document.getElementById("log-search").value || "").toLowerCase();
+
+      let filtered = state.logs || [];
+      if (activeLogFilter !== "ALL") {
+        filtered = filtered.filter(l => l.level === activeLogFilter);
+      }
+      if (search) {
+        filtered = filtered.filter(l => (l.message || "").toLowerCase().includes(search) || (l.stage || "").toLowerCase().includes(search));
+      }
+
+      if (!filtered.length) {
+        stream.innerHTML = '<span class="metric-sub">No matching log entries.</span>';
+        return;
+      }
+
+      let html = "";
+      for (const l of filtered) {
+        html += `<div class="log-line ${l.level}"><span>[${l.time_str}]</span> <span>[${l.level}]</span> <span>[${l.stage}]</span> <span>${l.message}</span></div>`;
+      }
+      stream.innerHTML = html;
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function copyLogs() {
+      const text = (state.logs || []).map(l => `[${l.time_str}] [${l.level}] [${l.stage}] ${l.message}`).join("\n");
+      navigator.clipboard.writeText(text);
+      alert("Logs copied to clipboard.");
+    }
+
+    function downloadReport() {
+      const report = {
+        execution_id: state.execution_id,
+        project_id: state.project_id,
+        status: state.status,
+        timestamp: new Date().toISOString(),
+        overall_progress: state.overall_progress,
+        stages: state.stages,
+        engineering_results: state.engineering_results,
+        metrics: state.metrics,
+        timeline: state.timeline,
+        logs: state.logs
+      };
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `desk_diagnostic_report_${state.execution_id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Startup polling & SSE
+    window.addEventListener("DOMContentLoaded", function() {
+      document.getElementById("server-addr").textContent = window.location.host;
+      fetchStatus();
+      initSSE();
+      setInterval(fetchStatus, 2000);
+      setInterval(fetchTimeline, 3000);
+      setInterval(fetchLogs, 3000);
+    });
+  </script>
+</body>
+</html>
