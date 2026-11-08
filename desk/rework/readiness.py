@@ -74,11 +74,11 @@ class ManufacturingReadinessEngine:
             critical_nets=critical_nets or [],
             profile=profile,
             discontinuities_count=discontinuities_count,
-            current_pcb_hash=final_rev,
+            board_revision=final_rev,
         )
 
         outstanding = max(0, issues_count - resolved_count)
-        gate_map = q_report.hard_gates.to_dict()
+        gate_map = asdict(q_report.hard_gates)
 
         # Determine definitive readiness outcome
         if outstanding > 0:
@@ -98,7 +98,7 @@ class ManufacturingReadinessEngine:
             outcome=outcome,
             total_score=q_report.total_score,
             hard_gates_passed=q_report.hard_gates_passed,
-            gate_statuses={k: v["state"] for k, v in gate_map.items()},
+            gate_statuses={k: v.get("state", "UNKNOWN") for k, v in gate_map.items()},
             issues_total=issues_count,
             issues_resolved=resolved_count,
             issues_outstanding=outstanding,
@@ -106,7 +106,7 @@ class ManufacturingReadinessEngine:
             details={
                 "drc_violations_count": len(drc_violations or []),
                 "unconnected_nets_count": len(unconnected_nets or []),
-                "quality_scorecard": q_report.scorecard.to_dict(),
+                "quality_scorecard": asdict(q_report.scorecard),
             },
         )
 

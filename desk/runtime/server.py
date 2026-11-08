@@ -274,6 +274,75 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         else:
             self._send_json(404, {"error": f"Subroute '{subroute}' not recognized for execution '{exec_id}'"})
 
+    def _handle_rework_session(self, query: Dict[str, List[str]]) -> None:
+        """Returns the active or latest rework session."""
+        proj_id = query.get("project", ["projects/WATCH"])[0]
+        try:
+            from desk.rework import get_latest_rework_session
+            session = get_latest_rework_session(proj_id)
+            if session:
+                self._send_json(200, session.__dict__)
+            else:
+                self._send_json(404, {"error": "No rework session found"})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_rework_issues(self, query: Dict[str, List[str]]) -> None:
+        """Returns the issues inventory for the active rework session."""
+        proj_id = query.get("project", ["projects/WATCH"])[0]
+        try:
+            from desk.rework import get_latest_rework_session
+            session = get_latest_rework_session(proj_id)
+            if not session:
+                self._send_json(404, {"error": "No rework session found"})
+                return
+            path = os.path.join(session.project_path, "state", "rework", session.session_id, "issue_inventory.json")
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    issues = json.load(f)
+                self._send_json(200, issues)
+            else:
+                self._send_json(200, [])
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_rework_plan(self, query: Dict[str, List[str]]) -> None:
+        """Returns the repair plan for the active rework session."""
+        proj_id = query.get("project", ["projects/WATCH"])[0]
+        try:
+            from desk.rework import get_latest_rework_session, RepairPlanner
+            session = get_latest_rework_session(proj_id)
+            if not session:
+                self._send_json(404, {"error": "No rework session found"})
+                return
+            plan = RepairPlanner.load_plan(session.project_path, session.session_id)
+            if plan:
+                self._send_json(200, plan.to_dict())
+            else:
+                self._send_json(200, {"repairs": []})
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
+    def _handle_rework_history(self, query: Dict[str, List[str]]) -> None:
+        """Returns execution history log of completed repairs."""
+        proj_id = query.get("project", ["projects/WATCH"])[0]
+        try:
+            from desk.rework import get_latest_rework_session
+            session = get_latest_rework_session(proj_id)
+            if not session:
+                self._send_json(404, {"error": "No rework session found"})
+                return
+            path = os.path.join(session.project_path, "state", "rework", session.session_id, "repair_history.jsonl")
+            history = []
+            if os.path.exists(path):
+                with open(path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        if line.strip():
+                            history.append(json.loads(line))
+            self._send_json(200, history)
+        except Exception as e:
+            self._send_json(500, {"error": str(e)})
+
     def _handle_sse_stream(self, query: Dict[str, List[str]]) -> None:
         """Streams real-time execution events via Server-Sent Events (SSE)."""
         last_id = self.headers.get("Last-Event-ID") or (query.get("last_event_id", [None])[0])
