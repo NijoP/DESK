@@ -37,6 +37,8 @@ if not a or a[0] == "tools":
 if a[0] == "dashboard":
     port = int(a[a.index("--port") + 1]) if "--port" in a else 49630
     proj = a[a.index("--project") + 1] if "--project" in a else "projects/WATCH"
+    if not os.path.exists(proj) and os.path.exists(os.path.join(S.ROOT, proj)):
+        proj = os.path.join(S.ROOT, proj)
     from desk.runtime.projection import get_execution_projection
     from desk.runtime.server import DeskServer
 
@@ -69,6 +71,8 @@ if a[0] == "dashboard":
 if a[0] == "serve":
     port = int(a[a.index("--port") + 1]) if "--port" in a else 49630
     proj = a[a.index("--project") + 1] if "--project" in a else "projects/WATCH"
+    if not os.path.exists(proj) and os.path.exists(os.path.join(S.ROOT, proj)):
+        proj = os.path.join(S.ROOT, proj)
     from desk.runtime.projection import get_execution_projection
     from desk.runtime.server import DeskServer
 
@@ -79,6 +83,8 @@ if a[0] == "serve":
 
 if a[0] == "status":
     proj = a[a.index("--project") + 1] if "--project" in a else "projects/WATCH"
+    if not os.path.exists(proj) and os.path.exists(os.path.join(S.ROOT, proj)):
+        proj = os.path.join(S.ROOT, proj)
     from desk.runtime.projection import CANONICAL_STAGES, STAGE_NAMES, get_execution_projection
     projection = get_execution_projection(proj)
     summary = projection.get_summary()
