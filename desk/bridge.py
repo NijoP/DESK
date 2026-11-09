@@ -8,6 +8,7 @@ import os
 import sys
 import time
 import urllib.request
+import urllib.error
 import io
 import socket
 import select
@@ -314,6 +315,17 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
                 raise SystemExit("EDA error: " + err_msg)
 
             return resp.get("result")
+
+        except urllib.error.HTTPError as e:
+            try:
+                raw_body = e.read().decode("utf-8")
+                err_data = json.loads(raw_body)
+                err_detail = err_data.get("error") or raw_body
+                raise SystemExit(f"EasyEDA JavaScript Runtime Error: {err_detail}")
+            except SystemExit:
+                raise
+            except Exception:
+                raise SystemExit(f"Bridge HTTP Error {e.code}: {e}")
 
         except (OSError, TimeoutError) as e:
             # Never blindly repeat a mutating operation on network/bridge timeout

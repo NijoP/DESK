@@ -354,6 +354,10 @@ class ExecutionProjection:
         os.makedirs(d, exist_ok=True)
         return os.path.join(d, "execution_state.json")
 
+    def sync_from_project_artifacts(self, project_id: Optional[str] = None) -> bool:
+        """Alias for reconcile_live_telemetry to maintain backwards compatibility."""
+        return self.reconcile_live_telemetry(project_id)
+
     def reconcile_live_telemetry(self, project_id: Optional[str] = None) -> bool:
         """
         Reconciles in-memory projection with real project evidence, ledger milestones,

@@ -32,6 +32,8 @@ from desk.models import (
     RoutingRecoveryPlan,
     NetConnectivityGraph,
 )
+from desk.routing.dsn import DSNTree
+from desk.routing.connectivity import PhysicalConnectivityVerifier
 
 MIL = 39.37007874
 
@@ -301,6 +303,25 @@ class DSNTuningEngine:
         net_clearances = {k.upper(): v for k, v in (net_clearances or {}).items()}
         W_mil, H_mil = board_outline_mil
 
+        # Try robust AST S-expression transformation first
+        try:
+            tree = DSNTree(dsn_content)
+            tree.clean_duplicate_polygon_vertices()
+            tree.set_boundary(W_mil, H_mil, keepouts=keepouts)
+            tree.set_grid_resolution(wire_grid=1.25, via_grid=1.25)
+            tree.set_default_rules(width_mil=fine_pitch_width_mil, clearance_mil=fine_pitch_clearance_mil)
+            tree.update_net_classes(
+                net_widths=net_widths,
+                net_clearances=net_clearances,
+                power_nets=power_nets,
+                fine_pitch_width_mil=fine_pitch_width_mil,
+                fine_pitch_clearance_mil=fine_pitch_clearance_mil
+            )
+            return tree.serialize()
+        except Exception:
+            # Fall back to legacy regex tuner if AST parsing fails on partial/synthetic fragments
+            pass
+
         # 0. Deduplicate consecutive duplicate coordinates in padstack polygons
         def clean_poly(m):
             tokens = m.group(1).split()
@@ -502,18 +523,42 @@ class RoutingConvergenceController:
         return [n for n, count in self.failure_counts.items() if count >= 3]
 
 
-def verify_routing_result(intended_plan: RoutingPlan, readback_tracks: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Compares actual readback tracks against intended routing plan."""
+def verify_routing_result(intended_plan: RoutingPlan, readback_tracks: List[Dict[str, Any]],
+                          pcb_dump: Optional[Dict[str, Any]] = None,
+                          vias: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    """Compares actual readback tracks against intended routing plan.
+    If pcb_dump is provided, performs full physical pad-to-pad connectivity verification.
+    """
     routed_nets = {trk.get("net", "") for trk in readback_tracks if trk.get("net")}
     intended_nets = set(intended_plan.net_constraints.keys())
     
     missing_nets = intended_nets - routed_nets
     coverage_pct = round((len(intended_nets - missing_nets) / max(1, len(intended_nets))) * 100.0, 1)
 
-    return {
+    result: Dict[str, Any] = {
         "intended_net_count": len(intended_nets),
         "routed_net_count": len(intended_nets - missing_nets),
         "missing_nets": sorted(list(missing_nets)),
         "coverage_pct": coverage_pct,
         "is_complete": len(missing_nets) == 0,
     }
+
+    if pcb_dump:
+        conn_res = PhysicalConnectivityVerifier.verify_board(
+            pcb_dump=pcb_dump,
+            tracks=readback_tracks,
+            vias=vias or []
+        )
+        result["physical_connectivity"] = {
+            "total_nets": conn_res.total_nets,
+            "fully_connected_nets": conn_res.fully_connected_nets,
+            "partially_connected_nets": conn_res.partially_connected_nets,
+            "missing_nets": conn_res.missing_nets,
+            "is_100_percent_routed": conn_res.is_100_percent_routed,
+            "overall_completion_pct": conn_res.overall_completion_pct,
+            "summary": conn_res.summary
+        }
+        # Update is_complete based on real physical continuity
+        result["is_complete"] = conn_res.is_100_percent_routed
+
+    return result

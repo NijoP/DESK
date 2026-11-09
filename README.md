@@ -9,7 +9,7 @@
   <img src="assets/branding/desk-sentinel.svg" alt="THE SENTINEL — Homeostatic Engineering Organism" width="850"/>
 </p>
 
-[![Tests](https://img.shields.io/badge/tests-303%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-332%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero%20external-success.svg)](desk/)
 [![ECAD](https://img.shields.io/badge/ecad-EasyEDA%20Pro-orange.svg)](https://pro.easyeda.com/)
@@ -288,7 +288,7 @@ git clone https://github.com/NijoP/DESK.git
 # 2. Enter directory
 cd DESK
 
-# 3. Verify installation (runs 303 automated checks in ~13 seconds)
+# 3. Verify installation (runs 332 automated checks in ~12 seconds)
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
@@ -307,6 +307,12 @@ python desk.py status
 
 # Launch Local Mission Control Cockpit
 python desk.py dashboard
+
+# Route board with Routing Intelligence V2 (BALANCED mode, supervised execution)
+python tools/route.py projects/WATCH --mode BALANCED
+
+# Run full routing performance and correctness benchmark
+python tools/routing_benchmarks.py
 
 # Start Rework Mode on an existing project (captures baseline snapshot)
 python desk.py rework start projects/WATCH
@@ -339,7 +345,7 @@ An authoritative, evidence-based status of DESK capabilities verified by automat
 | Engineering Capability | Current Status | Verification Evidence |
 |---|---|---|
 | **IPC-2152 Trace Width Sizing** | `AVAILABLE (OFFLINE TESTED)` | Tested against physical copper formulas (`test_profile_hardening.py`). |
-| **6-Stage Net Priority Router** | `AVAILABLE (OFFLINE TESTED)` | Tested on multi-terminal netlists (`test_router_hardening.py`). |
+| **Routing Intelligence V2 & S-Expr DSN** | `AVAILABLE (OFFLINE TESTED)` | Pad escape feasibility, AST S-expr DSN parser, process supervisor, true physical connectivity (`test_routing_*.py`, 29 tests). |
 | **Copper Planes & Return Paths** | `AVAILABLE (OFFLINE TESTED)` | Ray-casting polygon intersection tests (`test_copper_geometry.py`). |
 | **8 Fail-Closed Quality Gates** | `AVAILABLE (OFFLINE TESTED)` | Verified to block unrouted/shorted nets (`test_quality_fail_closed.py`). |
 | **Local Mission Control Cockpit** | `AVAILABLE (OFFLINE TESTED)` | In-browser server tested on port 49630 (`test_server.py`). |
@@ -353,6 +359,8 @@ An authoritative, evidence-based status of DESK capabilities verified by automat
 ## 13. Contributing & Documentation
 
 ### Documentation Directory
+- [**Routing Intelligence V2 Architecture**](docs/ROUTING_INTELLIGENCE_V2.md) — Pad escape engine, AST DSN parser, process supervisor, and physical connectivity.
+- [**Routing Benchmark & Regression Report**](docs/ROUTING_BENCHMARK_REPORT.md) — Empirical performance metrics on Project One dataset.
 - [**Character Identity: THE SENTINEL**](docs/identity/DESK_CHARACTER_IDENTITY.md) — Comprehensive character persona and behavioral traits.
 - [**Biomimetic Design Philosophy**](docs/identity/BIOMIMETIC_DESIGN_PHILOSOPHY.md) — Detailed explanation of homeostasis, immunology, and wound healing in EDA.
 - [**Visual Identity Guide**](docs/identity/VISUAL_IDENTITY_GUIDE.md) — Visual standards, color palette, and asset usage.
@@ -365,7 +373,7 @@ An authoritative, evidence-based status of DESK capabilities verified by automat
 We welcome contributions from electronics engineers and software developers:
 1. Ensure all code uses **100% Python standard library** (zero external pip packages).
 2. Base all trace width and clearance rules on physical equations or documented fabricator standards.
-3. Verify that all 303 automated tests pass (`python -m unittest discover -s tests -p "test_*.py"`).
+3. Verify that all 332 automated tests pass (`python -m unittest discover -s tests -p "test_*.py"`).
 
 ---
 
