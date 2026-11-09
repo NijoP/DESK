@@ -147,7 +147,7 @@ tuned_dsn = DSNTuningEngine.tune_dsn(
     keepouts=plan.get("keepouts"),
     net_widths=custom_net_widths,
     fine_pitch_width_mil=6.0,
-    fine_pitch_clearance_mil=4.02
+    fine_pitch_clearance_mil=5.0
 )
 
 tuned_dsn_path = os.path.join(wd, "desk_route_tuned.dsn")
@@ -183,33 +183,79 @@ profiler.start_phase(15, category="IPC")
 b64 = base64.b64encode(open(ses, "rb").read()).decode()
 with ops.write_op(proj, "route_import", "PCB") as rec:
     rec["dirty"] = True
-    r = check(ex(G + 'const b=atob("%s"); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);'
-                     'const ok=await eda.pcb_Document.importAutoRouteSesFile(new File([u],"desk_route.ses")); await eda.pcb_Document.save(); return ok;' % b64,
-                 timeout=600, window_id=P.get("window_id"), is_mutation=True))
+    import_js = (
+        'const lines = await eda.pcb_PrimitiveLine.getAll();'
+        'const lineIds = lines.map(l => l.primitiveId);'
+        'if (lineIds.length > 0) await eda.pcb_PrimitiveLine.delete(lineIds);'
+        'const vias = await eda.pcb_PrimitiveVia.getAll();'
+        'const viaIds = vias.map(v => v.primitiveId);'
+        'if (viaIds.length > 0) await eda.pcb_PrimitiveVia.delete(viaIds);'
+        'const b=atob("%s"); const u=new Uint8Array(b.length); for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);'
+        'const ok=await eda.pcb_Document.importAutoRouteSesFile(new File([u],"desk_route.ses")); await eda.pcb_Document.save(); return ok;' % b64
+    )
+    r = check(ex(G + import_js, timeout=600, window_id=P.get("window_id"), is_mutation=True))
 
 print("SES import:", r)
 if r is not True: raise SystemExit("STOP: EasyEDA rejected the SES import")
+time.sleep(2.5)
 profiler.end_phase()
 
-# Phase 16: Post-import power integrity trace widening for battery & system rails (IPC-2152 compliant)
+# Phase 16: Geometry-aware power integrity trace widening with pad escape preservation (IPC-2152 compliant)
 profiler.start_phase(16, category="IPC")
 try:
-    widen_code = (
-        'const lines = await eda.pcb_PrimitiveLine.getAll();'
-        'let vb=0, vs=0;'
-        'for(const l of lines){'
-        '  if(l.net==="VBAT" && Math.hypot(l.endX-l.startX, l.endY-l.startY) > 20){'
-        '    await eda.pcb_PrimitiveLine.modify(l.primitiveId, {lineWidth: 35.0}); vb++;'
-        '  } else if(l.net==="VSYS" && Math.hypot(l.endX-l.startX, l.endY-l.startY) > 20){'
-        '    await eda.pcb_PrimitiveLine.modify(l.primitiveId, {lineWidth: 30.0}); vs++;'
-        '  }'
-        '}'
-        'await eda.pcb_Document.save(); return {vbat_widened: vb, vsys_widened: vs};'
+    raw_lines = ex(G + 'return (await eda.pcb_PrimitiveLine.getAll()).map(l => ({id:l.primitiveId, net:l.net, start_x:l.startX, start_y:l.startY, end_x:l.endX, end_y:l.endY, width:l.lineWidth, layer:l.layer}));',
+                   timeout=60, window_id=P.get("window_id")) or []
+    raw_pads = ex(G + 'return (await eda.pcb_PrimitivePad.getAll()).map(p => ({net:p.net, x:p.x, y:p.y, size:p.width||15.0}));',
+                  timeout=60, window_id=P.get("window_id")) or []
+
+    vbat_lines = [l for l in raw_lines if l.get("net") == "VBAT"]
+    vsys_lines = [l for l in raw_lines if l.get("net") == "VSYS"]
+
+    fine_pitch_pads = [(p["x"], p["y"], (p.get("size", 15.0) / 2.0)) for p in raw_pads if p.get("net") not in ("VBAT", "VSYS")]
+    obstacles = [(l["start_x"], l["start_y"], l["end_x"], l["end_y"], int(l["layer"])) for l in raw_lines if l.get("net") not in ("VBAT", "VSYS")]
+
+    vbat_plan = TraceWidthManager.plan_power_widening(
+        net_name="VBAT",
+        segments=vbat_lines,
+        target_width_mil=30.0,
+        escape_width_mil=10.0,
+        fine_pitch_pads=fine_pitch_pads,
+        obstacles=obstacles,
+        min_clearance_mil=5.0,
+        escape_radius_mil=35.0
     )
-    w_res = check(ex(G + widen_code, timeout=60, window_id=P.get("window_id")))
-    print("Power trace widening:", w_res)
+
+    vsys_plan = TraceWidthManager.plan_power_widening(
+        net_name="VSYS",
+        segments=vsys_lines,
+        target_width_mil=25.0,
+        escape_width_mil=10.0,
+        fine_pitch_pads=fine_pitch_pads,
+        obstacles=obstacles,
+        min_clearance_mil=5.0,
+        escape_radius_mil=35.0
+    )
+
+    modifications = []
+    for cand in (vbat_plan.candidates + vsys_plan.candidates):
+        if cand.is_widened and cand.approved_width_mil > cand.current_width_mil:
+            modifications.append({"id": cand.segment_id, "lineWidth": cand.approved_width_mil})
+
+    if modifications:
+        mod_code = f'for(const m of {json.dumps(modifications)}){{ await eda.pcb_PrimitiveLine.modify(m.id, {{lineWidth: m.lineWidth}}); }}; await eda.pcb_Document.save(); return true;'
+        check(ex(G + mod_code, timeout=60, window_id=P.get("window_id"), is_mutation=True))
+        time.sleep(2.0)
+    print(f"Power trace widening: VBAT widened {vbat_plan.widened_segments}/{vbat_plan.total_segments}, VSYS widened {vsys_plan.widened_segments}/{vsys_plan.total_segments}")
 except Exception as e:
     print("Warning: Power trace widening deferred:", e)
+
+# Rebuild copper pours to refresh ground planes around newly routed tracks
+try:
+    rebuild_js = 'const pours = await eda.pcb_PrimitivePour.getAll(); for(const p of pours){ try{ if(p.rebuildCopperRegion) await p.rebuildCopperRegion(); }catch(e){} } await eda.pcb_Document.save(); return true;'
+    check(ex(G + rebuild_js, timeout=60, window_id=P.get("window_id"), is_mutation=True))
+    time.sleep(2.0)
+except Exception as e:
+    print("Warning: Copper pour rebuild deferred:", e)
 profiler.end_phase()
 
 # Phase 17: EasyEDA readback

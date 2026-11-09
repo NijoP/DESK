@@ -71,22 +71,60 @@ class SExprParser:
         if not node:
             return "()"
 
-        head = str(node[0])
-        # If node contains sublists, format with indentation
+        head = str(node[0]).lower() if node else ""
+
+        # Compact representation test
+        def to_inline(n):
+            if not isinstance(n, list):
+                return str(n)
+            return "(" + " ".join(to_inline(x) for x in n) + ")"
+
+        # If it has no sublists (e.g. path, polygon, circle, rect, class net lists), ALWAYS keep inline!
         has_sublist = any(isinstance(x, list) for x in node)
+        if not has_sublist:
+            return ("  " * indent) + to_inline(node)
+
         spacing = "  " * indent
 
-        if not has_sublist and len(node) <= 8:
-            return f"({' '.join(str(x) for x in node)})"
+        # Specctra BNF requires (net <name> (pins ...)) with net name on same open line
+        if head == "net":
+            net_name = str(node[1]) if len(node) > 1 else ""
+            sub_parts = []
+            for sub in node[2:]:
+                if isinstance(sub, list):
+                    sub_parts.append(to_inline(sub))
+                else:
+                    sub_parts.append(str(sub))
+            pins_str = " ".join(sub_parts)
+            return f"{spacing}(net {net_name} {pins_str})"
 
-        lines = [f"{spacing}({head}"]
-        sub_spacing = "  " * (indent + 1)
+        # Specctra BNF requires (class <name> <members...> (rule ...) (circuit ...))
+        if head == "class":
+            cname = str(node[1]) if len(node) > 1 else ""
+            members = []
+            sub_exprs = []
+            for item in node[2:]:
+                if isinstance(item, list):
+                    sub_exprs.append(cls.serialize(item, indent=indent + 1))
+                else:
+                    members.append(str(item))
+            mem_str = (" " + " ".join(members)) if members else ""
+            lines = [f"{spacing}(class {cname}{mem_str}"]
+            lines.extend(sub_exprs)
+            lines.append(f"{spacing})")
+            return "\n".join(lines)
 
+        CONTAINERS = {"pcb", "parser", "structure", "placement", "library", "network", "wiring", "padstack"}
+        inline_candidate = to_inline(node)
+        if head not in CONTAINERS and len(inline_candidate) <= 80:
+            return spacing + inline_candidate
+
+        lines = [f"{spacing}({node[0]}"]
         for item in node[1:]:
             if isinstance(item, list):
                 lines.append(cls.serialize(item, indent=indent + 1))
             else:
-                lines.append(f"{sub_spacing}{item}")
+                lines.append(f"{spacing}  {item}")
 
         lines.append(f"{spacing})")
         return "\n".join(lines)
@@ -290,9 +328,21 @@ class DSNTree:
         net_widths_upper = {k.upper(): v for k, v in net_widths.items()}
         net_clearances_upper = {k.upper(): v for k, v in net_clearances.items()}
 
-        for item in network[1:]:
+        # Filter out empty or un-named classes first
+        cleaned_classes = []
+        for item in list(network[1:]):
             if isinstance(item, list) and item and str(item[0]).lower() == "class":
-                cname = str(item[1]).strip("'\"")
+                # Clean quotes from class and member net tokens
+                for idx in range(1, len(item)):
+                    if isinstance(item[idx], str):
+                        item[idx] = item[idx].strip("'\"")
+
+                # If class has no name or empty string, drop it
+                if len(item) < 2 or not str(item[1]).strip():
+                    network.remove(item)
+                    continue
+
+                cname = str(item[1]).strip()
                 c_upper = cname.upper()
 
                 # Determine target width
@@ -318,7 +368,7 @@ class DSNTree:
                     rule_node = [
                         "rule",
                         ["width", f"{target_w:.2f}"],
-                        ["clearance", f"{target_clr:.2f}"]
+                        ["clear", f"{target_clr:.2f}"]
                     ]
                     item.append(rule_node)
                 else:
@@ -341,7 +391,7 @@ class DSNTree:
                     if c_node:
                         c_node[1] = f"{target_clr:.2f}"
                     else:
-                        rule_node.append(["clearance", f"{target_clr:.2f}"])
+                        rule_node.append(["clear", f"{target_clr:.2f}"])
 
     def clean_duplicate_polygon_vertices(self) -> int:
         """Deduplicates consecutive identical polygon coordinates in library padstacks."""

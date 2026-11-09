@@ -12,7 +12,7 @@
   },
   "router": {
     "algorithm": "freerouting-router",
-    "job_timeout": "00:04:00",
+    "job_timeout": "00:00:20",
     "max_passes": 15,
     "trace_pull_tight_accuracy": 500,
     "allowed_via_types": true,
@@ -24,7 +24,7 @@
     },
     "optimizer": {
       "algorithm": "freerouting-optimizer",
-      "max_passes": 100,
+      "max_passes": 5,
       "max_threads": 1,
       "improvement_threshold": 0.01
     },
