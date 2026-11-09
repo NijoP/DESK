@@ -802,6 +802,7 @@
   ],
   "overhang_allowed": [
     "U5",
-    "J1"
+    "J1",
+    "J2"
   ]
 }

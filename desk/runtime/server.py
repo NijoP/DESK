@@ -97,6 +97,39 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         """Rejects state-mutating requests (strictly read-only dashboard)."""
         self.send_error(405, "Method Not Allowed: Mission Control is strictly read-only")
 
+    def do_POST(self) -> None:
+        """Handles telemetry ingestion from local tools, strictly read-only for PCB state."""
+        if not self._is_safe_origin():
+            self._send_json(403, {"error": "Access forbidden: Unrecognized Origin / Host header"})
+            return
+
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path
+
+        if path in {"/api/events", "/api/v1/events", "/api/telemetry", "/api/v1/telemetry"}:
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(length)
+                data = json.loads(body.decode("utf-8")) if body else {}
+                event_bus = get_event_bus()
+                ev = event_bus.emit(
+                    event_type=data.get("event_type", "stage.progress"),
+                    stage=data.get("stage", ""),
+                    task=data.get("task", ""),
+                    status=data.get("status", ""),
+                    progress=data.get("progress"),
+                    message=data.get("message", ""),
+                    metrics=data.get("metrics"),
+                    artifacts=data.get("artifacts"),
+                    error=data.get("error"),
+                    payload=data.get("payload", {})
+                )
+                self._send_json(200, {"status": "ok", "event_id": ev.event_id})
+            except Exception as e:
+                self._send_json(400, {"error": f"Invalid telemetry payload: {str(e)}"})
+        else:
+            self.send_error(405, "Method Not Allowed: Mission Control is strictly read-only")
+
     def do_PUT(self) -> None:
         """Rejects state-mutating requests."""
         self.send_error(405, "Method Not Allowed: Mission Control is strictly read-only")
@@ -135,6 +168,14 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
             self._handle_executions()
         elif path in {"/api/events", "/api/v1/events"}:
             self._handle_events(query)
+        elif path in {"/api/timeline", "/api/v1/timeline"}:
+            limit = int(query.get("limit", [100])[0]) if "limit" in query else 100
+            self._send_json(200, get_execution_projection().get_timeline(limit=limit))
+        elif path in {"/api/logs", "/api/v1/logs"}:
+            level = query.get("level", [None])[0]
+            search = query.get("search", [None])[0]
+            limit = int(query.get("limit", [200])[0]) if "limit" in query else 200
+            self._send_json(200, get_execution_projection().get_logs(level=level, search=search, limit=limit))
         elif path in {"/api/events/live", "/api/v1/events/stream"}:
             self._handle_sse_stream(query)
         elif path in {"/api/rework/session", "/api/v1/rework/session"}:
@@ -509,6 +550,7 @@ class DeskServer:
         self.actual_port = port
         self.server: Optional[http.server.ThreadingHTTPServer] = None
         self._thread: Optional[threading.Thread] = None
+        self._monitor_thread: Optional[threading.Thread] = None
         self._is_running = False
 
     @property
@@ -553,6 +595,9 @@ class DeskServer:
         self.server = server_instance
         self._is_running = True
 
+        self._monitor_thread = threading.Thread(target=self._telemetry_monitor_loop, name="DESK-Telemetry-Monitor", daemon=True)
+        self._monitor_thread.start()
+
         if background:
             self._thread = threading.Thread(target=self._serve_loop, name="DESK-Server-Thread", daemon=True)
             self._thread.start()
@@ -560,6 +605,31 @@ class DeskServer:
             self._serve_loop()
 
         return self.url, self.actual_port
+
+    def _telemetry_monitor_loop(self) -> None:
+        """Background loop reconciling live telemetry and broadcasting state changes."""
+        from desk.runtime.projection import get_execution_projection
+        from desk.runtime.events import get_event_bus
+        last_status = None
+        last_progress = None
+        last_stage = None
+        while self._is_running:
+            try:
+                proj = get_execution_projection()
+                proj.reconcile_live_telemetry()
+                summary = proj.get_summary()
+                cur_status = summary.get("status")
+                cur_progress = summary.get("overall_progress")
+                cur_stage = summary.get("current_stage")
+                if (cur_status != last_status) or (cur_progress != last_progress) or (cur_stage != last_stage):
+                    last_status = cur_status
+                    last_progress = cur_progress
+                    last_stage = cur_stage
+                    bus = get_event_bus()
+                    bus.emit("stage.progress", stage=cur_stage or "", progress=cur_progress, message=summary.get("current_activity", ""))
+            except Exception:
+                pass
+            time.sleep(1.0)
 
     def _serve_loop(self) -> None:
         """Internal server loop."""

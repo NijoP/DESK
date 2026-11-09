@@ -142,3 +142,6 @@
 {"id": "L-0142", "ts": "2026-11-07T13:43:45", "type": "verified", "text": "live netlist == spec (12 parts); sheet 89 parts / 59 nets", "block": "02_CHG_BAT", "spec_hash": "30bb1c4fa57d"}
 {"id": "L-0143", "ts": "2026-11-07T13:51:16", "type": "drc_convergence", "text": "DRC run: 38 violations. Unconnected: 0, Clearance: 0, Shorts: 0. Failed nets: 0. Status: REWORK_REQUIRED.", "source": "tools/drc.py"}
 {"id": "L-0144", "ts": "2026-11-07T16:20:45", "type": "drc_convergence", "text": "DRC run: 351 violations. Unconnected: 0, Clearance: 0, Shorts: 0. Failed nets: 0. Status: REWORK_REQUIRED.", "source": "tools/drc.py"}
+{"id": "L-0145", "ts": "2026-11-09T03:35:48", "type": "placement_freeze", "text": "Placement frozen with SHA-1 bf21a9e8fbc5. Routability score: 0.60, crossings: 357, wirelength: 1751.0 mm.", "source": "tools/pcb_check.py --freeze"}
+{"id": "L-0146", "ts": "2026-11-09T03:56:06", "type": "placement_freeze", "text": "Placement frozen with SHA-1 bf21a9e8fbc5. Routability score: 0.60, crossings: 355, wirelength: 1689.1 mm.", "source": "tools/pcb_check.py --freeze"}
+{"id": "L-0147", "ts": "2026-11-09T05:29:12", "type": "drc_convergence", "text": "DRC run: 442 violations. Unconnected: 0, Clearance: 42, Shorts: 0. Failed nets: 0. Status: REWORK_REQUIRED.", "source": "tools/drc.py"}

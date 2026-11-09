@@ -278,7 +278,10 @@ class NativeMazeRouter:
 
 BOUNDARY_RX = re.compile(r"\(boundary\s*\(path[^\)]+\)\s*\)")
 RULE_WIDTH_RX = re.compile(r"\(rule\s*\(width\s+[\d\.]+\)\)")
-CLASS_BLOCK_RX = re.compile(r"\(class\s+([^\s]+)\s+'([^']+)'\s*\(rule\s*\(width\s+[\d\.]+\)\s*\(clearance\s+[\d\.]+\)\)", re.MULTILINE)
+CLASS_BLOCK_RX = re.compile(
+    r"\(class\s+([^\s]+)\s+'([^']+)'.*?\(rule\s*\(width\s+[\d\.]+\)\s*\(clearance\s+[\d\.]+\)\s*\)",
+    re.DOTALL
+)
 
 
 class DSNTuningEngine:
@@ -345,17 +348,15 @@ class DSNTuningEngine:
             if c_upper in net_widths:
                 w = str(net_widths[c_upper])
             elif c_upper in power_nets:
-                w = "12.0"  # Standard default when net_widths not explicitly specified
+                w = "12.0"
             else:
                 w = str(fine_pitch_width_mil)
 
             # Check if specific clearance is provided
             clr = str(net_clearances.get(c_upper, fine_pitch_clearance_mil))
 
-            return (f"(class {m.group(1)} '{m.group(2)}'\n"
-                    f"      (rule\n"
-                    f"        (width {w})\n"
-                    f"        (clearance {clr}))")
+            rule_sub = f"(rule\n        (width {w})\n        (clearance {clr}))"
+            return re.sub(r"\(rule\s*\(width\s+[\d\.]+\)\s*\(clearance\s+[\d\.]+\)\s*\)", rule_sub, m.group(0))
 
         return CLASS_BLOCK_RX.sub(power_repl, content)
 

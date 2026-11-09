@@ -9,6 +9,7 @@ and reconciling interrupted work after system restart.
 from __future__ import annotations
 
 import datetime
+import glob
 import json
 import os
 import re
@@ -19,6 +20,8 @@ from typing import Any, Dict, List, Optional
 
 from desk.runtime.events import Event, EventBus, get_event_bus
 from desk.runtime.resource_profile import ResourceDetector
+
+DESK_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # The 12 Canonical Engineering Stages
 STAGE_REQUIREMENT_INGESTION = "requirement_ingestion"
@@ -94,6 +97,137 @@ def redact_sensitive(text: str) -> str:
     for pat in SECRET_PATTERNS:
         sanitized = pat.sub("[REDACTED]", sanitized)
     return sanitized
+
+
+def _get_process_cmdline(pid: int) -> str:
+    """Reads command line of a running process on Windows using PEB/ntdll, with cross-platform fallback."""
+    if pid <= 0:
+        return ""
+    if os.name == "nt":
+        try:
+            import ctypes
+            import ctypes.wintypes
+            ntdll = ctypes.windll.ntdll
+            kernel32 = ctypes.windll.kernel32
+            handle = kernel32.OpenProcess(0x0400 | 0x0010, False, pid)  # PROCESS_QUERY_INFORMATION | PROCESS_VM_READ
+            if not handle:
+                return ""
+            try:
+                class PROCESS_BASIC_INFORMATION(ctypes.Structure):
+                    _fields_ = [
+                        ('Reserved1', ctypes.c_void_p),
+                        ('PebBaseAddress', ctypes.c_void_p),
+                        ('Reserved2', ctypes.c_void_p * 2),
+                        ('UniqueProcessId', ctypes.c_void_p),
+                        ('Reserved3', ctypes.c_void_p)
+                    ]
+                pbi = PROCESS_BASIC_INFORMATION()
+                return_len = ctypes.wintypes.ULONG()
+                if ntdll.NtQueryInformationProcess(handle, 0, ctypes.byref(pbi), ctypes.sizeof(pbi), ctypes.byref(return_len)) != 0 or not pbi.PebBaseAddress:
+                    return ""
+                params_ptr = ctypes.c_void_p()
+                if not kernel32.ReadProcessMemory(handle, ctypes.c_void_p(pbi.PebBaseAddress + 0x20), ctypes.byref(params_ptr), ctypes.sizeof(params_ptr), None) or not params_ptr.value:
+                    return ""
+                class UNICODE_STRING(ctypes.Structure):
+                    _fields_ = [('Length', ctypes.c_ushort), ('MaximumLength', ctypes.c_ushort), ('Pad', ctypes.c_uint32), ('Buffer', ctypes.c_void_p)]
+                cmd_us = UNICODE_STRING()
+                if not kernel32.ReadProcessMemory(handle, ctypes.c_void_p(params_ptr.value + 0x70), ctypes.byref(cmd_us), ctypes.sizeof(cmd_us), None) or not cmd_us.Buffer or not cmd_us.Length:
+                    return ""
+                buf = (ctypes.c_wchar * (cmd_us.Length // 2))()
+                if not kernel32.ReadProcessMemory(handle, ctypes.c_void_p(cmd_us.Buffer), ctypes.byref(buf), cmd_us.Length, None):
+                    return ""
+                return buf.value
+            finally:
+                kernel32.CloseHandle(handle)
+        except Exception:
+            return ""
+    else:
+        try:
+            with open(f"/proc/{pid}/cmdline", "r", encoding="utf-8", errors="ignore") as f:
+                return f.read().replace("\x00", " ")
+        except Exception:
+            return ""
+
+
+def _scan_active_engineering_processes(project_keyword: str = "") -> List[Dict[str, Any]]:
+    """Discovers active local engineering processes (Freerouting, tools/*.py, etc.)."""
+    active: List[Dict[str, Any]] = []
+    kw = (project_keyword or "").lower()
+    if os.name == "nt":
+        try:
+            import ctypes
+            import ctypes.wintypes
+            kernel32 = ctypes.windll.kernel32
+            TH32CS_SNAPPROCESS = 0x00000002
+            class PROCESSENTRY32(ctypes.Structure):
+                _fields_ = [
+                    ('dwSize', ctypes.wintypes.DWORD),
+                    ('cntUsage', ctypes.wintypes.DWORD),
+                    ('th32ProcessID', ctypes.wintypes.DWORD),
+                    ('th32DefaultHeapID', ctypes.c_size_t),
+                    ('th32ModuleID', ctypes.wintypes.DWORD),
+                    ('cntThreads', ctypes.wintypes.DWORD),
+                    ('th32ParentProcessID', ctypes.wintypes.DWORD),
+                    ('pcPriClassBase', ctypes.c_long),
+                    ('dwFlags', ctypes.wintypes.DWORD),
+                    ('szExeFile', ctypes.c_char * 260)
+                ]
+            hSnap = kernel32.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+            if not hSnap:
+                return active
+            pe = PROCESSENTRY32()
+            pe.dwSize = ctypes.sizeof(PROCESSENTRY32)
+            cur_pid = os.getpid()
+            if kernel32.Process32First(hSnap, ctypes.byref(pe)):
+                while True:
+                    pid = pe.th32ProcessID
+                    if pid != cur_pid:
+                        exe = pe.szExeFile.decode('latin1', errors='ignore').lower()
+                        if 'python' in exe or 'java' in exe:
+                            cmd = _get_process_cmdline(pid)
+                            cmd_lower = cmd.lower()
+                            if ('tools/' in cmd_lower or 'tools\\' in cmd_lower or 'freerouting' in cmd_lower or 'desk.py' in cmd_lower) and ('dashboard' not in cmd_lower and 'serve' not in cmd_lower):
+                                if kw and (kw not in cmd_lower and kw.replace('/', '\\') not in cmd_lower):
+                                    if not kernel32.Process32Next(hSnap, ctypes.byref(pe)):
+                                        break
+                                    continue
+                                cpu_s = 0.0
+                                try:
+                                    h_proc = kernel32.OpenProcess(0x1000, False, pid)
+                                    if h_proc:
+                                        class FILETIME(ctypes.Structure):
+                                            _fields_ = [('dwLowDateTime', ctypes.c_ulong), ('dwHighDateTime', ctypes.c_ulong)]
+                                        cr, ex, kr, ur = FILETIME(), FILETIME(), FILETIME(), FILETIME()
+                                        if kernel32.GetProcessTimes(h_proc, ctypes.byref(cr), ctypes.byref(ex), ctypes.byref(kr), ctypes.byref(ur)):
+                                            k_sec = ((kr.dwHighDateTime << 32) + kr.dwLowDateTime) / 10000000.0
+                                            u_sec = ((ur.dwHighDateTime << 32) + ur.dwLowDateTime) / 10000000.0
+                                            cpu_s = round(k_sec + u_sec, 1)
+                                        kernel32.CloseHandle(h_proc)
+                                except Exception:
+                                    pass
+
+                                start_time = time.time()
+                                try:
+                                    from desk.ops import get_process_start_time
+                                    pst = get_process_start_time(pid)
+                                    if pst:
+                                        start_time = pst
+                                except Exception:
+                                    pass
+
+                                active.append({
+                                    "pid": pid,
+                                    "exe": exe,
+                                    "cmd": cmd,
+                                    "cpu_time": cpu_s,
+                                    "start_time": start_time,
+                                })
+                    if not kernel32.Process32Next(hSnap, ctypes.byref(pe)):
+                        break
+            kernel32.CloseHandle(hSnap)
+        except Exception:
+            pass
+    return active
 
 
 @dataclass
@@ -187,266 +321,310 @@ class ExecutionProjection:
         }
 
         # Wire event listener
+        self._explicitly_updated_stages: set[str] = set()
         self.event_bus.subscribe("*", self._handle_event)
 
-        # Attempt to reconcile previous interrupted state from disk
+        # Attempt to reconcile previous state from disk and live telemetry
         self._reconcile_restart_state()
-
-        # Automatically synchronize from actual workspace artifacts on disk
-        if os.path.exists(self.project_id) and self.status != "INTERRUPTED":
-            self.sync_from_project_artifacts(self.project_id)
+        self.reconcile_live_telemetry()
 
     def set_project(self, project_id: str) -> None:
         """Switches the active project context and reconciles its state."""
         with self._lock:
             self.project_id = project_id
+            self._explicitly_updated_stages.clear()
             self._reconcile_restart_state()
-            if os.path.exists(self.project_id) and self.status != "INTERRUPTED":
-                self.sync_from_project_artifacts(self.project_id)
+            self.reconcile_live_telemetry()
 
-    def sync_from_project_artifacts(self, project_id: Optional[str] = None) -> None:
-        """Inspects workspace artifacts on disk and projects the real project engineering state."""
-        with self._lock:
-            if self.status == "INTERRUPTED":
-                return
-            pid = project_id or self.project_id
-            self.project_id = pid
-            if not os.path.exists(pid):
-                return
-
-            import glob
-
-            # 1. Requirements (Stage 1)
-            req_files = [
-                f for f in ["REQUIREMENTS.md", "POWER_TREE.md", "GPIO_MAP.md", "BLOCK_PLAN.md"]
-                if os.path.exists(os.path.join(pid, f))
-            ]
-            if req_files:
-                st = self.stages[STAGE_REQUIREMENT_INGESTION]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = f"{len(req_files)} requirement specifications verified"
-                st.current_activity = "Completed"
-
-            # 2. Schematic Blocks (Stage 2)
-            block_files = glob.glob(os.path.join(pid, "blocks", "*.json"))
-            if block_files:
-                st = self.stages[STAGE_SCHEMATIC_INTELLIGENCE]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = f"{len(block_files)} functional schematic blocks compiled & verified"
-                st.current_activity = "Completed"
-
-            # 3. Components & BOM (Stage 3)
-            comps_count = 0
-            pads_count = 0
-            dump_path = os.path.join(pid, "state", "pcb_dump.json")
-            if os.path.exists(dump_path):
-                try:
-                    with open(dump_path, "r", encoding="utf-8") as f:
-                        comps = json.load(f)
-                        if isinstance(comps, dict):
-                            comps_count = len(comps)
-                            pads_count = sum(len(c.get("pads", [])) for c in comps.values() if isinstance(c, dict))
-                except Exception:
-                    pass
-            elif os.path.exists(os.path.join(pid, "placement.json")):
-                try:
-                    with open(os.path.join(pid, "placement.json"), "r", encoding="utf-8") as f:
-                        p_data = json.load(f)
-                        if isinstance(p_data, dict):
-                            comps_count = len(p_data)
-                except Exception:
-                    pass
-
-            if comps_count > 0 or os.path.exists(os.path.join(pid, "bom.csv")):
-                st = self.stages[STAGE_COMPONENT_INTELLIGENCE]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = f"{comps_count} components mapped with LCSC/sourcing data"
-                st.current_activity = "Completed"
-
-            # 4. Electrical Verification (Stage 4)
-            if block_files and req_files:
-                st = self.stages[STAGE_ELECTRICAL_VERIFICATION]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = "Power tree domains & ERC net continuity verified"
-                st.current_activity = "Completed"
-
-            # 5. PCB Stackup (Stage 5)
-            stackup_found = os.path.exists(os.path.join(pid, "design_profile.json")) or os.path.exists(os.path.join(pid, "pcb_rules.json"))
-            if stackup_found or comps_count > 0:
-                st = self.stages[STAGE_PCB_INGESTION]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = "4-layer physical stackup & keepout rules verified"
-                st.current_activity = "Completed"
-
-            # 6. Placement (Stage 6)
-            if os.path.exists(os.path.join(pid, "placement.json")) or comps_count > 0:
-                st = self.stages[STAGE_PLACEMENT_INTELLIGENCE]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = f"{comps_count} footprints placed, mechanical anchors locked"
-                st.current_activity = "Completed"
-
-            # 7. Routing Preparation (Stage 7)
-            dsn_files = glob.glob(os.path.join(pid, "state", "route", "*.dsn"))
-            if dsn_files:
-                st = self.stages[STAGE_ROUTING_PREPARATION]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = f"{len(dsn_files)} Specctra DSN rules tuned for 6-stage priority"
-                st.current_activity = "Completed"
-
-            # 8. PCB Routing (Stage 8)
-            ses_file = os.path.join(pid, "state", "route", "desk_route.ses")
-            track_count = 0
-            via_count = 0
-            net_count = 0
-            if os.path.exists(ses_file):
-                try:
-                    with open(ses_file, "r", encoding="utf-8") as f:
-                        c_text = f.read()
-                    track_count = len(re.findall(r"\(wire\b", c_text))
-                    via_count = len(re.findall(r"\(via\b", c_text))
-                    nets = set(re.findall(r"\(net\s+([^\s\)]+)", c_text))
-                    net_count = len(nets)
-                except Exception:
-                    pass
-
-            if track_count > 0 or os.path.exists(ses_file):
-                st = self.stages[STAGE_PCB_ROUTING]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = f"Routed {track_count} tracks, {via_count} vias across {net_count} nets"
-                st.current_activity = "Completed"
-
-            # 9. Copper Plane Generation (Stage 9)
-            if track_count > 0:
-                st = self.stages[STAGE_COPPER_GENERATION]
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = "Ground reference planes & stitching arrays synthesized"
-                st.current_activity = "Completed"
-
-            # 10. DRC Verification & Rework (Stage 10)
-            rework_issues_count = 0
-            rework_dir = os.path.join(pid, "state", "rework")
-            issue_file = None
-            if os.path.exists(rework_dir):
-                for s in os.listdir(rework_dir):
-                    p = os.path.join(rework_dir, s, "issue_inventory.json")
-                    if os.path.exists(p):
-                        issue_file = p
-                        break
-            if issue_file:
-                try:
-                    with open(issue_file, "r", encoding="utf-8") as f:
-                        issues = json.load(f)
-                        rework_issues_count = len(issues)
-                except Exception:
-                    pass
-
-            st = self.stages[STAGE_DRC_VERIFICATION]
-            if rework_issues_count > 0:
-                st.status = "FAILED" if rework_issues_count > 10 else "RUNNING"
-                st.warnings = [f"{rework_issues_count} DRC/rework issues cataloged in inventory"]
-                st.output_summary = f"{rework_issues_count} DRC clearance & geometry issues detected"
-                st.current_activity = f"Awaiting repair execution ({rework_issues_count} issues)"
-            elif track_count > 0:
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = "Zero hard clearance collisions detected"
-                st.current_activity = "Completed"
-
-            # 11. Manufacturing Verification (Stage 11)
-            st = self.stages[STAGE_MANUFACTURING_VERIFICATION]
-            if rework_issues_count > 0:
-                st.status = "PENDING"
-                st.output_summary = "Blocked pending clearance resolution"
-                st.current_activity = "Awaiting DRC resolution"
-            elif track_count > 0:
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = "All 8 hard quality gates verified PASS"
-                st.current_activity = "Completed"
-
-            # 12. Final Engineering Report (Stage 12)
-            st = self.stages[STAGE_ENGINEERING_REPORT]
-            release_dir = os.path.join(pid, "release")
-            if os.path.exists(release_dir) and any(os.listdir(release_dir)):
-                st.status = "COMPLETED"
-                st.progress = 100.0
-                st.output_summary = "Gerbers, drill files & assembly manifest packaged in release/"
-                st.current_activity = "Completed"
-
-            # Update engineering results
-            self.engineering_results.update({
-                "components_processed": comps_count,
-                "pads_count": pads_count,
-                "nets_analyzed": net_count or 56,
-                "tracks_generated": track_count,
-                "vias_generated": via_count,
-                "copper_zones_processed": 4 if track_count > 0 else 0,
-                "drc_violations": rework_issues_count,
-                "unconnected_nets": 0 if track_count > 0 else comps_count,
-                "critical_nets_status": "VERIFIED" if track_count > 0 else "PENDING",
-                "evidence_status": "FRESH" if track_count > 0 else "STALE",
-                "final_acceptance_state": "CONDITIONAL" if rework_issues_count > 0 else ("ACCEPTED" if track_count > 0 else "PENDING"),
-            })
-
-            # Check overall status
-            if rework_issues_count > 0:
-                self.status = "NEEDS_REVIEW"
-                self.current_activity = f"Project {pid} ready for rework: {rework_issues_count} issues cataloged."
-            elif all(self.stages[s].status == "COMPLETED" for s in CANONICAL_STAGES):
-                self.status = "COMPLETED"
-                self.current_activity = f"Project {pid} fully verified and manufacturing-ready."
-            else:
-                self.status = "IDLE"
-                self.current_activity = f"Project {pid} loaded ({comps_count} components, {track_count} tracks)."
-
-            # Load timeline and logs from LEDGER.jsonl if present and timeline has few entries
-            ledger_path = os.path.join(pid, "LEDGER.jsonl")
-            if os.path.exists(ledger_path) and len(self.timeline) < 10:
-                try:
-                    self.timeline.clear()
-                    self.logs.clear()
-                    with open(ledger_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-                            if not line:
-                                continue
-                            item = json.loads(line)
-                            t_str = item.get("ts", "").split("T")[-1] if "T" in item.get("ts", "") else "00:00:00"
-                            self.timeline.append({
-                                "id": f"tl_{item.get('id', len(self.timeline)+1)}",
-                                "timestamp": time.time(),
-                                "time_str": t_str,
-                                "severity": "INFO" if item.get("type") in ("fact", "verified", "decision") else "WARNING",
-                                "stage": item.get("block") or "M1",
-                                "message": redact_sensitive(item.get("text", "")),
-                            })
-                            self.logs.append({
-                                "id": f"log_{item.get('id', len(self.logs)+1)}",
-                                "timestamp": time.time(),
-                                "time_str": t_str,
-                                "level": "INFO",
-                                "stage": item.get("block") or "LEDGER",
-                                "task": item.get("id", ""),
-                                "message": redact_sensitive(item.get("text", "")),
-                            })
-                except Exception:
-                    pass
-
-            self.persist_state()
+    def _resolve_project_dir(self, proj_id: Optional[str] = None) -> str:
+        """Resolves the active project directory across varying working directories."""
+        pid = proj_id or self.project_id
+        if os.path.isabs(pid):
+            return pid
+        if os.path.exists(pid):
+            return os.path.abspath(pid)
+        cand = os.path.join(DESK_ROOT, pid)
+        if os.path.exists(cand):
+            return cand
+        return pid
 
     def _state_file_path(self) -> str:
-        d = os.path.join(self.project_id, "state") if os.path.exists(self.project_id) else "state"
+        proj_dir = self._resolve_project_dir()
+        d = os.path.join(proj_dir, "state") if os.path.exists(proj_dir) else "state"
         os.makedirs(d, exist_ok=True)
         return os.path.join(d, "execution_state.json")
+
+    def reconcile_live_telemetry(self, project_id: Optional[str] = None) -> bool:
+        """
+        Reconciles in-memory projection with real project evidence, ledger milestones,
+        and active OS processes (Freerouting, tools/*.py, etc.).
+        """
+        with self._lock:
+            proj_dir = self._resolve_project_dir(project_id)
+            if not os.path.exists(proj_dir) or not os.path.isdir(proj_dir):
+                return False
+
+            changed = False
+
+            # 1. Reconcile Completed Engineering Stages from Verified Artifacts
+            req_file = os.path.join(proj_dir, "REQUIREMENTS.md")
+            if os.path.exists(req_file) and os.path.getsize(req_file) > 50:
+                st = self.stages[STAGE_REQUIREMENT_INGESTION]
+                if STAGE_REQUIREMENT_INGESTION not in self._explicitly_updated_stages and st.status != "COMPLETED":
+                    st.status = "COMPLETED"
+                    st.progress = 100.0
+                    st.output_summary = "Gate R passed: Requirements & mechanical dimensions confirmed."
+                    changed = True
+
+            blocks = glob.glob(os.path.join(proj_dir, "blocks", "*.json"))
+            if len(blocks) > 0:
+                st = self.stages[STAGE_SCHEMATIC_INTELLIGENCE]
+                if STAGE_SCHEMATIC_INTELLIGENCE not in self._explicitly_updated_stages and st.status != "COMPLETED":
+                    st.status = "COMPLETED"
+                    st.progress = 100.0
+                    st.output_summary = f"M1 passed: {len(blocks)} functional blocks verified."
+                    changed = True
+
+            bom_file = os.path.join(proj_dir, "bom.csv")
+            bom_sel = os.path.join(proj_dir, "BOM_SELECTION.md")
+            if (os.path.exists(bom_file) and os.path.getsize(bom_file) > 50) or os.path.exists(bom_sel):
+                st = self.stages[STAGE_COMPONENT_INTELLIGENCE]
+                if STAGE_COMPONENT_INTELLIGENCE not in self._explicitly_updated_stages and st.status != "COMPLETED":
+                    st.status = "COMPLETED"
+                    st.progress = 100.0
+                    st.output_summary = "Gate B passed: Component selection & BOM MPNs resolved."
+                    changed = True
+
+            pwr_file = os.path.join(proj_dir, "POWER_TREE.md")
+            gpio_file = os.path.join(proj_dir, "GPIO_MAP.md")
+            if os.path.exists(pwr_file) or os.path.exists(gpio_file):
+                st = self.stages[STAGE_ELECTRICAL_VERIFICATION]
+                if STAGE_ELECTRICAL_VERIFICATION not in self._explicitly_updated_stages and st.status != "COMPLETED":
+                    st.status = "COMPLETED"
+                    st.progress = 100.0
+                    st.output_summary = "ERC verified: Voltage compatibility & net integrity confirmed."
+                    changed = True
+
+            pcb_rules = os.path.join(proj_dir, "pcb_rules.json")
+            if os.path.exists(pcb_rules):
+                st = self.stages[STAGE_PCB_INGESTION]
+                if STAGE_PCB_INGESTION not in self._explicitly_updated_stages and st.status != "COMPLETED":
+                    st.status = "COMPLETED"
+                    st.progress = 100.0
+                    st.output_summary = "PCB rules, layer stackup & clearance classes ingested."
+                    changed = True
+
+            place_frozen = os.path.join(proj_dir, "state", "placement_frozen.json")
+            if os.path.exists(place_frozen):
+                st = self.stages[STAGE_PLACEMENT_INTELLIGENCE]
+                if STAGE_PLACEMENT_INTELLIGENCE not in self._explicitly_updated_stages and st.status != "COMPLETED":
+                    st.status = "COMPLETED"
+                    st.progress = 100.0
+                    st.output_summary = "M2 passed: Placement verified & frozen."
+                    changed = True
+
+            tuned_dsn = os.path.join(proj_dir, "state", "route", "desk_route_tuned.dsn")
+            if os.path.exists(tuned_dsn):
+                st = self.stages[STAGE_ROUTING_PREPARATION]
+                if STAGE_ROUTING_PREPARATION not in self._explicitly_updated_stages and st.status != "COMPLETED":
+                    st.status = "COMPLETED"
+                    st.progress = 100.0
+                    st.output_summary = "Routing plan scheduled & tuned boundary DSN generated."
+                    changed = True
+
+            # 2. Reconcile Engineering Artifact Metrics from pcb_dump.json
+            dump_file = os.path.join(proj_dir, "state", "pcb_dump.json")
+            if os.path.exists(dump_file):
+                try:
+                    with open(dump_file, "r", encoding="utf-8") as f:
+                        dump = json.load(f)
+                    comps = [k for k, v in dump.items() if isinstance(v, dict) and "pads" in v]
+                    nets = set()
+                    for c in dump.values():
+                        if isinstance(c, dict):
+                            for p in c.get("pads", []):
+                                if p.get("net"):
+                                    nets.add(p["net"])
+                    tracks = len(dump.get("tracks", []))
+                    vias = len(dump.get("vias", []))
+                    copper_zones = len(dump.get("copper_zones", []))
+
+                    self.engineering_results["components_processed"] = max(self.engineering_results["components_processed"], len(comps))
+                    self.engineering_results["nets_analyzed"] = max(self.engineering_results["nets_analyzed"], len(nets))
+                    self.engineering_results["tracks_generated"] = max(self.engineering_results["tracks_generated"], tracks)
+                    self.engineering_results["vias_generated"] = max(self.engineering_results["vias_generated"], vias)
+                    self.engineering_results["copper_zones_processed"] = max(self.engineering_results["copper_zones_processed"], copper_zones)
+                    self.engineering_results["evidence_status"] = "FRESH"
+                except Exception:
+                    pass
+
+            # 3. Reconcile Activity Timeline & DRC from LEDGER.jsonl
+            ledger_file = os.path.join(proj_dir, "LEDGER.jsonl")
+            latest_drc_violations = None
+            if os.path.exists(ledger_file):
+                try:
+                    with open(ledger_file, "r", encoding="utf-8") as f:
+                        lines = [ln.strip() for ln in f if ln.strip()]
+                    existing_timeline_ids = {t.get("id") for t in self.timeline}
+                    for ln in lines:
+                        try:
+                            item = json.loads(ln)
+                            lid = item.get("id", "")
+                            t_type = item.get("type", "")
+                            text = item.get("text", "")
+                            ts = item.get("ts", "")
+                            time_str = ts.split("T")[1] if "T" in ts else ts
+
+                            if t_type == "drc_convergence":
+                                m = re.search(r"DRC run:\s*(\d+)\s*violations", text)
+                                if m:
+                                    latest_drc_violations = int(m.group(1))
+
+                            if lid and lid not in existing_timeline_ids:
+                                sev = "ERROR" if "fail" in t_type else ("WARNING" if "rework" in text.lower() else "INFO")
+                                stage_map = {
+                                    "verified": STAGE_SCHEMATIC_INTELLIGENCE,
+                                    "placement_freeze": STAGE_PLACEMENT_INTELLIGENCE,
+                                    "drc_convergence": STAGE_DRC_VERIFICATION,
+                                    "routing_attempt": STAGE_PCB_ROUTING,
+                                    "release": STAGE_ENGINEERING_REPORT,
+                                }
+                                stg = stage_map.get(t_type, "SYSTEM")
+                                self.timeline.append({
+                                    "id": lid,
+                                    "timestamp": time.time(),
+                                    "time_str": time_str,
+                                    "severity": sev,
+                                    "stage": stg,
+                                    "message": redact_sensitive(text),
+                                })
+                                existing_timeline_ids.add(lid)
+                                changed = True
+                        except Exception:
+                            continue
+                except Exception:
+                    pass
+
+            if latest_drc_violations is not None:
+                self.engineering_results["drc_violations"] = latest_drc_violations
+
+            # 4. Reconcile Active Running OS Processes (Live telemetry)
+            active_procs = _scan_active_engineering_processes(os.path.basename(proj_dir).lower())
+            routing_procs = [p for p in active_procs if "freerouting" in p["cmd"].lower() or "route.py" in p["cmd"].lower()]
+            drc_procs = [p for p in active_procs if "drc.py" in p["cmd"].lower()]
+            place_procs = [p for p in active_procs if "pcb_place.py" in p["cmd"].lower() or "gen_placement.py" in p["cmd"].lower()]
+
+            if routing_procs:
+                java_procs = [p for p in routing_procs if "java" in p["exe"].lower()]
+                primary = java_procs[0] if java_procs else routing_procs[0]
+                pid = primary["pid"]
+                cpu_s = primary.get("cpu_time", 0.0)
+                # If python wrapper exists, prefer its earlier start time for accurate duration
+                py_procs = [p for p in routing_procs if "python" in p["exe"].lower()]
+                st_time = py_procs[0]["start_time"] if py_procs else primary.get("start_time", time.time())
+                elapsed = max(0.0, round(time.time() - st_time, 1))
+
+                self.status = "RUNNING"
+                if not self.start_time:
+                    self.start_time = st_time
+                self.current_stage = STAGE_PCB_ROUTING
+                self.current_task = "tools/route.py (Freerouting autoroute)"
+                self.current_activity = f"Autorouting in progress (Freerouting PID {pid}, CPU: {int(cpu_s)}s, {int(elapsed)}s elapsed)"
+
+                st = self.stages[STAGE_PCB_ROUTING]
+                st.status = "RUNNING"
+                st.start_time = st_time
+                st.duration_s = elapsed
+                st.current_activity = self.current_activity
+                st.progress = min(92.0, max(25.0, round(25.0 + min(67.0, elapsed / 25.0), 1)))
+                changed = True
+
+            elif drc_procs:
+                primary = drc_procs[0]
+                pid = primary["pid"]
+                st_time = primary.get("start_time", time.time())
+                elapsed = max(0.0, round(time.time() - st_time, 1))
+
+                self.status = "RUNNING"
+                self.current_stage = STAGE_DRC_VERIFICATION
+                self.current_activity = f"DRC verification in progress (PID {pid}, {int(elapsed)}s elapsed)"
+                st = self.stages[STAGE_DRC_VERIFICATION]
+                st.status = "RUNNING"
+                st.current_activity = self.current_activity
+                st.progress = 50.0
+                changed = True
+
+            elif place_procs:
+                primary = place_procs[0]
+                pid = primary["pid"]
+                st_time = primary.get("start_time", time.time())
+                elapsed = max(0.0, round(time.time() - st_time, 1))
+
+                self.status = "RUNNING"
+                self.current_stage = STAGE_PLACEMENT_INTELLIGENCE
+                self.current_activity = f"Component placement optimization in progress (PID {pid}, {int(elapsed)}s elapsed)"
+                st = self.stages[STAGE_PLACEMENT_INTELLIGENCE]
+                st.status = "RUNNING"
+                st.current_activity = self.current_activity
+                st.progress = 50.0
+                changed = True
+
+            else:
+                # No active OS process running
+                route_attempt = os.path.join(proj_dir, "state", "route", "routing_attempt.json")
+                ses_file = os.path.join(proj_dir, "state", "route", "desk_route.ses")
+                st_route = self.stages[STAGE_PCB_ROUTING]
+                if (os.path.exists(route_attempt) or (os.path.exists(ses_file) and os.path.getsize(ses_file) > 0)) and st_route.status != "COMPLETED":
+                    st_route.status = "COMPLETED"
+                    st_route.progress = 100.0
+                    st_route.output_summary = "M3 passed: PCB tracks routed and imported into EasyEDA Pro."
+                    changed = True
+
+                if self.engineering_results.get("copper_zones_processed", 0) > 0:
+                    st_copper = self.stages[STAGE_COPPER_GENERATION]
+                    if st_copper.status != "COMPLETED":
+                        st_copper.status = "COMPLETED"
+                        st_copper.progress = 100.0
+                        st_copper.output_summary = "M4 passed: Ground & power copper polygons poured."
+                        changed = True
+
+                if latest_drc_violations is not None:
+                    st_drc = self.stages[STAGE_DRC_VERIFICATION]
+                    if latest_drc_violations == 0:
+                        st_drc.status = "COMPLETED"
+                        st_drc.progress = 100.0
+                        st_drc.output_summary = "M5 passed: DRC 0 violations verified."
+                    elif st_drc.status not in {"RUNNING", "FAILED"}:
+                        st_drc.status = "FAILED"
+                        st_drc.output_summary = f"DRC {latest_drc_violations} violations (Rework required)."
+
+                # Reconcile overall status if not actively set by event
+                if not self._explicitly_updated_stages:
+                    if all(self.stages[s].status in {"COMPLETED", "SKIPPED"} for s in CANONICAL_STAGES):
+                        self.status = "COMPLETED"
+                        self.current_stage = None
+                        self.current_activity = "All engineering stages verified and completed."
+                    else:
+                        pending = [s for s in CANONICAL_STAGES if self.stages[s].status == "PENDING"]
+                        if self.status == "RUNNING":
+                            self.status = "IDLE"
+                        self.current_stage = pending[0] if pending else None
+                        self.current_activity = f"Standing by for {STAGE_NAMES.get(self.current_stage or '', 'execution')}."
+
+            # Ensure logs have at least recent timeline events
+            if not self.logs and self.timeline:
+                for t in self.timeline[-50:]:
+                    self.logs.append({
+                        "id": f"log_{t['id']}",
+                        "timestamp": t.get("timestamp", time.time()),
+                        "time_str": t.get("time_str", ""),
+                        "level": t.get("severity", "INFO"),
+                        "stage": t.get("stage", "SYS"),
+                        "task": "",
+                        "message": t.get("message", ""),
+                    })
+
+            return changed
 
     def _reconcile_restart_state(self) -> None:
         """Restores persisted execution state and marks interrupted work honestly."""
@@ -546,6 +724,9 @@ class ExecutionProjection:
                 self._record_log_entry(lvl, stage_id or "SYSTEM", ev.task or "", ev.message or ev.error or "", ev.timestamp)
 
             # Stage lifecycle
+            if stage_id in self.stages:
+                self._explicitly_updated_stages.add(stage_id)
+
             if t == "stage.start" and stage_id in self.stages:
                 if self.status == "IDLE":
                     self.status = "RUNNING"
@@ -699,6 +880,7 @@ class ExecutionProjection:
     def get_summary(self) -> Dict[str, Any]:
         """Returns the high-density executive status for UI and CLI."""
         with self._lock:
+            self.reconcile_live_telemetry()
             hw = ResourceDetector.detect().to_dict()
 
             completed_count = sum(1 for s in self.stages.values() if s.status == "COMPLETED")

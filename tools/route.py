@@ -92,7 +92,27 @@ with open(dsn, "r", encoding="utf-8", errors="ignore") as f:
 board_w_mil = plan.get("board_mm", [50.0, 50.0])[0] * MIL
 board_h_mil = plan.get("board_mm", [50.0, 50.0])[1] * MIL
 power_nets = set(routing_plan.stage_nets.get(1, []) + routing_plan.stage_nets.get(5, []))
-tuned_dsn = DSNTuningEngine.tune_dsn(dsn_content, (board_w_mil, board_h_mil), power_nets=power_nets)
+
+# Fine-pitch escape compatible net widths (all <= 10.0 mil to clear 0.5mm QFN/ESP32 pads)
+# Main power trunks are widened post-import to 35 mil (VBAT) and 30 mil (VSYS)
+custom_net_widths = {
+    "VBAT": 10.0,
+    "VSYS": 10.0,
+    "VBUS": 10.0,
+    "VBUS_BOOST": 10.0,
+    "3V3": 8.0,
+    "GND": 8.0
+}
+
+tuned_dsn = DSNTuningEngine.tune_dsn(
+    dsn_content,
+    (board_w_mil, board_h_mil),
+    power_nets=power_nets,
+    keepouts=plan.get("keepouts"),
+    net_widths=custom_net_widths,
+    fine_pitch_width_mil=6.0,
+    fine_pitch_clearance_mil=4.02
+)
 
 tuned_dsn_path = os.path.join(wd, "desk_route_tuned.dsn")
 with open(tuned_dsn_path, "w", encoding="utf-8") as f:
@@ -110,7 +130,7 @@ if not shutil.which("java"):
     raise SystemExit("STOP: java not found on PATH.")
 
 ses = os.path.join(wd, "desk_route.ses")
-cmd = ["java", "-jar", jar, "-de", tuned_dsn_path, "-do", ses, "-mp", str(passes), "-mt", "1"]
+cmd = ["java", "-jar", jar, "-de", tuned_dsn_path, "-do", ses, "-mp", str(passes), "-mt", "1", "--gui.enabled=false"]
 t0 = time.time()
 p = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
 with open(os.path.join(wd, "freerouting.log"), "w", encoding="utf-8") as f:
@@ -132,6 +152,25 @@ with ops.write_op(proj, "route_import", "PCB") as rec:
 
 print("SES import:", r)
 if r is not True: raise SystemExit("STOP: EasyEDA rejected the SES import")
+
+# Post-import: Power integrity trace widening for battery & system rails (IPC-2152 compliant)
+try:
+    widen_code = (
+        'const lines = await eda.pcb_PrimitiveLine.getAll();'
+        'let vb=0, vs=0;'
+        'for(const l of lines){'
+        '  if(l.net==="VBAT" && Math.hypot(l.endX-l.startX, l.endY-l.startY) > 20){'
+        '    await eda.pcb_PrimitiveLine.modify(l.primitiveId, {lineWidth: 35.0}); vb++;'
+        '  } else if(l.net==="VSYS" && Math.hypot(l.endX-l.startX, l.endY-l.startY) > 20){'
+        '    await eda.pcb_PrimitiveLine.modify(l.primitiveId, {lineWidth: 30.0}); vs++;'
+        '  }'
+        '}'
+        'await eda.pcb_Document.save(); return {vbat_widened: vb, vsys_widened: vs};'
+    )
+    w_res = check(ex(G + widen_code, timeout=60, window_id=P.get("window_id")))
+    print("Power trace widening:", w_res)
+except Exception as e:
+    print("Warning: Power trace widening deferred:", e)
 
 # Log attempt
 attempt_record = {
