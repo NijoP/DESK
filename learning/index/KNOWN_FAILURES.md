@@ -167,6 +167,34 @@ CONFIRMED
 
 ---
 
+## KF-20251111-007: Window Rotation Document Context Loss
+
+### Failure Pattern
+**Panel document context lost after window rotation.** Auto-retry succeeds but on wrong document (empty/new PCB).
+
+### Root Cause
+Bridge window rotation creates new window context without preserving active document. Retry executes on whatever document is active in new window (often empty/new PCB).
+
+### Symptoms
+- Window rotation during long operation
+- Retry appears to succeed (HTTP 200)
+- But document has wrong content (missing copies, missing copper pours)
+- Repour finds 0 pours, DRC passes on empty document
+
+### Proven Resolution (PENDING)
+Track target document UUID explicitly. On rotation, re-open specific UUID before retry.
+
+### Prevention Rule
+**BRIDGE_DOCUMENT_CONTINUITY:** Track target document UUID. On rotation, re-open specific UUID before retry. Verify document content after rotation.
+
+### Related Incident
+INC-20251111-004
+
+### Confidence
+HYPOTHESIS (needs verified fix)
+
+---
+
 ## Search Index
 
 | Pattern | Subsystem | Status | Keywords |
@@ -177,6 +205,7 @@ CONFIRMED
 | KF-20251111-004 | copper | HYPOTHESIS | pour, translate, polygon |
 | KF-20251111-005 | panelisation | HYPOTHESIS | net, collision, isolation |
 | KF-20251111-006 | easyeda-api | CONFIRMED | poured, getter, API surface |
+| KF-20251111-007 | bridge | HYPOTHESIS | window rotation, document context, retry |
 
 ---
 

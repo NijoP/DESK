@@ -11,6 +11,7 @@ Chronological index of all documented engineering incidents.
 | INC-20251111-001 | Bridge Monolithic Script Failure | easyeda-integration / pcb-panelisation | HIGH | RECOVERED | LSN-20251111-001 |
 | INC-20251111-002 | Document Type Primitive Restriction | easyeda-integration / pcb-panelisation | HIGH | RECOVERED | LSN-20251111-002 |
 | INC-20251111-003 | Bridge Window Disconnection | easyeda-integration / bridge-reliability | CRITICAL | RECOVERED | LSN-20251111-003 |
+| INC-20251111-004 | Window Rotation Document Context Loss | easyeda-integration / bridge-reliability / pcb-panelisation | CRITICAL | OPEN | PENDING |
 
 ---
 
@@ -19,13 +20,17 @@ Chronological index of all documented engineering incidents.
 ### easyeda-integration
 - INC-20251111-001
 - INC-20251111-002
+- INC-20251111-003
+- INC-20251111-004
 
 ### pcb-panelisation
 - INC-20251111-001
 - INC-20251111-002
+- INC-20251111-004
 
 ### bridge-reliability
 - INC-20251111-003
+- INC-20251111-004
 
 ---
 
@@ -33,6 +38,7 @@ Chronological index of all documented engineering incidents.
 
 ### CRITICAL
 - INC-20251111-003
+- INC-20251111-004
 
 ### HIGH
 - INC-20251111-001
@@ -46,3 +52,6 @@ Chronological index of all documented engineering incidents.
 - INC-20251111-001
 - INC-20251111-002
 - INC-20251111-003
+
+### OPEN
+- INC-20251111-004
