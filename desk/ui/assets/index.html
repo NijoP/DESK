@@ -907,6 +907,7 @@
           const f = d.preflight;
           rows.push(`<div class="timeline-entry"><span class="timeline-msg">Pre-flight ${f.passed ? "PASS" : "REFUSED"} · planes ${esc(f.planes)} · outline primitives ${esc(f.outline_primitives)} · pads in router keep-outs ${esc(f.pads_in_router_keepouts)}${f.errors && f.errors.length ? " · " + esc(f.errors.join(" | ")) : ""}</span></div>`);
         }
+        if (d.chunks && d.chunks.count) rows.push(`<div class="timeline-entry"><span class="timeline-msg">Chunks ${d.chunks.count} · best ${esc(d.chunks.best_unrouted)} unrouted · ${(d.chunks.elapsed_s/60).toFixed(1)} of ${(d.chunks.budget_s/60).toFixed(0)} min · ${esc(d.chunks.summary.map(c => c.initial + "→" + c.final).join(", "))}</span></div>`);
         if (d.last_attempt) rows.push(`<div class="timeline-entry"><span class="timeline-msg">Last attempt: ${esc(JSON.stringify(d.last_attempt))}</span></div>`);
         if (rows.length) document.getElementById("route-summary").innerHTML = rows.join("");
         if (d.dense) {

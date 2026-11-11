@@ -47,6 +47,15 @@ class TestRouteProgress(unittest.TestCase):
         self.assertEqual(out["dense"]["hotspots"][0]["id"], "H1")
         json.dumps(out)
 
+    def test_chunk_summary_is_exposed(self):
+        self._w("progress_chunks.json", {"best_unrouted": 4, "elapsed_s": 400.0, "budget_s": 900.0,
+                                         "chunks": [{"chunk": 1, "status": "SUCCESS", "initial_unrouted": 42, "final_unrouted": 11, "seconds": 138.0, "ses": True, "pass_history": []},
+                                                    {"chunk": 2, "status": "SUCCESS", "initial_unrouted": 7, "final_unrouted": 4, "seconds": 90.0, "ses": True, "pass_history": []}]})
+        out = load_route_progress(self.d)
+        self.assertEqual(out["chunks"]["count"], 2)
+        self.assertEqual(out["chunks"]["best_unrouted"], 4)
+        self.assertEqual(out["chunks"]["summary"][1]["final"], 4)
+
     def test_refused_preflight_and_stopped_run_verdicts(self):
         self._w("preflight.json", {"passed": False, "errors": ["keep-outs: 3 pads"], "warnings": [], "planes_in_dsn": 0,
                                    "planes_declared": 2, "outline_primitives": 36, "pads_in_router_keepouts": ["U1.1"]})

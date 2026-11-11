@@ -33,6 +33,7 @@ def load_route_progress(project_dir: str) -> Dict[str, Any]:
     preflight = read_json(os.path.join(route_dir, "preflight.json"), default=None)
     dense = read_json(os.path.join(route_dir, "dense_analysis.json"), default=None)
     attempt = read_json(os.path.join(route_dir, "routing_attempt.json"), default=None)
+    chunks = read_json(os.path.join(route_dir, "progress_chunks.json"), default=None)
 
     out: Dict[str, Any] = {
         "project": project_dir,
@@ -42,8 +43,20 @@ def load_route_progress(project_dir: str) -> Dict[str, Any]:
         "preflight": None,
         "dense": None,
         "last_attempt": None,
+        "chunks": None,
         "verdict": "NO_ROUTING_DATA",
     }
+    if isinstance(chunks, dict):
+        out["chunks"] = {
+            "count": len(chunks.get("chunks", []) or []),
+            "best_unrouted": chunks.get("best_unrouted"),
+            "elapsed_s": chunks.get("elapsed_s"),
+            "budget_s": chunks.get("budget_s"),
+            "summary": [{"chunk": c.get("chunk"), "status": c.get("status"), "initial": c.get("initial_unrouted"),
+                         "final": c.get("final_unrouted"), "seconds": c.get("seconds"), "ses": c.get("ses")}
+                        for c in (chunks.get("chunks", []) or [])],
+            "updated_age_s": _age_s(os.path.join(route_dir, "progress_chunks.json")),
+        }
     if isinstance(progress, dict):
         elapsed = float(progress.get("elapsed_s") or 0.0)
         budget = float(progress.get("budget_s") or 0.0)
