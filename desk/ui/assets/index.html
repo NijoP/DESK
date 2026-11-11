@@ -468,6 +468,32 @@
 
     <!-- 2-Column Main Section -->
     <section class="layout-row">
+      <!-- Routing stage: file-backed status from state/route/*.json (225-minute programme, Stage 3 target 90 min) -->
+      <div class="panel">
+        <div class="panel-header">
+          <span>Routing Stage (target 90 min)</span>
+          <span class="metric-sub" id="route-verdict">NO_ROUTING_DATA</span>
+        </div>
+        <div class="panel-body">
+          <div class="stages-list" id="route-summary">
+            <div class="timeline-entry"><span class="timeline-msg">No routing data for this project yet.</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <span>Congestion Hotspots &amp; Problem Nets</span>
+          <span class="metric-sub" id="route-hotspot-count">0 regions</span>
+        </div>
+        <div class="panel-body">
+          <div class="timeline" id="route-hotspots">
+            <div class="timeline-entry"><span class="timeline-msg">Run tools/route.py to populate the dense-board analysis.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout-row">
       <!-- Left Column: Engineering Stages Workflow -->
       <div class="panel">
         <div class="panel-header">
@@ -861,6 +887,38 @@
       URL.revokeObjectURL(url);
     }
 
+    function esc(t) { return String(t == null ? "" : t).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+    async function fetchRoute() {
+      try {
+        const proj = (state && state.project_id) ? encodeURIComponent(state.project_id) : "projects/WATCH";
+        const res = await fetch("/api/v1/route/progress?project=" + proj);
+        if (!res.ok) return;
+        const d = await res.json();
+        document.getElementById("route-verdict").textContent = d.verdict || "UNKNOWN";
+        const rows = [];
+        if (d.progress) {
+          const p = d.progress;
+          const mins = (p.elapsed_s / 60).toFixed(1);
+          rows.push(`<div class="timeline-entry"><span class="timeline-msg">Engine ${esc(d.engine)} · phase ${esc(p.phase)} · ${mins} min of ${(p.budget_s/60).toFixed(0)} min budget (stage target ${d.stage_target_min} min)</span></div>`);
+          rows.push(`<div class="timeline-entry"><span class="timeline-msg">Passes ${esc(p.passes)} · unrouted ${esc(p.initial_unrouted)} → ${esc(p.last_unrouted)} · best ${esc(p.best_unrouted)} at pass ${esc(p.best_pass)} · ${esc(p.passes_since_best)} since best · restores ${esc(p.restores)}</span></div>`);
+          if (p.problem_nets && p.problem_nets.length) rows.push(`<div class="timeline-entry"><span class="timeline-msg">Problem nets: ${esc(p.problem_nets.join(", "))}</span></div>`);
+        }
+        if (d.preflight) {
+          const f = d.preflight;
+          rows.push(`<div class="timeline-entry"><span class="timeline-msg">Pre-flight ${f.passed ? "PASS" : "REFUSED"} · planes ${esc(f.planes)} · outline primitives ${esc(f.outline_primitives)} · pads in router keep-outs ${esc(f.pads_in_router_keepouts)}${f.errors && f.errors.length ? " · " + esc(f.errors.join(" | ")) : ""}</span></div>`);
+        }
+        if (d.last_attempt) rows.push(`<div class="timeline-entry"><span class="timeline-msg">Last attempt: ${esc(JSON.stringify(d.last_attempt))}</span></div>`);
+        if (rows.length) document.getElementById("route-summary").innerHTML = rows.join("");
+        if (d.dense) {
+          const h = d.dense.hotspots || [];
+          document.getElementById("route-hotspot-count").textContent = `${d.dense.hotspot_regions} regions · congestion ${d.dense.overall_congestion} · ${d.dense.overloaded_cells} overloaded · ${d.dense.ratsnest_crossings} crossings`;
+          const hs = h.map(x => `<div class="timeline-entry"><span class="timeline-time">${esc(x.id)}</span><span class="timeline-msg">[${(x.bbox_mm||[]).join(", ")}] mm · score ${esc(x.score)} · ${esc((x.causes||[]).join(", "))} → ${esc(x.strategy)}</span></div>`);
+          if (d.dense.priority_nets && d.dense.priority_nets.length) hs.push(`<div class="timeline-entry"><span class="timeline-time">prio</span><span class="timeline-msg">${esc(d.dense.priority_nets.join(", "))}</span></div>`);
+          if (hs.length) document.getElementById("route-hotspots").innerHTML = hs.join("");
+        }
+      } catch (err) {}
+    }
+
     // Startup polling & SSE
     window.addEventListener("DOMContentLoaded", function() {
       document.getElementById("server-addr").textContent = window.location.host;
@@ -869,6 +927,8 @@
       setInterval(fetchStatus, 2000);
       setInterval(fetchTimeline, 3000);
       setInterval(fetchLogs, 3000);
+      fetchRoute();
+      setInterval(fetchRoute, 5000);
     });
   </script>
 </body>

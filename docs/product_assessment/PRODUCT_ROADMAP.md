@@ -53,7 +53,7 @@ Team leads: HW = Principal Hardware Architect; SW = Principal Software Architect
 
 | ID | Item | Owner | Cx | Status |
 |---|---|---|---|---|
-| PX-05 | Data-driven Mission Control; remove WATCH default; render rework routes | SW | M | OPEN |
+| PX-05 | Data-driven Mission Control; remove WATCH default; render rework routes | SW | M | PARTIAL 2026-11-12: routing-stage panel and `/api/v1/route/progress` added (file-backed); WATCH default and rework panels still open |
 | PX-06 | Project-agnostic defaults (board size, net names) in `design_profile.json` with template and validator | PCB + SW | M | OPEN |
 | PX-08 | Unified error layer and argparse across tools | SW | M | OPEN |
 | PX-11 | Surface lessons at failure time; fix stale learning indexes | AI + QA | S | OPEN |

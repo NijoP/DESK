@@ -186,6 +186,11 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
             self._handle_rework_plan(query)
         elif path in {"/api/rework/history", "/api/v1/rework/history"}:
             self._handle_rework_history(query)
+        elif path in {"/api/route/progress", "/api/v1/route/progress"}:
+            # Routing-stage status from state/route/*.json (progress, pre-flight, dense analysis); file-backed, no ECAD call.
+            from desk.runtime.route_progress import load_route_progress
+            proj_id = query.get("project", ["projects/WATCH"])[0]
+            self._send_json(200, load_route_progress(proj_id))
         elif path == "/api/v1/health":
             self._handle_health()
         elif path in {"/api/projects", "/api/v1/projects"}:

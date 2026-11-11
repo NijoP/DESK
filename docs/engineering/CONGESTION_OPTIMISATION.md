@@ -44,7 +44,7 @@ A live A/B run through the new orchestrator on a scratch copy of the WATCH DSN i
 
 ## Remaining limiting factors
 
-- Freerouting 2.1.0's score function; only an engine upgrade (Java 25) fixes best-board selection.
+- ~~Freerouting 2.1.0's score function; only an engine upgrade (Java 25) fixes best-board selection.~~ Resolved 2026-11-12: Temurin JDK 25 bundled in `library/tools/jdk25/`, Freerouting 2.5.0 selected automatically; a 6-pass run on the scratch WATCH DSN stopped itself and returned a SES (42 → 11 unrouted) that the verifier confirms at 51/60 nets.
 - No fanout stub generation for RESTRICTED pads (78 on WATCH); the engine still does all escapes.
-- Pours ignored by the connectivity verifier (false "partially connected" for plane nets).
+- ~~Pours ignored by the connectivity verifier.~~ Resolved: declared planes are conductors; pad sizes and board-frame pad offsets fixed (QA-03).
 - Candidate evaluation in the refiner rebuilds the spatial index per candidate.
