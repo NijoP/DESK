@@ -27,7 +27,7 @@ class TestPassTracker(unittest.TestCase):
     def test_parses_real_lines(self):
         t = PassTracker(patience=6)
         rec = t.feed(line(1, 41.02, 64))
-        self.assertEqual(rec, {"pass": 1, "seconds": 41.02, "score": 700.0, "unrouted": 64})
+        self.assertEqual(rec, {"pass": 1, "seconds": 41.02, "score": 700.0, "unrouted": 64, "violations": None})
         self.assertIsNone(t.feed("2026-11-11 INFO Settings were loaded from freerouting.json"))
         t.feed("INFO   [x] Restoring an earlier board that has the score of 708.76 (51 unrouted).")
         self.assertEqual(t.restores, 1)
@@ -66,6 +66,12 @@ class TestPassTracker(unittest.TestCase):
             if stop2 is None and t2.stagnated():
                 stop2 = p
         self.assertEqual((t2.best_unrouted, t2.best_pass, stop2), (7, 20, 35))
+
+    def test_parses_v25_line_with_violations(self):
+        t = PassTracker(patience=3)
+        rec = t.feed("2026-11-12 01:11:56.025 INFO   [E55B00] Auto-routing pass #3 on board 'x' was completed in 13.77 seconds "
+                     "with score 912.81 (17 unrouted and 48 violations), using 94.89 CPU seconds and 1 MB memory.")
+        self.assertEqual(rec, {"pass": 3, "seconds": 13.77, "score": 912.81, "unrouted": 17, "violations": 48})
 
     def test_new_best_resets_patience(self):
         t = PassTracker(patience=3)

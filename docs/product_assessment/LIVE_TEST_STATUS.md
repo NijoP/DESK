@@ -4,12 +4,12 @@ Updated 2026-11-12. Categories are kept separate so that passing offline tests a
 
 | Category | Count / state | Evidence |
 |---|---|---|
-| Offline unit tests | 427 passed, 3 skipped across 74 files (2026-11-12 01:20 local, 29 s) | `python -m unittest discover -s tests` |
+| Offline unit tests | 428 passed, 3 skipped across 74 files (2026-11-12 01:30 local, 26 s) | `python -m unittest discover -s tests` |
 | Integration tests (offline, multi-module) | routing e2e on Project One SES, rework e2e, orchestrator with mock adapters, dense-board fixtures | `tests/test_routing_e2e_project_one.py`, `test_rework_e2e.py`, `test_orchestrator.py`, `test_dense_intelligence.py` |
 | EasyEDA API tests (read-only, live) | **1 pass executed** on the WATCH project through the gateway: 13 getter calls, 484 ms, no mutation | `docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md` |
 | Live EasyEDA mutation tests | **0 executed**; nine-stage checklist defined, never run | `docs/LIVE_INTEGRATION_CHECKLIST.md`, `tools/live_disposable_test.py` |
 | Complete PCB workflow tests | 0 timed runs; one real routing attempt observed (WATCH, 2026-11-11: 49 passes, no SES) | `projects/WATCH/state/route/freerouting.log` |
-| Freerouting engine tests (offline, scratch copy) | 3 runs: two WATCH-DSN runs (best 8 / 12 unrouted, engine ignores every stop setting, no SES) and one smoke-fixture run (SES in 3.2 s) | `docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`, `learning/incidents/INC-20261112-009.md` |
+| Freerouting engine tests (offline, scratch copy) | 5 runs: two 2.1.0 WATCH-DSN runs (no SES, engine ignores stop settings), 2.1.0 smoke (SES 3.2 s), **2.5.0 smoke (SES 4.4 s) and 2.5.0 WATCH-DSN run stopped at 6 passes with a 100 KB SES, 11 unrouted** | `docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`, `learning/incidents/INC-20261112-009.md` |
 | Senior engineer acceptance | none | `ESP32_HARDWARE_ACCEPTANCE_CRITERIA.md` |
 | Manufacturing verification (fabricator DFM) | none | — |
 

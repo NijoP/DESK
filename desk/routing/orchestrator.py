@@ -52,7 +52,10 @@ class PassTracker:
     Freerouting 2.x oscillates (64, 51, 51, 27, 18, 11, 12, 11, 27 ...) so an identical-count
     rule never fires while the run burns its whole timeout.
     """
-    PASS_RX = re.compile(r"pass\s*#?(\d+).*?completed in\s*([0-9.]+)\s*seconds(?:.*?score of\s*([0-9.]+))?.*?\((\d+)\s+unrouted\)", re.I)
+    # v2.1: "pass #3 ... completed in 24.56 seconds with the score of 711.80 (51 unrouted), ..."
+    # v2.5: "pass #3 ... completed in 13.77 seconds with score 912.81 (17 unrouted and 48 violations), ..."
+    PASS_RX = re.compile(r"pass\s*#?(\d+).*?completed in\s*([0-9.]+)\s*seconds(?:.*?score(?: of)?\s*([0-9.]+))?"
+                         r".*?\((\d+)\s+unrouted(?:\s+and\s+(\d+)\s+violations?)?\)", re.I)
     ALT_RX = re.compile(r"pass\s*#?(\d+)\D.*?(\d+)\s+unrouted", re.I)
 
     def __init__(self, patience: int = 6):
@@ -71,7 +74,8 @@ class PassTracker:
         rec = None
         if m:
             rec = {"pass": int(m.group(1)), "seconds": float(m.group(2)),
-                   "score": float(m.group(3)) if m.group(3) else None, "unrouted": int(m.group(4))}
+                   "score": float(m.group(3)) if m.group(3) else None, "unrouted": int(m.group(4)),
+                   "violations": int(m.group(5)) if m.group(5) else None}
         else:
             m2 = self.ALT_RX.search(line)
             if m2 and ("completed" in low or "unrouted" in low):
@@ -224,15 +228,17 @@ class RoutingEngineOrchestrator:
 
         found: List[Tuple[Tuple[int, ...], str, str]] = []
         incompatible: List[str] = []
-        for jar_name in self.CANDIDATE_JARS:
+        # Probe newest first (by the version in the file name; the unversioned freerouting.jar last) and stop at
+        # the first JAR that starts: each failed probe can cost its full timeout.
+        present = [n for n in self.CANDIDATE_JARS if os.path.exists(os.path.join(self.tools_dir, n))]
+        present.sort(key=lambda n: (self._version_tuple(n) if re.search(r"\d", n) else (0,)), reverse=True)
+        for jar_name in present:
             jar_path = os.path.join(self.tools_dir, jar_name)
-            if not os.path.exists(jar_path):
-                continue
             compat, ver = self._probe_jar_compatibility(jar_path)
             if compat:
                 found.append((self._version_tuple(ver), jar_path, ver))
-            else:
-                incompatible.append(f"{jar_name} ({ver})")
+                break
+            incompatible.append(f"{jar_name} ({ver})")
         if found:
             found.sort(key=lambda t: t[0], reverse=True)
             self.last_discovery_note = (
@@ -473,7 +479,9 @@ class RoutingEngineOrchestrator:
         ])
         if ver_t >= (2, 2):
             cmd.append(f"--router.autorouter.max_passes={max_passes}")
-            cmd.append(f"--router.autorouter.stagnation_pass_limit={int(stagnation_patience)}")
+            if os.environ.get("DESK_FR_STAGNATION_FLAG") == "1":
+                # documented for newer builds; v2.5.0 rejects it ("No field found ... stagnation_pass_limit")
+                cmd.append(f"--router.autorouter.stagnation_pass_limit={int(stagnation_patience)}")
             cmd.append(f"--router.job_timeout={timeout_str}")
             if priority_net_classes:
                 cmd.append("--router.autorouter.priority_net_classes=" + ",".join(priority_net_classes))

@@ -105,7 +105,7 @@ Team leads: HW = Principal Hardware Architect; SW = Principal Software Architect
 | SW-11 | Pours as conductors in `PhysicalConnectivityVerifier`; poured-region readback | SW + PCB | M | OPEN, P1 (blocks 100 % connectivity claims for plane nets) |
 | PERF-08 | Reuse spatial index across refiner candidates (12 s → target < 2 s on WATCH) | SW | S | OPEN |
 | H-12 | Switching-loop area check for buck/boost | HW | M | OPEN |
-| ENG-01 | Install Java 25 and validate Freerouting 2.5.0 (completion-dominant score, best-board restore) | Founder + PCB | S | OPEN, human step |
+| ENG-01 | Install Java 25 and validate Freerouting 2.5.0 (completion-dominant score, best-board restore) | Founder + PCB | S | DONE 2026-11-12: bundled JDK in library/tools/jdk25, stopped job returned a SES (INC-20261112-009) |
 | ESP-01 | Freeze C2/C3 benchmark designs (`ESP32_C2_C3_PERFORMANCE_SPECIFICATION.md`) as disposable projects | HW | M | OPEN, human step |
 | ESP-02 | Stage timers and accounting report (`ESP32_ENGINEERING_TIME_REPORT.md`) | SW + QA | M | OPEN |
 | ESP-03 | Block-spec and placement generators from requirements + LCSC data (Stage 1/2 time) | PX + AI | L | OPEN |

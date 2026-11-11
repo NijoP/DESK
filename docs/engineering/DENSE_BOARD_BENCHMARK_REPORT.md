@@ -63,7 +63,16 @@ Command: `-de watch.dsn -do watch_new.ses -mp 30 -mt 1`, 240 s budget, priority 
 | Legacy-keys global config, `max_passes 6`, `job_timeout 00:02:00`, scratch WATCH DSN | 12 passes in 240 s, best 12 unrouted; engine ignored both limits; killed; no SES |
 | Smoke fixture (`desk/routing/dsn_fixture.py`, 4 nets, `-mp 2`) | 12/12 connections in 3.2 s, SES written (2,232 bytes) |
 
-Conclusion: on this host Freerouting 2.1.0 honours no stop setting at all (CLI, per-run file, global file); the SES write path itself works. A partial board can only be obtained from Freerouting ≥ 2.2 on Java 25 (human install step, `INC-20261112-009`). `tools/route.py` now runs the smoke fixture before any long job and refuses to start when the engine cannot write a SES.
+### 3d. Freerouting 2.5.0 on the bundled JDK 25 (2026-11-12 01:10, after the Founder installed Java 25)
+
+| Run | Result |
+|---|---|
+| Smoke fixture | SES in 4.4 s |
+| Scratch WATCH DSN, max_passes 6, 240 s budget, via_costs 80 | engine stopped itself after 6 passes (138 s) and wrote a 100 KB SES; unrouted 42 → 11; 48 baseline clearance violations reported |
+
+A stopped job now returns a SES (rework item C proven). Pass 1 reached 42 unrouted versus 64-68 with 2.1.0 on the same DSN. Verifier cross-check against the live dump: 27/60 nets fully connected while the engine reports 11 open connections; frame verified identical; discrepancy tracked as QA-03.
+
+Conclusion for 2.1.0: on this host Freerouting 2.1.0 honours no stop setting at all (CLI, per-run file, global file); the SES write path itself works. A partial board can only be obtained from Freerouting ≥ 2.2 on Java 25 (human install step, `INC-20261112-009`). `tools/route.py` now runs the smoke fixture before any long job and refuses to start when the engine cannot write a SES.
 
 ## 4. What is routed more efficiently now
 
