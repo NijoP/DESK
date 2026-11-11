@@ -221,7 +221,7 @@ class DesignProfile:
         return curr
 
     def derive_trace_width_mil(self, net: str, is_inner: bool = False, layer_idx: Optional[int] = None) -> float:
-        """Calculate IPC-2152 width using profile current, copper weight, and allowed temp rise."""
+        """Calculate trace width (IPC-2221 power law; see routing/width.py) from profile current, copper weight and temp rise."""
         min_width = self.manufacturing.min_trace_width_mil
 
         # 1. Check if net is in RF profile
@@ -230,7 +230,7 @@ class DesignProfile:
             rf_prof = rf_dict[net]
             return max(rf_prof.trace_width_mil, min_width)
 
-        # 2. Derive physical current capacity from IPC-2152
+        # 2. Derive physical current capacity (IPC-2221 formula)
         current_A = self.get_current_for_net(net)
 
         # Determine actual copper thickness from stackup

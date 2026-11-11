@@ -22,10 +22,12 @@ from desk import spec as S
 from desk import ledger as LG
 
 ROOT = S.ROOT
-DOC_FILES = ["AGENTS.md", "docs/*.md"]
+# learning/ holds live-verified EasyEDA gotchas (incidents, lessons); indexing them lets
+# `ctx.py find` surface a known failure at the moment an agent hits it (roadmap SW-10).
+DOC_FILES = ["AGENTS.md", "docs/*.md", "learning/incidents/*.md", "learning/lessons/*.md"]
 PROJECT_MD = ["REQUIREMENTS.md", "BOM_SELECTION.md", "BLOCK_PLAN.md", "RESULT.md", "ROUTING_PLAN.md"]
 TOK = 4  # chars per token (estimate)
-FORMAT = 3  # bump when chunk format changes -> old caches are rebuilt
+FORMAT = 4  # bump when chunk format changes -> old caches are rebuilt
 
 
 def _json(path, default=None):

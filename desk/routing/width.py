@@ -54,7 +54,9 @@ class TraceWidthManager:
         copper_oz: float = 1.0,
         temp_rise_C: float = 10.0
     ) -> float:
-        """Calculates required trace width in mils based on IPC-2152 formulas.
+        """Calculates required trace width in mils using the IPC-2221 power-law formula.
+        Note: the function name says 2152 for API compatibility; the constants below are IPC-2221
+        (k = 0.048 external / 0.024 internal). IPC-2152 chart data is not implemented (roadmap H-10).
         A = (I / (k * delta_T^b))^(1 / c)
         where k = 0.048 for outer, 0.024 for inner.
         """

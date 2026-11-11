@@ -161,7 +161,7 @@ class RoutingPriorityScheduler:
 
 
 class TraceWidthCalculator:
-    """Calculates IPC-2152 trace widths based on current capacity and layer placement."""
+    """Calculates trace widths (IPC-2221 power law) based on current capacity and layer placement."""
 
     @staticmethod
     def get_width_mil(net_name: str, current_A: Optional[float] = None, is_inner: bool = False,
@@ -183,7 +183,7 @@ class TraceWidthCalculator:
         if current_A <= 0.3:
             return min_signal_width_mil
 
-        # IPC-2152 Area formula
+        # IPC-2221 area formula (not IPC-2152 chart data)
         cu_oz = 0.5 if is_inner else 1.0
         k = 0.024 if is_inner else 0.048
         delta_T = 10.0  # 10 deg C temp rise
