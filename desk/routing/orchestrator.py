@@ -563,10 +563,12 @@ class RoutingEngineOrchestrator:
                 self._graceful_stop(proc)
                 break
 
-            if stagnated and tracker.passes >= 5:
-                # Terminate cleanly on plateau. For v2.1 the SES is only written at job end, so
-                # terminate() (not kill) gives the JVM its shutdown hook; v2.2+ stops itself via
-                # stagnation_pass_limit before we get here.
+            if stagnated and tracker.passes >= 5 and os.name != "nt":
+                # POSIX: SIGINT lets the JVM run its shutdown hooks. On Windows a child JVM cannot be
+                # stopped gracefully and the SES is written only when the engine ends on its own
+                # (measured 2026-11-12: a plateau terminate at pass 17 lost a 4-unrouted board), so on
+                # Windows the plateau is only recorded; the run ends via max_passes/job_timeout.
+                # Use execute_routing_chunked() for bounded runs that always keep a SES.
                 self._graceful_stop(proc)
                 break
 
@@ -682,3 +684,103 @@ class RoutingEngineOrchestrator:
                                  "the engine cannot return a partial board here (KF-20261111-006). Install Java 25 so "
                                  "Freerouting >= 2.2 is used, or route with EasyEDA's native autorouter.")
         return res
+
+    def execute_routing_chunked(
+        self,
+        dsn_path: str,
+        ses_path: str,
+        working_dir: str,
+        chunk_passes: int = 6,
+        max_chunks: int = 8,
+        plateau_chunks: int = 2,
+        budget_sec: float = 1200.0,
+        chunk_timeout_sec: float = 300.0,
+        log_callback: Optional[Any] = None,
+        **engine_kwargs,
+    ) -> EngineExecutionResult:
+        """Bounded routing that ALWAYS keeps a SES (rework item B, measured 2026-11-12).
+
+        Each chunk runs `chunk_passes` passes and ends on its own, so the engine writes its SES. The
+        best SES (lowest final unrouted) is kept as `ses_path`; the next chunk continues from it with
+        `-de board.dsn+best.ses`. Stops when a chunk reaches 0 unrouted, when `plateau_chunks`
+        consecutive chunks fail to improve, when `max_chunks` or `budget_sec` is reached. This replaces
+        plateau termination, which on Windows kills the JVM before it writes anything.
+        """
+        import shutil as _shutil
+        t0 = time.time()
+        best_unrouted: Optional[int] = None
+        best_ses = os.path.join(working_dir, "chunk_best.ses")
+        history: List[Dict[str, Any]] = []
+        chunks_since_improvement = 0
+        last: Optional[EngineExecutionResult] = None
+        input_ses = engine_kwargs.pop("input_ses", None)
+        if input_ses and os.path.exists(input_ses):
+            _shutil.copyfile(input_ses, best_ses)
+        for chunk in range(1, max_chunks + 1):
+            remaining = budget_sec - (time.time() - t0)
+            if remaining < 30.0:
+                break
+            chunk_ses = os.path.join(working_dir, f"chunk_{chunk:02d}.ses")
+            try:
+                os.remove(chunk_ses)
+            except OSError:
+                pass
+            res = self.execute_routing(
+                dsn_path=dsn_path, ses_path=chunk_ses, max_passes=chunk_passes,
+                timeout_sec=min(chunk_timeout_sec, remaining), working_dir=working_dir,
+                stagnation_patience=max(chunk_passes, 99),   # never stop a chunk early; it must end by itself
+                log_callback=log_callback,
+                input_ses=best_ses if os.path.exists(best_ses) else None,
+                **engine_kwargs,
+            )
+            last = res
+            final = res.final_unrouted if res.final_unrouted is not None else res.best_unrouted
+            history.append({"chunk": chunk, "status": res.status, "passes": res.passes_completed, "seconds": res.duration_sec,
+                            "initial_unrouted": res.initial_unrouted, "final_unrouted": final, "ses": res.ses_generated,
+                            "pass_history": res.pass_history})
+            write_progress(os.path.join(working_dir, "progress_chunks.json"), {
+                "chunks": history, "best_unrouted": best_unrouted, "elapsed_s": round(time.time() - t0, 1), "budget_s": budget_sec})
+            if not res.ses_generated or final is None:
+                # a chunk that returns nothing is a tool defect, not a routing result: stop and report
+                break
+            if best_unrouted is None or final < best_unrouted:
+                best_unrouted = final
+                _shutil.copyfile(chunk_ses, best_ses)
+                chunks_since_improvement = 0
+            else:
+                chunks_since_improvement += 1
+            if final == 0 or chunks_since_improvement >= plateau_chunks:
+                break
+        if os.path.exists(best_ses):
+            _shutil.copyfile(best_ses, ses_path)
+        dur = round(time.time() - t0, 2)
+        ok = os.path.exists(ses_path) and os.path.getsize(ses_path) > 0
+        status = ("SUCCESS" if ok and best_unrouted == 0 else
+                  "PLATEAU_PARTIAL" if ok else
+                  (last.status if last else "NO_RUN"))
+        return EngineExecutionResult(
+            success=ok,
+            status=status,
+            engine_name="Freerouting",
+            engine_version=last.engine_version if last else "",
+            engine_path=last.engine_path if last else "",
+            command=last.command if last else [],
+            duration_sec=dur,
+            returncode=last.returncode if last else 0,
+            passes_completed=sum(h["passes"] for h in history),
+            initial_unrouted=history[0]["initial_unrouted"] if history else None,
+            final_unrouted=best_unrouted,
+            ses_generated=ok,
+            ses_path=ses_path if ok else None,
+            ses_size_bytes=os.path.getsize(ses_path) if ok else 0,
+            stdout_summary="\n".join(f"chunk {h['chunk']}: {h['status']} {h['initial_unrouted']} -> {h['final_unrouted']} in {h['seconds']}s" for h in history),
+            stderr_summary=last.stderr_summary if last else "",
+            error_message=None if ok else (last.error_message if last else "no chunk ran"),
+            best_unrouted=best_unrouted,
+            best_pass=None,
+            pass_history=[p for h in history for p in h["pass_history"]],
+            restores_seen=sum(getattr(x, "restores_seen", 0) for x in [last] if x),
+            engine_config={"chunk_passes": chunk_passes, "max_chunks": max_chunks, "plateau_chunks": plateau_chunks,
+                           "budget_sec": budget_sec, "chunks": [{k: v for k, v in h.items() if k != "pass_history"} for h in history]},
+        )
+

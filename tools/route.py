@@ -284,19 +284,27 @@ if "--skip-smoke" not in args:
     if not _smoke.success:
         raise SystemExit(f"STOP: {_smoke.error_message}")
 
-exec_result = orchestrator.execute_routing(
+_prev_ses = os.path.join(wd, "desk_route_prev.ses") if "--continue" in args and os.path.exists(os.path.join(wd, "desk_route_prev.ses")) else None
+_via_costs = 80 if len(dense_report.routable_layers) <= 2 else None   # discourage via hopping when only 2 signal layers remain
+# Chunked execution: every chunk ends on its own so the engine writes its SES; the best SES is kept and
+# continued (-de dsn+ses). A plateau never terminates the JVM (on Windows that loses the board; INC-20261112-009).
+exec_result = orchestrator.execute_routing_chunked(
     dsn_path=tuned_dsn_path,
     ses_path=ses,
-    max_passes=passes,
-    timeout_sec=mode_cfg.timeout_sec,
     working_dir=wd,
-    stagnation_patience=mode_cfg.stagnation_patience,
+    chunk_passes=max(4, min(8, passes // 4)),
+    max_chunks=max(2, passes // max(4, min(8, passes // 4)) + 1),
+    plateau_chunks=2,
+    budget_sec=mode_cfg.timeout_sec,
+    chunk_timeout_sec=min(300.0, mode_cfg.timeout_sec),
     priority_net_classes=priority_classes,
     plane_nets=plane_nets,
-    via_costs=80 if len(dense_report.routable_layers) <= 2 else None,   # discourage via hopping when only 2 signal layers remain
-    input_ses=(os.path.join(wd, "desk_route_prev.ses") if "--continue" in args and os.path.exists(os.path.join(wd, "desk_route_prev.ses")) else None),
+    via_costs=_via_costs,
+    input_ses=_prev_ses,
 )
 profiler.end_phase()
+for _c in exec_result.engine_config.get("chunks", []):
+    print(f"  chunk {_c['chunk']}: {_c['status']} unrouted {_c['initial_unrouted']} -> {_c['final_unrouted']} in {_c['seconds']}s ({_c['passes']} passes)")
 print(f"Engine {exec_result.engine_version}: {exec_result.passes_completed} passes, best {exec_result.best_unrouted} unrouted at pass "
       f"{exec_result.best_pass}, last {exec_result.final_unrouted}, restores {exec_result.restores_seen}")
 if exec_result.ses_generated:
