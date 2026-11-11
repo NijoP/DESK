@@ -52,6 +52,16 @@ Coordinates deterministic net scheduling, escape routing, via transitions, and c
 5. Execute routing passes; perform rip-up and retry on congested channels.
 6. Verify 100% netlist connectivity and run DRC checks.
 
+## Engine execution (2026-11-12)
+- `tools/route.py` runs a pre-flight gate, an engine smoke run, then **chunked** routing
+  (`RoutingEngineOrchestrator.execute_routing_chunked`): chunks of `max_passes` end on their own and
+  write a SES; the best SES is kept and continued with `-de board.dsn+best.ses`. Never terminate the
+  JVM on Windows to "stop on plateau": it loses the board (INC-20261112-009). Watch
+  `state/route/progress.json` (per pass) and `state/route/progress_chunks.json` (per chunk) or the
+  Mission Control routing panel (`/api/v1/route/progress`).
+- The engine must be Freerouting >= 2.2 on Java 25 (`library/tools/jdk25/`, `DESK_JAVA`); 2.1.0 on
+  an older Java ignores every stop setting and only writes a SES at 100 %. `desk doctor` reports it.
+
 ## Validation Steps
 - Verify connectivity: `python tools/verify.py projects/<P> routing`.
 - Execute routing test suite: `python -m unittest tests.test_routing_dsn tests.test_routing_escape tests.test_routing_priority tests.test_routing_pass_tracker tests.test_dense_intelligence`.

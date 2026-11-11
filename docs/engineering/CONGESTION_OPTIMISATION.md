@@ -22,6 +22,8 @@ Evidence base: the recorded Freerouting 2.1.0 run on WATCH (`projects/WATCH/stat
 | Per-net clearances from the routing plan reach the DSN | `tools/route.py` → `tune_dsn(net_clearances=…)` | voltage/RF/fine-pitch clearances no longer collapsed to 4.05 mil |
 | Pre-flight congestion veto and dense-board report before Java starts | `tools/route.py` | impossible boards fail in milliseconds with a named cause |
 | BALANCED stagnation patience 6 → 4 | `desk/routing/modes.py` | shorter stalls (the operator's PRECISION edit kept) |
+| Bundled JDK 25 + Freerouting 2.5.0 selected automatically | `find_java`, `discover_engine` | engine honours `max_passes`, scores by completion, writes its best board; 6 passes on WATCH: 42 → 11 unrouted in 138 s with a SES |
+| **Chunked execution** (`execute_routing_chunked`): natural-ending chunks, best SES kept, continued with `-de dsn+ses`; plateau never terminates the JVM on Windows | orchestrator, `tools/route.py` | every bounded run ends with a SES (a plateau terminate lost a 4-unrouted board on 2026-11-12); continuation measured: 11 → start at 7, 6 passes, 84 s |
 
 ## Bounded retries and recovery
 

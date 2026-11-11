@@ -39,6 +39,9 @@ Bottleneck: human transcription of block specs and pin maps, not computation. Le
 | Recorded full run | 996 s, no SES (killed at timeout) | M |
 | Scratch A/B run through the new orchestrator (240 s budget) | engine ignored the merged config, ran to DESK's 360 s kill, best 8 unrouted at pass 16, no SES | M (2026-11-12; config writer corrected to legacy keys afterwards; re-verification pending) |
 | Tracker stop on the recorded log (patience 6 / 14) | pass 12 (279 s) / pass 35 (~675 s) | M (simulation on real log) |
+| Freerouting 2.5.0 on the bundled JDK 25, scratch WATCH DSN, 6 passes | 138 s, SES written, 42 → 11 unrouted | M (2026-11-12) |
+| 2.5.0 continuation from that SES (`-de dsn+ses`), 6 passes | 84 s, SES written, 7 → 6 | M |
+| 2.5.0 uninterrupted run, density priority classes, 17 passes | best 4 unrouted at pass 9 (~160 s engine time); SES lost to a plateau terminate on Windows (now never done) | M |
 | SES import + widening + repour + readback | 4 bridge calls + 6.5 s fixed sleeps | M (audit) |
 | DRC pass (EasyEDA) | ≤ 600 s each, up to 3 converge passes | M (timeouts); actual U |
 | **Stage estimate for C3-like WATCH** | **> 90 min today** (two 15-minute engine runs that produced nothing, plus DRC) | E |
