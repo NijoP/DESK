@@ -9,18 +9,18 @@
 | IO2 (38) | I2S_MIC_SD2 | Right Mic Data | Free GPIO | Input / Hi-Z |
 | IO3 (15) | I2S_MIC_CLK | Common Mic BCLK / CLK | Free GPIO | Output |
 | IO4 (4) | I2S_MIC_WS | Left Mics L/R WS Select | Free GPIO | Output |
-| IO5 (5) | I2S_SPK_BCLK | Stereo Amp I2S Bit Clock | Free GPIO | Output |
-| IO6 (6) | I2S_SPK_WS | Stereo Amp I2S Word Select | Free GPIO | Output |
-| IO7 (7) | I2S_SPK_DOUT | Stereo Amp I2S Data Out | Free GPIO | Output |
-| IO8 (12) | AMP_SD_MODE | Stereo Amp Enable / Shutdown | Free GPIO | Pull-down 100k (LOW) |
+| IO5 (5) | I2S_SPK_BCLK | Mono Amp I2S Bit Clock | Free GPIO | Output |
+| IO6 (6) | I2S_SPK_WS | Mono Amp I2S Word Select | Free GPIO | Output |
+| IO7 (7) | I2S_SPK_DOUT | Mono Amp I2S Data Out | Free GPIO | Output |
+| IO8 (12) | AMP_SD_MODE | Mono Amp Enable / Shutdown | Free GPIO | Pull-down 100k (LOW) |
 | IO9 (17) | I2C_SDA | IMU Sensor I2C Data | Free GPIO | Pull-up 4.7k (HIGH) |
 | IO10 (18) | I2C_SCL | IMU Sensor I2C Clock | Free GPIO | Pull-up 4.7k (HIGH) |
 | IO11 (19) | IMU_INT1 | Motion Detection Interrupt | Free GPIO | Input (Pulled low) |
-| IO12 (20) | SD_SPI_MOSI | MicroSD MOSI | Free GPIO | Output |
-| IO13 (21) | SD_SPI_MISO | MicroSD MISO | Free GPIO | Input (PU 10k) |
-| IO14 (22) | SD_SPI_CLK | MicroSD SCLK | Free GPIO | Output |
-| IO15 (8) | SD_CS | MicroSD Chip Select | Free GPIO | Output (PU 10k) |
-| IO16 (9) | SD_DET | MicroSD Card Detect switch | Free GPIO | Input (PU 10k) |
+| IO12 (20) | LED_3 | Status LED 3 (rev B, via R32 1k) | Free GPIO | Output (LOW) |
+| IO13 (21) | LED_4 | Status LED 4 (rev B, via R33 1k) | Free GPIO | Output (LOW) |
+| IO14 (22) | LED_5 | Status LED 5 (rev B, via R34 1k) | Free GPIO | Output (LOW) |
+| IO15 (8) | LED_6 | Status LED 6 (rev B, via R35 1k) | Free GPIO | Output (LOW) |
+| IO16 (9) | — (NC) | Spare, microSD removed in rev B | Free GPIO | NC |
 | IO17 (10) | LCD_SCL | Waveshare LCD SPI Clock | Free GPIO | Output |
 | IO18 (11) | LCD_SDA | Waveshare LCD SPI MOSI | Free GPIO | Output |
 | IO19 (13) | USB_DM | USB-C Native USB D- | Native USB Peripheral | Hi-Z |
@@ -46,3 +46,8 @@
 - **GPIO46**: Boot strapping pin (must be pulled LOW during reset for normal boot). Open-drain active-low signals or floating pull-down verified.
 - **GPIO3**: Connected to common I2S Mic Clock. Free GPIO, no bootstrapping constraint.
 - **GPIO19/GPIO20**: Dedicated native USB Full-Speed D- / D+ peripheral lines connected to USB-C receptacle for firmware flashing and USB CDC communication.
+
+
+## Rev B change log (2026-11-11)
+- microSD removed (block 09_STORAGE retired): IO12-IO15 re-assigned to status LEDs 3-6 (client order 1-6 = LED1, LED2, LED3, LED4, LED5, LED6 top-to-bottom on the right edge), IO16 spare/NC.
+- Audio output is mono: I2S_SPK_* drive a single MAX98357A (U6) whose PVDD is the 5 V boost rail; VBUS_BOOST_EN must be driven HIGH before playback.

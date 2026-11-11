@@ -135,3 +135,15 @@ A compact, wearable voice-interactive watch worn throughout the day with local o
 | IO46 (16) | CHG_STAT | BQ24074 Charge Status | Strap pin (must be low at reset)| Input (open drain PU) |
 | IO47 (24) | CHG_EN | BQ24074 Charge Enable / Mode | Free GPIO | Output (Pull-down) |
 | IO48 (25) | LED_PWR | Power LED 1 (Charging / Power) | Free GPIO | Output (LOW) |
+
+
+## Rev B client overrides (2026-11-11, Captain verbal; supersede the rows above where they conflict)
+| ID | Change | New requirement | Status |
+|---|---|---|---|
+| R-03 | Audio output | Mono Class-D, 3 W into 4 ohm, MAX98357A on 5 V boost rail; speaker on solder pads SPK+/SPK- | CONFIRMED |
+| R-08 | Display | Waveshare 1.47inch LCD Module (ST7789V3) on a soldered 1x8 1.27 mm pin header, no FPC/JST | CONFIRMED |
+| R-13 | Battery | 300 mAh 1S LiPo; runtime ~6.8 h at the §3 profile (client-accepted) | CONFIRMED |
+| R-14 | Envelope | 30 x 45 mm rounded rectangle, 4 corner mounting holes, USB-C on side, battery over top half, module bottom half | CONFIRMED |
+| R-20 | Speaker connector | Solder pads (BAT_WIREPAD_2P footprint), one speaker | CONFIRMED |
+| R-21 (new) | Status LEDs | Six LEDs, order 1-6 top-to-bottom on the right edge below the display, each on its own GPIO + 1k | CONFIRMED |
+| R-22 (new) | Storage | No microSD (block 09 retired) | CONFIRMED |

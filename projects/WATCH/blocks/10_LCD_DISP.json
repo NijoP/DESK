@@ -2,7 +2,7 @@
  "id": "10_LCD_DISP",
  "title": "10 WAVESHARE LCD INTERFACE",
  "status": "draft",
- "purpose": "JST PH 2.0mm 8-pin connector matching Waveshare 1.47-inch LCD interface cable with power decoupling and control line conditioning.",
+ "purpose": "Soldered 1x8 1.27 mm pin header (KH-1.27PH180-1X8P-L7.2) carrying the Waveshare 1.47-inch LCD Module 8-pin SPI interface (VCC, GND, DIN, CLK, CS, DC, RST, BL) with power decoupling and control-line conditioning. Rev B client change: no FPC/JST connector.",
  "ports": [
   "3V3",
   "GND",
@@ -32,8 +32,8 @@
  "parts": [
   {
    "ref": "J6",
-   "mpn": "S8B-PH-SM4-TB",
-   "role": "JST PH 2.0mm 8-pin Right-Angle SMT Header",
+   "mpn": "KH-1.27PH180-1X8P-L7.2",
+   "role": "1x8 1.27 mm vertical pin header, soldered to the Waveshare 1.47inch LCD Module (pin order VCC, GND, DIN, CLK, CS, DC, RST, BL)",
    "pins": {
     "1": "3V3",
     "2": "GND",
@@ -42,10 +42,10 @@
     "5": "LCD_CS",
     "6": "LCD_DC",
     "7": "LCD_RST",
-    "8": "LCD_BL",
-    "9": "GND",
-    "10": "GND"
-   }
+    "8": "LCD_BL"
+   },
+   "lcsc": "C2938403",
+   "package": "HDR-TH_8P-P1.27-V-M"
   },
   {
    "ref": "C27",
@@ -103,8 +103,6 @@
   ],
   "GND": [
    "J6.2",
-   "J6.9",
-   "J6.10",
    "C27.2",
    "C28.2",
    "R24.2"

@@ -211,6 +211,106 @@ HYPOTHESIS (needs verified fix)
 
 ## Usage
 
+## KF-20261111-004: DSN Without Planes
+
+### Failure Pattern
+Autorouter stalls with 100+ unrouted connections on a 4-layer board that has solid GND / power pours.
+
+### Root Cause
+EasyEDA's DSN export carries no pours; the router routes every plane-net pin as a trace.
+
+### Symptoms
+- GND / 3V3 dominate the unrouted list; plateau from pass ~15
+
+### Proven Resolution
+Declare `(plane NET (polygon LAYER 0 ...))` in `(structure)` from `placement.json` `planes` (route.py Phase 9b).
+
+### Prevention Rule
+**ROUTE_PLANES_DECLARED:** every pour-backed net has a plane in the DSN matching the pour polygon.
+
+### Related Incident
+INC-20261111-007
+
+### Confidence
+CONFIRMED
+
+---
+
+## KF-20261111-005: Placement Keep-outs Exported as Router Keep-outs
+
+### Failure Pattern
+Router log full of "maze search algorithm could not be created"; plateau at 30-45 unrouted regardless of time budget.
+
+### Root Cause
+Placement keep-outs (mic ports, antenna, holes) exported as all-layer `(keepout (polygon signal ...))`; pads inside them are unreachable.
+
+### Symptoms
+- Failures concentrate on parts that sit inside or next to keep-outs (mics, module corner pads)
+
+### Proven Resolution
+`placement.json` `route_keepouts` (routing-only set); pre-flight: no pad inside a router keep-out.
+
+### Prevention Rule
+**ROUTE_KEEPOUTS_PAD_FREE:** abort routing if any pad lies inside a router keep-out.
+
+### Related Incident
+INC-20261111-007
+
+### Confidence
+CONFIRMED
+
+---
+
+## KF-20261111-006: Freerouting 2.1.0 Never Returns a Partial Board
+
+### Failure Pattern
+Engine reaches 5-7 unrouted, keeps looping; orchestrator kills it at budget; no SES; nothing to import.
+
+### Root Cause
+Freerouting v2.1.0 ignores `-mp`, `router.max_passes`, `router.autorouter.max_passes` and `job_timeout` (per-run and `%TEMP%\freerouting\freerouting.json`); the SES is written only at 100 %. Newer JARs need Java 25.
+
+### Symptoms
+- Pass counter exceeds the configured limit; the run ends only by external kill
+
+### Proven Resolution
+None yet for 2.1.0. Workarounds: EasyEDA native autorouter (GUI), Freerouting >= 2.4 on Java 25, or API mode with cancel + output.
+
+### Prevention Rule
+**ROUTER_SMOKE_RUN:** before any long run, a 2-pass smoke run must produce a SES on this host.
+
+### Related Incident
+INC-20261111-007
+
+### Confidence
+CONFIRMED
+
+---
+
+## KF-20261111-007: Board Outline Must Be One Closed Primitive
+
+### Failure Pattern
+`getDsnFile()` returns `undefined`; GUI export says "board outline missing"; polyline creation freezes the editor.
+
+### Root Cause
+Outline drawn as 36 `pcb_PrimitiveLine` segments; `pcb_PrimitivePolyline.create` with a long explicit vertex list hangs EasyEDA; the `"R"` polygon with radii exports a skewed boundary.
+
+### Symptoms
+- DSN export undefined after ~3 s while Gerber and netlist exports work
+
+### Proven Resolution
+One polyline from `createPolygon(["R", x, yTop, w, h, 0, 0])` on layer 11; corner keep-outs for routing; rounded fab outline drawn in the GUI until an arc polygon format is verified.
+
+### Prevention Rule
+**OUTLINE_SINGLE_PRIMITIVE:** exactly one outline primitive on layer 11 before any export.
+
+### Related Incident
+INC-20261111-008
+
+### Confidence
+CONFIRMED
+
+---
+
 Before attempting risky operations:
 1. Search this index for relevant patterns
 2. Apply prevention rules

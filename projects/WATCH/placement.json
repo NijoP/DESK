@@ -1,808 +1,1118 @@
 {
-  "origin_mm": [
-    0,
-    0
+ "origin_mm": [
+  0,
+  0
+ ],
+ "board_mm": [
+  30.0,
+  45.0
+ ],
+ "layers": 4,
+ "grid_mm": 0.05,
+ "roles": {
+  "connectors": [
+   "J1"
   ],
-  "board_mm": [
-    45.0,
-    45.0
+  "sensors": [
+   "U8",
+   "MIC1",
+   "MIC2",
+   "MIC3"
   ],
-  "layers": 4,
-  "grid_mm": 0.05,
-  "roles": {
-    "connectors": [
-      "J1",
-      "J2",
-      "J5",
-      "J6"
-    ],
-    "sensors": [
-      "U8",
-      "MIC1",
-      "MIC2",
-      "MIC3"
-    ],
-    "heat": [
-      "U2",
-      "U3",
-      "U4",
-      "L1",
-      "L2"
-    ],
-    "rf": [
-      "U5"
-    ],
-    "esd": [
-      "U1"
-    ],
-    "not_connectors": [
-      "J3",
-      "J4"
-    ]
-  },
-  "keepouts": [
-    {
-      "name": "antenna",
-      "rect_mm": [
-        0.0,
-        37.0,
-        22.0,
-        45.0
-      ],
-      "side": "both",
-      "allow": [
-        "U5"
-      ]
-    }
+  "heat": [
+   "U2",
+   "U3",
+   "U4",
+   "L1",
+   "L2",
+   "U6"
   ],
-  "rules": {
-    "edge_pad_mm": 0.3,
-    "connector_edge_mm": 0.8,
-    "connector_front_keepout_mm": 1.5,
-    "esd_max_mm": 8.0,
-    "sensor_heat_mm": 5.0,
-    "heat_spacing_mm": 2.5,
-    "rf_edge_mm": 0.5,
-    "decap_max_mm": 8.0,
-    "max_utilisation": 0.65,
-    "density_cell_mm": 2.5,
-    "hotspot_fill": 0.85,
-    "pad": {
-      "p0201": 0.2,
-      "p0402": 0.25,
-      "p0603": 0.3,
-      "ic": 0.4,
-      "fine": 0.5,
-      "connector": 0.5,
-      "tall": 0.5
-    },
-    "body": {
-      "p0201": 0.15,
-      "p0402": 0.2,
-      "p0603": 0.25,
-      "ic": 0.3,
-      "fine": 0.5,
-      "connector": 0.5,
-      "tall": 0.5
-    }
-  },
-  "parts": [
-    [
-      "U5",
-      10.5,
-      28.0,
-      0,
-      "T",
-      "ESP32-S3 MCU in upper-left corner, antenna at top board edge"
-    ],
-    [
-      "J1",
-      22.5,
-      3.5,
-      180,
-      "T",
-      "USB-C receptacle on bottom board edge with mouth outward"
-    ],
-    [
-      "U1",
-      22.5,
-      12.0,
-      0,
-      "T",
-      "USBLC6-2SC6 TVS protection diode directly behind USB-C"
-    ],
-    [
-      "R1",
-      17.5,
-      12.0,
-      0,
-      "T",
-      "5.1k CC1 pull-down resistor"
-    ],
-    [
-      "R2",
-      27.5,
-      12.0,
-      0,
-      "T",
-      "5.1k CC2 pull-down resistor"
-    ],
-    [
-      "J2",
-      4.8,
-      5.2,
-      180,
-      "T",
-      "JST PH 2-pin battery connector on bottom-left edge"
-    ],
-    [
-      "J6",
-      40.0,
-      18.0,
-      90,
-      "T",
-      "JST PH 8-pin LCD connector on right edge facing outward"
-    ],
-    [
-      "SW1",
-      4.0,
-      14.0,
-      90,
-      "T",
-      "Tactile Reset switch on left board edge"
-    ],
-    [
-      "SW2",
-      13.0,
-      3.8,
-      180,
-      "T",
-      "Tactile Boot download switch on bottom edge"
-    ],
-    [
-      "SW3",
-      41.5,
-      33.0,
-      90,
-      "T",
-      "Tactile Push-to-Talk switch on right edge"
-    ],
-    [
-      "SW4",
-      26.5,
-      41.5,
-      0,
-      "T",
-      "User interaction button 1 on top board edge"
-    ],
-    [
-      "SW5",
-      38.0,
-      41.5,
-      0,
-      "T",
-      "User interaction button 2 on top board edge"
-    ],
-    [
-      "LED1",
-      23.5,
-      37.0,
-      90,
-      "T",
-      "Green Power/Charge indicator LED visible on top side"
-    ],
-    [
-      "LED2",
-      26.5,
-      37.0,
-      90,
-      "T",
-      "Blue BLE/DSP Status indicator LED visible on top side"
-    ],
-    [
-      "R28",
-      23.5,
-      33.5,
-      90,
-      "T",
-      "1k current limiting resistor for LED1"
-    ],
-    [
-      "R29",
-      26.5,
-      33.5,
-      90,
-      "T",
-      "1k current limiting resistor for LED2"
-    ],
-    [
-      "MIC1",
-      23.5,
-      25.0,
-      0,
-      "T",
-      "Top MEMS microphone for primary speech capture"
-    ],
-    [
-      "C16",
-      23.5,
-      21.5,
-      0,
-      "T",
-      "100nF decoupling capacitor for MIC1"
-    ],
-    [
-      "MIC2",
-      31.5,
-      37.0,
-      0,
-      "T",
-      "Upper MEMS microphone for directional beamforming"
-    ],
-    [
-      "C17",
-      31.5,
-      33.5,
-      0,
-      "T",
-      "100nF decoupling capacitor for MIC2"
-    ],
-    [
-      "MIC3",
-      31.5,
-      25.0,
-      0,
-      "T",
-      "Lateral MEMS microphone for ambient noise cancellation"
-    ],
-    [
-      "C18",
-      31.5,
-      21.5,
-      0,
-      "T",
-      "100nF decoupling capacitor for MIC3"
-    ],
-    [
-      "C14",
-      5.0,
-      35.0,
-      0,
-      "B",
-      "10uF MCU 3V3 bulk capacitor directly under VDD33 pin"
-    ],
-    [
-      "C15",
-      8.0,
-      35.0,
-      0,
-      "B",
-      "100nF MCU 3V3 HF bypass capacitor directly under VDD33"
-    ],
-    [
-      "R14",
-      5.0,
-      32.0,
-      0,
-      "B",
-      "10k MCU_EN pull-up resistor near EN pin"
-    ],
-    [
-      "C13",
-      8.0,
-      32.0,
-      0,
-      "B",
-      "1uF MCU_EN reset delay capacitor near EN pin"
-    ],
-    [
-      "R15",
-      5.0,
-      29.0,
-      0,
-      "B",
-      "10k MCU_BOOT IO0 strapping pull-up resistor"
-    ],
-    [
-      "U2",
-      7.0,
-      13.0,
-      0,
-      "B",
-      "BQ24074 power-path battery charger IC on bottom side"
-    ],
-    [
-      "C3",
-      3.0,
-      13.0,
-      90,
-      "B",
-      "10uF IN bulk capacitor at U2 IN pin"
-    ],
-    [
-      "C4",
-      3.0,
-      9.5,
-      90,
-      "B",
-      "10uF OUT bulk capacitor at U2 OUT pin"
-    ],
-    [
-      "C5",
-      3.0,
-      6.0,
-      90,
-      "B",
-      "10uF BAT bulk capacitor at U2 BAT pin"
-    ],
-    [
-      "R3",
-      3.5,
-      17.0,
-      0,
-      "B",
-      "10k ILIM pull-up resistor for U2"
-    ],
-    [
-      "R4",
-      6.0,
-      17.0,
-      0,
-      "B",
-      "10k ISET2 pull-up resistor for U2"
-    ],
-    [
-      "R5",
-      8.5,
-      17.0,
-      0,
-      "B",
-      "10k CE pull-down resistor for U2"
-    ],
-    [
-      "R6",
-      3.5,
-      19.5,
-      0,
-      "B",
-      "1.2k ISET programming resistor for U2"
-    ],
-    [
-      "R7",
-      6.0,
-      19.5,
-      0,
-      "B",
-      "2.0k TS thermal sensing top resistor for U2"
-    ],
-    [
-      "R8",
-      8.5,
-      19.5,
-      0,
-      "B",
-      "2.0k TS thermal sensing bottom resistor for U2"
-    ],
-    [
-      "R9",
-      11.0,
-      19.5,
-      0,
-      "B",
-      "47k TMR safety timer resistor for U2"
-    ],
-    [
-      "U3",
-      15.0,
-      15.0,
-      0,
-      "B",
-      "TPS63802 3.3V high-efficiency buck-boost converter"
-    ],
-    [
-      "L1",
-      15.0,
-      9.2,
-      0,
-      "B",
-      "470nH shielded power inductor directly at U3 switch nodes"
-    ],
-    [
-      "C6",
-      11.5,
-      17.0,
-      90,
-      "B",
-      "10uF VIN bulk capacitor at U3 VIN"
-    ],
-    [
-      "C7",
-      11.5,
-      13.5,
-      90,
-      "B",
-      "10uF VIN capacitor at U3 VIN"
-    ],
-    [
-      "C8",
-      18.5,
-      16.5,
-      90,
-      "B",
-      "10uF VOUT bulk capacitor at U3 VOUT"
-    ],
-    [
-      "C9",
-      18.5,
-      13.5,
-      90,
-      "B",
-      "100nF VOUT HF bypass capacitor at U3 VOUT"
-    ],
-    [
-      "R10",
-      15.0,
-      19.0,
-      0,
-      "B",
-      "10k PG pull-up resistor for U3"
-    ],
-    [
-      "U4",
-      24.0,
-      15.0,
-      0,
-      "B",
-      "TPS61023 5V synchronous boost converter for audio/storage"
-    ],
-    [
-      "L2",
-      24.0,
-      9.2,
-      0,
-      "B",
-      "1uH shielded power inductor directly at U4 SW pin"
-    ],
-    [
-      "C10",
-      20.5,
-      12.5,
-      90,
-      "B",
-      "10uF VIN capacitor at U4 VIN"
-    ],
-    [
-      "C11",
-      26.8,
-      17.5,
-      0,
-      "B",
-      "10uF VOUT bulk capacitor 1 at U4 VOUT"
-    ],
-    [
-      "C12",
-      26.8,
-      14.0,
-      0,
-      "B",
-      "10uF VOUT bulk capacitor 2 at U4 VOUT"
-    ],
-    [
-      "R11",
-      21.0,
-      19.0,
-      0,
-      "B",
-      "10k EN pull-up resistor for U4"
-    ],
-    [
-      "R12",
-      23.5,
-      19.0,
-      0,
-      "B",
-      "1.0M top feedback resistor for U4"
-    ],
-    [
-      "R13",
-      26.5,
-      20.5,
-      0,
-      "B",
-      "120k bottom feedback resistor for U4"
-    ],
-    [
-      "C1",
-      3.5,
-      3.5,
-      0,
-      "B",
-      "100nF VBUS sense filter capacitor"
-    ],
-    [
-      "C2",
-      6.5,
-      3.5,
-      0,
-      "B",
-      "100nF VBAT sense filter capacitor"
-    ],
-    [
-      "R30",
-      3.5,
-      1.5,
-      0,
-      "B",
-      "100k VBUS sense top divider resistor"
-    ],
-    [
-      "R31",
-      6.5,
-      1.5,
-      0,
-      "B",
-      "100k VBUS sense bottom divider resistor"
-    ],
-    [
-      "C32",
-      9.5,
-      1.5,
-      0,
-      "B",
-      "100nF VBUS input bypass capacitor"
-    ],
-    [
-      "J5",
-      38.5,
-      9.0,
-      90,
-      "B",
-      "MicroSD card socket on bottom side with card slot at right edge"
-    ],
-    [
-      "C25",
-      30.0,
-      19.5,
-      0,
-      "B",
-      "10uF MicroSD bulk decoupling capacitor"
-    ],
-    [
-      "C26",
-      32.5,
-      19.5,
-      0,
-      "B",
-      "100nF MicroSD HF bypass capacitor"
-    ],
-    [
-      "R19",
-      35.0,
-      19.5,
-      0,
-      "B",
-      "10k SD_CS pull-up resistor"
-    ],
-    [
-      "R20",
-      37.5,
-      19.5,
-      0,
-      "B",
-      "10k SD_MISO pull-up resistor"
-    ],
-    [
-      "R21",
-      40.0,
-      19.5,
-      0,
-      "B",
-      "10k SD_DET card detect pull-up resistor"
-    ],
-    [
-      "C29",
-      30.0,
-      22.0,
-      0,
-      "B",
-      "MicroSD power filter capacitor"
-    ],
-    [
-      "R26",
-      32.5,
-      22.0,
-      0,
-      "B",
-      "SPI clock damping resistor"
-    ],
-    [
-      "C30",
-      35.0,
-      22.0,
-      0,
-      "B",
-      "SPI clock filter capacitor"
-    ],
-    [
-      "R27",
-      37.5,
-      22.0,
-      0,
-      "B",
-      "SPI MOSI damping resistor"
-    ],
-    [
-      "C31",
-      40.0,
-      22.0,
-      0,
-      "B",
-      "SPI MISO filter capacitor"
-    ],
-    [
-      "U8",
-      34.0,
-      31.0,
-      0,
-      "B",
-      "6-axis IMU motion sensor at quiet bottom region"
-    ],
-    [
-      "C23",
-      30.0,
-      31.0,
-      90,
-      "B",
-      "100nF VDD decoupling capacitor for U8"
-    ],
-    [
-      "C24",
-      38.0,
-      31.0,
-      90,
-      "B",
-      "100nF VDDIO decoupling capacitor for U8"
-    ],
-    [
-      "R17",
-      32.5,
-      27.0,
-      0,
-      "B",
-      "4.7k I2C SDA pull-up resistor"
-    ],
-    [
-      "R18",
-      35.5,
-      27.0,
-      0,
-      "B",
-      "4.7k I2C SCL pull-up resistor"
-    ],
-    [
-      "U6",
-      13.0,
-      25.0,
-      0,
-      "B",
-      "MAX98357A Left audio amplifier IC on bottom side"
-    ],
-    [
-      "J3",
-      7.0,
-      25.0,
-      90,
-      "B",
-      "JST-SH 2-pin Left Speaker header"
-    ],
-    [
-      "C19",
-      13.0,
-      28.5,
-      0,
-      "B",
-      "10uF Left Amp bulk decoupling capacitor"
-    ],
-    [
-      "C20",
-      15.5,
-      28.5,
-      0,
-      "B",
-      "100nF Left Amp HF bypass capacitor"
-    ],
-    [
-      "R16",
-      9.5,
-      28.5,
-      0,
-      "B",
-      "Left Channel gain programming resistor"
-    ],
-    [
-      "C27",
-      13.0,
-      22.0,
-      0,
-      "B",
-      "Left Channel filter capacitor"
-    ],
-    [
-      "C28",
-      15.5,
-      22.0,
-      0,
-      "B",
-      "Left Channel filter capacitor 2"
-    ],
-    [
-      "U7",
-      23.0,
-      30.0,
-      0,
-      "B",
-      "MAX98357A Right audio amplifier IC on bottom side"
-    ],
-    [
-      "J4",
-      26.5,
-      35.5,
-      0,
-      "B",
-      "JST-SH 2-pin Right Speaker header"
-    ],
-    [
-      "C21",
-      19.0,
-      30.0,
-      90,
-      "B",
-      "10uF Right Amp bulk decoupling capacitor"
-    ],
-    [
-      "C22",
-      19.0,
-      33.0,
-      90,
-      "B",
-      "100nF Right Amp HF bypass capacitor"
-    ],
-    [
-      "R22",
-      27.0,
-      30.0,
-      0,
-      "B",
-      "Right Channel gain programming resistor"
-    ],
-    [
-      "R23",
-      27.0,
-      27.0,
-      0,
-      "B",
-      "Right Channel SD_MODE pull-up resistor"
-    ],
-    [
-      "R24",
-      23.0,
-      26.5,
-      0,
-      "B",
-      "Right Channel timing resistor"
-    ],
-    [
-      "R25",
-      20.0,
-      26.5,
-      0,
-      "B",
-      "Right Channel mute resistor"
-    ]
+  "rf": [
+   "U5"
   ],
-  "overhang_allowed": [
-    "U5",
-    "J1",
-    "J2"
+  "esd": [
+   "U1"
+  ],
+  "not_connectors": [
+   "J2",
+   "J3",
+   "J6"
   ]
+ },
+ "keepouts": [
+  {
+   "name": "antenna",
+   "rect_mm": [
+    6.6,
+    0.0,
+    25.6,
+    8.8
+   ],
+   "side": "both",
+   "allow": [
+    "U5"
+   ]
+  },
+  {
+   "name": "hole",
+   "rect_mm": [
+    1.5,
+    1.5,
+    4.5,
+    4.5
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "hole",
+   "rect_mm": [
+    26.5,
+    1.5,
+    29.5,
+    4.5
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "hole",
+   "rect_mm": [
+    1.5,
+    40.5,
+    4.5,
+    43.5
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "hole",
+   "rect_mm": [
+    26.5,
+    40.5,
+    29.5,
+    43.5
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "micport_MIC1",
+   "rect_mm": [
+    26.400000000000002,
+    9.700000000000001,
+    28.8,
+    12.1
+   ],
+   "side": "both",
+   "allow": [
+    "MIC1"
+   ]
+  },
+  {
+   "name": "micport_MIC2",
+   "rect_mm": [
+    26.400000000000002,
+    13.600000000000001,
+    28.8,
+    16.0
+   ],
+   "side": "both",
+   "allow": [
+    "MIC2"
+   ]
+  },
+  {
+   "name": "micport_MIC3",
+   "rect_mm": [
+    26.400000000000002,
+    17.5,
+    28.8,
+    19.9
+   ],
+   "side": "both",
+   "allow": [
+    "MIC3"
+   ]
+  },
+  {
+   "name": "corner_BL",
+   "rect_mm": [
+    0,
+    0,
+    3,
+    3
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "corner_BR",
+   "rect_mm": [
+    27,
+    0,
+    30,
+    3
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "corner_TL",
+   "rect_mm": [
+    0,
+    42,
+    3,
+    45
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "corner_TR",
+   "rect_mm": [
+    27,
+    42,
+    30,
+    45
+   ],
+   "side": "both",
+   "allow": []
+  }
+ ],
+ "rules": {
+  "edge_pad_mm": 0.3,
+  "connector_edge_mm": 0.8,
+  "connector_front_keepout_mm": 1.5,
+  "esd_max_mm": 8.0,
+  "sensor_heat_mm": 5.0,
+  "heat_spacing_mm": 2.5,
+  "rf_edge_mm": 0.5,
+  "decap_max_mm": 8.0,
+  "max_utilisation": 0.65,
+  "density_cell_mm": 2.5,
+  "hotspot_fill": 0.85,
+  "pad": {
+   "p0201": 0.2,
+   "p0402": 0.25,
+   "p0603": 0.3,
+   "ic": 0.4,
+   "fine": 0.5,
+   "connector": 0.5,
+   "tall": 0.5
+  },
+  "body": {
+   "p0201": 0.15,
+   "p0402": 0.2,
+   "p0603": 0.25,
+   "ic": 0.3,
+   "fine": 0.5,
+   "connector": 0.5,
+   "tall": 0.5
+  }
+ },
+ "parts": [
+  [
+   "U5",
+   16.1,
+   17.0,
+   0,
+   "B",
+   "ESP32-S3 module lower half of the board, antenna end at the bottom edge (4 mm setback), client render"
+  ],
+  [
+   "SW1",
+   3.2,
+   9.0,
+   90,
+   "B",
+   "Reset underside, left strip beside the module (RFQ: reset/boot underside)"
+  ],
+  [
+   "SW2",
+   3.2,
+   16.5,
+   90,
+   "B",
+   "Boot underside, left strip beside the module"
+  ],
+  [
+   "MIC1",
+   27.6,
+   10.9,
+   0,
+   "B",
+   "MEMS mic 1 back right strip beside the module, >15 mm from every switching part (RFQ mic/switching separation)"
+  ],
+  [
+   "MIC2",
+   27.6,
+   14.8,
+   0,
+   "B",
+   "MEMS mic 2 back right strip, 3.9 mm above mic 1 (array)"
+  ],
+  [
+   "MIC3",
+   27.6,
+   18.7,
+   0,
+   "B",
+   "MEMS mic 3 back right strip, linear array"
+  ],
+  [
+   "U6",
+   5.5,
+   15.5,
+   0,
+   "T",
+   "Mono Class-D amp front bottom-left, 20+ mm from the mic array"
+  ],
+  [
+   "J3",
+   3.5,
+   10.5,
+   0,
+   "T",
+   "Speaker solder pads next to the amp; speaker wires run to the grille at the top"
+  ],
+  [
+   "U8",
+   24.0,
+   12.5,
+   0,
+   "T",
+   "IMU front lower-right, >5 mm from switching parts"
+  ],
+  [
+   "J6",
+   16.3,
+   43.0,
+   0,
+   "T",
+   "1x8 1.27 mm display header: display body spans the top third, LED column clear on the right"
+  ],
+  [
+   "SW4",
+   6.5,
+   22.0,
+   0,
+   "T",
+   "User button 1 (-) left of the -/play/+ row (row below the USB-C/display zone)"
+  ],
+  [
+   "SW3",
+   14.0,
+   22.0,
+   0,
+   "T",
+   "Voice/PTT button (play) centre of the row"
+  ],
+  [
+   "SW5",
+   21.5,
+   22.0,
+   0,
+   "T",
+   "User button 2 (+) right of the row"
+  ],
+  [
+   "J1",
+   5.22,
+   31.5,
+   270,
+   "T",
+   "USB-C on the left side edge (client 3D markup), raised above the module so its shell legs clear the module pads"
+  ],
+  [
+   "U1",
+   10.8,
+   35.6,
+   0,
+   "T",
+   "USB ESD/TVS within 3 mm of the connector pins"
+  ],
+  [
+   "LED1",
+   28.6,
+   38.8,
+   90,
+   "T",
+   "Client LED order 1 (top) on the right edge just below the display"
+  ],
+  [
+   "LED2",
+   28.6,
+   35.4,
+   90,
+   "T",
+   "Client LED order 2"
+  ],
+  [
+   "LED3",
+   28.6,
+   32.0,
+   90,
+   "T",
+   "Client LED order 3"
+  ],
+  [
+   "LED4",
+   28.6,
+   28.6,
+   90,
+   "T",
+   "Client LED order 4"
+  ],
+  [
+   "LED5",
+   28.6,
+   25.2,
+   90,
+   "T",
+   "Client LED order 5"
+  ],
+  [
+   "LED6",
+   28.6,
+   21.8,
+   90,
+   "T",
+   "Client LED order 6 (bottom)"
+  ],
+  [
+   "U2",
+   24.2,
+   40.0,
+   0,
+   "T",
+   "Charger front top-left under the display (display sits on 7 mm header pins)"
+  ],
+  [
+   "L1",
+   7.8,
+   41.5,
+   0,
+   "T",
+   "Buck-boost inductor next to U3"
+  ],
+  [
+   "U3",
+   14.0,
+   39.0,
+   0,
+   "T",
+   "3.3 V buck-boost under the display zone"
+  ],
+  [
+   "L2",
+   19.0,
+   27.5,
+   0,
+   "T",
+   "Boost inductor on top between button row and display header (off the back where the battery pouch sits)"
+  ],
+  [
+   "U4",
+   23.5,
+   27.5,
+   0,
+   "T",
+   "5 V boost on top next to L2, >5 mm from MIC3 and U8"
+  ],
+  [
+   "J2",
+   24.5,
+   34.0,
+   90,
+   "T",
+   "Battery wire pads front right under the display; cell sits over the back top half"
+  ],
+  [
+   "R14",
+   12.0,
+   10.1,
+   0,
+   "T",
+   "EN pull-up opposite module pin 3"
+  ],
+  [
+   "C13",
+   12.0,
+   11.7,
+   0,
+   "T",
+   "EN RC cap next to R14"
+  ],
+  [
+   "R15",
+   12.0,
+   13.3,
+   0,
+   "T",
+   "IO0 pull-up near module"
+  ],
+  [
+   "C14",
+   12.0,
+   15.1,
+   0,
+   "T",
+   "Module 10 uF bulk, within 8 mm of pin 2"
+  ],
+  [
+   "C15",
+   12.0,
+   16.9,
+   0,
+   "T",
+   "Module 100 nF bypass, within 8 mm of pin 2"
+  ],
+  [
+   "R30",
+   16.0,
+   12.0,
+   0,
+   "T",
+   "VBUS sense divider near U1/J1"
+  ],
+  [
+   "R31",
+   16.0,
+   13.6,
+   0,
+   "T",
+   "VBUS sense divider"
+  ],
+  [
+   "C32",
+   16.0,
+   15.2,
+   0,
+   "T",
+   "VBUS sense filter cap"
+  ],
+  [
+   "C10",
+   25.75,
+   28.0,
+   90,
+   "T",
+   "VSYS: next to U4 pin 3 (1.5 mm)"
+  ],
+  [
+   "C7",
+   14.5,
+   36.0,
+   0,
+   "T",
+   "3V3: next to U3 pin 4 (2.8 mm)"
+  ],
+  [
+   "C1",
+   9.75,
+   31.75,
+   90,
+   "T",
+   "VBUS: next to J1 pin A4B9 (3.0 mm)"
+  ],
+  [
+   "C5",
+   20.25,
+   40.0,
+   90,
+   "T",
+   "VBAT: next to U2 pin 2 (2.5 mm)"
+  ],
+  [
+   "C6",
+   16.5,
+   40.0,
+   90,
+   "T",
+   "VSYS: next to U3 pin 1 (3.3 mm)"
+  ],
+  [
+   "C8",
+   17.25,
+   36.5,
+   90,
+   "T",
+   "3V3: next to U3 pin 4 (4.5 mm)"
+  ],
+  [
+   "C12",
+   26.25,
+   24.5,
+   90,
+   "T",
+   "VBUS_BOOST: next to U4 pin 6 (4.3 mm)"
+  ],
+  [
+   "C4",
+   24.75,
+   43.5,
+   0,
+   "T",
+   "VSYS: next to U2 pin 10 (3.9 mm)"
+  ],
+  [
+   "C19",
+   8.5,
+   15.75,
+   90,
+   "T",
+   "VBUS_BOOST: next to U6 pin 7 (1.5 mm)"
+  ],
+  [
+   "C27",
+   6.75,
+   37.75,
+   0,
+   "T",
+   "3V3: next to J6 pin 1 (7.3 mm)"
+  ],
+  [
+   "C11",
+   20.0,
+   31.0,
+   0,
+   "T",
+   "VBUS_BOOST: next to U4 pin 6 (4.9 mm)"
+  ],
+  [
+   "C3",
+   20.0,
+   36.75,
+   0,
+   "T",
+   "VBUS: next to U2 pin 5 (3.9 mm)"
+  ],
+  [
+   "R4",
+   21.0,
+   34.5,
+   90,
+   "T",
+   "PGOOD_N: next to U2 pin 7 (5.3 mm)"
+  ],
+  [
+   "R29",
+   23.5,
+   30.25,
+   0,
+   "T",
+   "NET_LED_STAT_A: next to LED2 pin 2 (7.8 mm)"
+  ],
+  [
+   "R8",
+   19.5,
+   34.5,
+   90,
+   "T",
+   "NET_ITERM: next to U2 pin 15 (8.3 mm)"
+  ],
+  [
+   "R3",
+   17.5,
+   34.0,
+   0,
+   "T",
+   "CHG_STAT: next to U2 pin 9 (9.7 mm)"
+  ],
+  [
+   "R1",
+   9.75,
+   29.25,
+   0,
+   "T",
+   "USB_CC1: next to J1 pin A5 (4.1 mm)"
+  ],
+  [
+   "R32",
+   17.5,
+   32.0,
+   90,
+   "T",
+   "NET_LED_3_A: next to LED3 pin 2 (11.1 mm)"
+  ],
+  [
+   "R7",
+   15.0,
+   34.0,
+   0,
+   "T",
+   "NET_ISET: next to U2 pin 16 (11.3 mm)"
+  ],
+  [
+   "R5",
+   15.5,
+   32.5,
+   0,
+   "T",
+   "CHG_EN: next to U2 pin 4 (9.9 mm)"
+  ],
+  [
+   "R6",
+   15.5,
+   31.0,
+   0,
+   "T",
+   "NET_ILIM: next to U2 pin 12 (14.1 mm)"
+  ],
+  [
+   "R11",
+   26.0,
+   21.5,
+   90,
+   "T",
+   "VBUS_BOOST_EN: next to U4 pin 2 (6.3 mm)"
+  ],
+  [
+   "R35",
+   25.0,
+   18.25,
+   0,
+   "T",
+   "NET_LED_6_A: next to LED6 pin 2 (5.6 mm)"
+  ],
+  [
+   "R33",
+   28.0,
+   16.75,
+   0,
+   "T",
+   "NET_LED_4_A: next to LED4 pin 2 (12.6 mm)"
+  ],
+  [
+   "R28",
+   13.5,
+   32.0,
+   90,
+   "T",
+   "NET_LED_PWR_A: next to LED1 pin 2 (16.9 mm)"
+  ],
+  [
+   "R12",
+   15.75,
+   28.25,
+   90,
+   "T",
+   "NET_BST_FB: next to U4 pin 1 (8.6 mm)"
+  ],
+  [
+   "R18",
+   24.0,
+   15.0,
+   0,
+   "T",
+   "I2C_SDA: next to U8 pin 14 (1.6 mm)"
+  ],
+  [
+   "R34",
+   22.5,
+   18.25,
+   0,
+   "T",
+   "NET_LED_5_A: next to LED5 pin 2 (9.8 mm)"
+  ],
+  [
+   "R16",
+   7.25,
+   12.0,
+   90,
+   "T",
+   "AMP_SD_MODE: next to U6 pin 4 (2.2 mm)"
+  ],
+  [
+   "R17",
+   22.0,
+   15.5,
+   90,
+   "T",
+   "I2C_SCL: next to U8 pin 13 (2.8 mm)"
+  ],
+  [
+   "R26",
+   2.0,
+   24.25,
+   90,
+   "T",
+   "BTN_USER1: next to SW4 pin 1 (1.5 mm)"
+  ],
+  [
+   "R25",
+   11.75,
+   25.75,
+   0,
+   "T",
+   "BTN_VOICE: next to SW3 pin 1 (2.0 mm)"
+  ],
+  [
+   "R13",
+   15.25,
+   26.25,
+   0,
+   "T",
+   "NET_BST_FB: next to U4 pin 1 (9.0 mm)"
+  ],
+  [
+   "R2",
+   9.5,
+   27.25,
+   90,
+   "T",
+   "USB_CC2: next to J1 pin B5 (3.1 mm)"
+  ],
+  [
+   "R23",
+   12.0,
+   32.25,
+   90,
+   "T",
+   "LCD_RST: next to J6 pin 7 (13.1 mm)"
+  ],
+  [
+   "R27",
+   17.0,
+   18.25,
+   0,
+   "T",
+   "BTN_USER2: next to SW5 pin 1 (5.8 mm)"
+  ],
+  [
+   "R10",
+   12.25,
+   30.0,
+   0,
+   "T",
+   "REG_3V3_PG: next to U3 pin 5 (8.1 mm)"
+  ],
+  [
+   "R24",
+   14.25,
+   29.0,
+   90,
+   "T",
+   "LCD_BL: next to J6 pin 8 (15.4 mm)"
+  ],
+  [
+   "R9",
+   12.25,
+   28.5,
+   0,
+   "T",
+   "NET_TMR: next to U2 pin 14 (17.8 mm)"
+  ],
+  [
+   "R22",
+   4.0,
+   39.75,
+   0,
+   "T",
+   "LCD_CS: next to J6 pin 5 (13.3 mm)"
+  ],
+  [
+   "C2",
+   4.25,
+   37.75,
+   90,
+   "T",
+   "VBUS: next to J1 pin A4B9 (5.2 mm)"
+  ],
+  [
+   "C16",
+   26.75,
+   8.0,
+   90,
+   "B",
+   "3V3: next to MIC1 pin 5 (2.0 mm)"
+  ],
+  [
+   "C28",
+   2.0,
+   39.5,
+   90,
+   "T",
+   "3V3: next to J6 pin 1 (10.5 mm)"
+  ],
+  [
+   "C30",
+   1.5,
+   22.25,
+   0,
+   "T",
+   "BTN_USER1: next to SW4 pin 1 (2.6 mm)"
+  ],
+  [
+   "C18",
+   28.5,
+   8.0,
+   90,
+   "B",
+   "3V3: next to MIC1 pin 5 (3.0 mm)"
+  ],
+  [
+   "C24",
+   23.0,
+   10.0,
+   0,
+   "T",
+   "3V3: next to U8 pin 5 (1.6 mm)"
+  ],
+  [
+   "C23",
+   20.75,
+   12.0,
+   90,
+   "T",
+   "3V3: next to U8 pin 5 (2.8 mm)"
+  ],
+  [
+   "C29",
+   9.5,
+   18.25,
+   0,
+   "T",
+   "BTN_VOICE: next to SW3 pin 1 (5.8 mm)"
+  ],
+  [
+   "C20",
+   6.75,
+   18.25,
+   0,
+   "T",
+   "VBUS_BOOST: next to U6 pin 7 (2.5 mm)"
+  ],
+  [
+   "C17",
+   27.0,
+   6.0,
+   0,
+   "B",
+   "3V3: next to MIC1 pin 5 (4.1 mm)"
+  ],
+  [
+   "C9",
+   2.25,
+   37.5,
+   0,
+   "T",
+   "3V3: next to U3 pin 4 (11.0 mm)"
+  ],
+  [
+   "C31",
+   19.5,
+   18.25,
+   0,
+   "T",
+   "BTN_USER2: next to SW5 pin 1 (5.7 mm)"
+  ]
+ ],
+ "overhang_allowed": [
+  "U5",
+  "J1",
+  "J2"
+ ],
+ "mounting_holes_mm": [
+  [
+   3.0,
+   3.0
+  ],
+  [
+   28.0,
+   3.0
+  ],
+  [
+   3.0,
+   42.0
+  ],
+  [
+   28.0,
+   42.0
+  ]
+ ],
+ "passives": [],
+ "planes": [
+  {
+   "net": "GND",
+   "layer": "Inner1",
+   "polygon_mm": [
+    [
+     0.3,
+     0.3
+    ],
+    [
+     6.4,
+     0.3
+    ],
+    [
+     6.4,
+     9.6
+    ],
+    [
+     25.4,
+     9.6
+    ],
+    [
+     25.4,
+     0.3
+    ],
+    [
+     29.7,
+     0.3
+    ],
+    [
+     29.7,
+     44.7
+    ],
+    [
+     0.3,
+     44.7
+    ]
+   ]
+  },
+  {
+   "net": "3V3",
+   "layer": "Inner2",
+   "polygon_mm": [
+    [
+     0.3,
+     0.3
+    ],
+    [
+     6.4,
+     0.3
+    ],
+    [
+     6.4,
+     9.6
+    ],
+    [
+     25.4,
+     9.6
+    ],
+    [
+     25.4,
+     0.3
+    ],
+    [
+     29.7,
+     0.3
+    ],
+    [
+     29.7,
+     25.0
+    ],
+    [
+     0.3,
+     25.0
+    ]
+   ]
+  }
+ ],
+ "route_keepouts": [
+  {
+   "name": "antenna",
+   "rect_mm": [
+    6.6,
+    0,
+    25.6,
+    7.5
+   ],
+   "side": "both",
+   "allow": [
+    "U5"
+   ]
+  },
+  {
+   "name": "hole",
+   "rect_mm": [
+    1.5,
+    1.5,
+    4.5,
+    4.5
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "hole",
+   "rect_mm": [
+    26.5,
+    1.5,
+    29.5,
+    4.5
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "hole",
+   "rect_mm": [
+    1.5,
+    40.5,
+    4.5,
+    43.5
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "hole",
+   "rect_mm": [
+    26.5,
+    40.5,
+    29.5,
+    43.5
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "corner_BL",
+   "rect_mm": [
+    0,
+    0,
+    3,
+    3
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "corner_BR",
+   "rect_mm": [
+    27,
+    0,
+    30,
+    3
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "corner_TL",
+   "rect_mm": [
+    0,
+    42,
+    3,
+    45
+   ],
+   "side": "both",
+   "allow": []
+  },
+  {
+   "name": "corner_TR",
+   "rect_mm": [
+    27,
+    42,
+    30,
+    45
+   ],
+   "side": "both",
+   "allow": []
+  }
+ ]
 }

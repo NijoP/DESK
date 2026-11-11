@@ -12,6 +12,12 @@ Chronological index of all reusable engineering lessons.
 | LSN-20251111-002 | Match Document Type to Task | EasyEDA API Integration / Manufacturing | CONFIRMED | INC-20251111-002 |
 | LSN-20251111-003 | Bridge Executor Window Resilience | EasyEDA API Integration / Bridge Reliability | CONFIRMED | INC-20251111-003 |
 
+## 2026-11-11
+
+| ID | Title | Domain | Confidence | Originating Incident |
+|----|-------|--------|------------|---------------------|
+| LSN-20261111-004 | Why routing failed on WATCH rev B; what DESK must change for the 90-minute routing target | PCB Routing / EasyEDA API Integration / Placement | CONFIRMED | INC-20261111-006, 007, 008 |
+
 ---
 
 ## By Domain
@@ -20,6 +26,9 @@ Chronological index of all reusable engineering lessons.
 - LSN-20251111-001
 - LSN-20251111-002
 - LSN-20251111-003
+
+### PCB Routing
+- LSN-20261111-004
 
 ### Manufacturing / Panelisation
 - LSN-20251111-002
@@ -32,6 +41,7 @@ Chronological index of all reusable engineering lessons.
 ## By Confidence
 
 ### CONFIRMED
+- LSN-20261111-004
 - LSN-20251111-001
 - LSN-20251111-002
 - LSN-20251111-003
@@ -55,3 +65,4 @@ Chronological index of all reusable engineering lessons.
 | LSN-20251111-001 | YES | YES | YES | YES | YES | YES | YES |
 | LSN-20251111-002 | YES | NO | NO | NO | NO | NO | NO |
 | LSN-20251111-003 | YES | YES | YES | YES | YES | YES | YES |
+| LSN-20261111-004 | NO | YES | YES | YES | YES | NO | NO |

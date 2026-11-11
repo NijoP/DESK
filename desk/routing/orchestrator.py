@@ -6,6 +6,7 @@ Zero external dependencies.
 """
 from __future__ import annotations
 import os
+import re
 import sys
 import json
 import time
@@ -37,6 +38,73 @@ class EngineExecutionResult:
     stdout_summary: str = ""
     stderr_summary: str = ""
     error_message: Optional[str] = None
+    best_unrouted: Optional[int] = None      # lowest unrouted count seen in any pass
+    best_pass: Optional[int] = None
+    pass_history: List[Dict[str, Any]] = field(default_factory=list)  # [{pass, seconds, score, unrouted}]
+    restores_seen: int = 0                   # engine "Restoring an earlier board" events
+    engine_config: Dict[str, Any] = field(default_factory=dict)
+
+
+class PassTracker:
+    """Parses Freerouting pass lines and decides when a run has stopped improving.
+
+    Stagnation is "no new best unrouted count for `patience` passes", not "identical counts":
+    Freerouting 2.x oscillates (64, 51, 51, 27, 18, 11, 12, 11, 27 ...) so an identical-count
+    rule never fires while the run burns its whole timeout.
+    """
+    PASS_RX = re.compile(r"pass\s*#?(\d+).*?completed in\s*([0-9.]+)\s*seconds(?:.*?score of\s*([0-9.]+))?.*?\((\d+)\s+unrouted\)", re.I)
+    ALT_RX = re.compile(r"pass\s*#?(\d+)\D.*?(\d+)\s+unrouted", re.I)
+
+    def __init__(self, patience: int = 6):
+        self.patience = max(1, int(patience))
+        self.history: List[Dict[str, Any]] = []
+        self.best_unrouted: Optional[int] = None
+        self.best_pass: Optional[int] = None
+        self.restores = 0
+
+    def feed(self, line: str) -> Optional[Dict[str, Any]]:
+        low = line.lower()
+        if "restoring an earlier board" in low:
+            self.restores += 1
+            return None
+        m = self.PASS_RX.search(line)
+        rec = None
+        if m:
+            rec = {"pass": int(m.group(1)), "seconds": float(m.group(2)),
+                   "score": float(m.group(3)) if m.group(3) else None, "unrouted": int(m.group(4))}
+        else:
+            m2 = self.ALT_RX.search(line)
+            if m2 and ("completed" in low or "unrouted" in low):
+                rec = {"pass": int(m2.group(1)), "seconds": None, "score": None, "unrouted": int(m2.group(2))}
+        if rec is None:
+            return None
+        self.history.append(rec)
+        if self.best_unrouted is None or rec["unrouted"] < self.best_unrouted:
+            self.best_unrouted = rec["unrouted"]
+            self.best_pass = rec["pass"]
+        return rec
+
+    @property
+    def passes(self) -> int:
+        return len(self.history)
+
+    @property
+    def last_unrouted(self) -> Optional[int]:
+        return self.history[-1]["unrouted"] if self.history else None
+
+    @property
+    def initial_unrouted(self) -> Optional[int]:
+        return self.history[0]["unrouted"] if self.history else None
+
+    def passes_since_best(self) -> int:
+        if self.best_pass is None:
+            return 0
+        return sum(1 for r in self.history if r["pass"] > self.best_pass)
+
+    def stagnated(self) -> bool:
+        if self.best_unrouted == 0:
+            return False  # done, let the engine finish and write
+        return self.passes_since_best() >= self.patience
 
 
 class RoutingEngineOrchestrator:
@@ -56,6 +124,7 @@ class RoutingEngineOrchestrator:
             base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             tools_dir = os.path.join(base, "library", "tools")
         self.tools_dir = tools_dir
+        self.last_discovery_note = ""
 
     def discover_engine(self, explicit_path: Optional[str] = None) -> Tuple[str, str, str]:
         """Discovers a working routing engine binary / JAR compatible with the host environment.
@@ -88,21 +157,45 @@ class RoutingEngineOrchestrator:
                 if compat:
                     return ("NATIVE", which_p, ver)
 
-        # 3. Check candidate JARs in tools_dir
+        # 3. Check candidate JARs in tools_dir: probe every one and pick the HIGHEST compatible version.
+        #    (Previously the first match won, so freerouting.jar = v2.1.0 was used while v2.5.0 sat beside it.)
         if not shutil.which("java"):
             raise RuntimeError("Java executable ('java') not found on system PATH. Install Java JRE/JDK 17+.")
 
+        found: List[Tuple[Tuple[int, ...], str, str]] = []
+        incompatible: List[str] = []
         for jar_name in self.CANDIDATE_JARS:
             jar_path = os.path.join(self.tools_dir, jar_name)
-            if os.path.exists(jar_path):
-                compat, ver = self._probe_jar_compatibility(jar_path)
-                if compat:
-                    return ("JAR", jar_path, ver)
+            if not os.path.exists(jar_path):
+                continue
+            compat, ver = self._probe_jar_compatibility(jar_path)
+            if compat:
+                found.append((self._version_tuple(ver), jar_path, ver))
+            else:
+                incompatible.append(f"{jar_name} ({ver})")
+        if found:
+            found.sort(key=lambda t: t[0], reverse=True)
+            self.last_discovery_note = (
+                f"selected {os.path.basename(found[0][1])} {found[0][2]}; incompatible: {incompatible}" if incompatible
+                else f"selected {os.path.basename(found[0][1])} {found[0][2]}")
+            return ("JAR", found[0][1], found[0][2])
 
         raise RuntimeError(
             f"No compatible Freerouting engine found in '{self.tools_dir}'. "
-            "Installed JARs may require a newer Java runtime, or no Java JRE is installed."
+            + (f"Present but needing a newer Java: {incompatible}. " if incompatible else "")
+            + "Install a Java runtime matching the JAR (v2.2+ needs Java 25) or set FREEROUTING_JAR."
         )
+
+    @staticmethod
+    def _version_tuple(ver: str) -> Tuple[int, ...]:
+        nums = re.findall(r"\d+", ver or "")
+        return tuple(int(n) for n in nums[:3]) if nums else (0,)
+
+    @staticmethod
+    def global_config_path() -> str:
+        """Freerouting 2.1.0 ignores the per-run freerouting.json and reads this file instead (INC-007)."""
+        base = os.environ.get("TEMP") or os.environ.get("TMPDIR") or "/tmp"
+        return os.path.join(base, "freerouting", "freerouting.json")
 
     def _probe_jar_compatibility(self, jar_path: str) -> Tuple[bool, str]:
         """Tests whether a JAR can be loaded by the installed Java VM without class version errors."""
@@ -154,26 +247,93 @@ class RoutingEngineOrchestrator:
         return h.hexdigest()
 
     @staticmethod
-    def ensure_headless_config(working_dir: str, job_timeout_str: str = "00:05:00") -> str:
-        """Writes a strict headless freerouting.json configuration into working_dir.
-        Fixes BN-004 (modal GUI hang) and BN-007 (pass 999 termination loop).
+    def build_config(job_timeout_str: str = "00:05:00",
+                     max_passes: int = 30,
+                     stagnation_pass_limit: Optional[int] = None,
+                     priority_net_classes: Optional[List[str]] = None,
+                     plane_nets: Optional[List[str]] = None,
+                     via_costs: Optional[int] = None,
+                     optimizer_passes: int = 3,
+                     max_threads: Optional[int] = None) -> Dict[str, Any]:
+        """Freerouting settings DESK's intelligence can actually drive (docs/settings.md, v2.x):
+
+        * autorouter.priority_net_classes  <- DensePCBIntelligence.priority_net_order (DSN has one class per net)
+        * plane_nets                        <- placement.json planes
+        * autorouter.stagnation_pass_limit  <- stop when the engine itself sees no improvement (v2.2+)
+        * via_costs                         <- raised on boards with few routable layers
+        Keys unknown to an older engine are ignored by it.
         """
-        cfg_path = os.path.join(working_dir, "freerouting.json")
-        cfg = {
-            "gui": {
-                "enabled": False,
-                "currentLocale": "en"
-            },
-            "router": {
-                "job_timeout": job_timeout_str,
-                "autorouter": {
-                    "max_passes": 30
-                }
-            }
+        router: Dict[str, Any] = {
+            "job_timeout": job_timeout_str,
+            "max_passes": max_passes,                      # Freerouting 2.1.x key (router.max_passes)
+            "autorouter": {"enabled": True, "max_passes": max_passes},   # 2.4+ key
+            "optimizer": {"enabled": optimizer_passes > 0, "max_passes": max(0, optimizer_passes)},
         }
+        if stagnation_pass_limit is not None:
+            router["autorouter"]["stagnation_pass_limit"] = int(stagnation_pass_limit)
+        if priority_net_classes:
+            router["autorouter"]["priority_net_classes"] = list(priority_net_classes)
+        if plane_nets:
+            router["plane_nets"] = list(plane_nets)
+        if via_costs is not None:
+            router["via_costs"] = int(via_costs)
+        if max_threads is not None:
+            router["max_threads"] = int(max_threads)
+            router["optimizer"]["max_threads"] = int(max_threads)
+        return {"gui": {"enabled": False, "currentLocale": "en"},
+                "profile": {"allow_telemetry": False, "allow_contact": False},
+                "router": router}
+
+    @classmethod
+    def ensure_headless_config(cls, working_dir: str, job_timeout_str: str = "00:05:00", max_passes: int = 30,
+                               **settings) -> str:
+        """Writes the headless freerouting.json into working_dir (v2.2+ reads it from the CWD).
+        Fixes BN-004 (modal GUI hang) and BN-007 (pass 999 termination loop)."""
+        cfg_path = os.path.join(working_dir, "freerouting.json")
+        cfg = cls.build_config(job_timeout_str, max_passes=max_passes, **settings)
         with open(cfg_path, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2)
         return cfg_path
+
+    @classmethod
+    def install_global_config(cls, cfg: Dict[str, Any]) -> Optional[str]:
+        """Freerouting 2.1.0 only honours %TEMP%/freerouting/freerouting.json (INC-007). Merge DESK's
+        router settings into it for the duration of a run; returns the backup path to restore afterwards,
+        or None when nothing was written."""
+        path = cls.global_config_path()
+        try:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            existing: Dict[str, Any] = {}
+            if os.path.exists(path):
+                with open(path, encoding="utf-8") as f:
+                    existing = json.load(f)
+            backup = path + ".desk-backup"
+            with open(backup, "w", encoding="utf-8") as f:
+                json.dump(existing, f, indent=2)
+            merged = dict(existing)
+            merged.setdefault("gui", {}).update(cfg.get("gui", {}))
+            router = dict(merged.get("router", {}))
+            for k, v in cfg["router"].items():
+                if isinstance(v, dict) and isinstance(router.get(k), dict):
+                    router[k] = {**router[k], **v}
+                else:
+                    router[k] = v
+            merged["router"] = router
+            merged.setdefault("profile", {}).update({"allow_telemetry": False, "allow_contact": False})
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(merged, f, indent=2)
+            return backup
+        except Exception:
+            return None
+
+    @classmethod
+    def restore_global_config(cls, backup: Optional[str]) -> None:
+        if not backup or not os.path.exists(backup):
+            return
+        try:
+            os.replace(backup, cls.global_config_path())
+        except Exception:
+            pass
 
     def execute_routing(
         self,
@@ -184,10 +344,21 @@ class RoutingEngineOrchestrator:
         working_dir: Optional[str] = None,
         explicit_engine: Optional[str] = None,
         stagnation_patience: int = 6,
-        log_callback: Optional[Any] = None
+        log_callback: Optional[Any] = None,
+        priority_net_classes: Optional[List[str]] = None,
+        plane_nets: Optional[List[str]] = None,
+        input_ses: Optional[str] = None,
+        via_costs: Optional[int] = None,
+        max_threads: int = 1,
     ) -> EngineExecutionResult:
         """Executes the routing engine with full process supervision, streaming logs,
-        watchdog stagnation detection, and bounded timeout.
+        improvement-based stagnation detection, and bounded timeout.
+
+        priority_net_classes: DSN class names (= net names in EasyEDA exports) the engine should route
+            first; from DensePCBIntelligence.priority_net_order.
+        plane_nets: nets served by copper planes (pad-to-plane vias instead of corridors).
+        input_ses: a previous session to start from (-de board.dsn+previous.ses), which keeps routed
+            copper so a run continues a partial result instead of rerouting the whole board.
         """
         if not os.path.exists(dsn_path):
             raise FileNotFoundError(f"Input DSN file not found: {dsn_path}")
@@ -196,12 +367,17 @@ class RoutingEngineOrchestrator:
         os.makedirs(wd, exist_ok=True)
 
         engine_type, engine_path, engine_ver = self.discover_engine(explicit_engine)
+        ver_t = self._version_tuple(engine_ver)
 
-        # 1. Prepare headless configuration in working directory
+        # 1. Prepare headless configuration (per-run file for v2.2+, global file for v2.1)
         mins = max(1, int(timeout_sec // 60))
         secs = int(timeout_sec % 60)
         timeout_str = f"00:{mins:02d}:{secs:02d}"
-        self.ensure_headless_config(wd, job_timeout_str=timeout_str)
+        settings = dict(stagnation_pass_limit=stagnation_patience, priority_net_classes=priority_net_classes,
+                        plane_nets=plane_nets, via_costs=via_costs, max_threads=max_threads)
+        cfg = self.build_config(timeout_str, max_passes=max_passes, **settings)
+        self.ensure_headless_config(wd, job_timeout_str=timeout_str, max_passes=max_passes, **settings)
+        global_backup = self.install_global_config(cfg) if ver_t < (2, 2) else None
 
         # 2. Build canonical command line
         cmd: List[str] = []
@@ -210,22 +386,31 @@ class RoutingEngineOrchestrator:
         else:
             cmd = [engine_path]
 
-        # Use canonical CLI arguments
+        design_arg = os.path.abspath(dsn_path)
+        if input_ses and os.path.exists(input_ses):
+            design_arg += "+" + os.path.abspath(input_ses)
         cmd.extend([
-            "-de", os.path.abspath(dsn_path),
+            "-de", design_arg,
             "-do", os.path.abspath(ses_path),
             "-mp", str(max_passes),
-            "-mt", "1",
+            "-mt", str(max_threads),
             "--gui.enabled=false"
         ])
-
-        # If newer release supports canonical nested argument
-        if "v2.5" in engine_ver or "v2.4" in engine_ver:
+        if ver_t >= (2, 2):
             cmd.append(f"--router.autorouter.max_passes={max_passes}")
+            cmd.append(f"--router.autorouter.stagnation_pass_limit={int(stagnation_patience)}")
+            cmd.append(f"--router.job_timeout={timeout_str}")
+            if priority_net_classes:
+                cmd.append("--router.autorouter.priority_net_classes=" + ",".join(priority_net_classes))
+            if plane_nets:
+                cmd.append("--router.plane_nets=" + ",".join(plane_nets))
+            if via_costs is not None:
+                cmd.append(f"--router.via_costs={int(via_costs)}")
 
         t0 = time.time()
         stdout_lines: List[str] = []
         stderr_lines: List[str] = []
+        tracker = PassTracker(patience=stagnation_patience)
 
         # 3. Supervised execution with background reader threads
         proc = subprocess.Popen(
@@ -238,41 +423,18 @@ class RoutingEngineOrchestrator:
             universal_newlines=True
         )
 
-        passes_completed = 0
-        unrouted_history: List[int] = []
-        initial_unrouted: Optional[int] = None
-        final_unrouted: Optional[int] = None
         stagnated = False
 
         def read_stdout():
-            nonlocal passes_completed, initial_unrouted, final_unrouted, stagnated
+            nonlocal stagnated
             for line in proc.stdout:
                 clean_line = line.strip()
                 if clean_line:
                     stdout_lines.append(clean_line)
                     if log_callback:
                         log_callback(clean_line)
-
-                    # Parse pass metrics from standard Freerouting logs:
-                    # e.g., "Pass 1: unrouted connections: 14"
-                    # or "Pass 2 completed with 8 unrouted"
-                    low = clean_line.lower()
-                    if "pass " in low and ("unrouted" in low or "connections" in low or "completed" in low):
-                        passes_completed += 1
-                        import re
-                        m = re.search(r"(\d+)\s+unrouted", low)
-                        if m:
-                            count = int(m.group(1))
-                            if initial_unrouted is None:
-                                initial_unrouted = count
-                            final_unrouted = count
-                            unrouted_history.append(count)
-
-                            # Watchdog stagnation detection
-                            if len(unrouted_history) >= stagnation_patience:
-                                last_k = unrouted_history[-stagnation_patience:]
-                                if len(set(last_k)) == 1:
-                                    stagnated = True
+                    if tracker.feed(clean_line) is not None and tracker.stagnated():
+                        stagnated = True
 
         def read_stderr():
             for line in proc.stderr:
@@ -291,16 +453,20 @@ class RoutingEngineOrchestrator:
             now = time.time()
             elapsed = now - t0
 
-            if elapsed > timeout_sec:
+            # Freerouting's own job_timeout equals timeout_sec; give it a grace period to exit by itself and write
+            # the SES (-do) with its best board instead of killing it at the same instant and losing the result.
+            if elapsed > timeout_sec + 120.0:
                 timed_out = True
                 proc.kill()
                 break
 
-            if stagnated and passes_completed >= 5:
-                # Terminate cleanly on plateau
+            if stagnated and tracker.passes >= 5:
+                # Terminate cleanly on plateau. For v2.1 the SES is only written at job end, so
+                # terminate() (not kill) gives the JVM its shutdown hook; v2.2+ stops itself via
+                # stagnation_pass_limit before we get here.
                 proc.terminate()
                 try:
-                    proc.wait(timeout=5)
+                    proc.wait(timeout=20)
                 except subprocess.TimeoutExpired:
                     proc.kill()
                 break
@@ -310,18 +476,27 @@ class RoutingEngineOrchestrator:
         t_out.join(timeout=2.0)
         t_err.join(timeout=2.0)
         dur = round(time.time() - t0, 2)
+        self.restore_global_config(global_backup)
 
         ses_exists = os.path.exists(ses_path)
         ses_size = os.path.getsize(ses_path) if ses_exists else 0
+        passes_completed = tracker.passes
+        initial_unrouted = tracker.initial_unrouted
+        final_unrouted = tracker.last_unrouted
 
         # Determine status
         if timed_out:
             status = "TIMEOUT"
             err_msg = f"Routing engine exceeded timeout budget of {timeout_sec:.1f}s"
             success = False
+        elif ses_exists and ses_size > 0 and proc.returncode != 0 and (final_unrouted or 0) > 0:
+            status = "TIMEOUT_PARTIAL"
+            err_msg = f"Engine stopped at its job_timeout with {final_unrouted} unrouted; partial SES kept"
+            success = True
         elif stagnated:
             status = "STAGNATED"
-            err_msg = f"Unrouted score stalled at {final_unrouted} for {stagnation_patience} consecutive passes"
+            err_msg = (f"No new best unrouted count for {stagnation_patience} passes "
+                       f"(best {tracker.best_unrouted} at pass {tracker.best_pass}, last {final_unrouted})")
             # If SES exists and has routed content, it is a partial success
             success = ses_exists and ses_size > 0
         elif proc.returncode != 0:
@@ -362,5 +537,10 @@ class RoutingEngineOrchestrator:
             ses_size_bytes=ses_size,
             stdout_summary="\n".join(stdout_lines[:50]),
             stderr_summary="\n".join(stderr_lines[:50]),
-            error_message=err_msg
+            error_message=err_msg,
+            best_unrouted=tracker.best_unrouted,
+            best_pass=tracker.best_pass,
+            pass_history=list(tracker.history),
+            restores_seen=tracker.restores,
+            engine_config=cfg.get("router", {}),
         )

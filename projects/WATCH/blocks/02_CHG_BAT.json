@@ -2,7 +2,7 @@
  "id": "02_CHG_BAT",
  "title": "02 BATTERY CHARGING AND POWER PATH",
  "status": "draft",
- "purpose": "BQ24074RGTR 1.5A USB-friendly LiPo battery charger and autonomous NVDC power-path manager. Powers VSYS directly from VBUS while charging the LiPo cell at 400mA, with dynamic power management (ILIM=1.5A), termination current at 40mA (ITERM=2k), and safety timer / thermal monitoring.",
+ "purpose": "BQ24074RGTR 1.5A USB-friendly LiPo battery charger and autonomous NVDC power-path manager. Powers VSYS directly from VBUS while charging the 300 mAh LiPo cell at 157 mA (0.52 C), with dynamic power management (ILIM=1.5A), termination current at 15.7 mA (ITERM=2k), and safety timer / thermal monitoring.",
  "ports": [
   "VBUS",
   "VSYS",
@@ -102,14 +102,13 @@
   },
   {
    "ref": "R7",
-   "mpn": "0402WGF2000TCE",
-   "role": "2.0k resistor on ISET pin setting charge current to 400mA",
+   "mpn": "0402WGF5101TCE",
+   "role": "5.1k resistor on ISET pin setting charge current to 157 mA (0.52 C for 300 mAh cell)",
    "pins": {
     "1": "NET_ISET",
     "2": "GND"
    },
    "nc": [],
-   "lcsc": "C25087",
    "package": "0402"
   },
   {
@@ -190,28 +189,28 @@
   {
    "item": "Charge Current I_CHG Calculation",
    "formula": "I_CHG = K_ISET / R_ISET, K_ISET = 800 A*Ohm (BQ24074 Datasheet Section 9.3.7.2)",
-   "result": "R_ISET = 2.0 kOhm -> I_CHG = 800 / 2000 = 0.400 A (400 mA). Perfectly sized for typical 1S wearable LiPo cells (350-600 mAh at ~0.8C-1C rate).",
+   "result": "R_ISET = 5.1 kOhm -> I_CHG = 800 / 5100 = 0.157 A (157 mA) = 0.52 C for the client's 300 mAh 1S LiPo (rev B). Within the usual 0.5-1 C fast-charge window for small pouch cells; CC phase ~1.9 h.",
    "source": "Texas Instruments BQ24074 Datasheet SLUS884F Section 9.3.7.2",
    "pass": true
   },
   {
    "item": "Input Current Limit I_IN_MAX Calculation",
    "formula": "I_IN_MAX = K_ILIM / R_ILIM, K_ILIM = 1550 A*Ohm (BQ24074 Section 9.3.7.1)",
-   "result": "R_ILIM = 1.2 kOhm -> I_IN_MAX = 1550 / 1200 = 1.29 A (~1.3 A). Safely supports 400 mA charging + 500 mA system peak load under USB Type-C 1.5A supply.",
+   "result": "R_ILIM = 1.2 kOhm -> I_IN_MAX = 1.29 A. Supports 157 mA charging + ~0.9 A system peak (5 V boost feeding the 3 W Class-D amp at full output) under a USB Type-C 1.5 A supply.",
    "source": "Texas Instruments BQ24074 Datasheet SLUS884F Section 9.3.7.1",
    "pass": true
   },
   {
    "item": "Charge Termination Current I_TERM Calculation",
    "formula": "I_TERM = (R_ITERM / 1000) * (I_CHG / 20) with R_ITERM in Ohm",
-   "result": "R_ITERM = 2.0 kOhm -> I_TERM = 0.1 * I_CHG = 40 mA. Standard 10% termination ensures complete saturation of LiPo without over-soaking.",
+   "result": "R_ITERM = 2.0 kOhm -> I_TERM = 0.1 * I_CHG = 15.7 mA (10 % of 157 mA).",
    "source": "Texas Instruments BQ24074 Datasheet SLUS884F Section 9.3.7.3",
    "pass": true
   },
   {
    "item": "Safety Timer T_MAX Calculation",
    "formula": "t_MAX = K_TMR * R_TMR, K_TMR = 0.133 hr/kOhm",
-   "result": "R_TMR = 47 kOhm -> t_MAX = 0.133 * 47 = 6.25 hours fast-charge limit. Ample time for full CC-CV charging while preventing thermal runaway on defective cells.",
+   "result": "R_TMR = 47 kOhm -> t_MAX = 6.25 h. 300 mAh at 157 mA needs ~1.9 h CC + CV tail, so the timer has >2x margin.",
    "source": "Texas Instruments BQ24074 Datasheet SLUS884F Section 9.3.7.4",
    "pass": true
   }

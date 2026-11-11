@@ -4,7 +4,7 @@
  "board": "MAIN",
  "sheet_uuid": "c75145b22afda01f",
  "pcb_uuid": "d8c5340d62893518",
- "window_id": "1d8b63e5-5d20-4c0e-a121-8d9d6f67bec2",
+ "window_id": "2ff825bb-d8f5-4d67-92ce-e7f60a9ae137",
  "top": 3200,
  "row_max": 5200,
  "block_order": [
@@ -16,7 +16,6 @@
   "06_AUDIO_IN",
   "07_AUDIO_OUT",
   "08_IMU_MOTION",
-  "09_STORAGE",
   "10_LCD_DISP",
   "11_BUTTONS",
   "12_STATUS_LEDS",

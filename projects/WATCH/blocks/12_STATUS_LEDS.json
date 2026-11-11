@@ -1,11 +1,15 @@
 {
  "id": "12_STATUS_LEDS",
- "title": "12 STATUS AND POWER INDICATOR LEDS",
+ "title": "12 SIX STATUS INDICATOR LEDS",
  "status": "draft",
- "purpose": "Green and Blue surface-mount 0603 status indicator LEDs with 1k current-limiting resistors for power state and BLE/DSP activity indication.",
+ "purpose": "Six 0603 status LEDs (client order 1-6 along the right board edge below the display), each on its own ESP32-S3 GPIO through a 1k current-limit resistor. LED1 power/charge (IO48), LED2 BLE/DSP (IO41), LED3-LED6 user status (IO12-IO15). Colours of LED3-6 alternate green/blue pending client choice.",
  "ports": [
   "LED_PWR",
   "LED_STAT",
+  "LED_3",
+  "LED_4",
+  "LED_5",
+  "LED_6",
   "GND"
  ],
  "qa": [
@@ -53,12 +57,88 @@
     "1": "LED_STAT",
     "2": "NET_LED_STAT_A"
    }
+  },
+  {
+   "ref": "LED3",
+   "mpn": "KT-0603G",
+   "role": "Green status LED 3 (client position 3)",
+   "pins": {
+    "1": "GND",
+    "2": "NET_LED_3_A"
+   }
+  },
+  {
+   "ref": "R32",
+   "mpn": "0402WGF1001TCE",
+   "role": "1k 0402 Current Limiting Resistor for LED3",
+   "pins": {
+    "1": "LED_3",
+    "2": "NET_LED_3_A"
+   }
+  },
+  {
+   "ref": "LED4",
+   "mpn": "KT-0603B",
+   "role": "Blue status LED 4 (client position 4)",
+   "pins": {
+    "1": "GND",
+    "2": "NET_LED_4_A"
+   }
+  },
+  {
+   "ref": "R33",
+   "mpn": "0402WGF1001TCE",
+   "role": "1k 0402 Current Limiting Resistor for LED4",
+   "pins": {
+    "1": "LED_4",
+    "2": "NET_LED_4_A"
+   }
+  },
+  {
+   "ref": "LED5",
+   "mpn": "KT-0603G",
+   "role": "Green status LED 5 (client position 5)",
+   "pins": {
+    "1": "GND",
+    "2": "NET_LED_5_A"
+   }
+  },
+  {
+   "ref": "R34",
+   "mpn": "0402WGF1001TCE",
+   "role": "1k 0402 Current Limiting Resistor for LED5",
+   "pins": {
+    "1": "LED_5",
+    "2": "NET_LED_5_A"
+   }
+  },
+  {
+   "ref": "LED6",
+   "mpn": "KT-0603B",
+   "role": "Blue status LED 6 (client position 6)",
+   "pins": {
+    "1": "GND",
+    "2": "NET_LED_6_A"
+   }
+  },
+  {
+   "ref": "R35",
+   "mpn": "0402WGF1001TCE",
+   "role": "1k 0402 Current Limiting Resistor for LED6",
+   "pins": {
+    "1": "LED_6",
+    "2": "NET_LED_6_A"
+   }
   }
  ],
  "nets": {
   "GND": [
    "LED1.1",
-   "LED2.1"
+   "LED2.1",
+   "LED3.1",
+   "LED4.1",
+   "LED5.1",
+   "LED6.1"
   ],
   "LED_PWR": [
    "R28.1"
@@ -73,6 +153,34 @@
   "NET_LED_STAT_A": [
    "R29.2",
    "LED2.2"
+  ],
+  "LED_3": [
+   "R32.1"
+  ],
+  "NET_LED_3_A": [
+   "R32.2",
+   "LED3.2"
+  ],
+  "LED_4": [
+   "R33.1"
+  ],
+  "NET_LED_4_A": [
+   "R33.2",
+   "LED4.2"
+  ],
+  "LED_5": [
+   "R34.1"
+  ],
+  "NET_LED_5_A": [
+   "R34.2",
+   "LED5.2"
+  ],
+  "LED_6": [
+   "R35.1"
+  ],
+  "NET_LED_6_A": [
+   "R35.2",
+   "LED6.2"
   ]
  }
 }

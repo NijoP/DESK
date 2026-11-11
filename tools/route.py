@@ -108,6 +108,28 @@ if routing_plan.blocking_issues:
 if profile is None:
     print("NOTE: no design_profile.json; widths and clearances use built-in heuristics, not your rails.")
 
+# Dense-board intelligence (deterministic, ~50 ms): hotspot regions with causes, reserved corridors and a
+# net priority order that is handed to the engine as priority_net_classes (DSN classes are named per net).
+from desk.routing.density import DensePCBIntelligence
+from desk.routing.fixtures import plane_layers_from_planes
+_stack_names = list(routing_plan.board_stackup)
+dense = DensePCBIntelligence(dump, tuple(plan.get("board_mm", [50.0, 50.0])), tuple(plan.get("origin_mm", [0.0, 0.0])),
+                             stackup=_stack_names, plane_layers=plane_layers_from_planes(plan.get("planes", []), _stack_names),
+                             keepouts_mm=plan.get("route_keepouts") or plan.get("keepouts"), profile=profile)
+dense_report = dense.analyze()
+print(f"Dense-board analysis ({dense_report.analysis_ms:.0f} ms): congestion {dense_report.overall_congestion}, "
+      f"{dense_report.overloaded_cells} overloaded cells, {len(dense_report.hotspots)} hotspot regions, "
+      f"{dense_report.ratsnest_crossings} crossings, escape {dense_report.escape_summary}")
+for _h in dense_report.hotspots[:5]:
+    print(f"  {_h.region_id} {_h.bbox_mm} mm score {_h.max_score}: {', '.join(_h.causes)} -> {_h.recommended_strategy}")
+priority_classes = dense_report.priority_net_order[:max(8, len(dense_report.priority_net_order) // 3)]
+plane_nets = dense_report.plane_nets
+try:
+    from desk.fsutil import atomic_write_json
+    atomic_write_json(os.path.join(proj, "state", "route", "dense_analysis.json"), dense_report.to_dict(include_cells=True), indent=1)
+except Exception as _e:
+    print("Warning: could not save dense_analysis.json:", _e)
+
 # Phase 7: Routing-plan generation
 profiler.start_phase(7, category="CPU")
 print(f"Routing Mode: {mode_cfg.mode_name} (Pass Budget: {passes}, Stackup: {routing_plan.board_stackup})")
@@ -181,6 +203,8 @@ tuned_dsn = DSNTuningEngine.tune_dsn(
     power_nets=power_nets,
     keepouts=plan.get("route_keepouts", plan.get("keepouts")),   # routing-only keepouts (placement keepouts may contain pads)
     net_widths=custom_net_widths,
+    # Per-net clearances from the routing plan (profile voltages / RF / fine pitch); previously discarded.
+    net_clearances={n: c.clearance_mil for n, c in routing_plan.net_constraints.items() if c.clearance_mil > 4.05},
     fine_pitch_width_mil=5.0,    # DRC rule set: min track 0.127 mm
     fine_pitch_clearance_mil=4.05  # DRC rule set: clearance 0.1016 mm (4.0 mil)
 )
@@ -228,9 +252,20 @@ exec_result = orchestrator.execute_routing(
     max_passes=passes,
     timeout_sec=mode_cfg.timeout_sec,
     working_dir=wd,
-    stagnation_patience=mode_cfg.stagnation_patience
+    stagnation_patience=mode_cfg.stagnation_patience,
+    priority_net_classes=priority_classes,
+    plane_nets=plane_nets,
+    via_costs=80 if len(dense_report.routable_layers) <= 2 else None,   # discourage via hopping when only 2 signal layers remain
+    input_ses=(os.path.join(wd, "desk_route_prev.ses") if "--continue" in args and os.path.exists(os.path.join(wd, "desk_route_prev.ses")) else None),
 )
 profiler.end_phase()
+print(f"Engine {exec_result.engine_version}: {exec_result.passes_completed} passes, best {exec_result.best_unrouted} unrouted at pass "
+      f"{exec_result.best_pass}, last {exec_result.final_unrouted}, restores {exec_result.restores_seen}")
+if exec_result.ses_generated:
+    try:
+        shutil.copyfile(ses, os.path.join(wd, "desk_route_prev.ses"))   # kept for --continue (incremental re-route)
+    except Exception:
+        pass
 
 print(f"Routing Engine Result: {exec_result.status} in {exec_result.duration_sec:.1f}s ({exec_result.engine_version})")
 if not exec_result.success and not (exec_result.ses_generated and exec_result.ses_size_bytes > 0):
