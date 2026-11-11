@@ -41,10 +41,14 @@ def passive(ref: str, x_mm: float, y_mm: float, net_a: str, net_b: str, size: st
     dims = {"0201": (23.6, 11.8, 15.7), "0402": (39.4, 19.7, 21.3), "0603": (63.0, 31.5, 35.4), "0805": (78.7, 47.2, 49.2)}
     body, pw, ph = dims.get(size, dims["0402"])
     gap = body / 2.0 - pw / 2.0 + 4.0
-    pads = [_pad(1, -gap, 0.0, pw, ph, net_a, layer), _pad(2, gap, 0.0, pw, ph, net_b, layer)]
-    bb = [-body / 2 - 6, body / 2 + 6, -ph / 2 - 6, ph / 2 + 6]
+    # Dump convention: pad dx/dy are already in the board frame (tools/pcb_dump.py stores absolute
+    # offsets), so a rotated part carries rotated offsets and rotated pad shapes.
     if rot in (90, 270):
-        bb = [bb[2], bb[3], bb[0], bb[1]]
+        pads = [_pad(1, 0.0, -gap, ph, pw, net_a, layer, 90), _pad(2, 0.0, gap, ph, pw, net_b, layer, 90)]
+        bb = [-ph / 2 - 6, ph / 2 + 6, -body / 2 - 6, body / 2 + 6]
+    else:
+        pads = [_pad(1, -gap, 0.0, pw, ph, net_a, layer), _pad(2, gap, 0.0, pw, ph, net_b, layer)]
+        bb = [-body / 2 - 6, body / 2 + 6, -ph / 2 - 6, ph / 2 + 6]
     return ref, {"id": ref, "x": x_mm * MIL, "y": y_mm * MIL, "rot": rot, "layer": layer, "fp": f"{'C' if ref[0]=='C' else 'R'}{size}",
                  "bbox": bb, "pads": pads}
 

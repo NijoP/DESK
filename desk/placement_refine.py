@@ -125,11 +125,10 @@ class PlacementRefiner:
         for ref, comp in self.dump.items():
             if not IC_RX.match(ref):
                 continue
-            cx, cy, rot = comp["x"], comp["y"], math.radians(comp.get("rot") or 0)
+            from desk.routing.connectivity import pad_xy
             for p in comp.get("pads", []):
                 if p.get("net") and POWER_RX.match(p["net"]) and not GND_RX.match(p["net"]):
-                    px = cx + p["dx"] * math.cos(rot) - p["dy"] * math.sin(rot)
-                    py = cy + p["dx"] * math.sin(rot) + p["dy"] * math.cos(rot)
+                    px, py = pad_xy(comp, p)
                     ic_pads.append((p["net"], px / MIL - self.origin_mm[0], py / MIL - self.origin_mm[1]))
         for ref, comp in self.dump.items():
             if not ref.upper().startswith("C") or len(comp.get("pads", [])) != 2:
@@ -179,7 +178,21 @@ class PlacementRefiner:
         return round(J, 3), rep.hotspot_cells, rep.ratsnest_crossings
 
     def _moved_record(self, ref: str, x_mm: float, y_mm: float, rot: float) -> Dict[str, Any]:
+        """New dump record for a moved/rotated part. Pad offsets are board-frame, so a rotation change
+        rotates them (and swaps rectangular pad shapes) by the delta only."""
         comp = copy.deepcopy(self.dump[ref])
+        delta = math.radians(float(rot) - float(comp.get("rot") or 0))
+        if abs(delta) > 1e-9:
+            c, s = math.cos(delta), math.sin(delta)
+            for p in comp.get("pads", []):
+                dx, dy = float(p.get("dx", 0.0)), float(p.get("dy", 0.0))
+                p["dx"], p["dy"] = dx * c - dy * s, dx * s + dy * c
+                shape = p.get("shape")
+                if isinstance(shape, list) and len(shape) >= 3 and abs(abs(math.degrees(delta)) % 180 - 90) < 1e-6:
+                    shape[1], shape[2] = shape[2], shape[1]
+            b = comp.get("bbox")
+            if b and abs(abs(math.degrees(delta)) % 180 - 90) < 1e-6:
+                comp["bbox"] = [b[2], b[3], b[0], b[1]]
         comp["x"] = (x_mm + self.origin_mm[0]) * MIL
         comp["y"] = (y_mm + self.origin_mm[1]) * MIL
         comp["rot"] = rot

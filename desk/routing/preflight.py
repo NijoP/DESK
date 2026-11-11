@@ -89,12 +89,11 @@ def pads_inside_keepouts(dump: Dict[str, Any], route_keepouts: List[Dict[str, An
     for ref, comp in dump.items():
         if not isinstance(comp, dict):
             continue
-        cx, cy = float(comp.get("x", 0.0)), float(comp.get("y", 0.0))
-        rot = math.radians(float(comp.get("rot", 0.0) or 0.0))
+        from desk.routing.connectivity import pad_xy
         side = "T" if int(comp.get("layer", 1)) == 1 else "B"
         for p in comp.get("pads", []):
-            px = (cx + p.get("dx", 0.0) * math.cos(rot) - p.get("dy", 0.0) * math.sin(rot)) / MIL - ox
-            py = (cy + p.get("dx", 0.0) * math.sin(rot) + p.get("dy", 0.0) * math.cos(rot)) / MIL - oy
+            ax, ay = pad_xy(comp, p)
+            px, py = ax / MIL - ox, ay / MIL - oy
             th = p.get("layer") in (11, 12)
             for ko in route_keepouts or []:
                 if ref in (ko.get("allow") or []):

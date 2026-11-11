@@ -124,3 +124,7 @@ Unchanged at **4.1 / 10** for production readiness: nothing is live-verified bey
 ### Addendum 2026-11-12 01:30 — rework item C closed
 
 The Founder installed Temurin JDK 25 into `library/tools/jdk25/`. Freerouting 2.5.0 now runs, honours `max_passes`, and returned a 100 KB SES after a 6-pass, 138 s run on the scratch WATCH DSN (42 → 11 unrouted). The smoke fixture routes in 4.4 s. Engine discovery probes newest-first and stops at the first JAR that starts. Next: import such a SES into a disposable copy and run the connectivity report with poured-copper readback (QA-03 / EE-03); the verifier's 45 % on the SES against the live dump does not yet agree with the engine's 11 open connections and must be resolved before any completion claim.
+
+### Addendum 2026-11-12 01:55 — QA-03 closed, geometry defect fixed across the stack
+
+Reconciling the 2.5.0 SES with the engine exposed two long-standing geometry defects (pad size defaulting to 15 mil; pad offsets rotated twice for rotated parts) that affected escape analysis, density, keep-out checks, snapshots and the connectivity verifier. Fixed with one shared helper and a regression test; the verifier now agrees with the engine (51/60 nets, 15 open pads vs 11 open connections). This is the first time DESK's physical connectivity verdict on a routed board is trustworthy. Dense-board numbers were regenerated.

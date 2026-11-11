@@ -4,7 +4,7 @@ Updated 2026-11-12. Categories are kept separate so that passing offline tests a
 
 | Category | Count / state | Evidence |
 |---|---|---|
-| Offline unit tests | 428 passed, 3 skipped across 74 files (2026-11-12 01:30 local, 26 s) | `python -m unittest discover -s tests` |
+| Offline unit tests | 433 passed, 3 skipped across 75 files (2026-11-12 01:55 local) | `python -m unittest discover -s tests` |
 | Integration tests (offline, multi-module) | routing e2e on Project One SES, rework e2e, orchestrator with mock adapters, dense-board fixtures | `tests/test_routing_e2e_project_one.py`, `test_rework_e2e.py`, `test_orchestrator.py`, `test_dense_intelligence.py` |
 | EasyEDA API tests (read-only, live) | **1 pass executed** on the WATCH project through the gateway: 13 getter calls, 484 ms, no mutation | `docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md` |
 | Live EasyEDA mutation tests | **0 executed**; nine-stage checklist defined, never run | `docs/LIVE_INTEGRATION_CHECKLIST.md`, `tools/live_disposable_test.py` |

@@ -61,7 +61,8 @@ for ref, ic, pin, why in plan.get("passives", []):
     pad = next((p for p in dump[ic]["pads"] if str(p["num"]) == str(pin)), None)
     if pad is None: raise SystemExit(f"{ref}: {ic} has no pad {pin}")
     x, y, rot, side = target[ic]
-    a = math.radians(rot); dx, dy = pad["dx"] / MIL, pad["dy"] / MIL
+    # pad dx/dy are board-frame at the dump's current rotation: rotate by (planned - current) only (QA-03)
+    a = math.radians(rot - (dump[ic].get("rot") or 0)); dx, dy = pad["dx"] / MIL, pad["dy"] / MIL
     px, py = x + dx * math.cos(a) - dy * math.sin(a), y + dx * math.sin(a) + dy * math.cos(a)
     bb = dump[ic]["bbox"]; half = max(abs(bb[0]), abs(bb[1]), abs(bb[2]), abs(bb[3])) / MIL
     ux, uy = px - x, py - y; n = math.hypot(ux, uy) or 1

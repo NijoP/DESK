@@ -104,29 +104,23 @@ class RoutabilityEvaluator:
         for ref, comp in dump.items():
             if not ref or not isinstance(comp, dict): continue
             pads = comp.get("pads", [])
+            from desk.routing.connectivity import pad_xy
             if ref in target:
                 tx_mm, ty_mm, rot_deg, side = target[ref][:4]
                 base_x_mil = tx_mm * MIL
                 base_y_mil = ty_mm * MIL
-                rot_rad = math.radians(rot_deg)
+                rot_override = rot_deg          # pad offsets rotate by (planned - current) only
                 layer = 1 if side == "T" else 2
             else:
                 base_x_mil = comp.get("x", 0.0)
                 base_y_mil = comp.get("y", 0.0)
-                rot_deg = comp.get("rot", 0.0) or 0.0
-                rot_rad = math.radians(rot_deg)
+                rot_override = None
                 layer = comp.get("layer", 1)
-
-            cos_a = math.cos(rot_rad)
-            sin_a = math.sin(rot_rad)
 
             for p in pads:
                 net = p.get("net")
                 if not net or not net.strip(): continue
-                dx = p.get("dx", 0.0)
-                dy = p.get("dy", 0.0)
-                px = base_x_mil + dx * cos_a - dy * sin_a
-                py = base_y_mil + dx * sin_a + dy * cos_a
+                px, py = pad_xy(comp, p, base_x_mil, base_y_mil, rot_override)
                 pad_num = str(p.get("num", ""))
                 is_smd = p.get("layer") not in (11, 12)
 

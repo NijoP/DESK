@@ -100,6 +100,43 @@ def _segments_overlap_or_touch(
     return False
 
 
+def pad_xy(comp: Dict[str, Any], pad: Dict[str, Any], base_x: Optional[float] = None, base_y: Optional[float] = None,
+           rot_override: Optional[float] = None) -> Tuple[float, float]:
+    """Absolute pad centre (mil) for a PCB-dump record.
+
+    `pad["dx"]/["dy"]` are offsets in the BOARD frame at the component's current rotation
+    (`tools/pcb_dump.py` stores pad.getState_X() - component.x). They must not be rotated again by the
+    component's own rotation; only a rotation delta to a *planned* orientation (`rot_override`) is applied.
+    Verified on the WATCH live dump 2026-11-12: 405/1130 SES track endpoints land on their pads without the
+    extra rotation versus 324 with it (QA-03)."""
+    cx = float(comp.get("x", 0.0)) if base_x is None else float(base_x)
+    cy = float(comp.get("y", 0.0)) if base_y is None else float(base_y)
+    dx, dy = float(pad.get("dx", 0.0)), float(pad.get("dy", 0.0))
+    if rot_override is not None:
+        delta = math.radians(float(rot_override) - float(comp.get("rot", 0.0) or 0.0))
+        if abs(delta) > 1e-9:
+            dx, dy = dx * math.cos(delta) - dy * math.sin(delta), dx * math.sin(delta) + dy * math.cos(delta)
+    return cx + dx, cy + dy
+
+
+def pad_size_mil(p: Dict[str, Any]) -> Tuple[float, float]:
+    """Pad width/height in mil from a PCB-dump pad record. EasyEDA dumps carry the size inside
+    `shape: ["RECT"|"ELLIPSE"|..., w, h, ...]`; explicit w/h keys win when present. Falling back to
+    15 mil for every pad (the previous behaviour) made track endpoints miss real 30-40 mil pads and
+    produced false "partially connected" verdicts (QA-03)."""
+    if "w" in p or "width" in p:
+        return float(p.get("w", p.get("width", 15.0))), float(p.get("h", p.get("height", 15.0)))
+    shape = p.get("shape")
+    if isinstance(shape, (list, tuple)) and len(shape) >= 3:
+        try:
+            w, h = float(shape[1]), float(shape[2])
+            if w > 0 and h > 0:
+                return w, h
+        except (TypeError, ValueError):
+            pass
+    return 15.0, 15.0
+
+
 def _layer_rank(layer: int) -> int:
     """Physical stacking order for EasyEDA layer ids: 1 Top, 15..46 Inner1..Inner32, 2 Bottom.
     Through-hole markers (11/12) and unknown ids rank as 'all layers' (-1)."""
@@ -193,7 +230,9 @@ class SESParser:
         if not network_node:
             return ([], [])
 
-        layer_map = {"toplayer": 1, "top": 1, "bottomlayer": 2, "bottom": 2, "inner1": 3, "inner2": 4}
+        # EasyEDA layer ids: 1 top, 2 bottom, 15.. inner (same ids as the PCB dump, vias and declared zones)
+        layer_map = {"toplayer": 1, "top": 1, "bottomlayer": 2, "bottom": 2}
+        layer_map.update({f"inner{i}": 14 + i for i in range(1, 33)})
 
         for item in network_node[1:]:
             if isinstance(item, list) and item and str(item[0]).lower() == "net":
@@ -254,26 +293,16 @@ class PhysicalConnectivityVerifier:
         net_pads: Dict[str, List[Dict[str, Any]]] = {}
         for ref, comp in pcb_dump.items():
             if not isinstance(comp, dict): continue
-            cx = float(comp.get("x", 0.0))
-            cy = float(comp.get("y", 0.0))
-            rot_deg = float(comp.get("rot", 0.0) or 0.0)
-            rot_rad = math.radians(rot_deg)
-            cos_a = math.cos(rot_rad)
-            sin_a = math.sin(rot_rad)
             comp_layer = int(comp.get("layer", 1))
 
             for p in comp.get("pads", []):
                 net = (p.get("net") or "").strip()
                 if not net: continue
 
-                dx = float(p.get("dx", 0.0))
-                dy = float(p.get("dy", 0.0))
-                px = cx + dx * cos_a - dy * sin_a
-                py = cy + dx * sin_a + dy * cos_a
+                px, py = pad_xy(comp, p)
                 pad_num = str(p.get("num", ""))
                 pad_layer = int(p.get("layer", comp_layer))
-                pad_w = float(p.get("w", p.get("width", 15.0)))
-                pad_h = float(p.get("h", p.get("height", 15.0)))
+                pad_w, pad_h = pad_size_mil(p)
 
                 pad_id = f"{ref}.{pad_num}"
                 pad_data = {

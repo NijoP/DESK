@@ -227,8 +227,8 @@ class IndexedPCBSnapshot:
 
                     dx = p.get("dx", 0.0)
                     dy = p.get("dy", 0.0)
-                    px = cx + dx * cos_a - dy * sin_a
-                    py = cy + dx * sin_a + dy * cos_a
+                    px = cx + dx  # dump pad offsets are already in the board frame (QA-03)
+                    py = cy + dy
                     is_smd = p.get("layer") not in (11, 12)
 
                     self.net_to_endpoints[net].append(NetEndpoint(
@@ -269,7 +269,8 @@ class IndexedPCBSnapshot:
         if ref not in self.layer_to_components[layer]:
             self.layer_to_components[layer].append(ref)
 
-        rot_rad = math.radians(rot_deg)
+        # Pad offsets are board-frame at the component's stored rotation: rotate by the delta only (QA-03).
+        rot_rad = math.radians(float(rot_deg) - float(comp.get("rot", 0.0) or 0.0))
         cos_a = math.cos(rot_rad)
         sin_a = math.sin(rot_rad)
 
@@ -338,8 +339,8 @@ class IndexedPCBSnapshot:
 
                 dx = p.get("dx", 0.0)
                 dy = p.get("dy", 0.0)
-                px = cx + dx * cos_a - dy * sin_a
-                py = cy + dx * sin_a + dy * cos_a
+                px = cx + dx  # board-frame offsets (QA-03)
+                py = cy + dy
                 is_smd = p.get("layer") not in (11, 12)
 
                 self.net_to_endpoints[net].append(NetEndpoint(
@@ -415,8 +416,8 @@ class IndexedPCBSnapshot:
             rot_rad = math.radians(rot_deg)
             dx = pad.get("dx", 0.0)
             dy = pad.get("dy", 0.0)
-            px = cx + dx * math.cos(rot_rad) - dy * math.sin(rot_rad)
-            py = cy + dx * math.sin(rot_rad) + dy * math.cos(rot_rad)
+            px = cx + dx  # board-frame offsets (QA-03)
+            py = cy + dy
             is_smd = pad.get("layer") not in (11, 12)
             layer = comp.get("layer", 1)
 

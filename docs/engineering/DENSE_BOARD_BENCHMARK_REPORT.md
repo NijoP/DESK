@@ -27,7 +27,8 @@ Date 2026-11-12. Machine: Windows 11, Python 3.11.9, OpenJDK 23, 2-core tier. Ev
 | dense_sensor | SYNTHETIC | 28 | 135 | 12 | 172 | 1.47 | 64 | 15 | 41.6 | 3 moves / 4.7 s | fine-pitch escape |
 | multi_terminal | SYNTHETIC | 17 | 149 | 14 | 502 | 1.21 | 47 | 14 | 46.8 | 2 moves / 0.4 s | fine-pitch escape |
 | multi_rail_limited_layers | SYNTHETIC | 30 | 167 | 44 | 62 | 0.82 | 28 | 9 | 44.3 | 2 moves / 0.8 s | fine-pitch escape |
-| WATCH (repo dump) | REAL-BOARD | 87 | 313 | 60 | 212 | 0.62 | 11 | 16 | 83.1 | 3 moves / 12.6 s | power trunk through signal corridor |
+| WATCH (repo dump), before pad-frame fix | REAL-BOARD | 87 | 313 | 60 | 212 | 0.62 | 11 | 16 | 83.1 | 3 moves / 12.6 s | power trunk through signal corridor |
+| WATCH (repo dump), after pad-frame fix (2026-11-12 01:45) | REAL-BOARD | 87 | 313 | 60 | 218 | 0.98 | 43 | 23 | 40.3 | 3 moves / 7.5 s | keep-out or pad crossing (detour required) |
 | WATCH (live read 18:05Z) | REAL-BOARD | 87 | 313 | 60 | 233 | 0.69 | 11 | 18 | 42.9 | — | power trunk through signal corridor |
 
 Power distribution plan (synthetic multi-rail, declared currents): 3 ms; 3V3 → PLANE, 5V / VIN_12V → WIDE_TRACE, 1V8 / 1V2 → POLYGON (drop > 2 % of a low rail).
@@ -99,3 +100,7 @@ The 30 % reduction target is met on the replayed log (−32 % at patience 14, �
 - Pour creation, repour and poured-copper readback never executed live; declared polygons are used for verification until then.
 - Priority classes are only known to be honoured by Freerouting ≥ 2.2; on 2.1.0 their effect is UNKNOWN.
 - Copper-zone connectivity on real poured geometry, DRC convergence time and SES import time are unmeasured.
+
+## 7. Addendum 2026-11-12 01:50 — pad-frame fix and verifier agreement
+
+Two geometry defects were found while reconciling the 2.5.0 SES with the engine's own count (details in `INC-20261112-009`): pad sizes defaulted to 15 mil, and pad offsets were rotated twice for rotated parts. After the fix the verifier reports **51/60 nets, 15 unconnected pads of 320** on the 2.5.0 SES, consistent with the engine's 11 open connections. All density and refinement numbers above the addendum were measured before the fix; the regenerated synthetic rows (`tools/dense_benchmarks.py --runs 2`) are: mcu_2layer 1.64 / 53 overloaded; esp32_4layer 2.63 / 98; qfn_fine_pitch 1.58 / 66; motor 1.14 / 44; buck_boost 1.11 / 33; mixed_signal 1.00 / 39; rf 1.14 / 35; dense_sensor 1.59 / 82; multi_terminal 1.39 / 59; multi_rail 1.14 / 49; WATCH 0.98 / 43 (analysis 40 ms, refinement 7.5 s). Real pad bodies now block more of each cell, so absolute scores rose; the relative ranking of regions is what the router consumes.

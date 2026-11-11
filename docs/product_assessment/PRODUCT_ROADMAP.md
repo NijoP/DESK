@@ -28,7 +28,7 @@ Team leads: HW = Principal Hardware Architect; SW = Principal Software Architect
 | SW-04 | Durable task inbox and unified lifecycle | SW | persist `tasks.jsonl`; states CREATED…RECOVERING; restart reconciler via `is_process_alive` | RUNNING tasks load as RECOVERING after restart | — | kill-and-reload test | L | OPEN |
 | QA-01 | Disposable fixture boards | QA | 2-layer MCU and diff-pair fixtures with dump, DSN, SES, expected metrics | tests run without customer projects | — | — | L | OPEN |
 | QA-05 | Execute the nine-stage live checklist | QA | on `projects/DISPOSABLE_TEST` with a human at the window | transcript committed | QA-01 | — | L | OPEN (needs Founder-scheduled session) |
-| QA-03 | Investigate B5 1.7 % connectivity | QA + PCB | regenerate Project One SES or fix verifier | B5 ≥ 95 % on a known-routed board or defect documented | — | benchmark | M | OPEN |
+| QA-03 | Investigate B5 1.7 % connectivity | QA + PCB | regenerate Project One SES or fix verifier | B5 ≥ 95 % on a known-routed board or defect documented | — | benchmark | M | DONE 2026-11-12: verifier defects fixed (pad size, double rotation); 2.5.0 SES verifies at 51/60 nets consistent with the engine; Project One dataset itself is stale (6.8 %) |
 | PERF-01 | Stream Freerouting passes to Mission Control with abort | PCB + SW | per-pass unrouted count events; operator stop | stalled run stopped at pass 4 | — | event test | M | OPEN |
 
 ## P2 — important engineering capability

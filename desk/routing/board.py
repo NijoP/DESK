@@ -125,25 +125,18 @@ class BoardIntelligenceEngine:
         """Parses pcb_dump into normalized spatial models and populates spatial hash index."""
         for ref, comp in dump.items():
             if not isinstance(comp, dict): continue
-            cx = float(comp.get("x", 0.0))
-            cy = float(comp.get("y", 0.0))
             rot_deg = float(comp.get("rot", 0.0) or 0.0)
-            rot_rad = math.radians(rot_deg)
-            cos_a = math.cos(rot_rad)
-            sin_a = math.sin(rot_rad)
             comp_layer = int(comp.get("layer", 1))
 
             for p in comp.get("pads", []):
                 net = (p.get("net") or "").strip()
-                dx = float(p.get("dx", 0.0))
-                dy = float(p.get("dy", 0.0))
-                px = cx + dx * cos_a - dy * sin_a
-                py = cy + dx * sin_a + dy * cos_a
+                from desk.routing.connectivity import pad_xy
+                px, py = pad_xy(comp, p)
                 pad_num = str(p.get("num", ""))
                 pad_layer = int(p.get("layer", comp_layer))
                 is_th = pad_layer in (11, 12)
-                pw = float(p.get("w", p.get("width", 15.0)))
-                ph = float(p.get("h", p.get("height", 15.0)))
+                from desk.routing.connectivity import pad_size_mil
+                pw, ph = pad_size_mil(p)
                 pid = f"{ref}.{pad_num}"
 
                 bpad = BoardPad(
