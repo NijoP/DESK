@@ -326,9 +326,13 @@ class DensePCBIntelligence:
             return  # a plane net needs pad-to-plane vias, not corridors
         tw = self._net_track_mil(net)
         for e in edges:
+            # The cells holding the two pads themselves are never corridor demand: the track starts and ends
+            # inside copper that belongs to this net. Counting them made every pad-blocked cell look like a
+            # "detour required" hotspot once real pad sizes were used (2026-11-12).
+            end_cells = {self._cell_of(e[0].x_mil, e[0].y_mil), self._cell_of(e[1].x_mil, e[1].y_mil)}
             for key, w in self._l_route_cells((e[0].x_mil, e[0].y_mil), (e[1].x_mil, e[1].y_mil)):
                 cell = self.cells.get(key)
-                if not cell:
+                if not cell or key in end_cells:
                     continue
                 amount = sign * w * tw
                 cell.demand_mil += amount
@@ -340,7 +344,7 @@ class DensePCBIntelligence:
         if sign < 0:
             self._net_contrib.pop(net, None)
 
-    BLOCKED_SCORE_CAP = 5.0  # a fully blocked cell with demand means "detour required", not infinite congestion
+    BLOCKED_SCORE_CAP = 2.0  # a fully blocked cell with demand means "detour required"; capped so detours do not outrank real hotspots
 
     def _recompute_scores(self, keys) -> None:
         for key in keys:
@@ -493,7 +497,7 @@ class DensePCBIntelligence:
                             seen.add(q)
                             stack.append(q)
             regions.append(self._describe_region(len(regions) + 1, comp))
-        regions.sort(key=lambda r: (-r.max_score, -len(r.cells)))
+        regions.sort(key=lambda r: (-(r.max_score if r.pad_count else min(r.max_score, 1.0)), -r.pad_count, -len(r.cells)))
         for i, r in enumerate(regions, 1):
             r.region_id = f"H{i}"
         return regions

@@ -111,3 +111,4 @@ Team leads: HW = Principal Hardware Architect; SW = Principal Software Architect
 | ESP-03 | Block-spec and placement generators from requirements + LCSC data (Stage 1/2 time) | PX + AI | L | OPEN |
 | CP-01..04 | Cross-platform CI, POSIX config path, entry-laptop measurement, explicit `-Xmx` | QA + SW | S-M | OPEN |
 | ECO-01 | LCSC/JLCPCB/EasyEDA ecosystem architecture set (Continuation 03) | LCSC/JLCPCB + PM | L | OPEN (inventory in progress) |
+| PCB-05 | Escape classifier calibration with real pad sizes: 218 RESTRICTED / 13 NO_LEGAL_ESCAPE on the WATCH live dump versus 78 / 0 with the old 15 mil default, on a board the engine routes to 96 % | PCB | M | OPEN (probe margin uses the neighbour's full half-size; compare against engine-routed pads to calibrate) |
