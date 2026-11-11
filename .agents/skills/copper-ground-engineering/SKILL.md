@@ -40,4 +40,4 @@ Synthesizes uninterrupted ground return planes, power distribution polygons, and
    - Invoke `desk.copper.detect_copper_islands()` and prune floating, unreferenced copper islands.
    - Respect route keepout polygons and board edge clearance ($\ge 0.5\,\text{mm}$).
 4. **Invoke M4 Copper Engine**:
-   - Execute `desk.copper.create_copper_zone(...)`.
+   - Plan zones with `desk.power_distribution.PowerDistributionPlanner(dump, profile, plan).analyze()` and `desk.copper.CopperPlaneEngine.plan_power_polygons(...)`; live creation goes through `desk/adapters/easyeda_pcb_adapter.py` pour scripts under `ops.write_op` with explicit approval (never executed live yet).

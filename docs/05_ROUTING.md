@@ -92,3 +92,12 @@ When nets cannot be routed:
    - Zero unconnected populated nets
    - Zero unintended shorts
    - Zero clearance violations.
+
+## Dense-board intelligence and engine integration (added 2026-11-12)
+
+Before the engine runs, `tools/route.py` now builds a congestion map with measured causes
+(`desk/routing/density.py`), hands the priority order and plane nets to Freerouting, passes
+per-net clearances into the DSN, stops the engine when no better unrouted count appears for
+`stagnation_patience` passes (`PassTracker`), and can continue from the previous session with
+`--continue`. Details and measured results: `docs/engineering/DENSE_PCB_INTELLIGENCE.md`,
+`docs/engineering/CONGESTION_OPTIMISATION.md`, `docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`.

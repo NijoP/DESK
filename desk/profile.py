@@ -209,7 +209,7 @@ class DesignProfile:
 
         # 3. Known power / battery / motor net names without explicit limit -> UNKNOWN
         net_u = net.upper()
-        is_power_pattern = bool(re.search(r"(VCC|VDD|VBAT|VBUS|VSYS|VIN|12V|5V|3V3|PWR|MOTOR|COIL|HEATER)", net_u))
+        is_power_pattern = bool(re.search(r"(VCC|VDD|VBAT|VBUS|VSYS|VIN|VOUT|VDRV|VMOT|VPP|12V|5V|3V3|PWR|MOTOR|COIL|HEATER)", net_u))
         if is_power_pattern:
             return 0.0, CurrentConfidence.UNKNOWN
 

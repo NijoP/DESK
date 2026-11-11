@@ -46,7 +46,7 @@ Coordinates deterministic net scheduling, escape routing, via transitions, and c
 
 ## Recommended Workflow
 1. Verify component placement completion and locked mechanical anchors.
-2. Initialize routing scheduler: `router = Router(profile)`.
+2. Build the plan: `RoutingPlanGenerator.generate_plan(net_graph, dump, board_mm, rules, profile)`; then `DensePCBIntelligence(dump, board_mm, origin_mm, stackup, plane_layers, keepouts).analyze()` for hotspots, corridors and the priority order (see docs/engineering/DENSE_PCB_INTELLIGENCE.md).
 3. Schedule nets into priority stages.
 4. Synthesize pin escape stubs from fine-pitch SMD components.
 5. Execute routing passes; perform rip-up and retry on congested channels.
@@ -54,10 +54,17 @@ Coordinates deterministic net scheduling, escape routing, via transitions, and c
 
 ## Validation Steps
 - Verify connectivity: `python tools/verify.py projects/<P> routing`.
-- Execute routing test suite: `python -m unittest tests/test_router.py`.
+- Execute routing test suite: `python -m unittest tests.test_routing_dsn tests.test_routing_escape tests.test_routing_priority tests.test_routing_pass_tracker tests.test_dense_intelligence`.
 
 ## Failure Conditions & Recovery
-- Unrouted nets: Identify bottleneck clearance areas; report component displacement suggestions to Captain.
+- **"No SES" is a tool defect, not a routing result** (KF-20261111-006). Never re-run the same job; check
+  `state/route/progress.json` (best pass, problem nets) and the smoke run. If the engine cannot return a
+  partial board on this host (Freerouting 2.1.0 on Java < 25), the fallback is EasyEDA's native autorouter,
+  driven from the GUI by the Captain, followed by `tools/route.py --continue`-style readback verification.
+- Pre-flight refusal (planes / outline / pads inside router keep-outs): fix `placement.json` `planes` /
+  `route_keepouts` or the outline (one plain "R" polyline, KF-20261111-007); do not weaken the gate.
+- Unrouted nets after a run: read the net names from `progress.json` and the connectivity report; apply a
+  targeted placement fix (`desk/placement_refine.py` proposals, authorised) and re-run with `--continue`.
 - Stub/antenna detection: Purge floating track segments via DRC cleanup pass.
 
 ## Expected Output

@@ -241,10 +241,48 @@ if mode_cfg.run_congestion_analysis and escape_congestion > CONGESTION_VETO and 
 if dry:
     print("Dry run completed. DSN prepared."); sys.exit(0)
 
+# Phase 9d: fail-closed structural pre-flight (LSN-20261111-004): planes present in the DSN, exactly one closed
+# outline on the board, no pad inside a routing keep-out. Refuses to start the engine otherwise.
+from desk.routing.preflight import run_preflight
+from desk.fsutil import atomic_write_json
+try:
+    outline_prims = ex(G + 'const pl=(await eda.pcb_PrimitivePolyline.getAll()||[]).filter(p=>p.layer==11).map(p=>({id:p.primitiveId,layer:p.layer,closed:true}));'
+                           'const ln=(await eda.pcb_PrimitiveLine.getAll()||[]).filter(l=>l.layer==11).map(l=>({id:l.primitiveId,layer:l.layer,closed:false}));'
+                           'return pl.concat(ln);', timeout=30, window_id=P.get("window_id")) or []
+except BaseException as _e:
+    print("Warning: could not read outline primitives:", _e)
+    outline_prims = None
+preflight = run_preflight(tuned_dsn, plan, dump, outline_prims)
+try:
+    atomic_write_json(os.path.join(wd, "preflight.json"), preflight.to_dict(), indent=1)
+except Exception:
+    pass
+for _w in preflight.warnings:
+    print("PRE-FLIGHT WARNING:", _w)
+if not preflight.passed:
+    for _e in preflight.errors:
+        print("PRE-FLIGHT FAIL:", _e)
+    raise SystemExit("STOP: routing pre-flight refused the board (see state/route/preflight.json). "
+                     "Fix placement.json planes/route_keepouts or the outline; do not tune timeouts.")
+print(f"Pre-flight OK: planes {preflight.planes_in_dsn}/{preflight.planes_declared}, outline primitives {preflight.outline_primitives}, "
+      f"pads in router keep-outs {len(preflight.pads_in_router_keepouts)}")
+
 # Phase 10-12: External engine execution via RoutingEngineOrchestrator
 profiler.start_phase(10, category="PROCESS")
 ses = os.path.join(wd, "desk_route.ses")
 orchestrator = RoutingEngineOrchestrator()
+
+# Engine smoke run (2 passes on a tiny fixture) proves this host's engine writes a SES before a long run.
+if "--skip-smoke" not in args:
+    from desk.routing.dsn_fixture import tiny_board_dsn
+    _smoke_dir = os.path.join(wd, "smoke")
+    os.makedirs(_smoke_dir, exist_ok=True)
+    with open(os.path.join(_smoke_dir, "smoke.dsn"), "w", encoding="utf-8") as _f:
+        _f.write(tiny_board_dsn(nets=4))
+    _smoke = orchestrator.smoke_test(os.path.join(_smoke_dir, "smoke.dsn"), _smoke_dir)
+    print(f"Engine smoke run: {_smoke.engine_version} {_smoke.status} in {_smoke.duration_sec}s, SES {_smoke.ses_generated}")
+    if not _smoke.success:
+        raise SystemExit(f"STOP: {_smoke.error_message}")
 
 exec_result = orchestrator.execute_routing(
     dsn_path=tuned_dsn_path,
@@ -352,11 +390,22 @@ profiler.end_phase()
 
 # Phase 19: Physical connectivity verification
 profiler.start_phase(19, category="CPU")
+# Declared planes count as conductors (pads/vias/tracks inside them on their layer). Until poured-copper
+# geometry is read back live, the declared polygon is the best available evidence and is labelled as such.
+_layer_ids = {"top": 1, "bottom": 2}
+_layer_ids.update({f"inner{i}": 14 + i for i in range(1, 33)})
+_ox, _oy = plan.get("origin_mm", [0.0, 0.0])
+declared_zones = [{"net": pl["net"], "layer": _layer_ids.get(str(pl["layer"]).lower().replace(" ", ""), 1),
+                   "polygon": [[(x + _ox) * MIL, (y + _oy) * MIL] for x, y in pl["polygon_mm"]]}
+                  for pl in plan.get("planes", []) if pl.get("polygon_mm")]
 conn_result = PhysicalConnectivityVerifier.verify_board(
     pcb_dump=dump,
     tracks=readback_tracks,
-    vias=readback_vias
+    vias=readback_vias,
+    zones=declared_zones,
 )
+if declared_zones:
+    print(f"Connectivity evidence: {len(declared_zones)} declared plane polygon(s) treated as conductors (not poured-copper readback)")
 print("Physical Connectivity:", conn_result.summary)
 profiler.end_phase()
 

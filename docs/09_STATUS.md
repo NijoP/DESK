@@ -52,3 +52,13 @@ A dedicated test harness and checklist have been prepared for live verification 
 - Checklist: `docs/LIVE_INTEGRATION_CHECKLIST.md` (covering all 9 verification milestones).
 
 **Live testing has NOT yet been run.** All customer projects (`WATCH`, `BEEBOX`) remain untouched and protected.
+
+## Additions 2026-11-12 (dense-board programme)
+
+| # | Capability | Status | Acceptance Criteria | Test Evidence / Implementation |
+|---|---|---|---|---|
+| **16** | Dense PCB Intelligence (congestion map with causes, corridors, priority order, incremental update) | `IMPLEMENTED_AND_TESTED_OFFLINE` | hotspot causes measured, incremental == rebuild, < 100 ms on an 87-part board | `desk/routing/density.py`, `tests/test_dense_intelligence.py`, `tools/dense_benchmarks.py` |
+| **17** | Placement-routing co-optimisation (authorised minimal moves of unlocked passives) | `IMPLEMENTED_AND_TESTED_OFFLINE` | locked parts never moved, decoupling proximity kept, objective monotone, apply writes placement.json only | `desk/placement_refine.py`, `tests/test_dense_intelligence.py::TestPlacementRefiner` |
+| **18** | Power distribution intelligence (rail strategy, IPC widths, drop, via arrays, zone checks) | `IMPLEMENTED_AND_TESTED_OFFLINE` | undeclared rails blocked, strategies by current/drop/plane, zone pad containment | `desk/power_distribution.py`, `tests/test_power_distribution.py` |
+| **19** | Engine supervision v2 (improvement-based stagnation, best-pass tracking, highest compatible JAR, intelligence-driven config, `-de dsn+ses` continuation) | `IMPLEMENTED_AND_TESTED_OFFLINE`, engine behaviour `NEEDS_LIVE_VALIDATION` | tracker reproduces the recorded log; config merge restores the global file | `desk/routing/orchestrator.py`, `tests/test_routing_pass_tracker.py`, `docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md` |
+| **20** | Read-only live observation procedure | `VERIFIED_LIVE (read-only)` | 13 getter calls, no mutation, counts stable | `docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md` |

@@ -270,3 +270,33 @@ def check(dump, plan, blocks=(), profile=None):
                 Wn.append(f"side {side}: unbalanced — hotspots while a {free:.0f} mm² free region exists at {bbox}; spread parts into it "
                           f"or declare it 'reserved'")
     return E, Wn, M
+
+
+def plan_board_sync(dump, plan, tol_mm=0.1):
+    """Rework item F: report every part whose live board position/rotation/side differs from placement.json.
+    Returns (errors, metrics). A non-empty error list means the plan was regenerated or edited without
+    re-placing (or the board was moved by hand) and routing/DRC decisions would be made on stale geometry."""
+    ox, oy = plan.get("origin_mm", [0.0, 0.0])
+    errs, checked, missing = [], 0, []
+    for part in plan.get("parts", []):
+        if not part or len(part) < 5:
+            continue
+        ref, x, y, rot, side = part[0], float(part[1]), float(part[2]), float(part[3]) % 360, str(part[4]).upper()[:1]
+        c = dump.get(ref)
+        if not isinstance(c, dict):
+            missing.append(ref)
+            continue
+        checked += 1
+        bx, by = c["x"] / MIL - ox, c["y"] / MIL - oy
+        brot = float(c.get("rot", 0) or 0) % 360
+        bside = "T" if int(c.get("layer", 1)) == 1 else "B"
+        d = math.hypot(bx - x, by - y)
+        if d > tol_mm:
+            errs.append(f"{ref}: board at ({bx:.2f},{by:.2f}) mm, plan at ({x:.2f},{y:.2f}) mm (off by {d:.2f} mm)")
+        if abs(((brot - rot) + 180) % 360 - 180) > 0.5:
+            errs.append(f"{ref}: board rotation {brot:.0f}, plan {rot:.0f}")
+        if bside != side:
+            errs.append(f"{ref}: board side {bside}, plan {side}")
+    if missing:
+        errs.append(f"{len(missing)} planned part(s) not on the board: {missing[:8]}")
+    return errs, {"parts_checked": checked, "parts_missing": len(missing), "parts_out_of_sync": len(errs) - (1 if missing else 0)}

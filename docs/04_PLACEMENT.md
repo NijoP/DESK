@@ -79,3 +79,10 @@ Before routing begins, `tools/pcb_check.py --gate` verifies:
    - **MST Wirelength**: Multi-terminal Minimum Spanning Tree length estimation.
    - **Pin Escape Congestion**: Perimeter escape ratio for fine-pitch QFN/BGA packages.
 5. **Freeze Snapshot**: `tools/pcb_check.py --freeze` locks the verified placement into `state/placement_frozen.json` with an immutable SHA-1 hash recorded in `LEDGER.jsonl`.
+
+## Placement-routing co-optimisation (added 2026-11-12)
+
+`desk/placement_refine.py` proposes minimal moves of unlocked passives that reduce predicted
+routing congestion while preserving anchors, decoupling proximity, keep-outs and body clearances.
+Proposals are written to `placement.json` only when explicitly authorised; see
+`docs/engineering/PLACEMENT_ROUTING_COOPTIMISATION.md`.

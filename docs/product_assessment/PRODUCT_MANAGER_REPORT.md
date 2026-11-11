@@ -78,3 +78,45 @@ Confirmed requirements: none recorded. Implemented requests: none attributable. 
 - Local Pi extension configuration on the development machine is broken (duplicate subagent candidate); DESK bypasses it with `-ne`, but interactive Pi use will fail until it is fixed.
 - The Freerouting JAR is git-ignored; a fresh clone cannot route until the JAR is placed; doctor now reports this.
 - `tools/desk.py` and `desk/routing/modes.py` carried uncommitted Founder edits that were included in the M1 commit (rework window binding; PRECISION timeout 900 s, recovery attempts 6).
+
+
+---
+
+# Product Manager Report — Milestone 2 (2026-11-12)
+
+**Commits:** `56792e7` (hardware P0), `863aea9` (rework terminal: post-mortem + orchestrator/route changes), this commit (dense-board programme, rework items A-G, ecosystem architecture, 225-minute programme baseline).
+**Suite:** 427 passed, 3 skipped (was 359 at M1 close).
+
+## What was discovered (measured)
+
+- The WATCH rev B routing failure is fully explained: no planes in the DSN, placement keep-outs exported as router keep-outs, an engine (Freerouting 2.1.0 on Java 23) that ignores every stop setting and writes a SES only at 100 %, and an outline drawn as 36 segments (`learning/lessons/LSN-20261111-004.md`, `INC-20261112-009`).
+- Read-only live observation of the WATCH board (13 getter calls, 484 ms, no mutation): 87 parts, 313 pads, 60 nets, 233 crossings; seven of the ten worst congestion regions are power trunks (VBUS/VBUS_BOOST/VSYS/VBAT) competing with signals on the two routable layers; 12 pour outlines, none poured; no signal copper at that moment.
+- Smoke proof on this host: the engine writes a SES in 3.2 s when it completes; the missing SES on WATCH was never an I/O problem.
+
+## What was implemented and verified offline
+
+Dense PCB intelligence (congestion map with measured causes, corridors, priority order, incremental update), placement-routing co-optimisation (authorised minimal moves), power distribution planner (IPC sizing, drop, via arrays, zone checks), pours-as-conductors connectivity with physical layer order, improvement-based engine supervision with per-pass progress.json and problem nets by name, highest-compatible-JAR and bundled-JDK discovery, fail-closed routing pre-flight (planes / one closed outline / no pad in a router keep-out), engine smoke run before long jobs, plain-R outline helpers, plan-vs-board sync in the placement gate, hardware P0 (standards-table clearance/creepage, fail-closed unknown currents, profile-driven widths), ecosystem inventory and architecture (LCSC, JLCPCB, EasyEDA), the 225-minute programme specification, baseline, acceptance criteria, live-test status and cross-platform notes.
+
+## Rework terminal items A-G
+
+| Item | Status |
+|---|---|
+| A pre-flight gate + tests/test_route_preflight.py | DONE (fixture passes; a pad inside a keep-out is refused) |
+| B smoke run, plateau stop, graceful stop | DONE; graceful stop is SIGINT on POSIX, terminate on Windows (no JVM hook) |
+| C Java 25 + Freerouting >= 2.4 | discovery, startup check and doctor guidance DONE; the JDK download was blocked by the sandbox: HUMAN STEP (unzip Temurin 25 into library/tools/jdk25/ or set DESK_JAVA), then re-run the scratch A/B and record in INC-20261112-009 |
+| D per-pass telemetry with net names | DONE (state/route/progress.json) |
+| E outline helpers and skill text | DONE |
+| F deterministic placer / plan-vs-board sync | sync check DONE in pcb_check --gate; placer determinism not changed (needs the owner's generator run to reproduce) |
+| G skill failure guidance | DONE |
+
+## Evidence-based score
+
+Unchanged at **4.1 / 10** for production readiness: nothing is live-verified beyond read-only observation, and the routing stage still cannot return a partial board on this host until Java 25 is installed. Offline engineering depth moved materially (hardware models, dense-board intelligence, connectivity truthfulness, engine supervision).
+
+## Next five
+
+1. Install Java 25 (human), prove a stopped job returns a SES on the scratch WATCH DSN, then route the disposable copy with --continue (ENG-01).
+2. QA-05 live checklist on a disposable project: pours, repour, poured-copper readback getter (EE-03).
+3. Declare rail currents for WATCH in a design_profile.json and run the power planner; move VBUS/VSYS/VBAT to polygons or plane taps.
+4. Freeze the C2/C3 benchmark designs (ESP-01) and start stage timing (ESP-02).
+5. LC-01/JL-01: live-verify the LCSC client and versioned JLCPCB profiles with credentials.

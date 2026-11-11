@@ -107,6 +107,64 @@ class PassTracker:
         return self.passes_since_best() >= self.patience
 
 
+
+def find_java(tools_dir: Optional[str] = None) -> str:
+    """Java executable for the engine: DESK_JAVA env, then a JDK bundled under library/tools/jdk*/bin,
+    then `java` on PATH. A bundled JDK lets Freerouting >= 2.2 (class file 69 = Java 25) run on a host
+    whose system Java is older (KF-20261111-006)."""
+    env = os.environ.get("DESK_JAVA", "").strip()
+    if env and os.path.exists(env):
+        return env
+    if tools_dir and os.path.isdir(tools_dir):
+        cands = []
+        for name in sorted(os.listdir(tools_dir), reverse=True):
+            if not name.lower().startswith("jdk"):
+                continue
+            base = os.path.join(tools_dir, name)
+            for root, dirs, files in os.walk(base):
+                for exe in ("java.exe", "java"):
+                    if exe in files and os.path.basename(root) == "bin":
+                        cands.append(os.path.join(root, exe))
+                if len(root[len(base):].split(os.sep)) > 3:
+                    dirs[:] = []
+        if cands:
+            return cands[0]
+    return shutil.which("java") or "java"
+
+
+class DSNPinMap:
+    """Maps DSN pin ids (u1-<padid>) and net names from the (network) block, so engine messages that name
+    pins can be reported as net names (rework item D)."""
+    NET_RX = re.compile(r"\(net\s+(\S+)\s*\(pins\s+([^)]*)\)", re.S)
+    PIN_RX = re.compile(r"\bu\d+-[0-9a-fA-F]{6,}\b")
+
+    def __init__(self, dsn_text: str = ""):
+        self.pin_to_net: Dict[str, str] = {}
+        for m in self.NET_RX.finditer(dsn_text or ""):
+            for pin in m.group(2).split():
+                self.pin_to_net[pin] = m.group(1)
+
+    def nets_in(self, text: str) -> List[str]:
+        return sorted({self.pin_to_net[p] for p in self.PIN_RX.findall(text or "") if p in self.pin_to_net})
+
+    @classmethod
+    def from_file(cls, dsn_path: str) -> "DSNPinMap":
+        try:
+            with open(dsn_path, encoding="utf-8", errors="ignore") as f:
+                return cls(f.read())
+        except Exception:
+            return cls("")
+
+
+def write_progress(path: str, payload: Dict[str, Any]) -> None:
+    """Atomic progress.json for the Captain / Mission Control; never raises."""
+    try:
+        from desk.fsutil import atomic_write_json
+        atomic_write_json(path, payload, indent=1)
+    except Exception:
+        pass
+
+
 class RoutingEngineOrchestrator:
     """Supervisor for detailed routing backends (Freerouting JAR / native executable)."""
 
@@ -125,6 +183,7 @@ class RoutingEngineOrchestrator:
             tools_dir = os.path.join(base, "library", "tools")
         self.tools_dir = tools_dir
         self.last_discovery_note = ""
+        self.java = find_java(tools_dir)
 
     def discover_engine(self, explicit_path: Optional[str] = None) -> Tuple[str, str, str]:
         """Discovers a working routing engine binary / JAR compatible with the host environment.
@@ -159,8 +218,9 @@ class RoutingEngineOrchestrator:
 
         # 3. Check candidate JARs in tools_dir: probe every one and pick the HIGHEST compatible version.
         #    (Previously the first match won, so freerouting.jar = v2.1.0 was used while v2.5.0 sat beside it.)
-        if not shutil.which("java"):
-            raise RuntimeError("Java executable ('java') not found on system PATH. Install Java JRE/JDK 17+.")
+        if not (os.path.exists(self.java) or shutil.which(self.java)):
+            raise RuntimeError("Java executable not found (DESK_JAVA, library/tools/jdk*/bin, or PATH). Install Java 25 "
+                               "for Freerouting >= 2.2 or Java 17+ for 2.1.")
 
         found: List[Tuple[Tuple[int, ...], str, str]] = []
         incompatible: List[str] = []
@@ -200,8 +260,8 @@ class RoutingEngineOrchestrator:
     def _probe_jar_compatibility(self, jar_path: str) -> Tuple[bool, str]:
         """Tests whether a JAR can be loaded by the installed Java VM without class version errors."""
         try:
-            cmd = ["java", "-jar", jar_path, "--help"]
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+            cmd = [self.java, "-jar", jar_path, "--help"]
+            proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=25)
             combined = proc.stdout + proc.stderr
 
             if "UnsupportedClassVersionError" in combined:
@@ -295,6 +355,21 @@ class RoutingEngineOrchestrator:
             json.dump(cfg, f, indent=2)
         return cfg_path
 
+    @staticmethod
+    def legacy_router_keys(cfg: Dict[str, Any]) -> Dict[str, Any]:
+        """Freerouting 2.1.x only understands a flat router block (job_timeout, max_passes, optimizer.max_passes,
+        scoring.*). Unknown nested keys can make it fall back to its defaults (12 h / 9999 passes, observed
+        2026-11-12), so only the keys it knows are merged into its global file."""
+        r = cfg.get("router", {})
+        out: Dict[str, Any] = {"job_timeout": r.get("job_timeout"), "max_passes": r.get("max_passes")}
+        if "optimizer" in r and "max_passes" in r["optimizer"]:
+            out["optimizer"] = {"max_passes": r["optimizer"]["max_passes"]}
+        if "max_threads" in r:
+            out["optimizer"] = {**out.get("optimizer", {}), "max_threads": r["max_threads"]}
+        if "via_costs" in r:
+            out["scoring"] = {"via_costs": r["via_costs"]}
+        return {k: v for k, v in out.items() if v is not None}
+
     @classmethod
     def install_global_config(cls, cfg: Dict[str, Any]) -> Optional[str]:
         """Freerouting 2.1.0 only honours %TEMP%/freerouting/freerouting.json (INC-007). Merge DESK's
@@ -313,7 +388,7 @@ class RoutingEngineOrchestrator:
             merged = dict(existing)
             merged.setdefault("gui", {}).update(cfg.get("gui", {}))
             router = dict(merged.get("router", {}))
-            for k, v in cfg["router"].items():
+            for k, v in cls.legacy_router_keys(cfg).items():
                 if isinstance(v, dict) and isinstance(router.get(k), dict):
                     router[k] = {**router[k], **v}
                 else:
@@ -382,7 +457,7 @@ class RoutingEngineOrchestrator:
         # 2. Build canonical command line
         cmd: List[str] = []
         if engine_type == "JAR":
-            cmd = ["java", "-jar", engine_path]
+            cmd = [self.java, "-jar", engine_path]
         else:
             cmd = [engine_path]
 
@@ -411,6 +486,21 @@ class RoutingEngineOrchestrator:
         stdout_lines: List[str] = []
         stderr_lines: List[str] = []
         tracker = PassTracker(patience=stagnation_patience)
+        pin_map = DSNPinMap.from_file(dsn_path)
+        progress_path = os.path.join(wd, "progress.json")
+        problem_nets: Dict[str, int] = {}
+
+        def publish(phase: str) -> None:
+            write_progress(progress_path, {
+                "phase": phase, "engine": engine_ver, "elapsed_s": round(time.time() - t0, 1),
+                "passes": tracker.passes, "initial_unrouted": tracker.initial_unrouted,
+                "last_unrouted": tracker.last_unrouted, "best_unrouted": tracker.best_unrouted,
+                "best_pass": tracker.best_pass, "passes_since_best": tracker.passes_since_best(),
+                "restores": tracker.restores, "budget_s": timeout_sec,
+                "problem_nets": sorted(problem_nets, key=lambda n: -problem_nets[n])[:20],
+                "history": tracker.history[-50:],
+            })
+        publish("starting")
 
         # 3. Supervised execution with background reader threads
         proc = subprocess.Popen(
@@ -433,8 +523,13 @@ class RoutingEngineOrchestrator:
                     stdout_lines.append(clean_line)
                     if log_callback:
                         log_callback(clean_line)
-                    if tracker.feed(clean_line) is not None and tracker.stagnated():
-                        stagnated = True
+                    for net in pin_map.nets_in(clean_line):
+                        problem_nets[net] = problem_nets.get(net, 0) + 1
+                    rec = tracker.feed(clean_line)
+                    if rec is not None:
+                        publish("routing")
+                        if tracker.stagnated():
+                            stagnated = True
 
         def read_stderr():
             for line in proc.stderr:
@@ -457,18 +552,14 @@ class RoutingEngineOrchestrator:
             # the SES (-do) with its best board instead of killing it at the same instant and losing the result.
             if elapsed > timeout_sec + 120.0:
                 timed_out = True
-                proc.kill()
+                self._graceful_stop(proc)
                 break
 
             if stagnated and tracker.passes >= 5:
                 # Terminate cleanly on plateau. For v2.1 the SES is only written at job end, so
                 # terminate() (not kill) gives the JVM its shutdown hook; v2.2+ stops itself via
                 # stagnation_pass_limit before we get here.
-                proc.terminate()
-                try:
-                    proc.wait(timeout=20)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
+                self._graceful_stop(proc)
                 break
 
             time.sleep(0.2)
@@ -477,8 +568,9 @@ class RoutingEngineOrchestrator:
         t_err.join(timeout=2.0)
         dur = round(time.time() - t0, 2)
         self.restore_global_config(global_backup)
-
         ses_exists = os.path.exists(ses_path)
+        publish("finished" if ses_exists else ("timeout" if timed_out else "stopped"))
+
         ses_size = os.path.getsize(ses_path) if ses_exists else 0
         passes_completed = tracker.passes
         initial_unrouted = tracker.initial_unrouted
@@ -544,3 +636,41 @@ class RoutingEngineOrchestrator:
             restores_seen=tracker.restores,
             engine_config=cfg.get("router", {}),
         )
+
+    @staticmethod
+    def _graceful_stop(proc: "subprocess.Popen", wait_s: float = 30.0) -> None:
+        """Ask the engine to stop and give it time to write its output. POSIX: SIGINT runs the JVM shutdown
+        hooks; Windows has no equivalent for a child console process, so terminate() is used and the SES is
+        only present if the engine wrote it itself (engines >= 2.2 do on stagnation/max_passes)."""
+        import signal
+        try:
+            if os.name != "nt":
+                proc.send_signal(signal.SIGINT)
+            else:
+                proc.terminate()
+            proc.wait(timeout=wait_s)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        except Exception:
+            try:
+                proc.kill()
+            except Exception:
+                pass
+
+    def smoke_test(self, dsn_path: str, working_dir: str, max_passes: int = 2, timeout_sec: float = 90.0) -> EngineExecutionResult:
+        """Rework item B: before any long run, prove on this host that the engine starts, routes and WRITES a
+        SES. A smoke run that returns no SES is a tool defect; the caller must not start a 15-minute run."""
+        ses = os.path.join(working_dir, "smoke.ses")
+        try:
+            os.remove(ses)
+        except OSError:
+            pass
+        res = self.execute_routing(dsn_path=dsn_path, ses_path=ses, max_passes=max_passes, timeout_sec=timeout_sec,
+                                   working_dir=working_dir, stagnation_patience=max_passes)
+        res.status = res.status if res.ses_generated else "SMOKE_NO_SES"
+        res.success = bool(res.ses_generated)
+        if not res.ses_generated:
+            res.error_message = (f"smoke run produced no SES with engine {res.engine_version} on this host: "
+                                 "the engine cannot return a partial board here (KF-20261111-006). Install Java 25 so "
+                                 "Freerouting >= 2.2 is used, or route with EasyEDA's native autorouter.")
+        return res

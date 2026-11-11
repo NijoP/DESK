@@ -100,6 +100,38 @@ def _segments_overlap_or_touch(
     return False
 
 
+def _layer_rank(layer: int) -> int:
+    """Physical stacking order for EasyEDA layer ids: 1 Top, 15..46 Inner1..Inner32, 2 Bottom.
+    Through-hole markers (11/12) and unknown ids rank as 'all layers' (-1)."""
+    if layer == 1:
+        return 0
+    if 15 <= layer <= 46:
+        return layer - 14
+    if layer == 2:
+        return 1000
+    return -1
+
+
+def _span_covers(start_layer: int, end_layer: int, layer: int) -> bool:
+    a, b, l = _layer_rank(start_layer), _layer_rank(end_layer), _layer_rank(layer)
+    if l < 0 or a < 0 or b < 0:
+        return True
+    return min(a, b) <= l <= max(a, b)
+
+
+def _point_in_polygon(x: float, y: float, pts) -> bool:
+    inside = False
+    n = len(pts)
+    for i in range(n):
+        xi, yi = pts[i][0], pts[i][1]
+        xj, yj = pts[(i + 1) % n][0], pts[(i + 1) % n][1]
+        if (yi > y) != (yj > y):
+            xint = (xj - xi) * (y - yi) / ((yj - yi) or 1e-12) + xi
+            if x < xint:
+                inside = not inside
+    return inside
+
+
 class DisjointSet:
     """Union-Find data structure with path compression."""
     def __init__(self):
@@ -277,6 +309,16 @@ class PhysicalConnectivityVerifier:
                 net_vias[net] = []
             net_vias[net].append(v)
 
+        # Poured copper: {"net", "layer", "polygon": [[x_mil, y_mil], ...]} per zone. A zone is a conductor:
+        # pads on its layer inside it, vias penetrating its layer inside it and tracks on its layer touching it
+        # are all connected through the zone (previously ignored -> false "partially connected" for plane nets).
+        net_zones: Dict[str, List[Dict[str, Any]]] = {}
+        for z in zones:
+            net = (z.get("net") or "").strip()
+            poly = z.get("polygon") or z.get("points") or []
+            if not net or len(poly) < 3: continue
+            net_zones.setdefault(net, []).append(z)
+
         # 3. Evaluate each populated net
         net_reports: Dict[str, NetConnectivityReport] = {}
         fully_connected_count = 0
@@ -290,7 +332,8 @@ class PhysicalConnectivityVerifier:
                 expected_pads=pads,
                 tracks=net_tracks.get(net_name, []),
                 vias=net_vias.get(net_name, []),
-                tolerance_mil=tolerance_mil
+                tolerance_mil=tolerance_mil,
+                zones=net_zones.get(net_name, []),
             )
             net_reports[net_name] = report
 
@@ -331,9 +374,12 @@ class PhysicalConnectivityVerifier:
         expected_pads: List[Dict[str, Any]],
         tracks: List[Dict[str, Any]],
         vias: List[Dict[str, Any]],
-        tolerance_mil: float = 1.0
+        tolerance_mil: float = 1.0,
+        zones: Optional[List[Dict[str, Any]]] = None,
     ) -> NetConnectivityReport:
-        """Computes connected components for a single net across all physical conductors."""
+        """Computes connected components for a single net across all physical conductors
+        (tracks, vias and poured copper zones)."""
+        zones = zones or []
         pad_count = len(expected_pads)
         if pad_count == 0:
             return NetConnectivityReport(
@@ -349,7 +395,7 @@ class PhysicalConnectivityVerifier:
                 total_wire_length_mil=0.0
             )
 
-        if len(tracks) == 0 and len(vias) == 0:
+        if len(tracks) == 0 and len(vias) == 0 and len(zones) == 0:
             # Zero routing has occurred for this net
             unconn = [p["id"] for p in expected_pads]
             return NetConnectivityReport(
@@ -400,6 +446,26 @@ class PhysicalConnectivityVerifier:
             via_nodes.append((vx, vy, vd, v_start, v_end, via_id))
             dsu.find(via_id)
 
+        # Zones as conductors
+        zone_nodes: List[Tuple[int, list, str]] = []
+        for i, z in enumerate(zones):
+            poly = [(float(pt[0]), float(pt[1])) for pt in (z.get("polygon") or z.get("points") or [])]
+            if len(poly) < 3:
+                continue
+            zid = f"Z_{i}"
+            zone_nodes.append((int(z.get("layer", 1)), poly, zid))
+            dsu.find(zid)
+        for z_lay, poly, zid in zone_nodes:
+            for s in segments:
+                if s[5] == z_lay and (_point_in_polygon(s[0], s[1], poly) or _point_in_polygon(s[2], s[3], poly)):
+                    dsu.union(zid, s[6])
+            for vx, vy, vd, v_start, v_end, via_id in via_nodes:
+                if _span_covers(v_start, v_end, z_lay) and _point_in_polygon(vx, vy, poly):
+                    dsu.union(zid, via_id)
+            for p in expected_pads:
+                if (p["layer"] in (11, 12) or p["layer"] == z_lay) and _point_in_polygon(p["x"], p["y"], poly):
+                    dsu.union(zid, p["id"])
+
         # Connect track segment to track segment on same layer
         n_segs = len(segments)
         for i in range(n_segs):
@@ -419,8 +485,8 @@ class PhysicalConnectivityVerifier:
 
             for s in segments:
                 s_lay = s[5]
-                # Via penetrates layers between min_lay and max_lay
-                if min_lay <= s_lay <= max_lay or min_lay == 1:
+                # Via penetrates every layer between its start and end in physical stacking order
+                if _span_covers(v_start, v_end, s_lay):
                     d, _, _ = _dist_point_to_segment(vx, vy, s[0], s[1], s[2], s[3])
                     touch_thresh = v_radius + s[4] / 2.0 + tolerance_mil
                     if d <= touch_thresh:
@@ -447,7 +513,7 @@ class PhysicalConnectivityVerifier:
             # Connect pad to vias
             for v in via_nodes:
                 vx, vy, vd, v_start, v_end, via_id = v
-                is_layer_match = (p_lay in (11, 12)) or (min(v_start, v_end) <= p_lay <= max(v_start, v_end))
+                is_layer_match = (p_lay in (11, 12)) or _span_covers(v_start, v_end, p_lay)
                 if is_layer_match:
                     d = math.hypot(px - vx, py - vy)
                     if d <= (p_rad + vd / 2.0 + tolerance_mil):
@@ -475,6 +541,10 @@ class PhysicalConnectivityVerifier:
             if not has_copper:
                 for v in via_nodes:
                     if dsu.find(v[5]) == root:
+                        has_copper = True; break
+            if not has_copper:
+                for _, _, zid in zone_nodes:
+                    if dsu.find(zid) == root:
                         has_copper = True; break
             if not has_copper:
                 unconnected.append(pid)

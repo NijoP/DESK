@@ -16,3 +16,5 @@ library/api_signatures.json
 *.db
 *.db-wal
 *.db-shm
+library/tools/jdk*/
+library/tools/*.zip

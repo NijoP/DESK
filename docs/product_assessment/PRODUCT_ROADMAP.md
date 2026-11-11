@@ -87,3 +87,27 @@ Team leads: HW = Principal Hardware Architect; SW = Principal Software Architect
 - **M3:** QA-01, QA-03, PX-04, PX-03, SW-04, AI-01, AI-06. Target: one disposable board through the full pipeline with undo and live events.
 - **M4:** QA-05 live checklist, PX-07, H-04, H-05, H-06, H-08, PX-09. Target: first live-verified release on a representative board.
 - **M5:** H-07, H-11, PCB-01, SW-07, Mission Control, CI, snapshot tests. Target: 9/10 scorecard with evidence.
+
+## Milestone 2 additions (2026-11-12)
+
+| ID | Item | Owner | Cx | Status |
+|---|---|---|---|---|
+| PCB-03 | Dense PCB Intelligence engine wired into `tools/route.py` (priority classes, plane nets, via costs, clearances to DSN) | PCB + SW | M | DONE |
+| PCB-04 | Placement refiner (proposals; authorised apply to placement.json) | PCB | M | DONE |
+| H-13 | Power distribution planner with IPC sizing, drop budget, via arrays, zone checks | HW | M | DONE |
+| SW-13 | PassTracker improvement-based stagnation; highest-compatible JAR; legacy global config merge/restore; `--continue` | SW | M | DONE (engine honouring of the legacy config under verification) |
+| H-10 | Single ampacity module, IPC-2221 relabel | HW | S | DONE |
+| H-01 | Clearance/creepage tables | HW | M | DONE (table values await Hardware Architect confirmation) |
+| H-02 | Unknown current fail-closed | HW | S | DONE |
+| H-03 | route.py widths from profile | PCB | M | DONE |
+| QA-04 | Numeric reference tests | QA | S | DONE |
+| SW-10 | learning/ indexed by context engine | SW | S | DONE |
+| SW-11 | Pours as conductors in `PhysicalConnectivityVerifier`; poured-region readback | SW + PCB | M | OPEN, P1 (blocks 100 % connectivity claims for plane nets) |
+| PERF-08 | Reuse spatial index across refiner candidates (12 s → target < 2 s on WATCH) | SW | S | OPEN |
+| H-12 | Switching-loop area check for buck/boost | HW | M | OPEN |
+| ENG-01 | Install Java 25 and validate Freerouting 2.5.0 (completion-dominant score, best-board restore) | Founder + PCB | S | OPEN, human step |
+| ESP-01 | Freeze C2/C3 benchmark designs (`ESP32_C2_C3_PERFORMANCE_SPECIFICATION.md`) as disposable projects | HW | M | OPEN, human step |
+| ESP-02 | Stage timers and accounting report (`ESP32_ENGINEERING_TIME_REPORT.md`) | SW + QA | M | OPEN |
+| ESP-03 | Block-spec and placement generators from requirements + LCSC data (Stage 1/2 time) | PX + AI | L | OPEN |
+| CP-01..04 | Cross-platform CI, POSIX config path, entry-laptop measurement, explicit `-Xmx` | QA + SW | S-M | OPEN |
+| ECO-01 | LCSC/JLCPCB/EasyEDA ecosystem architecture set (Continuation 03) | LCSC/JLCPCB + PM | L | OPEN (inventory in progress) |

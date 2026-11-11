@@ -58,4 +58,4 @@ Chronological index of all documented engineering incidents.
 - INC-20251111-003
 
 ### OPEN
-- INC-20251111-004
+- INC-20251111-004- INC-20261112-009 — Engine stop settings and SES behaviour measured (Freerouting 2.1.0 ignores all limits; smoke fixture proves SES write path; Java 25 needed)

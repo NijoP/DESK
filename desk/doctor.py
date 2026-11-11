@@ -76,11 +76,26 @@ def check_node() -> Check:
 
 
 def check_java() -> Check:
-    java = shutil.which("java")
-    if not java:
-        return Check("Java runtime", FAIL, "java not on PATH",
-                     "Install a Java 17+ JRE/JDK; tools/route.py needs it to run Freerouting.")
-    return Check("Java runtime", OK, _version(["java", "-version"]) or java)
+    try:
+        from desk.routing.orchestrator import find_java
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        java = find_java(os.path.join(base, "library", "tools"))
+    except Exception:
+        java = shutil.which("java")
+    if not java or not (os.path.exists(java) or shutil.which(java)):
+        return Check("Java runtime", FAIL, "java not found (DESK_JAVA, library/tools/jdk*/bin, PATH)",
+                     "Install Java 25 (needed by Freerouting >= 2.2) or set DESK_JAVA; Java 17+ only runs Freerouting 2.1.")
+    ver = _version([java, "-version"]) or java
+    major = 0
+    import re as _re
+    m = _re.search(r'version "(\d+)', ver)
+    if m:
+        major = int(m.group(1))
+    if 0 < major < 25:
+        return Check("Java runtime", WARN, f"{ver} ({java})",
+                     "Only Freerouting 2.1.0 runs on this Java; it never returns a partial board (KF-20261111-006). "
+                     "Install a Java 25 JDK (e.g. unzip Temurin 25 into library/tools/jdk25/) or set DESK_JAVA.")
+    return Check("Java runtime", OK, f"{ver} ({java})")
 
 
 def check_freerouting() -> Check:
@@ -89,6 +104,11 @@ def check_freerouting() -> Check:
         orch = RoutingEngineOrchestrator()
         try:
             kind, path, ver = orch.discover_engine()
+            note = getattr(orch, "last_discovery_note", "") or ""
+            if "incompatible" in note:
+                return Check("Freerouting engine", WARN, f"{kind} {ver} at {path}; {note}",
+                             "Newer Freerouting JARs are present but need a newer Java (v2.2+ needs Java 25). Install it to get "
+                             "completion-based scoring and best-board restore.")
             return Check("Freerouting engine", OK, f"{kind} {ver} at {path}")
         except RuntimeError as e:
             return Check("Freerouting engine", FAIL, str(e)[:160],

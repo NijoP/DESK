@@ -36,4 +36,4 @@ Directs deterministic component placement respecting functional domain isolation
    - Align passive components along standard 0°/90° orthogonal axes for automated pick-and-place nozzles.
    - Enforce courtyard clearances to prevent component collisions.
 4. **Invoke M2 Placement Engine**:
-   - Call `desk.placement.plan_placement(components, board_outline, profile)`.
+   - Generate with `PlacementIntelligenceEngine.generate_hierarchical_placement(reqs, blocks, keepouts)` (tools/pcb_place.py --auto), check with `desk.placement.check(dump, plan, blocks, profile)`, then refine routability with `desk.placement_refine.PlacementRefiner(dump, plan).refine()` (proposals only; apply needs authorisation).

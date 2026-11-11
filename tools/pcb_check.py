@@ -35,6 +35,14 @@ target = json.load(open(target_path, encoding="utf-8")) if os.path.exists(target
 # Standard placement rule checks
 E, W, M = placement.check(dump, plan, blocks)
 
+# Plan-vs-board sync (rework item F): the gate must not pass on geometry that differs from placement.json.
+if "--gate" in args:
+    sync_errs, sync_m = placement.plan_board_sync(dump, plan)
+    M["plan_sync"] = sync_m
+    if sync_errs:
+        E = list(E) + [f"plan/board out of sync: {e}" for e in sync_errs]
+        print(f"PLAN/BOARD SYNC: {len(sync_errs)} difference(s); run tools/pcb_place.py or tools/pcb_dump.py before gating")
+
 # Component Intelligence extraction
 reqs = ComponentIntelligenceExtractor.extract_all(
     dump, blocks=blocks, roles=plan.get("roles", {}), heights=plan.get("heights", {})
