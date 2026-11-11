@@ -183,12 +183,13 @@ class TraceWidthCalculator:
         if current_A <= 0.3:
             return min_signal_width_mil
 
-        # IPC-2221 area formula (not IPC-2152 chart data)
+        from desk import ipc
         cu_oz = 0.5 if is_inner else 1.0
-        k = 0.024 if is_inner else 0.048
-        delta_T = 10.0  # 10 deg C temp rise
-        area_mil2 = (current_A / (k * (delta_T ** 0.44))) ** (1.0 / 0.725)
-        width_mil = area_mil2 / (cu_oz * 1.37)
+        width_mil = ipc.trace_width_mil(current_A, is_inner=is_inner, copper_oz=cu_oz, temp_rise_c=10.0)
+        if width_mil > max_power_width_mil:
+            import warnings
+            warnings.warn(f"Net {net_name}: IPC-2221 width {width_mil:.1f} mil exceeds the {max_power_width_mil:.0f} mil "
+                          f"single-trace cap; use a plane, multiple traces or a wider cap.", stacklevel=2)
         return round(min(max_power_width_mil, max(min_signal_width_mil, width_mil)), 1)
 
 
@@ -429,6 +430,13 @@ class RoutingPlanGenerator:
         constraints: Dict[str, RoutingConstraint] = {}
         power_set = {n.upper() for n in stages.get(1, []) + stages.get(5, [])}
 
+        # Fail-closed pre-flight: nets whose current or voltage is undeclared are listed as blocking
+        # issues and sized with heuristics only so the plan can still be reported, never executed.
+        blocking_issues: List[str] = []
+        if profile and hasattr(profile, "validate_electrical_inputs"):
+            blocking_issues = profile.validate_electrical_inputs(list(net_graph.nets))
+        blocked_nets = {msg.split(":", 1)[0] for msg in blocking_issues}
+
         for net_name in net_graph.nets:
             is_pwr = net_name.upper() in power_set or net_name in high_c
             tier = 6
@@ -437,9 +445,10 @@ class RoutingPlanGenerator:
                     tier = s_num
                     break
 
+            net_profile = None if net_name in blocked_nets else profile
             current_A = None
-            if profile and hasattr(profile, "get_current_for_net"):
-                current_A = profile.get_current_for_net(net_name)
+            if net_profile and hasattr(net_profile, "get_current_for_net"):
+                current_A = net_profile.get_current_for_net(net_name)
             elif net_name in high_c:
                 current_A = high_c[net_name]
             elif is_pwr:
@@ -463,11 +472,11 @@ class RoutingPlanGenerator:
                 current_A=current_A,
                 is_inner=is_inner,
                 layer_idx=primary_layer,
-                profile=profile
+                profile=net_profile
             )
 
-            if profile and hasattr(profile, "derive_clearance_mil"):
-                clearance = profile.derive_clearance_mil(net_name, "GND")
+            if net_profile and hasattr(net_profile, "derive_clearance_mil"):
+                clearance = net_profile.derive_clearance_mil(net_name, "GND")
             else:
                 clearance = 4.02 if not is_pwr else 6.0
 
@@ -487,7 +496,8 @@ class RoutingPlanGenerator:
         return RoutingPlan(
             board_stackup=stackup,
             stage_nets=stages,
-            net_constraints=constraints
+            net_constraints=constraints,
+            blocking_issues=blocking_issues
         )
 
 

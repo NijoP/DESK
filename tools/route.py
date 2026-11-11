@@ -92,6 +92,22 @@ routing_plan = RoutingPlanGenerator.generate_plan(
 )
 profiler.end_phase()
 
+# Fail-closed electrical pre-flight (roadmap H-01/H-02): a power rail without a declared current or a
+# high-voltage net without a declared voltage must not be sized by guesswork.
+blocked_nets = set()
+if routing_plan.blocking_issues:
+    for _m in routing_plan.blocking_issues:
+        print("ELECTRICAL UNKNOWN:", _m)
+    blocked_nets = {_m.split(":", 1)[0] for _m in routing_plan.blocking_issues}
+    if "--allow-unknown-electrical" not in args:
+        raise SystemExit(
+            f"STOP: {len(routing_plan.blocking_issues)} undeclared electrical input(s) listed above. "
+            "Declare them in design_profile.json (current_limits_A / voltage_rails) or rerun with "
+            "--allow-unknown-electrical to size them heuristically (not for manufacturing).")
+    print("WARNING: continuing with heuristic sizing for undeclared nets (--allow-unknown-electrical).")
+if profile is None:
+    print("NOTE: no design_profile.json; widths and clearances use built-in heuristics, not your rails.")
+
 # Phase 7: Routing-plan generation
 profiler.start_phase(7, category="CPU")
 print(f"Routing Mode: {mode_cfg.mode_name} (Pass Budget: {passes}, Stackup: {routing_plan.board_stackup})")
@@ -136,22 +152,34 @@ board_w_mil = plan.get("board_mm", [50.0, 50.0])[0] * MIL
 board_h_mil = plan.get("board_mm", [50.0, 50.0])[1] * MIL
 power_nets = set(routing_plan.stage_nets.get(1, []) + routing_plan.stage_nets.get(5, []))
 
-# Fine-pitch escape compatible net widths (all <= 10.0 mil to clear 0.5mm QFN/ESP32 pads)
-# Main power trunks are widened post-import to 35 mil (VBAT) and 30 mil (VSYS)
-custom_net_widths = {
-    "VBAT": 10.0,
-    "VSYS": 10.0,
-    "VBUS": 10.0,
-    "VBUS_BOOST": 10.0,
-    "3V3": 8.0,
-    "GND": 8.0
-}
+# Fine-pitch escape compatible net widths (all <= 10.0 mil to clear 0.5mm QFN/ESP32 pads).
+# Power trunks are widened post-import (phase 16) to the width the design profile derives from the
+# declared rail current; the DSN width stays escape-compatible so the autorouter can reach fine pads.
+ESCAPE_CAP_MIL = 10.0
+custom_net_widths = {"3V3": 8.0, "GND": 8.0}
+widen_targets = {}
+if profile is not None:
+    for _net in power_nets:
+        if _net in blocked_nets:
+            continue
+        try:
+            _w = profile.derive_trace_width_mil(_net)
+        except ValueError:
+            continue
+        custom_net_widths[_net] = min(ESCAPE_CAP_MIL, _w)
+        if _w > ESCAPE_CAP_MIL:
+            widen_targets[_net] = min(_w, 120.0)
+if not widen_targets and profile is None:
+    # Legacy WATCH behaviour when no profile exists: VBAT/VSYS/VBUS trunks at 10 mil, widened later.
+    custom_net_widths.update({"VBAT": 10.0, "VSYS": 10.0, "VBUS": 10.0, "VBUS_BOOST": 10.0})
+    widen_targets = {"VBAT": 30.0, "VSYS": 25.0}
+print("Power widening targets (mil):", {k: round(v, 1) for k, v in widen_targets.items()} or "none")
 
 tuned_dsn = DSNTuningEngine.tune_dsn(
     dsn_content,
     (board_w_mil, board_h_mil),
     power_nets=power_nets,
-    keepouts=plan.get("keepouts"),
+    keepouts=plan.get("route_keepouts", plan.get("keepouts")),   # routing-only keepouts (placement keepouts may contain pads)
     net_widths=custom_net_widths,
     fine_pitch_width_mil=5.0,    # DRC rule set: min track 0.127 mm
     fine_pitch_clearance_mil=4.05  # DRC rule set: clearance 0.1016 mm (4.0 mil)
@@ -238,44 +266,35 @@ try:
     raw_pads = ex(G + 'return (await eda.pcb_PrimitivePad.getAll()).map(p => ({net:p.net, x:p.x, y:p.y, size:p.width||15.0}));',
                   timeout=60, window_id=P.get("window_id")) or []
 
-    vbat_lines = [l for l in raw_lines if l.get("net") == "VBAT"]
-    vsys_lines = [l for l in raw_lines if l.get("net") == "VSYS"]
+    widen_nets = set(widen_targets)
+    fine_pitch_pads = [(p["x"], p["y"], (p.get("size", 15.0) / 2.0)) for p in raw_pads if p.get("net") not in widen_nets]
+    obstacles = [(l["start_x"], l["start_y"], l["end_x"], l["end_y"], int(l["layer"])) for l in raw_lines if l.get("net") not in widen_nets]
 
-    fine_pitch_pads = [(p["x"], p["y"], (p.get("size", 15.0) / 2.0)) for p in raw_pads if p.get("net") not in ("VBAT", "VSYS")]
-    obstacles = [(l["start_x"], l["start_y"], l["end_x"], l["end_y"], int(l["layer"])) for l in raw_lines if l.get("net") not in ("VBAT", "VSYS")]
-
-    vbat_plan = TraceWidthManager.plan_power_widening(
-        net_name="VBAT",
-        segments=vbat_lines,
-        target_width_mil=30.0,
-        escape_width_mil=10.0,
-        fine_pitch_pads=fine_pitch_pads,
-        obstacles=obstacles,
-        min_clearance_mil=5.0,
-        escape_radius_mil=35.0
-    )
-
-    vsys_plan = TraceWidthManager.plan_power_widening(
-        net_name="VSYS",
-        segments=vsys_lines,
-        target_width_mil=25.0,
-        escape_width_mil=10.0,
-        fine_pitch_pads=fine_pitch_pads,
-        obstacles=obstacles,
-        min_clearance_mil=5.0,
-        escape_radius_mil=35.0
-    )
+    widen_plans = {}
+    for _net, _target in widen_targets.items():
+        widen_plans[_net] = TraceWidthManager.plan_power_widening(
+            net_name=_net,
+            segments=[l for l in raw_lines if l.get("net") == _net],
+            target_width_mil=_target,
+            escape_width_mil=ESCAPE_CAP_MIL,
+            fine_pitch_pads=fine_pitch_pads,
+            obstacles=obstacles,
+            min_clearance_mil=5.0,
+            escape_radius_mil=35.0
+        )
 
     modifications = []
-    for cand in (vbat_plan.candidates + vsys_plan.candidates):
-        if cand.is_widened and cand.approved_width_mil > cand.current_width_mil:
-            modifications.append({"id": cand.segment_id, "lineWidth": cand.approved_width_mil})
+    for _plan in widen_plans.values():
+        for cand in _plan.candidates:
+            if cand.is_widened and cand.approved_width_mil > cand.current_width_mil:
+                modifications.append({"id": cand.segment_id, "lineWidth": cand.approved_width_mil})
 
     if modifications:
         mod_code = f'for(const m of {json.dumps(modifications)}){{ await eda.pcb_PrimitiveLine.modify(m.id, {{lineWidth: m.lineWidth}}); }}; await eda.pcb_Document.save(); return true;'
         check(ex(G + mod_code, timeout=60, window_id=P.get("window_id"), is_mutation=True))
         time.sleep(2.0)
-    print(f"Power trace widening: VBAT widened {vbat_plan.widened_segments}/{vbat_plan.total_segments}, VSYS widened {vsys_plan.widened_segments}/{vsys_plan.total_segments}")
+    print("Power trace widening: " + (", ".join(
+        f"{n} {p.widened_segments}/{p.total_segments} -> {widen_targets[n]:.0f} mil" for n, p in widen_plans.items()) or "no targets"))
 except Exception as e:
     print("Warning: Power trace widening deferred:", e)
 

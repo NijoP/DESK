@@ -206,6 +206,9 @@ class RoutingPlan:
     via_definitions: Dict[str, Any] = field(default_factory=lambda: {"diameter_mil": 24.0, "drill_mil": 12.0})
     ground_strategy: str = "flood_with_escape_vias"
     routing_corridors: List[RoutingCorridor] = field(default_factory=list)
+    # Fail-closed electrical unknowns (undeclared rail current or HV voltage). Non-empty means the
+    # plan must not be executed without explicit operator override (roadmap H-01/H-02).
+    blocking_issues: List[str] = field(default_factory=list)
 
 @dataclass
 class RoutingAttempt:

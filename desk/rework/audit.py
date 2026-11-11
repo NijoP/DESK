@@ -330,16 +330,30 @@ class ReworkAuditEngine:
         snapshot: IndexedPCBSnapshot,
         profile: Optional[DesignProfile] = None,
     ) -> List[Issue]:
-        """Domain F: Audits trace widths vs IPC-2152 ampacity requirements."""
+        """Domain F: Audits trace widths vs IPC-2221 ampacity requirements (desk.ipc)."""
+        from desk import ipc
         found: List[Issue] = []
-        power_nets = profile.power_nets if profile else {"3V3": 1.0, "5V": 2.0, "VIN": 3.0}
+        if profile is not None:
+            # Only VERIFIED currents are audited; unknown rails are reported by validate_electrical_inputs.
+            power_nets = dict(profile.current_limits_A)
+            for nc in profile.net_classes.values():
+                for n in nc.nets:
+                    power_nets.setdefault(n, nc.max_current_A)
+            temp_rise = max(1.0, profile.thermal.max_temperature_rise_c)
+            cu_oz = profile.stackup[0].copper_thickness_oz if profile.stackup else 1.0
+        else:
+            power_nets = {"3V3": 1.0, "5V": 2.0, "VIN": 3.0}
+            temp_rise, cu_oz = 10.0, 1.0
 
         for p_net, target_current in power_nets.items():
+            if target_current <= 0.3:
+                continue
             net_tracks = [t for t in snapshot.tracks if t.get("net") == p_net]
             for t in net_tracks:
                 width = float(t.get("width", 0.0))
-                # IPC-2152 estimate: min ~10 mil per Ampere for 1oz copper (10C temp rise)
-                min_width = max(8.0, target_current * 10.0)
+                is_inner = int(t.get("layer", 1)) not in (1, 2) if profile and profile.layer_count == 2 else False
+                min_width = max(8.0, ipc.trace_width_mil(target_current, is_inner=is_inner, copper_oz=cu_oz,
+                                                         temp_rise_c=temp_rise))
                 if width < (min_width - 0.5):
                     found.append(Issue(
                         issue_id=self._next_issue_id(),

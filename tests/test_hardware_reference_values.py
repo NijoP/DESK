@@ -62,13 +62,29 @@ class TestClearanceTiers(unittest.TestCase):
         self.assertEqual(self.p.derive_clearance_mil("3V3", "GND"), self.p.manufacturing.min_clearance_mil)
 
     def test_mid_voltage_tier(self):
-        self.assertGreaterEqual(self.p.derive_clearance_mil("VIN", "GND"), 8.0)
+        # 48 V external uncoated: IPC-2221B B2 0.6 mm; IEC 60664-1 PD2 group III creepage at 50 V row 1.2 mm.
+        self.assertAlmostEqual(self.p.derive_clearance_mil("VIN", "GND"), 1.2 * 39.37007874, places=1)
 
-    def test_high_voltage_tier_is_known_insufficient(self):
-        # Documents the defect tracked as roadmap H-01: 300 V receives only 24 mil (0.61 mm).
-        # IPC-2221B B2 (external, uncoated) requires about 2.5 mm at 300 V. This test must be
-        # updated to the table value when H-01 lands; until then it pins current behaviour.
-        self.assertEqual(self.p.derive_clearance_mil("HV", "GND"), 24.0)
+    def test_high_voltage_uses_standards_tables(self):
+        # 300 V: clearance B2 1.25 mm, creepage PD2/III 3.2 mm -> 3.2 mm = 126 mil (was 24 mil before H-01).
+        self.assertAlmostEqual(self.p.derive_clearance_mil("HV", "GND"), 3.2 * 39.37007874, places=1)
+
+    def test_internal_layer_condition_is_smaller(self):
+        self.p.clearance_condition = "B1"
+        self.p.pollution_degree = 1
+        self.assertAlmostEqual(self.p.derive_clearance_mil("HV", "GND"),
+                               max(0.20, 0.75) * 39.37007874, places=1)
+
+    def test_undeclared_high_voltage_net_fails_closed(self):
+        with self.assertRaises(ValueError):
+            self.p.derive_clearance_mil("MAINS_L", "GND")
+        self.assertIn("MAINS_L", " ".join(self.p.validate_electrical_inputs(["MAINS_L", "3V3"])))
+
+    def test_undeclared_power_rail_current_fails_closed(self):
+        with self.assertRaises(ValueError):
+            self.p.get_current_for_net("VBAT")
+        self.p.unknown_current_policy = "default_1A"
+        self.assertEqual(self.p.get_current_for_net("VBAT"), 1.0)
 
 
 if __name__ == "__main__":

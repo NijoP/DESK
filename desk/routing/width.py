@@ -60,10 +60,15 @@ class TraceWidthManager:
         A = (I / (k * delta_T^b))^(1 / c)
         where k = 0.048 for outer, 0.024 for inner.
         """
+        from desk import ipc
         if current_A <= 0.0:
+            # Placeholder for segments whose net has no declared current. Sizing decisions for
+            # such nets are blocked upstream (DesignProfile.validate_electrical_inputs, H-02).
             return 6.0
+        return round(max(5.0, ipc.trace_width_mil(current_A, is_inner=is_inner, copper_oz=copper_oz,
+                                                  temp_rise_c=temp_rise_C)), 2)
 
-        k = 0.024 if is_inner else 0.048
+        k = 0.024 if is_inner else 0.048  # pragma: no cover (legacy path retained for reference)
         b = 0.44
         c = 0.725
 

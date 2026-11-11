@@ -145,8 +145,17 @@ class DesignProfile:
     critical_nets: List[str] = field(default_factory=list)
     keepouts: List[Dict[str, Any]] = field(default_factory=list)
     approved_exceptions: List[Dict[str, Any]] = field(default_factory=list)
+    # Electrical-spacing environment (IPC-2221B Table 6-1 condition and IEC 60664-1 creepage inputs).
+    clearance_condition: str = "B2"        # B1 internal, B2 external uncoated, B3 >3050 m, B4 coated, A5-A7 leads
+    pollution_degree: int = 2              # 1 or 2 (3/4 not implemented)
+    material_group: str = "III"            # CTI group I, II, III (IIIa/IIIb)
+    # Fail-closed policy for power nets without a declared current: "fail" raises, "default_1A" sizes at 1 A.
+    unknown_current_policy: str = "fail"
     created_at: str = ""
     profile_hash: str = ""
+
+    # Net names that imply a hazardous or undeclared high voltage. Such nets must appear in voltage_rails.
+    HV_NET_PATTERN = r"(HV|MAINS|AC_|_AC\b|^L\d*$|^N\d*$|LINE|NEUTRAL|230V|240V|110V|120V|400V|VBULK|VDC_?BUS|HVDC)"
 
     def __post_init__(self):
         if not self.stackup:
@@ -207,18 +216,49 @@ class DesignProfile:
         # 4. Standard generic signal net -> ESTIMATED 0.2A
         return 0.2, CurrentConfidence.ESTIMATED
 
-    def get_current_for_net(self, net: str, allow_unknown_default: bool = True) -> float:
-        """Returns current limit for a net. Fails closed on UNKNOWN high-current rails if strict."""
+    def get_current_for_net(self, net: str, allow_unknown_default: Optional[bool] = None) -> float:
+        """Returns current limit for a net.
+
+        Fails closed on UNKNOWN power rails unless the caller passes `allow_unknown_default=True`
+        or the profile's `unknown_current_policy` is "default_1A". The 1 A fallback exists only for
+        exploratory runs; production sizing must declare every power-rail current (roadmap H-02).
+        """
         curr, confidence = self.get_net_current_status(net)
         if confidence == CurrentConfidence.UNKNOWN:
+            if allow_unknown_default is None:
+                allow_unknown_default = (self.unknown_current_policy == "default_1A")
             if not allow_unknown_default:
                 raise ValueError(
                     f"Unsafe electrical assumption: Net '{net}' is a power rail with UNKNOWN current capacity. "
                     f"An explicit current limit in 'current_limits_A' is required."
                 )
-            # Safe default for unknown power nets is 1.0A (conservative sizing rather than 0.2A)
             return 1.0
         return curr
+
+    def get_net_voltage_status(self, net: str) -> Tuple[Optional[float], str]:
+        """(voltage, confidence). GND-like nets are 0 V VERIFIED; declared rails VERIFIED;
+        nets matching HV_NET_PATTERN without a declaration are UNKNOWN; others ESTIMATED 3.3 V."""
+        if net in self.voltage_rails:
+            return float(self.voltage_rails[net]), CurrentConfidence.VERIFIED
+        net_u = net.upper()
+        if re.search(r"^(GND|AGND|DGND|PGND|VSS|0V)", net_u):
+            return 0.0, CurrentConfidence.VERIFIED
+        if re.search(self.HV_NET_PATTERN, net_u):
+            return None, CurrentConfidence.UNKNOWN
+        return 3.3, CurrentConfidence.ESTIMATED
+
+    def validate_electrical_inputs(self, nets: List[str]) -> List[str]:
+        """Fail-closed pre-flight: every blocking electrical unknown for the given nets, as messages.
+        Empty list means sizing and clearance can be derived safely."""
+        issues: List[str] = []
+        for net in nets:
+            _, c_conf = self.get_net_current_status(net)
+            if c_conf == CurrentConfidence.UNKNOWN:
+                issues.append(f"{net}: power rail without a declared current; add current_limits_A['{net}']")
+            _, v_conf = self.get_net_voltage_status(net)
+            if v_conf == CurrentConfidence.UNKNOWN:
+                issues.append(f"{net}: high-voltage net without a declared voltage; add voltage_rails['{net}']")
+        return issues
 
     def derive_trace_width_mil(self, net: str, is_inner: bool = False, layer_idx: Optional[int] = None) -> float:
         """Calculate trace width (IPC-2221 power law; see routing/width.py) from profile current, copper weight and temp rise."""
@@ -251,12 +291,11 @@ class DesignProfile:
             else:
                 cu_oz = self.stackup[0].copper_thickness_oz if self.stackup else 1.0
 
-        cu_thick_mil = cu_oz * 1.37
-        k = 0.024 if is_inner else 0.048
+        from desk import ipc
         delta_T = max(1.0, self.thermal.max_temperature_rise_c)
         if current_A > 0.3:
-            area_mil2 = (current_A / (k * (delta_T ** 0.44))) ** (1.0 / 0.725)
-            ipc_width = area_mil2 / max(0.1, cu_thick_mil)
+            ipc_width = ipc.trace_width_mil(current_A, is_inner=is_inner, copper_oz=max(0.1, cu_oz),
+                                            temp_rise_c=delta_T)
         else:
             ipc_width = min_width
 
@@ -269,18 +308,29 @@ class DesignProfile:
         final_width = max(ipc_width, net_class_min, min_width)
         return round(final_width, 1)
 
-    def derive_clearance_mil(self, net1: str, net2: str) -> float:
-        """Profile-driven electrical clearance respecting manufacturer and voltage limits."""
+    def derive_clearance_mil(self, net1: str, net2: str, allow_unknown_voltage: bool = False) -> float:
+        """Electrical spacing between two nets: max(IPC-2221B clearance for the profile's condition,
+        IEC 60664-1 creepage for its pollution degree and material group, fabricator minimum).
+
+        Raises ValueError when either net looks high-voltage but has no declared voltage, unless
+        `allow_unknown_voltage` is set (roadmap H-01, fail-closed)."""
+        from desk import ipc
         base = self.manufacturing.min_clearance_mil
-        v1 = self.voltage_rails.get(net1, 3.3)
-        v2 = self.voltage_rails.get(net2, 0.0)
-        v_diff = abs(v1 - v2)
-        # IPC-2221 bare board voltage scaling
-        if v_diff > 50.0:
-            base = max(base, 24.0)
-        elif v_diff > 15.0:
-            base = max(base, 8.0)
-        return base
+        volts = []
+        for net in (net1, net2):
+            v, conf = self.get_net_voltage_status(net)
+            if conf == CurrentConfidence.UNKNOWN:
+                if not allow_unknown_voltage:
+                    raise ValueError(
+                        f"Unsafe electrical assumption: Net '{net}' looks high-voltage but has no entry in "
+                        f"'voltage_rails'. Declare its working voltage before deriving clearance.")
+                v = 0.0
+            volts.append(v)
+        v_diff = abs(volts[0] - volts[1])
+        return ipc.required_spacing_mil(v_diff, condition=self.clearance_condition,
+                                        pollution_degree=self.pollution_degree,
+                                        material_group=self.material_group,
+                                        manufacturer_min_mil=base)
 
     def affected_domains(self, changed_keys: Set[str]) -> Set[str]:
         """Identify which engineering mental model domains are invalidated by specific key changes."""
@@ -316,6 +366,10 @@ class DesignProfile:
             "critical_nets": self.critical_nets,
             "keepouts": self.keepouts,
             "approved_exceptions": self.approved_exceptions,
+            "clearance_condition": self.clearance_condition,
+            "pollution_degree": self.pollution_degree,
+            "material_group": self.material_group,
+            "unknown_current_policy": self.unknown_current_policy,
             "created_at": self.created_at,
             "profile_hash": self.profile_hash,
         }
