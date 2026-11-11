@@ -55,7 +55,17 @@ DESK auto-discovers the port (scans 49620-49629). Force one with `EDA_PORT=49621
 | NC flag | `pin.setState_NoConnected(true); await pin.done()` |
 | frame / title | `eda.sch_PrimitiveRectangle.create(...)`, `eda.sch_PrimitiveText.create(...)` |
 | netlist | `eda.sch_Netlist.getNetlist("Protel2")` |
+| **schematic read-back** (parts, pins, coordinates, nets) | `python tools/sch_dump.py projects/<P>` → `state/sch_dump.json` (`desk/schematic_io.py`, read-only) |
+| **wire by pin name** | `python tools/wire.py projects/<P> <NET> U1.3 C2.1 [--apply]` (plans from the read-back, mutates only with `--apply`) |
 | PCB parts | `eda.pcb_PrimitiveComponent.get/modify`, `getAllPinsByPrimitiveId`, `eda.pcb_Primitive.getPrimitivesBBox` |
+
+## The bridge reads as well as writes
+`POST /execute` runs any JavaScript, so every `getState_*` getter above is a read. An agent that reports
+"the bridge only supports write operations" has not called the read tools. Use them, never the browser:
+- `python tools/sch_dump.py projects/<P>` — components, uuids, pins with absolute x/y, rotation and net (no mutation).
+- `python tools/wire.py projects/<P> NET U1.3 C2.1` — dry-run plan with exact stub wires and labels; add `--apply` to create them and read back.
+- `python tools/pcb_dump.py projects/<P>` — PCB components and pads.
+- `python tools/desk.py agent projects/<P> "<task>"` — lets an NVIDIA NIM model drive the same tools (see `docs/agent_system/NVIDIA_TOOL_CALLING.md`).
 
 ## Hard-won gotchas
 - **Labels close together merge nets.** That is why stubs alternate length and `verify.py` flags "unexpected net".

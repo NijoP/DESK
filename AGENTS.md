@@ -76,7 +76,9 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
 
 ## G. API & Integration Safety
 
-- **No Custom Drawing Code:** Never write your own EasyEDA drawing JavaScript. Drawing = `tools/build.py` only.
+- **No Custom Drawing Code:** Never write your own EasyEDA drawing JavaScript. Drawing = `tools/build.py` (blocks) or `tools/wire.py` (named pins) only.
+- **The Bridge Reads:** `python tools/sch_dump.py projects/<P>` and `tools/pcb_dump.py` read the live sheet/board. Never claim the API is write-only and never fall back to browser automation or manual UI work.
+- **Model Tool Loop:** `python tools/desk.py agent projects/<P> "<task>"` runs NVIDIA NIM models (default Nemotron 3 Ultra) against DESK's tools; mutations need `--allow-mutation`.
 - **Verified Pin Maps:** Never guess pin numbers. Use `library/pins/<MPN>.json` (generated from `tools/pins.py`).
 - **No Invented Parts:** Never invent a part. Every `mpn` must resolve via `tools/resolve.py`.
 - **No Component Replacement:** Do not silently replace PCB components or substitute footprints.

@@ -135,6 +135,41 @@ class OpenAICompatAdapter:
             body["reasoning_effort"] = level
         return body
 
+    def chat_completion(self, messages: List[Dict[str, Any]], model: Optional[str] = None,
+                        tools: Optional[List[Dict[str, Any]]] = None, tool_choice: str = "auto",
+                        thinking: Optional[str] = "off", max_tokens: Optional[int] = None,
+                        timeout: float = 120.0, temperature: float = 0.0) -> Dict[str, Any]:
+        """Raw chat call with optional OpenAI-style tools. Returns {"message": {...}, "usage": {...}} or {"error": ...}.
+        Verified on NVIDIA NIM 2026-11-12: Nemotron 3 Ultra / 3.5 emit `tool_calls` with tool_choice auto."""
+        model = model or os.environ.get("DESK_AGENT_MODEL") or "nvidia/nemotron-3-ultra-550b-a55b"
+        body: Dict[str, Any] = {"model": model, "messages": messages, "temperature": temperature,
+                                "max_tokens": int(max_tokens or os.environ.get("DESK_HTTP_MAX_TOKENS", "2048"))}
+        if tools:
+            body["tools"] = tools
+            body["tool_choice"] = tool_choice
+        level = (thinking or "").lower()
+        if level == "off":
+            body["chat_template_kwargs"] = {"enable_thinking": False}
+            body["reasoning_effort"] = "none"
+        elif level in ("low", "medium", "high"):
+            body["reasoning_effort"] = level
+        try:
+            req = urllib.request.Request(self.base_url + "/chat/completions", data=json.dumps(body).encode("utf-8"),
+                                         headers=self._headers())
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                resp = json.loads(r.read().decode("utf-8"))
+            choice = resp["choices"][0]
+            return {"message": choice.get("message", {}), "finish_reason": choice.get("finish_reason"), "usage": resp.get("usage") or {}}
+        except urllib.error.HTTPError as e:
+            detail = ""
+            try:
+                detail = e.read().decode("utf-8")[:300]
+            except Exception:
+                pass
+            return {"error": f"HTTP {e.code}: {detail}"}
+        except Exception as e:
+            return {"error": f"{type(e).__name__}: {str(e)[:300]}"}
+
     def execute(self, task: TaskRequest) -> TaskResult:
         t0 = time.perf_counter()
         model = task.preferred_model or "unset"

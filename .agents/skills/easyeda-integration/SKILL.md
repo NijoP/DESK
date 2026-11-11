@@ -32,13 +32,17 @@ Governs communication with EasyEDA Pro via the high-speed local socket bridge, e
 - Verified drawing commands generated via `tools/build.py`.
 
 ## Relevant DESK Modules
+- `desk/schematic_io.py` + `tools/sch_dump.py`: READ-ONLY schematic read-back (parts, pins, coordinates, nets) — the bridge supports reads; never claim otherwise.
+- `tools/wire.py`: wire pins by name (`U1.3`), dry-run by default, `--apply` mutates under the lock and verifies by read-back.
+- `desk/orchestrator/agent_loop.py` + `desk/orchestrator/tools_manifest.py`: tool-calling loop for NVIDIA NIM models (`python tools/desk.py agent`).
 - `desk/adapters/easyeda_pcb_adapter.py`: Fast bridge socket connector.
 - `tools/build.py`: Deterministic EasyEDA command synthesizer.
 - `tools/ctx.py api`: Verified API signature inspector.
 
 ## Required Engineering Constraints
 - Authorization Required: Never run live EasyEDA operations without explicit authorization from the Captain.
-- No Custom Drawing Scripts: Never write ad-hoc EasyEDA drawing JavaScript. All drawing commands must originate from `tools/build.py`.
+- No Custom Drawing Scripts: Never write ad-hoc EasyEDA drawing JavaScript. All drawing commands must originate from `tools/build.py` or `tools/wire.py`.
+- No Browser Automation: never drive the EasyEDA UI with a browser tool; every read and write goes through the bridge tools above.
 - Verified API Surface: Do not invoke unverified or speculative EasyEDA API methods. Query `python tools/ctx.py api <method>` first.
 - Single-Writer Mutation Safety: Enforce single-writer lock; never allow two agents to write to the bridge simultaneously.
 

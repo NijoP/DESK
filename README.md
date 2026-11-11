@@ -369,7 +369,7 @@ Test suite: **428 tests passing** across 74 test files (last verified 2026-11-12
 - **No switching-loop area minimisation** or RF-specific ground-plane rules.
 - **No client engineering drawing import** (no OCR/PDF parsing).
 - **Multi-agent organisation is documentation, not runtime.** Team structure is documented; no runtime multi-agent system with worktree isolation exists.
-- **NVIDIA model capabilities (tool calling, vision) are declared but not integration-tested.**
+- **NVIDIA tool calling is verified (2026-11-12) for Nemotron 3 Ultra and 3.5 Lightning via `desk.py agent`; vision remains declared-only.**
 - **No Firstmate/Backpass/Herdr/Wefth integration.** Only Pi and AGY adapters are implemented.
 - **No 72-class PCB compatibility.** Only WATCH (ESP32-S3 smartwatch) and sensor patch boards have been tested.
 - **No senior hardware engineer acceptance recorded.** Acceptance criteria are defined but unfulfilled.

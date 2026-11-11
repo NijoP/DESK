@@ -45,6 +45,8 @@ One document, five sections, replacing the proposed `MULTI_AGENT_ARCHITECTURE.md
 
 **Providers (implemented M1):** `nvidia` (direct OpenAI-compatible HTTP, `desk/orchestrator/http_adapter.py`), `pi` (CLI, `-p --mode json -ne --no-session`), `agy` (Gemini CLI). Order via `DESK_PROVIDER_ORDER`; recommended `nvidia,pi,agy`.
 
+**Tool-calling agent (implemented 2026-11-12):** `desk/orchestrator/agent_loop.py` runs an OpenAI-style tool loop on the `nvidia` provider (default `nvidia/nemotron-3-ultra-550b-a55b`, thinking off). The model sees only DESK's deterministic tools (`desk/orchestrator/tools_manifest.py`: read_schematic, list_schematic_nets, plan_wires, wire_net, read_pcb, dense_board_analysis, doctor, run_desk_tool); DESK executes every call, mutations exist only with `--allow-mutation`, and the trace lands in `<project>/state/agent_trace.jsonl`. See `docs/agent_system/NVIDIA_TOOL_CALLING.md`.
+
 **Tiers (implemented M1):**
 
 | Tier | Use | Default model (nvidia) | Thinking | Timeout |

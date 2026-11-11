@@ -7,6 +7,8 @@
   python tools/desk.py auth [configure|status|test]  secure credential vault management
   python tools/desk.py settings                      ecosystem provider health and readiness dashboard
   python tools/desk.py doctor [--project <P>] [--json] check prerequisites (bridge, Java, Freerouting, CLIs, project binding) with fixes
+  python tools/desk.py agent projects/<P> "<task>" [--model <id>] [--allow-mutation] [--max-turns N] [--json]
+                                                     tool-calling agent on NVIDIA NIM (Nemotron 3 Ultra by default): reads the sheet, plans wires, mutates only with --allow-mutation
   python tools/desk.py recover projects/<P>          list unfinished/dirty live operations and how to resolve each
   python tools/desk.py recover projects/<P> --clear  resolve dirty builds by running tools/clear_block.py for them (live)
   python tools/desk.py recover projects/<P> --mark-resolved <op_id> --reason "checked by hand"
@@ -409,6 +411,29 @@ if a[0] == "settings":
 if a[0] == "doctor":
     from desk.doctor import main as doctor_main
     sys.exit(doctor_main(a[1:]))
+
+if a[0] == "agent":
+    from desk.orchestrator.agent_loop import run_agent
+    opt = a[1:]
+    skip = set()
+    for flag in ("--model", "--max-turns", "--window"):
+        if flag in opt:
+            skip.add(opt.index(flag) + 1)
+    pos = [x for i, x in enumerate(opt) if not x.startswith("--") and i not in skip]
+    if len(pos) < 2:
+        raise SystemExit('usage: desk.py agent projects/<P> "<task>" [--model <id>] [--allow-mutation] [--max-turns N] [--json]')
+    proj, task = pos[0], " ".join(pos[1:])
+    run = run_agent(task, project=proj,
+                    model=opt[opt.index("--model") + 1] if "--model" in opt else None,
+                    allow_mutation="--allow-mutation" in opt,
+                    max_turns=int(opt[opt.index("--max-turns") + 1]) if "--max-turns" in opt else 12,
+                    window_id=opt[opt.index("--window") + 1] if "--window" in opt else None)
+    if "--json" in opt:
+        print(json.dumps(run.to_dict(), indent=1, ensure_ascii=False))
+    else:
+        print(run.final_text or f"(no final text; stopped: {run.stopped_reason})")
+        print(f"-- {run.model}: {run.turns} turns, {run.tool_calls} tool calls, {run.elapsed_s}s, stopped={run.stopped_reason}, trace={run.trace_path}")
+    sys.exit(0 if run.stopped_reason == "final" else 1)
 
 if a[0] == "recover":
     proj = a[1]
