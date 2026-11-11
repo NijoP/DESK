@@ -1,0 +1,10 @@
+﻿{
+ "document": "PCB1_1 (recovery copy of PCB1)", "uuid": "a6e933d56b6ca092",
+ "api": "eda.pcb_Drc.check(strict=true, userInterface=false, includeVerboseError=true)",
+ "rule_configuration": "Custom Config",
+ "timestamp_local": "2026-11-11 19:14 IST",
+ "panelize_record": {"on": true, "row": 3, "column": 2, "rowSpacing": 0, "columnSpacing": 0, "onlyOutline": false, "type": "V-CUT", "rails": "top+bottom 236.2 mil (6 mm)", "positioning_holes_mil": 78.7, "fiducial_mil": 39.4, "mask_expansion_mil": 19.7},
+ "top_level_groups": 0, "flattened_items": 0, "violations": 0,
+ "note_master_PCB1": "PCB1 (7dac46c2fc1176fd, bound to Board1) reports 1 item: 'Netlist Error / Import Changes' = schematic designators C101..U109 vs PCB C301..U309 (same 22 parts, prefix 1xx vs 3xx). Not a geometric violation. PCB1_1 is unbound to the schematic so this check does not apply to it. Not renumbered; Captain decision pending.",
+ "copper": {"pour_definitions": 4, "poured_fills": 4, "net": "P3_GND", "layers": [1,2,15,16], "refill_fingerprint_before": {"56b8f345d7c0e07c":5880,"6188889a3300e42d":4901,"a9242fe0f2c272fa":11254,"bdd01d2b8a5df7d2":15043}, "refill_fingerprint_after": "identical"}
+}

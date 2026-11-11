@@ -1,0 +1,194 @@
+{
+ "zip": "output/sensor_patch_6up_release/02_gerber_6up/sensor_patch_6up_gerber.zip",
+ "files": [
+  "Drill_NPTH_Through.DRL",
+  "Drill_PTH_Through.DRL",
+  "Drill_PTH_Through_Via.DRL",
+  "Gerber_BoardOutlineLayer.GKO",
+  "Gerber_BottomLayer.GBL",
+  "Gerber_BottomPasteMaskLayer.GBP",
+  "Gerber_BottomSilkscreenLayer.GBO",
+  "Gerber_BottomSolderMaskLayer.GBS",
+  "Gerber_DocumentLayer.GDL",
+  "Gerber_DrillDrawingLayer.GDD",
+  "Gerber_InnerLayer1.G1",
+  "Gerber_InnerLayer2.G2",
+  "Gerber_TopLayer.GTL",
+  "Gerber_TopPasteMaskLayer.GTP",
+  "Gerber_TopSilkscreenLayer.GTO",
+  "Gerber_TopSolderMaskLayer.GTS",
+  "PCB\u4e0b\u5355\u5fc5\u8bfb.txt"
+ ],
+ "layers": {
+  "Gerber_BoardOutlineLayer.GKO": {
+   "objects": 18,
+   "bbox": [
+    19.939,
+    3.909,
+    42.283,
+    89.68
+   ]
+  },
+  "Gerber_BottomLayer.GBL": {
+   "objects": 602,
+   "bbox": [
+    20.323,
+    6.536,
+    35.569,
+    87.053
+   ]
+  },
+  "Gerber_BottomPasteMaskLayer.GBP": {
+   "objects": 63,
+   "bbox": [
+    20.477,
+    6.536,
+    35.569,
+    87.053
+   ]
+  },
+  "Gerber_BottomSilkscreenLayer.GBO": {
+   "objects": 103,
+   "bbox": [
+    20.4,
+    10.465,
+    30.715,
+    32.924
+   ]
+  },
+  "Gerber_BottomSolderMaskLayer.GBS": {
+   "objects": 63,
+   "bbox": [
+    20.426,
+    6.036,
+    36.069,
+    87.553
+   ]
+  },
+  "Gerber_DrillDrawingLayer.GDD": {
+   "error": "C:\\Users\\HP\\AppData\\Local\\Temp\\gerb_a62fo27r\\Gerber_DrillDrawingLayer.GDD:1 \"G04 Layer: DrillDrawingLayer*\": ('Unknown excellon statement:', 'G04 Layer: DrillDrawingLayer*')"
+  },
+  "Gerber_InnerLayer1.G1": {
+   "objects": 218,
+   "bbox": [
+    20.323,
+    10.29,
+    30.858,
+    34.287
+   ]
+  },
+  "Gerber_InnerLayer2.G2": {
+   "objects": 201,
+   "bbox": [
+    20.323,
+    10.29,
+    30.858,
+    34.287
+   ]
+  },
+  "Gerber_TopLayer.GTL": {
+   "objects": 468,
+   "bbox": [
+    20.323,
+    6.536,
+    35.569,
+    87.053
+   ]
+  },
+  "Gerber_TopPasteMaskLayer.GTP": {
+   "objects": 58,
+   "bbox": [
+    20.994,
+    6.536,
+    35.569,
+    87.053
+   ]
+  },
+  "Gerber_TopSilkscreenLayer.GTO": {
+   "objects": 59,
+   "bbox": [
+    20.208,
+    14.473,
+    30.578,
+    29.173
+   ]
+  },
+  "Gerber_TopSolderMaskLayer.GTS": {
+   "objects": 58,
+   "bbox": [
+    20.943,
+    6.036,
+    36.069,
+    87.553
+   ]
+  },
+  "PCB\u4e0b\u5355\u5fc5\u8bfb.txt": {
+   "error": "'charmap' codec can't decode byte 0x8d in position 19: character maps to <undefined>"
+  }
+ },
+ "drills": {
+  "Drill_NPTH_Through.DRL": {
+   "hits": 10,
+   "by_diameter_mm": {
+    "0": 10
+   },
+   "bbox": [
+    24.069,
+    6.036,
+    38.156,
+    87.553
+   ],
+   "plated": null
+  },
+  "Drill_PTH_Through.DRL": {
+   "hits": 264,
+   "by_diameter_mm": {
+    "0": 264
+   },
+   "bbox": [
+    20.774,
+    12.414,
+    40.825,
+    80.331
+   ],
+   "plated": null
+  },
+  "Drill_PTH_Through_Via.DRL": {
+   "hits": 264,
+   "by_diameter_mm": {
+    "0": 264
+   },
+   "bbox": [
+    20.774,
+    12.414,
+    40.825,
+    80.331
+   ],
+   "plated": null
+  }
+ },
+ "outline": {
+  "Gerber_BoardOutlineLayer.GKO": {
+   "segments": 14,
+   "distinct_x": [
+    20.066,
+    20.069,
+    21.069,
+    31.112,
+    31.115,
+    41.156,
+    42.156
+   ],
+   "distinct_y": [
+    4.036,
+    5.036,
+    10.033,
+    10.036,
+    34.544,
+    83.553,
+    88.553,
+    89.553
+   ]
+  }
+ }
+}
