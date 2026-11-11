@@ -1,0 +1,201 @@
+{
+ "id": "01_LED_DROPPER",
+ "title": "230V AC RESISTIVE DROPPER, 4 BLUE LEDS",
+ "status": "draft",
+ "purpose": "Mains 230 V AC illumination: series dropper resistor, half-wave series diode, 4 blue chip LEDs in series, anti-parallel diode protecting the LED string from reverse voltage, wire solder pads for L and N.",
+ "ports": [
+  "AC_L",
+  "AC_N"
+ ],
+ "parts": [
+  {
+   "ref": "J1",
+   "mpn": "C9900007423",
+   "role": "L wire solder pad 1 (red wire), at right board edge",
+   "pins": {
+    "1": "AC_L"
+   },
+   "lcsc": "C9900007423",
+   "package": "TESTPOINT-TH_BD3.2"
+  },
+  {
+   "ref": "J2",
+   "mpn": "C9900007423",
+   "role": "L wire solder pad 2 (second pad per client drawing, strain relief)",
+   "pins": {
+    "1": "AC_L"
+   },
+   "lcsc": "C9900007423",
+   "package": "TESTPOINT-TH_BD3.2"
+  },
+  {
+   "ref": "R1",
+   "mpn": "MOF2WS-47KΩ±5% T",
+   "value": "47k 2W",
+   "role": "series dropper from L, limits LED current to 2.1 mA avg / 6.6 mA peak, dissipates 0.51 W half-wave (1.02 W worst single fault)",
+   "pins": {
+    "1": "AC_L",
+    "2": "V_R"
+   },
+   "lcsc": "C121703",
+   "rating": "2 W, 350 V max working voltage, non-flammable metal oxide film",
+   "package": "RES-TH_BD4.5-L11.5-P15.50-D0.7"
+  },
+  {
+   "ref": "D1",
+   "mpn": "C108355",
+   "value": "1N4007 1000V 1A DO-41",
+   "role": "series half-wave rectifier, blocks the negative half-cycle (325 V peak vs 1000 V VRRM); DO-41 chosen because its 8.7 mm pitch keeps >=3 mm between its HV anode and LV cathode pads (SMA pads are only 2.4 mm apart)",
+   "pins": {
+    "2": "V_R",
+    "1": "VLED"
+   },
+   "lcsc": "C108355",
+   "rating": "VRRM 1000 V, IF(AV) 1 A, IFSM 30 A",
+   "package": "DO-41_BD2.4-L4.7-P8.70-D0.9-RD"
+  },
+  {
+   "ref": "LED1",
+   "mpn": "XL-3216UBC",
+   "value": "BLUE 3216",
+   "role": "chip LED 1 of 4 in series, front side on 20 mm PCD",
+   "pins": {
+    "2": "VLED",
+    "1": "LED1_LED2"
+   },
+   "lcsc": "C965827",
+   "rating": "IF max 20 mA DC, VF 2.6-3.4 V, VR 5 V",
+   "package": "LED1206-RD_BLUE"
+  },
+  {
+   "ref": "LED2",
+   "mpn": "XL-3216UBC",
+   "value": "BLUE 3216",
+   "role": "chip LED 2 of 4 in series",
+   "pins": {
+    "2": "LED1_LED2",
+    "1": "LED2_LED3"
+   },
+   "lcsc": "C965827",
+   "rating": "IF max 20 mA DC, VF 2.6-3.4 V, VR 5 V",
+   "package": "LED1206-RD_BLUE"
+  },
+  {
+   "ref": "LED3",
+   "mpn": "XL-3216UBC",
+   "value": "BLUE 3216",
+   "role": "chip LED 3 of 4 in series",
+   "pins": {
+    "2": "LED2_LED3",
+    "1": "LED3_LED4"
+   },
+   "lcsc": "C965827",
+   "rating": "IF max 20 mA DC, VF 2.6-3.4 V, VR 5 V",
+   "package": "LED1206-RD_BLUE"
+  },
+  {
+   "ref": "LED4",
+   "mpn": "XL-3216UBC",
+   "value": "BLUE 3216",
+   "role": "chip LED 4 of 4 in series, cathode to N",
+   "pins": {
+    "2": "LED3_LED4",
+    "1": "AC_N"
+   },
+   "lcsc": "C965827",
+   "rating": "IF max 20 mA DC, VF 2.6-3.4 V, VR 5 V",
+   "package": "LED1206-RD_BLUE"
+  },
+  {
+   "ref": "D2",
+   "mpn": "C95872",
+   "value": "M7 1000V 1A",
+   "role": "anti-parallel across the LED string (anode AC_N, cathode VLED): clamps LED reverse voltage to one diode drop while D1 blocks",
+   "pins": {
+    "2": "AC_N",
+    "1": "VLED"
+   },
+   "lcsc": "C95872",
+   "rating": "VRRM 1000 V, IF(AV) 1 A",
+   "package": "SMA_L4.3-W2.6-LS5.2-RD"
+  },
+  {
+   "ref": "J3",
+   "mpn": "C9900007423",
+   "role": "N wire solder pad 1 (black wire), at right board edge",
+   "pins": {
+    "1": "AC_N"
+   },
+   "lcsc": "C9900007423",
+   "package": "TESTPOINT-TH_BD3.2"
+  },
+  {
+   "ref": "J4",
+   "mpn": "C9900007423",
+   "role": "N wire solder pad 2 (second pad per client drawing, strain relief)",
+   "pins": {
+    "1": "AC_N"
+   },
+   "lcsc": "C9900007423",
+   "package": "TESTPOINT-TH_BD3.2"
+  }
+ ],
+ "qa": [
+  {
+   "item": "LED peak current",
+   "formula": "(325 V - 4x2.9 V - 0.9 V) / 47 kOhm",
+   "result": "6.6 mA peak, 2.1 mA average, 3.3 mA rms (numeric half-wave integration)",
+   "limit": "<= 20 mA DC absolute maximum",
+   "source": "XL-3216UBC datasheet p.3 (IF max 20 mA); light/01_ELECTRICAL_REVIEW.md section 3",
+   "pass": true
+  },
+  {
+   "item": "R1 power",
+   "formula": "I_rms^2 x R = (3.3 mA)^2 x 47 kOhm",
+   "result": "0.51 W half-wave; 1.02 W if D1 fails short (full-wave)",
+   "limit": "<= 2 W rated at 70 C ambient",
+   "source": "CCO MOF datasheet p.13-1 (rated power at 70 C), p.13-2 Table-1",
+   "pass": true
+  },
+  {
+   "item": "R1 working voltage",
+   "formula": "V_rms across R1 = I_rms x R = 155 V; peak 312 V",
+   "result": "155 V rms continuous",
+   "limit": "<= 350 V max working voltage (MOF2WS)",
+   "source": "CCO MOF datasheet p.13-2 Table-1",
+   "pass": true
+  },
+  {
+   "item": "D1 reverse voltage",
+   "formula": "230 V x sqrt(2)",
+   "result": "325 V peak",
+   "limit": "<= 1000 V VRRM (margin 3x)",
+   "source": "MDD M7 datasheet p.1",
+   "pass": true
+  },
+  {
+   "item": "LED reverse voltage",
+   "formula": "D2 anti-parallel clamps LED string to -VF(D2) while D1 blocks",
+   "result": "<= 1.1 V reverse",
+   "limit": "<= 5 V absolute maximum",
+   "source": "XL-3216UBC datasheet p.3 (VR 5 V); MDD M7 p.1 (VF 1.1 V)",
+   "pass": true
+  },
+  {
+   "item": "Single-fault power",
+   "formula": "any downstream short leaves R1 limiting: full-wave P = 2 x 0.51 W",
+   "result": "1.02 W",
+   "limit": "<= 2 W rated; non-flammable coating",
+   "source": "CCO MOF datasheet p.13-1 (Nonflammable), light/01_ELECTRICAL_REVIEW.md section 3",
+   "pass": true
+  }
+ ],
+ "decisions": [
+  "Captain 2026-11-11: R1 = 47 kOhm MOF2WS 2 W (C121703) to match the prototype brightness class; 39 k 3 W was the alternative",
+  "Captain 2026-11-11: D2 used as anti-parallel protection diode across the LED string instead of a second series diode",
+  "Captain 2026-11-11: SMA M7 diodes (prototype package) rather than DO-41 1N4007 (NRND)",
+  "Wire pads: four single-pad test-point devices (two per wire) give free pad spacing for the 3 mm L-N clearance; no library wire-pad device exists",
+  "D1 = 1N4007-T DO-41 (C108355): SMA pad gap 2.4 mm cannot meet the 3 mm HV-LV clearance across the series diode; D2 stays M7 SMA (both pads LV)"
+ ],
+ "requirements": []
+}
