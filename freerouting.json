@@ -2,8 +2,8 @@
   "profile": {
     "id": "58385c35-85da-4744-8c50-cf60f9d56c87",
     "email": "",
-    "allow_telemetry": true,
-    "allow_contact": true
+    "allow_telemetry": false,
+    "allow_contact": false
   },
   "gui": {
     "enabled": false,

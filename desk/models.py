@@ -275,9 +275,11 @@ class ManufacturingReadinessReport:
     unconnected_nets: List[str] = field(default_factory=list)
     clearance_violations: int = 0
     short_circuits: int = 0
-    footprint_integrity_verified: bool = True
-    mechanical_fit_verified: bool = True
-    thermal_clearance_verified: bool = True
+    # Fail-closed: a check that was not performed is reported as not verified.
+    footprint_integrity_verified: bool = False
+    mechanical_fit_verified: bool = False
+    thermal_clearance_verified: bool = False
+    checks_not_performed: List[str] = field(default_factory=list)
     summary: str = ""
 
 # Serialization helpers

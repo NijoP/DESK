@@ -6,6 +6,7 @@
   python tools/desk.py rework [start|status|audit|plan|issues|approve|execute|report] rework existing PCB
   python tools/desk.py auth [configure|status|test]  secure credential vault management
   python tools/desk.py settings                      ecosystem provider health and readiness dashboard
+  python tools/desk.py doctor [--project <P>] [--json] check prerequisites (bridge, Java, Freerouting, CLIs, project binding) with fixes
   python tools/desk.py recover projects/<P>          list unfinished/dirty live operations and how to resolve each
   python tools/desk.py recover projects/<P> --clear  resolve dirty builds by running tools/clear_block.py for them (live)
   python tools/desk.py recover projects/<P> --mark-resolved <op_id> --reason "checked by hand"
@@ -168,7 +169,9 @@ if a[0] == "rework":
         # Step 1: Connect & Bind
         print("Checking EasyEDA Pro connection...")
         try:
-            binding = ECADConnectionManager.discover_project_identity(norm_proj)
+            _pj = os.path.join(norm_proj, "project.json")
+            _pref = json.load(open(_pj, encoding="utf-8")).get("window_id") if os.path.exists(_pj) else None
+            binding = ECADConnectionManager.discover_project_identity(norm_proj, preferred_window_id=_pref)
             session.window_id = binding.window_id
             session.pcb_uuid = binding.pcb_uuid
             session.sheet_uuid = binding.sheet_uuid
@@ -402,6 +405,10 @@ if a[0] == "settings":
     from desk.ui.settings import run_settings_cli
     run_settings_cli()
     sys.exit(0)
+
+if a[0] == "doctor":
+    from desk.doctor import main as doctor_main
+    sys.exit(doctor_main(a[1:]))
 
 if a[0] == "recover":
     proj = a[1]

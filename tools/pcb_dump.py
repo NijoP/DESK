@@ -3,6 +3,7 @@ Usage: python tools/pcb_dump.py projects/<product>   -> state/pcb_dump.json   (u
 This is the input for placement planning and for tools/pcb_check.py."""
 import sys, os, json
 from _common import ex, guard, load_project, check
+from desk.fsutil import atomic_write_json
 
 proj = sys.argv[1]
 P = load_project(proj)
@@ -18,6 +19,5 @@ for i in range(0, len(ids), 40):
   bbox:[b.minX-x,b.maxX-x,b.minY-y,b.maxY-y],
   pads:pads.map(p=>({num:p.getState_PadNumber(),dx:p.getState_X()-x,dy:p.getState_Y()-y,shape:p.getState_Pad(),rot:p.getState_Rotation(),net:p.getState_Net(),layer:p.getState_Layer()}))}; } return res;''' % json.dumps(chunk), window_id=P.get("window_id")))
     out.update(r); print(f"{len(out)}/{len(ids)}")
-os.makedirs(os.path.join(proj, "state"), exist_ok=True)
-json.dump(out, open(os.path.join(proj, "state", "pcb_dump.json"), "w"), indent=0)
+atomic_write_json(os.path.join(proj, "state", "pcb_dump.json"), out, indent=0)
 print("saved state/pcb_dump.json")

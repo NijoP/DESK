@@ -124,6 +124,114 @@ class TestOrchestrator(unittest.TestCase):
         self.assertIn("AGY route plan", res.output_text)
         self.assertIn("Pi route plan", res.output_text)
 
+    def test_07_fallback_does_not_leak_provider_model(self):
+        # A model name chosen for the first provider must never be passed to the fallback provider.
+        seen = {}
+
+        class RecordingAdapter(MockAdapter):
+            def execute(self, task):
+                seen[self.name] = task.preferred_model
+                return super().execute(task)
+
+        ProviderRegistry.register("agy", RecordingAdapter("agy", succeed=False))
+        ProviderRegistry.register("pi", RecordingAdapter("pi", succeed=True, output_text="pi ok"))
+
+        task = TaskRequest(task_type="fast", prompt="q", execution_level=1)
+        res = CapabilityRouter.dispatch(task)
+
+        self.assertTrue(res.success)
+        self.assertEqual(seen["agy"], "gemini-3.8-flash-low")
+        self.assertIsNone(seen["pi"])              # pi runs with its own default, not the Gemini name
+        self.assertIsNone(task.preferred_model)    # caller's request object is untouched
+
+    def test_08_tier_timeouts_applied_when_unset(self):
+        seen = {}
+
+        class RecordingAdapter(MockAdapter):
+            def execute(self, task):
+                seen[task.execution_level] = task.timeout_sec
+                return super().execute(task)
+
+        ProviderRegistry.register("agy", RecordingAdapter("agy"))
+        ProviderRegistry.register("pi", RecordingAdapter("pi"))
+
+        CapabilityRouter.dispatch(TaskRequest(prompt="q", execution_level=1))
+        CapabilityRouter.dispatch(TaskRequest(prompt="q", execution_level=2))
+        self.assertEqual(seen[1], 30.0)
+        self.assertEqual(seen[2], 90.0)
+
+        explicit = TaskRequest(prompt="q", execution_level=1, timeout_sec=7.5)
+        CapabilityRouter.dispatch(explicit)
+        self.assertEqual(seen[1], 7.5)
+
+    def test_09_l3_runs_providers_concurrently(self):
+        class SlowAdapter(MockAdapter):
+            def execute(self, task):
+                time.sleep(0.25)
+                return super().execute(task)
+
+        ProviderRegistry.register("agy", SlowAdapter("agy", output_text="A"))
+        ProviderRegistry.register("pi", SlowAdapter("pi", output_text="B"))
+
+        t0 = time.perf_counter()
+        res = CapabilityRouter.dispatch(TaskRequest(prompt="q", execution_level=3))
+        elapsed = time.perf_counter() - t0
+
+        self.assertTrue(res.success)
+        self.assertEqual(res.provider, "dual_consensus")
+        self.assertLess(elapsed, 0.45)  # sequential would be >= 0.5 s
+
+    def test_10_l4_uses_configured_frontier_model(self):
+        import os
+        seen = {}
+
+        class RecordingAdapter(MockAdapter):
+            def execute(self, task):
+                seen["model"] = task.preferred_model
+                return super().execute(task)
+
+        ProviderRegistry.register("agy", RecordingAdapter("agy"))
+        old = os.environ.get("DESK_FRONTIER_MODEL")
+        os.environ["DESK_FRONTIER_MODEL"] = "test-frontier-model"
+        try:
+            res = CapabilityRouter.dispatch(TaskRequest(prompt="q", execution_level=4))
+        finally:
+            if old is None:
+                os.environ.pop("DESK_FRONTIER_MODEL", None)
+            else:
+                os.environ["DESK_FRONTIER_MODEL"] = old
+        self.assertTrue(res.success)
+        self.assertEqual(seen["model"], "test-frontier-model")
+
+    def test_11_l4_falls_back_to_provider_reported_model(self):
+        import os
+
+        class HealthAdapter(MockAdapter):
+            def check_health(self):
+                h = super().check_health()
+                h.supported_models = ["gemini-3.8-flash-low", "gemini-3.8-pro"]
+                return h
+
+            def execute(self, task):
+                return TaskResult(task_id=task.task_id, success=True, provider="agy",
+                                  model=task.preferred_model, output_text="ok")
+
+        ProviderRegistry.register("agy", HealthAdapter("agy"))
+        os.environ.pop("DESK_FRONTIER_MODEL", None)
+        res = CapabilityRouter.dispatch(TaskRequest(prompt="q", execution_level=4))
+        self.assertTrue(res.success)
+        self.assertEqual(res.model, "gemini-3.8-pro")
+
+    def test_12_pi_command_is_argument_list_with_schema_in_system_prompt(self):
+        pi = PiAdapter(executable_path="pi")
+        task = TaskRequest(prompt='x" & calc.exe', output_schema={"type": "object"}, preferred_model="m")
+        cmd = pi.build_command(task)
+        self.assertIsInstance(cmd, list)
+        self.assertEqual(cmd[2], 'x" & calc.exe')  # passed verbatim as one argv entry, never via a shell
+        self.assertIn("--model", cmd)
+        self.assertIn("--system-prompt", cmd)
+        self.assertIn('"type": "object"', cmd[cmd.index("--system-prompt") + 1])
+
     def test_06_real_adapter_health_check(self):
         # Verify the real installed adapters do not throw unhandled exceptions
         agy = AGYAdapter()

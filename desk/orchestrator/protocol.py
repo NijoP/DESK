@@ -16,9 +16,11 @@ class TaskRequest:
     system_prompt: Optional[str] = None
     output_schema: Optional[Dict[str, Any]] = None
     execution_level: int = 1               # 0=Deterministic, 1=Fast, 2=Capable+Validated, 3=Dual-Review, 4=Frontier
-    timeout_sec: float = 60.0
+    timeout_sec: Optional[float] = None    # None = router applies the per-tier default (see router.tier_timeout)
     preferred_provider: Optional[str] = None # "agy", "pi", or None (auto)
     preferred_model: Optional[str] = None
+    thinking_level: Optional[str] = None   # "off" | "low" | "medium" | "high"; None = router applies tier default
+    requires_vision: bool = False          # task includes an image (board screenshot); router picks a vision model
     created_at: float = field(default_factory=time.time)
 
     def to_dict(self) -> Dict[str, Any]:

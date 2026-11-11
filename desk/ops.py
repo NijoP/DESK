@@ -139,19 +139,42 @@ def release_atomic_lock(lock_path: str, lock_id: str, pid: int) -> bool:
         return False
 
 
+LOCK_WRITE_GRACE_SEC = 2.0  # a lock file younger than this with no readable record is being written, not stale
+
+
 def acquire_atomic_lock(lock_path: str, rec: Dict[str, Any], force_unlock: bool = False, ttl: int = LOCK_TTL):
-    """Acquires lock file using atomic OS-level mutual exclusion with race-free reclamation."""
-    for attempt in range(5):
+    """Acquires lock file using atomic OS-level mutual exclusion with race-free reclamation.
+
+    The lock is created with O_EXCL and its record written immediately after. A
+    second acquirer that reads the file in that window sees an empty or partial
+    record. Such a record must not be treated as a dead holder: if the file is
+    younger than LOCK_WRITE_GRACE_SEC we wait and re-read instead of reclaiming.
+    """
+    for attempt in range(40):
         try:
             fd = os.open(lock_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
             with open(fd, "w", encoding="utf-8") as h:
                 json.dump(rec, h)
+                h.flush()
             return
         except FileExistsError:
+            info: Dict[str, Any] = {}
+            readable = False
             try:
                 with open(lock_path, "r", encoding="utf-8") as h:
                     info = json.load(h)
+                readable = isinstance(info, dict) and "pid" in info
             except Exception:
+                readable = False
+
+            if not readable and not force_unlock:
+                try:
+                    age = time.time() - os.path.getmtime(lock_path)
+                except OSError:
+                    continue  # vanished between our open and stat: retry the O_EXCL create
+                if age < LOCK_WRITE_GRACE_SEC:
+                    time.sleep(0.05)
+                    continue
                 info = {}
 
             holder_pid = info.get("pid", 0)
@@ -229,6 +252,9 @@ def write_op(
         })
     except BaseException as e:
         if rec.get("dirty"):
+            is_dirty = True
+        elif getattr(e, "possibly_mutated", False):
+            # A bridge timeout during a mutation: EasyEDA may have applied part of it.
             is_dirty = True
         elif isinstance(e, SystemExit):
             is_dirty = False

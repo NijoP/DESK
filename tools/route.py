@@ -1,5 +1,7 @@
 """Priority-Based Autonomous PCB Routing & Recovery Engine V2.
-Usage: python tools/route.py projects/<product> [--mode BALANCED] [--passes 30] [--recovery] [--dry]
+Usage: python tools/route.py projects/<product> [--mode BALANCED] [--passes 30] [--recovery] [--dry] [--force]
+
+--force   Launch the engine even when the pre-flight pin-escape congestion veto (> 1.0) trips.
 
 Supported Modes:
   FAST      - Fast execution, 12 passes, bounded optimization
@@ -16,7 +18,7 @@ Order of Execution:
 7. Physical Connectivity Verification: Pad-to-pad physical continuity check across all populated nets
 8. Routing Audit: Logs attempt metrics to state/route/routing_attempt.json and LEDGER.jsonl
 """
-import sys, os, json, subprocess, shutil, base64, time
+import sys, os, json, time, subprocess, shutil, base64
 from _common import ex, guard, load_project, check, S
 from desk.bridge import fetch_file
 from desk import ops
@@ -116,7 +118,12 @@ if recovery:
 
 # Phase 8: DSN export
 profiler.start_phase(8, category="IPC")
-dsn = fetch_file(G + 'const f=await eda.pcb_ManufactureData.getDsnFile("desk_route");', wd, window_id=P.get("window_id"))
+dsn = os.path.join(wd, "desk_route")
+if "--reuse-dsn" in args and os.path.exists(dsn):
+    # Reuse the last raw DSN export (operator-approved; only valid while placement/outline are unchanged since it was written)
+    print("DSN reuse: --reuse-dsn given, skipping EasyEDA export; using", dsn, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime(dsn))))
+else:
+    dsn = fetch_file(G + 'const f=await eda.pcb_ManufactureData.getDsnFile("desk_route");', wd, window_id=P.get("window_id"))
 print("DSN raw:", dsn, os.path.getsize(dsn), "B")
 profiler.end_phase()
 
@@ -146,15 +153,38 @@ tuned_dsn = DSNTuningEngine.tune_dsn(
     power_nets=power_nets,
     keepouts=plan.get("keepouts"),
     net_widths=custom_net_widths,
-    fine_pitch_width_mil=6.0,
-    fine_pitch_clearance_mil=5.0
+    fine_pitch_width_mil=5.0,    # DRC rule set: min track 0.127 mm
+    fine_pitch_clearance_mil=4.05  # DRC rule set: clearance 0.1016 mm (4.0 mil)
 )
+
+# Phase 9b: declare copper planes that exist on the real board (placement.json "planes") so the router
+# connects plane nets (GND / 3V3) with plane-access vias instead of routing every pin as a trace.
+for pl in plan.get("planes", []):
+    pts = " ".join(f"{x * MIL:.2f} {y * MIL:.2f}" for x, y in pl["polygon_mm"])
+    block = "    (plane %s (polygon %s 0 %s))" % (pl["net"], pl["layer"], pts) + chr(10)
+    marker = "\n  (placement"
+    i = tuned_dsn.find(marker)
+    j = tuned_dsn.rfind("\n  )", 0, i)  # closing paren of (structure ...)
+    if i < 0 or j < 0: raise SystemExit("STOP: cannot locate (structure) end for plane injection")
+    tuned_dsn = tuned_dsn[:j + 1] + block + tuned_dsn[j + 1:]
+    print("DSN plane: %s on %s (%d vertices)" % (pl["net"], pl["layer"], len(pl["polygon_mm"])))
 
 tuned_dsn_path = os.path.join(wd, "desk_route_tuned.dsn")
 with open(tuned_dsn_path, "w", encoding="utf-8") as f:
     f.write(tuned_dsn)
 print("DSN tuned ->", tuned_dsn_path)
 profiler.end_phase()
+
+# Phase 9c: pre-flight congestion veto. Pin-escape congestion is the ratio of perimeter needed
+# to escape every signal pad versus perimeter available; above ~1.0 the autorouter cannot
+# converge and will burn the whole pass/timeout budget. Fail fast here instead of in Java.
+escape_congestion = RoutabilityEvaluator.evaluate_pin_escape_congestion(dump)
+CONGESTION_VETO = 1.0
+print(f"Pin escape congestion: {escape_congestion:.3f} (veto above {CONGESTION_VETO:.2f})")
+if mode_cfg.run_congestion_analysis and escape_congestion > CONGESTION_VETO and "--force" not in args:
+    raise SystemExit(
+        f"STOP: pin escape congestion {escape_congestion:.3f} exceeds {CONGESTION_VETO:.2f}; "
+        "the engine will stall. Fix placement (spread high-pin-count parts) or rerun with --force.")
 
 if dry:
     print("Dry run completed. DSN prepared."); sys.exit(0)

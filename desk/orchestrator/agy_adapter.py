@@ -11,11 +11,23 @@ import subprocess
 from typing import Optional, Dict, Any, List
 from desk.orchestrator.protocol import TaskRequest, TaskResult, ProviderHealth
 
+_FALLBACK_TIMEOUT = 60.0
+
+
+def _resolve_executable(explicit: Optional[str]) -> str:
+    """Resolution order: explicit argument, DESK_AGY_PATH env var, PATH lookup."""
+    if explicit:
+        return explicit
+    env = os.environ.get("DESK_AGY_PATH", "").strip()
+    if env:
+        return env
+    return shutil.which("agy") or "agy"
+
+
 class AGYAdapter:
-    DEFAULT_EXE = r"C:\Users\HP\AppData\Local\agy\bin\agy.exe"
 
     def __init__(self, executable_path: Optional[str] = None):
-        self.exe = executable_path or shutil.which("agy") or (self.DEFAULT_EXE if os.path.exists(self.DEFAULT_EXE) else "agy")
+        self.exe = _resolve_executable(executable_path)
         self._cached_models: List[str] = []
         self._last_health_ts: float = 0.0
 
@@ -28,12 +40,12 @@ class AGYAdapter:
                 available=False,
                 cli_path=self.exe,
                 last_checked=t0,
-                status_message=f"Executable not found: {self.exe}"
+                status_message=f"Executable not found: {self.exe} (set DESK_AGY_PATH or add agy to PATH)"
             )
 
         try:
             cmd = [self.exe, "models"]
-            p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout_sec, shell=False)
+            p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout_sec, shell=False)
             if p.returncode == 0:
                 models = []
                 for line in p.stdout.splitlines():
@@ -71,20 +83,18 @@ class AGYAdapter:
         """Execute a task request non-interactively using agy.exe --print."""
         t0 = time.perf_counter()
         model = task.preferred_model or ("gemini-3.8-flash-high" if task.execution_level >= 2 else "gemini-3.8-flash-low")
+        timeout = task.timeout_sec or _FALLBACK_TIMEOUT
 
         cmd = [self.exe, "--print", task.prompt, "--model", model, "--output-format", "json"]
 
-        schema_file = None
         if task.output_schema:
             try:
-                # Write temp schema file
-                schema_str = json.dumps(task.output_schema)
-                cmd.extend(["--json-schema", schema_str])
+                cmd.extend(["--json-schema", json.dumps(task.output_schema)])
             except Exception:
                 pass
 
         try:
-            p = subprocess.run(cmd, capture_output=True, text=True, timeout=task.timeout_sec, shell=False)
+            p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout, shell=False)
             latency_ms = round((time.perf_counter() - t0) * 1000, 2)
 
             if p.returncode != 0:
@@ -132,7 +142,7 @@ class AGYAdapter:
                 output_text="",
                 latency_ms=latency_ms,
                 execution_level=task.execution_level,
-                error=f"Task timed out after {task.timeout_sec} seconds."
+                error=f"Task timed out after {timeout} seconds."
             )
         except Exception as e:
             latency_ms = round((time.perf_counter() - t0) * 1000, 2)

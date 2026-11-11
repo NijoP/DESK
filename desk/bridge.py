@@ -18,6 +18,15 @@ from dataclasses import dataclass, asdict
 if hasattr(sys.stdout, "buffer"):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
+class BridgeMutationTimeout(SystemExit):
+    """A mutating bridge call timed out: the board may be partially modified.
+
+    Subclasses SystemExit so CLI tools still exit with a clean message, while
+    `ops.write_op` can recognise it and journal the operation as dirty.
+    """
+    possibly_mutated = True
+
+
 @dataclass
 class BridgeSession:
     project_id: str
@@ -59,9 +68,8 @@ class SessionRegistry:
     def _write_persistent_cache(cls, port: int) -> None:
         try:
             path = cls._get_cache_path()
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump({"port": port, "timestamp": time.time(), "pid": os.getpid()}, f)
+            from desk.fsutil import atomic_write_json
+            atomic_write_json(path, {"port": port, "timestamp": time.time(), "pid": os.getpid()}, indent=None)
         except Exception:
             pass
 
@@ -257,8 +265,9 @@ def get_or_create_session(project_path: Optional[str] = None, window_id: Optiona
         target_win = _find_window_for_project(port, uuids)
         if target_win and p_path and os.path.exists(os.path.join(p_path, "project.json")):
             try:
+                from desk.fsutil import atomic_write_json
                 p_info["window_id"] = target_win
-                json.dump(p_info, open(os.path.join(p_path, "project.json"), "w", encoding="utf-8"), indent=1)
+                atomic_write_json(os.path.join(p_path, "project.json"), p_info, indent=1)
             except Exception:
                 pass
 
@@ -329,10 +338,11 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
 
         except (OSError, TimeoutError) as e:
             # Never blindly repeat a mutating operation on network/bridge timeout
-            if is_mutation and isinstance(e, TimeoutError):
+            if is_mutation and (isinstance(e, TimeoutError) or isinstance(e, socket.timeout)
+                                or "timed out" in str(e).lower()):
                 SessionRegistry.invalidate_session(project_path)
-                raise SystemExit(f"Mutation timeout: operation may have partially succeeded. "
-                                 f"Inspect PCB state before retrying. ({e})")
+                raise BridgeMutationTimeout(f"Mutation timeout: operation may have partially succeeded. "
+                                            f"Inspect PCB state before retrying. ({e})")
 
             # Auto-resolve window if lost
             if session.pcb_uuid or session.sheet_uuid:

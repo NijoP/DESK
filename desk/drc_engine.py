@@ -255,10 +255,19 @@ class DRCConvergenceLoop:
 
         approved = (len(violations) == 0 and len(unrouted_nets) == 0)
 
+        # This engine only consumes EasyEDA DRC output and the unrouted-net list. It has no
+        # evidence about footprint integrity, mechanical fit, thermal clearance, dangling
+        # tracks or orphan vias, so those are reported as NOT PERFORMED rather than passed.
+        not_performed = [
+            "footprint_integrity", "mechanical_fit", "thermal_clearance",
+            "disconnected_tracks", "orphan_vias",
+        ]
+
         summary = (
-            f"Manufacturing Readiness: {'APPROVED' if approved else 'REJECTED'}. "
+            f"Manufacturing Readiness: {'APPROVED (DRC + connectivity only)' if approved else 'REJECTED'}. "
             f"DRC Violations: {len(violations)} (Unconnected: {unconnected_smd}, Clearance: {clearance_errs}, Shorts: {short_errs}). "
-            f"Unrouted Populated Nets: {len(unrouted_nets)}."
+            f"Unrouted Populated Nets: {len(unrouted_nets)}. "
+            f"Checks not performed: {', '.join(not_performed)}."
         )
 
         return ManufacturingReadinessReport(
@@ -272,8 +281,9 @@ class DRCConvergenceLoop:
             unconnected_nets=unrouted_nets,
             clearance_violations=clearance_errs,
             short_circuits=short_errs,
-            footprint_integrity_verified=True,
-            mechanical_fit_verified=True,
-            thermal_clearance_verified=True,
+            footprint_integrity_verified=False,
+            mechanical_fit_verified=False,
+            thermal_clearance_verified=False,
+            checks_not_performed=not_performed,
             summary=summary
         )
