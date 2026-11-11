@@ -269,6 +269,30 @@
   "name": "BQ25170DSGR",
   "footprint": ""
  },
+ "C108355": {
+  "name": "1N4007-T",
+  "lcsc": "C108355",
+  "mfr": "1N4007-T",
+  "footprint": "DO-41_BD2.4-L4.7-P8.70-D0.9-RD",
+  "uuid": "a93a1d7520f04684aeac8b4b9a572e78",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
+ },
+ "C95872": {
+  "name": "M7_C95872",
+  "lcsc": "C95872",
+  "mfr": "M7",
+  "footprint": "SMA_L4.3-W2.6-LS5.2-RD",
+  "uuid": "590c967f6e1b4c1b83917b05751b5999",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
+ },
+ "C9900007423": {
+  "name": "TP-\u7ea2\u8272\u6d4b\u8bd5\u70b9",
+  "lcsc": "C9900007423",
+  "mfr": "TP-\u7ea2\u8272\u6d4b\u8bd5\u70b9",
+  "footprint": "TESTPOINT-TH_BD3.2",
+  "uuid": "9637c5ac7a364fe9a8450b54e66fa287",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
+ },
  "CL05A105KA5NQNC": {
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",
   "uuid": "115c3169541a48b3ba9c88523dfbcdee",
@@ -399,6 +423,14 @@
   "name": "ICS-43434_C5656610",
   "footprint": ""
  },
+ "KH-1.27PH180-1X8P-L7.2": {
+  "name": "KH-1.27PH180-1X8P-L7.2",
+  "lcsc": "C2938403",
+  "mfr": "KH-1.27PH180-1X8P-L7.2",
+  "footprint": "HDR-TH_8P-P1.27-V-M",
+  "uuid": "240c762487f241e4b0f2732e61d2db12",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
+ },
  "KT-0603B": {
   "name": "KT-0603B",
   "lcsc": "C2288",
@@ -426,6 +458,14 @@
   "uuid": "e5f40ffea669479c9e4ca82cf40a08cc",
   "name": "MAX98357AETE+T",
   "footprint": "TQFN-16"
+ },
+ "MOF2WS-47K\u03a9\u00b15% T": {
+  "name": "MOF2WS-47K\u03a9\u00b15% T",
+  "lcsc": "C121703",
+  "mfr": "MOF2WS-47K\u03a9\u00b15% T",
+  "footprint": "RES-TH_BD4.5-L11.5-P15.50-D0.7",
+  "uuid": "7d1afce20f814c1ba990ec25d3974dd9",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
  },
  "RT0402BRD07150KL": {
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",
@@ -648,5 +688,13 @@
   "uuid": "1b9e47154fde41f89b1ab0674cdb81f0",
   "name": "XFL4015-471MEC",
   "footprint": "IND-SMD_L4.0-W4.0"
+ },
+ "XL-3216UBC": {
+  "name": "XL-3216UBC",
+  "lcsc": "C965827",
+  "mfr": "XL-3216UBC",
+  "footprint": "LED1206-RD_BLUE",
+  "uuid": "fff502879e034626a2dad00d860fae53",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
  }
 }
