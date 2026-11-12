@@ -1,0 +1,29 @@
+# BOM: component families, component selection and verification, then human BOM approval
+Group(service: String, projectId: String, runId: String, ready: Boolean, profileHash: String, subject: String) -> (approved: Boolean, approvalRef: String) {
+  families = @include("__catalog/desk/component_family_resolver.weft")
+  families._should_flow = self.ready
+  families.service = self.service
+  families.projectId = self.projectId
+  families.runId = self.runId
+  families.profileHash = self.profileHash
+
+  components = @include("__catalog/desk_stages/components.weft")
+  components.service = self.service
+  components.projectId = self.projectId
+  components.runId = self.runId
+  components.ready = families.passed
+
+  approval = @include("__catalog/desk_stages/approve.weft")
+  approval._should_flow = components.passed
+  approval.service = self.service
+  approval.projectId = self.projectId
+  approval.runId = self.runId
+  approval.stage = "bom"
+  approval.title = "Approve the bill of materials?"
+  approval.subject = self.subject
+  approval.subjectHash = self.profileHash
+  approval.details = families.families
+
+  self.approved = approval.approved
+  self.approvalRef = approval.approvalRef
+}

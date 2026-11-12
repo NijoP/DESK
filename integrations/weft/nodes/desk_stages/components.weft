@@ -1,0 +1,40 @@
+# Components: search, identity, verification and BOM generation for the families the profile requires
+Group(service: String, projectId: String, runId: String, ready: Boolean) -> (passed: Boolean) {
+  search = @include("__catalog/desk/component_search.weft")
+  search._should_flow = self.ready
+  search.service = self.service
+  search.projectId = self.projectId
+  search.runId = self.runId
+
+  resolve = @include("__catalog/desk/mpn_resolver.weft")
+  resolve._should_flow = search.passed
+  resolve.service = self.service
+  resolve.projectId = self.projectId
+  resolve.runId = self.runId
+
+  datasheet = @include("__catalog/desk/datasheet_verifier.weft")
+  datasheet._should_flow = resolve.passed
+  datasheet.service = self.service
+  datasheet.projectId = self.projectId
+  datasheet.runId = self.runId
+
+  verify = @include("__catalog/desk/component_verifier.weft")
+  verify._should_flow = datasheet.passed
+  verify.service = self.service
+  verify.projectId = self.projectId
+  verify.runId = self.runId
+
+  alternatives = @include("__catalog/desk/alternative_finder.weft")
+  alternatives._should_flow = verify.passed
+  alternatives.service = self.service
+  alternatives.projectId = self.projectId
+  alternatives.runId = self.runId
+
+  bom = @include("__catalog/desk/bom_generator.weft")
+  bom._should_flow = alternatives.passed
+  bom.service = self.service
+  bom.projectId = self.projectId
+  bom.runId = self.runId
+
+  self.passed = bom.passed
+}

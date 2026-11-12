@@ -1,0 +1,36 @@
+# DeskDesignProfileCompiler 1.0.0: Compile the engineering design profile and its rule set for the classified domain.
+Group(service: String, projectId: String, runId: String, requirementsHash: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], profileHash: String, profileStatus: String, enforcedRuleCount: Number, advisoryRuleCount: Number) {
+  # Generated from desk/weft/contracts.py. Engine: desk.domain_intelligence.profile_compiler.compile_profile
+  type DeskDesignProfileCompilerEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { profileHash: String, profileStatus: String, enforcedRuleCount: Number, advisoryRuleCount: Number, .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskDesignProfileCompiler"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    requirementsHash: self.requirementsHash
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskDesignProfileCompilerEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.profileHash = checked.value.outputs.profileHash
+  self.profileStatus = checked.value.outputs.profileStatus
+  self.enforcedRuleCount = checked.value.outputs.enforcedRuleCount
+  self.advisoryRuleCount = checked.value.outputs.advisoryRuleCount
+}

@@ -1,0 +1,35 @@
+# DeskPowerDistributionAnalyzer 1.0.0: Derive minimum trace width (IPC-2221) for every current limit in the compiled profile. Values are computed, never supplied.
+Group(service: String, projectId: String, runId: String, profileHash: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], netCount: Number, widestTraceMil: Number, report: JsonDict) {
+  # Generated from desk/weft/contracts.py. Engine: desk.ipc.trace_width_mil
+  type DeskPowerDistributionAnalyzerEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { netCount: Number, widestTraceMil: Number, report: JsonDict, .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskPowerDistributionAnalyzer"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    profileHash: self.profileHash
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskPowerDistributionAnalyzerEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.netCount = checked.value.outputs.netCount
+  self.widestTraceMil = checked.value.outputs.widestTraceMil
+  self.report = checked.value.outputs.report
+}

@@ -1,0 +1,31 @@
+# DeskManufacturingVerifier 0.1.0: Check BOM, pick-and-place and Gerber consistency. [UNAVAILABLE, fails closed: not wired into the node service yet]
+Group(service: String, projectId: String, runId: String) -> (passed: Boolean, blocking: List[String], evidence: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: desk.release
+  type DeskManufacturingVerifierEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: JsonDict,
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskManufacturingVerifier"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskManufacturingVerifierEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+}

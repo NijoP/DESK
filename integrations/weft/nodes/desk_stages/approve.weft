@@ -1,0 +1,31 @@
+# Human approval of one engineering subject, recorded as a DESK approval record bound to the subject hash
+Group(service: String, projectId: String, runId: String, stage: String, title: String, subject: String, subjectHash: String, details: List[String]) -> (approved: Boolean, approvalRef: String) {
+  # The run pauses here and resumes when the answer arrives.
+  review = HumanQuery {
+    title: self.title
+    description: "Approve to let DESK continue. Reject to stop this run."
+    fields: [
+      { "kind": "display", "key": "subject" },
+      { "kind": "display", "key": "subjectHash" },
+      { "kind": "display", "key": "details" },
+      { "kind": "approve_reject", "key": "decision" }
+    ]
+    subject: self.subject
+    subjectHash: self.subjectHash
+    details: self.details
+  }
+  approvedWord = Text { _should_flow: review.decisionApproved, value: "approved" }
+  rejectedWord = Text { _should_flow: review.decisionRejected, value: "rejected" }
+  decision = FirstInOrder { approved: approvedWord.value, rejected: rejectedWord.value }
+
+  record = @include("__catalog/desk/approval_recorder.weft")
+  record.service = self.service
+  record.projectId = self.projectId
+  record.runId = self.runId
+  record.stage = self.stage
+  record.decision = decision.value
+  record.subjectHash = self.subjectHash
+
+  self.approved = record.passed
+  self.approvalRef = record.approvalRef
+}

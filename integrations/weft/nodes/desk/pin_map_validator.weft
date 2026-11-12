@@ -1,0 +1,31 @@
+# DeskPinMapValidator 0.1.0: Lint block specs: every pin mapped, QA computed. [UNAVAILABLE, fails closed: not wired into the node service yet]
+Group(service: String, projectId: String, runId: String) -> (passed: Boolean, blocking: List[String], evidence: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: desk.spec.lint
+  type DeskPinMapValidatorEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: JsonDict,
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskPinMapValidator"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskPinMapValidatorEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+}

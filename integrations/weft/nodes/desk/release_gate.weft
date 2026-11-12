@@ -1,0 +1,36 @@
+# DeskReleaseGate 1.0.0: Confirm that manufacturing release is allowed: quality gate approved and a human manufacturing approval recorded for this profile.
+Group(service: String, projectId: String, runId: String, profileHash: String, evidenceRef: String, approvalRef: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], releaseAllowed: Boolean, approvalRef: String) {
+  # Generated from desk/weft/contracts.py. Engine: desk.weft.store.RecordStore.find_approval
+  type DeskReleaseGateEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { releaseAllowed: Boolean, approvalRef: String, .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskReleaseGate"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    profileHash: self.profileHash
+    evidenceRef: self.evidenceRef
+    approvalRef: self.approvalRef
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskReleaseGateEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.releaseAllowed = checked.value.outputs.releaseAllowed
+  self.approvalRef = checked.value.outputs.approvalRef
+}

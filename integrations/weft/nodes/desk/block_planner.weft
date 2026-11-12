@@ -1,0 +1,31 @@
+# DeskBlockPlanner 0.1.0: Plan schematic blocks. [UNAVAILABLE, fails closed: block planning is a manual DESK step; there is no planner engine]
+Group(service: String, projectId: String, runId: String) -> (passed: Boolean, blocking: List[String], evidence: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: BLOCK_PLAN.md (manual)
+  type DeskBlockPlannerEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: JsonDict,
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskBlockPlanner"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskBlockPlannerEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+}

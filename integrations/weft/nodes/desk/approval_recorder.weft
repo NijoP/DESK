@@ -1,0 +1,37 @@
+# DeskApprovalRecorder 1.0.0: Record a human decision taken in a Weft HumanQuery as a DESK approval record bound to a subject hash.
+Group(service: String, projectId: String, runId: String, stage: String, decision: String, subjectHash: String, note: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], approvalRef: String, approved: Boolean) {
+  # Generated from desk/weft/contracts.py. Engine: desk.weft.store.RecordStore.put_approval
+  type DeskApprovalRecorderEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { approvalRef: String, approved: Boolean, .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskApprovalRecorder"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    stage: self.stage
+    decision: self.decision
+    subjectHash: self.subjectHash
+    note?: self.note
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskApprovalRecorderEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.approvalRef = checked.value.outputs.approvalRef
+  self.approved = checked.value.outputs.approved
+}

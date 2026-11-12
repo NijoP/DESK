@@ -1,0 +1,5 @@
+[package]
+name = "desk_requirement_to_profile"
+id = "3b1f6c1e-6f0a-4d0e-9a51-7a0d5c9e1a01"
+version = "0.1.0"
+description = "DESK: client requirements to an approved engineering design profile"

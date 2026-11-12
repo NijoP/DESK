@@ -1,0 +1,28 @@
+# Verification: physical connectivity, DRC, thermal and manufacturing checks on the routed board
+Group(service: String, projectId: String, runId: String, ready: Boolean) -> (passed: Boolean) {
+  connectivity = @include("__catalog/desk/connectivity_verifier.weft")
+  connectivity._should_flow = self.ready
+  connectivity.service = self.service
+  connectivity.projectId = self.projectId
+  connectivity.runId = self.runId
+
+  drc = @include("__catalog/desk/drc_analyzer.weft")
+  drc._should_flow = connectivity.passed
+  drc.service = self.service
+  drc.projectId = self.projectId
+  drc.runId = self.runId
+
+  thermal = @include("__catalog/desk/thermal_analyzer.weft")
+  thermal._should_flow = drc.passed
+  thermal.service = self.service
+  thermal.projectId = self.projectId
+  thermal.runId = self.runId
+
+  manufacturing = @include("__catalog/desk/manufacturing_verifier.weft")
+  manufacturing._should_flow = thermal.passed
+  manufacturing.service = self.service
+  manufacturing.projectId = self.projectId
+  manufacturing.runId = self.runId
+
+  self.passed = manufacturing.passed
+}

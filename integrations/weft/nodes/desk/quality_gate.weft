@@ -1,0 +1,36 @@
+# DeskQualityGate 1.0.0: Evaluate DESK's hard acceptance gates from recorded verification evidence. Missing or stale evidence fails closed.
+Group(service: String, projectId: String, runId: String, profileHash: String, evidenceRef: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], approved: Boolean, totalScore: Number, failures: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: desk.quality.QualityGateEvaluator.evaluate
+  type DeskQualityGateEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { approved: Boolean, totalScore: Number, failures: List[String], .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskQualityGate"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    profileHash: self.profileHash
+    evidenceRef: self.evidenceRef
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskQualityGateEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.approved = checked.value.outputs.approved
+  self.totalScore = checked.value.outputs.totalScore
+  self.failures = checked.value.outputs.failures
+}
