@@ -4,9 +4,9 @@ These are real end-to-end runs of DESK against a live EasyEDA Pro session, with 
 Each run keeps its frozen requirements, timing, failure register, reviewer analysis and output files, so
 the results can be checked rather than taken on trust.
 
-| Run | Board | Builder | Reviewer | Benchmark verdict | After remediation |
+| Run | Board | Builder | Reviewer | Graded benchmark verdict | Current board |
 |---|---|---|---|---|---|
-| [`esp32-s3-plotus/`](esp32-s3-plotus/) | ESP32-S3 development board, 2 layers, 74 × 44 mm | Claude Opus 5.5 driving DESK | Claude Sonnet examiner (separate session) | **FAIL**, scored 50/100 | EasyEDA DRC **0 errors** (post-benchmark, not graded) |
+| [`esp32-s3-plotus/`](esp32-s3-plotus/) | ESP32-S3 development board, 2 layers, 74 × 44 mm | Claude Opus 5.5 driving DESK | Claude Sonnet examiner (separate session) | **FAIL**, scored 50/100 | ✅ **EasyEDA DRC 0 errors**, all 43 nets connected (fixed after the benchmark) |
 
 ---
 
@@ -91,16 +91,19 @@ Deviations from the frozen text, all recorded:
 | ![schematic](esp32-s3-plotus/images/sch_overview_v2.png) | ![placement](esp32-s3-plotus/images/placement_v4_neat.png) | ![copper](esp32-s3-plotus/images/copper_final.png) |
 
 ## 4. Benchmark results (graded run)
+
+> **Current status:** the board now passes EasyEDA DRC with **0 errors** (see §7). The table below keeps the
+> graded result from when the clock stopped and adds the board's current state in the last column.
 Clock ran from 04:50:28 to 06:33:18 IST: **102.8 of 225 minutes**. It stopped early because Stage 4 failed a hard
 gate.
 
-| Stage | Budget | Used | Builder result | Reviewer result |
-|---|---:|---:|---|---|
-| 1 Schematic | 45 | 28.3 | PASS (DESK verify and lint pass; EasyEDA ERC 0 errors) | PASS with caveats (1 ERC warning not itemised) |
-| 2 Placement | 45 | 11.9 | PASS_WITH_DEVIATION | NOT FULLY MET: C5 is 2.7 mm from the module power pin (limit 2.0 mm), no rounded corners, DESK placement check `passed=false` |
-| 3 Routing | 90 | 38.1 | PASS_WITH_DEVIATION: 42/43 nets, 0 clearance, 0 short; GND left to the pours | NOT FULLY MET: GND gate moved to Stage 4; USB not impedance-controlled; test-point stubs |
-| 4 Copper | 30 | 23.3 | **FAIL**: 5 GND connection errors | **FAIL** |
-| 5 Manufacturing | 15 | 0 | Not started (stop rule) | NOT STARTED |
+| Stage | Budget | Used | Builder result | Reviewer result | Current board (after fixes) |
+|---|---:|---:|---|---|---|
+| 1 Schematic | 45 | 28.3 | PASS (DESK verify and lint pass; EasyEDA ERC 0 errors) | PASS with caveats (1 ERC warning not itemised) | PASS |
+| 2 Placement | 45 | 11.9 | PASS_WITH_DEVIATION | NOT FULLY MET: C5 is 2.7 mm from the module power pin (limit 2.0 mm), no rounded corners, DESK placement check `passed=false` | Unchanged deviations: C5 2.7 mm, no rounded corners |
+| 3 Routing | 90 | 38.1 | PASS_WITH_DEVIATION: 42/43 nets, 0 clearance, 0 short; GND left to the pours | NOT FULLY MET: GND gate moved to Stage 4; USB not impedance-controlled; test-point stubs | ✅ 43/43 nets connected, 0 clearance, 0 short |
+| 4 Copper | 30 | 23.3 | **FAIL**: 5 GND connection errors | **FAIL** | ✅ **DRC 0 errors**, GND fully connected |
+| 5 Manufacturing | 15 | 0 | Not started (stop rule) | NOT STARTED | Rev A files exported (§8); release preflight not yet run |
 
 - **Verdict:** **FAIL**. The builder and the reviewer agree.
 - **Reviewer's production-readiness score:** **50/100**:

@@ -162,15 +162,18 @@ DESK's first timed end-to-end run against a live EasyEDA Pro project. Full recor
 - **Setup:** Claude Opus 5.5 drove DESK from frozen requirements to an ESP32-S3-WROOM-1 dev board (2 layers,
   74 × 44 mm, 38 parts). It had a 225-minute budget split by stage (45 / 45 / 90 / 30 / 15). A separate Claude
   Sonnet examiner graded the run independently.
-- **Benchmark verdict: FAIL**, scored 50/100 by the examiner, with 102.8 minutes used:
+- **Current board status: EasyEDA DRC 0 errors.** The 5 GND opens are fixed and all 43 nets are connected.
+  Revision A output files have been exported.
+- **Graded benchmark verdict: FAIL**, scored 50/100 by the examiner, with 102.8 minutes used. The fixes came after
+  the clock stopped, so they do not change the graded result.
 
-  | Stage | Result |
-  |---|---|
-  | Schematic | PASS |
-  | Placement | Pass with deviations |
-  | Routing | Pass with deviations |
-  | Copper | **FAIL**: 5 GND opens |
-  | Manufacturing | Not started (stop rule) |
+  | Stage | Graded benchmark (clock stopped 06:33) | Current board (after fixes) |
+  |---|---|---|
+  | Schematic | PASS | PASS |
+  | Placement | Pass with deviations | Pass with deviations (C5 is 2.7 mm from the module power pin; no rounded corners) |
+  | Routing | Pass with deviations | ✅ 43/43 nets connected, 0 clearance, 0 short |
+  | Copper | **FAIL**: 5 GND opens | ✅ **Fixed: DRC 0 errors**, GND fully connected |
+  | Manufacturing | Not started (stop rule) | Rev A Gerber, BOM with LCSC, CPL, schematic PDF and `.epro` exported; release preflight not yet run |
 
 - **Human help:** a window reconnect before the clock, an *Apply* click in Import Changes, and approval to
   download Freerouting.
