@@ -1,0 +1,43 @@
+{"id": "L-0001", "ts": "2026-11-12T16:24:01", "type": "decision", "text": "Archetype half_bridge_converter accepted (classifier REVIEW_REQUIRED: close candidate buck_converter). LV half-bridge dev prototype; bucks are auxiliary. Overlays kept as composed by DESK incl. mains_safety_isolation and motor_drive (conservative; mains rules evaluate N/A, no mains nets). No mains/HV net on rev A.", "source": "desk.py domains validate (projects/UPS_1000/domain_validate.json)"}
+{"id": "L-0002", "ts": "2026-11-12T16:34:17", "type": "built", "text": "built at (100,3200) size 920x760, 9 parts", "block": "01_PWR_IN", "spec_hash": "ac859729abf9"}
+{"id": "L-0003", "ts": "2026-11-12T16:34:20", "type": "verified", "text": "live netlist == spec (9 parts); sheet 9 parts / 4 nets", "block": "01_PWR_IN", "spec_hash": "ac859729abf9"}
+{"id": "L-0004", "ts": "2026-11-12T16:34:56", "type": "built", "text": "built at (1170,3200) size 920x1255, 17 parts", "block": "02_AUX_12V", "spec_hash": "94a6685daef2"}
+{"id": "L-0005", "ts": "2026-11-12T16:34:59", "type": "verified", "text": "live netlist == spec (17 parts); sheet 26 parts / 12 nets", "block": "02_AUX_12V", "spec_hash": "94a6685daef2"}
+{"id": "L-0006", "ts": "2026-11-12T16:35:20", "type": "built", "text": "built at (2240,3200) size 1344x735, 13 parts", "block": "03_AUX_5V_3V3", "spec_hash": "b2d3e8caaa19"}
+{"id": "L-0007", "ts": "2026-11-12T16:35:22", "type": "verified", "text": "live netlist == spec (13 parts); sheet 39 parts / 17 nets", "block": "03_AUX_5V_3V3", "spec_hash": "b2d3e8caaa19"}
+{"id": "L-0008", "ts": "2026-11-12T16:35:56", "type": "built", "text": "built at (3734,3200) size 2188x1373, 19 parts", "block": "04_MCU", "spec_hash": "7fc039b8c6b9"}
+{"id": "L-0009", "ts": "2026-11-12T16:36:00", "type": "verified", "text": "live netlist == spec (19 parts); sheet 58 parts / 37 nets", "block": "04_MCU", "spec_hash": "7fc039b8c6b9"}
+{"id": "L-0010", "ts": "2026-11-12T16:36:08", "type": "built", "text": "built at (100,1677) size 1032x493, 5 parts", "block": "05_CAN", "spec_hash": "824db10f838b"}
+{"id": "L-0011", "ts": "2026-11-12T16:36:12", "type": "verified", "text": "live netlist == spec (5 parts); sheet 63 parts / 39 nets", "block": "05_CAN", "spec_hash": "824db10f838b"}
+{"id": "L-0012", "ts": "2026-11-12T16:36:58", "type": "built", "text": "built at (1282,1677) size 1349x1158, 21 parts", "block": "06_GATE_DRV", "spec_hash": "4575e7dc5146"}
+{"id": "L-0013", "ts": "2026-11-12T16:37:02", "type": "verified", "text": "live netlist == spec (21 parts); sheet 84 parts / 49 nets", "block": "06_GATE_DRV", "spec_hash": "4575e7dc5146"}
+{"id": "L-0014", "ts": "2026-11-12T16:37:35", "type": "built", "text": "built at (2781,1677) size 2342x618, 18 parts", "block": "07_HALF_BRIDGE", "spec_hash": "25c0327d0e4e"}
+{"id": "L-0015", "ts": "2026-11-12T16:37:39", "type": "verified", "text": "live netlist == spec (18 parts); sheet 102 parts / 52 nets", "block": "07_HALF_BRIDGE", "spec_hash": "25c0327d0e4e"}
+{"id": "L-0016", "ts": "2026-11-12T16:38:09", "type": "built", "text": "built at (100,369) size 920x1151, 15 parts", "block": "08_PROTECTION", "spec_hash": "7bd4ad0b51c6"}
+{"id": "L-0017", "ts": "2026-11-12T16:38:12", "type": "verified", "text": "live netlist == spec (15 parts); sheet 117 parts / 56 nets", "block": "08_PROTECTION", "spec_hash": "7bd4ad0b51c6"}
+{"id": "L-0018", "ts": "2026-11-12T16:38:24", "type": "built", "text": "built at (1170,369) size 920x890, 6 parts", "block": "09_FAN_IO", "spec_hash": "75013776c2d9"}
+{"id": "L-0019", "ts": "2026-11-12T16:38:26", "type": "verified", "text": "live netlist == spec (6 parts); sheet 123 parts / 58 nets", "block": "09_FAN_IO", "spec_hash": "75013776c2d9"}
+{"id": "L-0020", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (9 parts); sheet 123 parts / 58 nets", "block": "01_PWR_IN", "spec_hash": "ac859729abf9"}
+{"id": "L-0021", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (17 parts); sheet 123 parts / 58 nets", "block": "02_AUX_12V", "spec_hash": "94a6685daef2"}
+{"id": "L-0022", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (13 parts); sheet 123 parts / 58 nets", "block": "03_AUX_5V_3V3", "spec_hash": "b2d3e8caaa19"}
+{"id": "L-0023", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (19 parts); sheet 123 parts / 58 nets", "block": "04_MCU", "spec_hash": "7fc039b8c6b9"}
+{"id": "L-0024", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (5 parts); sheet 123 parts / 58 nets", "block": "05_CAN", "spec_hash": "824db10f838b"}
+{"id": "L-0025", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (21 parts); sheet 123 parts / 58 nets", "block": "06_GATE_DRV", "spec_hash": "4575e7dc5146"}
+{"id": "L-0026", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (18 parts); sheet 123 parts / 58 nets", "block": "07_HALF_BRIDGE", "spec_hash": "25c0327d0e4e"}
+{"id": "L-0027", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (15 parts); sheet 123 parts / 58 nets", "block": "08_PROTECTION", "spec_hash": "7bd4ad0b51c6"}
+{"id": "L-0028", "ts": "2026-11-12T16:38:34", "type": "verified", "text": "live netlist == spec (6 parts); sheet 123 parts / 58 nets", "block": "09_FAN_IO", "spec_hash": "75013776c2d9"}
+{"id": "L-0029", "ts": "2026-11-12T16:51:39", "type": "placement_freeze", "text": "Placement frozen with SHA-1 ee2316f7cd5e. Routability score: 0.67, crossings: 166, wirelength: 3492.9 mm.", "source": "tools/pcb_check.py --freeze"}
+{"id": "L-0030", "ts": "2026-11-12T16:57:12", "type": "placement_freeze", "text": "Placement frozen with SHA-1 21abfa5d1032. Routability score: 0.67, crossings: 166, wirelength: 3500.5 mm.", "source": "tools/pcb_check.py --freeze"}
+{"id": "L-0031", "ts": "2026-11-12T16:57:30", "type": "decision", "text": "Stackup deviation: L3 (Inner2) = second GND plane instead of client's 'DC power distribution'. 10 A VBUS/SW/PHASE need >=3.62 mm 2oz-outer copper (desk.ipc) and 13x12-mil vias per layer change; a 1 oz inner VBUS plane would need 18.8 mm width-equivalent and puts 58 V under logic. Power distribution on L1 polygons + L4 traces; L2+L3 GND give continuous return paths (ROUTE-RETURN-027).", "source": "live-test/ups-1000/builder-records/conductor_sizing.txt"}
+{"id": "L-0032", "ts": "2026-11-12T17:04:16", "type": "placement_freeze", "text": "Placement frozen with SHA-1 5807858cff02. Routability score: 0.70, crossings: 151, wirelength: 3466.7 mm.", "source": "tools/pcb_check.py --freeze"}
+{"id": "L-0033", "ts": "2026-11-12T17:24:10", "type": "drc_convergence", "text": "DRC run: 349 violations. Unconnected: 0, Clearance: 0, Shorts: 0. Failed nets: 0. Status: REWORK_REQUIRED.", "source": "tools/drc.py"}
+{"id": "L-0034", "ts": "2026-11-12T17:24:26", "type": "drc_convergence", "text": "DRC run: 349 violations. Unconnected: 0, Clearance: 0, Shorts: 0. Failed nets: 0. Status: REWORK_REQUIRED.", "source": "tools/drc.py"}
+{"id": "L-0035", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (9 parts); sheet 123 parts / 58 nets", "block": "01_PWR_IN", "spec_hash": "388c82167bc2"}
+{"id": "L-0036", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (17 parts); sheet 123 parts / 58 nets", "block": "02_AUX_12V", "spec_hash": "94a6685daef2"}
+{"id": "L-0037", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (13 parts); sheet 123 parts / 58 nets", "block": "03_AUX_5V_3V3", "spec_hash": "b2d3e8caaa19"}
+{"id": "L-0038", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (19 parts); sheet 123 parts / 58 nets", "block": "04_MCU", "spec_hash": "7fc039b8c6b9"}
+{"id": "L-0039", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (5 parts); sheet 123 parts / 58 nets", "block": "05_CAN", "spec_hash": "824db10f838b"}
+{"id": "L-0040", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (21 parts); sheet 123 parts / 58 nets", "block": "06_GATE_DRV", "spec_hash": "4575e7dc5146"}
+{"id": "L-0041", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (18 parts); sheet 123 parts / 58 nets", "block": "07_HALF_BRIDGE", "spec_hash": "25c0327d0e4e"}
+{"id": "L-0042", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (15 parts); sheet 123 parts / 58 nets", "block": "08_PROTECTION", "spec_hash": "7bd4ad0b51c6"}
+{"id": "L-0043", "ts": "2026-11-12T17:25:01", "type": "verified", "text": "live netlist == spec (6 parts); sheet 123 parts / 58 nets", "block": "09_FAN_IO", "spec_hash": "75013776c2d9"}

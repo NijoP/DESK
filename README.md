@@ -16,8 +16,8 @@ Requirements in, verified and manufacturable boards out, with the physics done b
 Developed by Tusk Innovations Global Pvt Ltd. Pure Python standard library, no pip packages. The one exception is
 the optional API-only copper fill, which needs `shapely`.
 
-**Live test:** a timed ESP32-S3 board benchmark with independent review, its graded result and revision A output
-files. See [`live-test/`](live-test/README.md).
+**Performance metrics:** a timed ESP32-S3 board build in a live EasyEDA Pro project: 66.7 of 225 minutes,
+DRC 0, 43/43 nets, full manufacturing package. See [`live-test/`](live-test/README.md).
 
 ---
 
@@ -186,50 +186,64 @@ Working on an existing board rather than a new one: `python desk.py rework start
 
 ---
 
-## Live test: ESP32-S3 development board (timed benchmark, 2026-11-12)
+## Performance metrics: ESP32-S3 live test (2026-11-12)
 
-DESK's first timed end-to-end run against a live EasyEDA Pro project. Full record:
-[`live-test/`](live-test/README.md).
+A timed end-to-end run of DESK against a live EasyEDA Pro project:
+- **Board:** an ESP32-S3-WROOM-1 dev board, 2 layers, 74 × 44 mm, 40 parts, 43 nets.
+- **Starting point:** built from an empty schematic and PCB under frozen requirements.
+- **Builder:** Claude Opus 5.5 driving DESK (`main` at 2c9de1a).
+- **Reviewer:** a separate Claude Sonnet examiner.
 
-- **Setup:** Claude Opus 5.5 drove DESK from frozen requirements to an ESP32-S3-WROOM-1 dev board (2 layers,
-  74 × 44 mm, 38 parts). It had a 225-minute budget split by stage (45 / 45 / 90 / 30 / 15). A separate Claude
-  Sonnet examiner graded the run independently.
-- **Current board status: EasyEDA DRC 0 errors.** The 5 GND opens are fixed and all 43 nets are connected.
-  Revision A output files have been exported.
-- **Graded benchmark verdict: FAIL**, scored 50/100 by the examiner, with 102.8 minutes used. The fixes came after
-  the clock stopped, so they do not change the graded result.
+Full record: [`live-test/`](live-test/README.md).
 
-  | Stage | Graded benchmark (clock stopped 06:33) | Current board (after fixes) |
-  |---|---|---|
-  | Schematic | PASS | PASS |
-  | Placement | Pass with deviations | Pass with deviations (C5 is 2.7 mm from the module power pin; no rounded corners) |
-  | Routing | Pass with deviations | ✅ 43/43 nets connected, 0 clearance, 0 short |
-  | Copper | **FAIL**: 5 GND opens | ✅ **Fixed: DRC 0 errors**, GND fully connected |
-  | Manufacturing | Not started (stop rule) | Rev A Gerber, BOM with LCSC, CPL, schematic PDF and `.epro` exported; release preflight not yet run |
+### Time (monotonic clock, 225-minute budget, no borrowing between stages)
+| Stage | Budget (min) | Used (min) | Share of budget |
+|---|---:|---:|---:|
+| 1 Schematic | 45 | 11.2 | 25 % |
+| 2 Placement | 45 | 12.3 | 27 % |
+| 3 Routing | 90 | 33.0 | 37 % |
+| 4 Copper | 30 | 3.1 | 10 % |
+| 5 Manufacturing | 15 | 6.4 | 42 % |
+| **Total** | **225** | **66.7** | **30 %** |
 
-- **Human help:** a window reconnect before the clock, an *Apply* click in Import Changes, and approval to
-  download Freerouting.
-- **After the benchmark (not graded):** EasyEDA DRC went from 5 errors to **0**. Revision A Gerber, schematic PDF,
-  BOM with LCSC numbers, CPL and the `.epro` project are in
-  [`live-test/esp32-s3-plotus/manufacturing-revA/`](live-test/esp32-s3-plotus/manufacturing-revA/). The board is
-  not production-released.
-- **DESK gained from the run:**
-  - API-only GND planes (`tools/copper_fill.py`), needed because EasyEDA's pour rebuild cannot be driven through
-    the API in Pro 3.2;
-  - explicit via links in `tools/stitch_orphans.py`;
-  - refreshed library entries.
-- **Defects it exposed:** the DRC summary miscount (0 reported against 174 real errors), the outline JS signature
-  and origin, and stale library UUIDs. These are listed in the run's failure register.
-- **Reviewer analysis:** uploaded unchanged in
-  [`live-test/esp32-s3-plotus/reviewer-analysis/`](live-test/esp32-s3-plotus/reviewer-analysis/). It includes the
-  10-minute reports (five were written after the fact), hardware telemetry and the Opus-vs-Nemotron comparison,
-  which found nothing to compare because no Nemotron board exists.
+### Design metrics (live readback)
+| Metric | Value |
+|---|---|
+| EasyEDA DRC violations (final) | 0 |
+| Nets physically connected (DESK verifier, fills as zones) | 43 / 43 |
+| EasyEDA ERC | 0 errors, 2 warnings (text not exposed by the API) |
+| Placement routability score | 0.88 |
+| Decoupling distance to module power pin | 0.85–0.88 mm |
+| USB D+ / D− length (J1 → module) | 63.05 / 63.76 mm (Δ 0.71 mm) |
+| USB differential impedance (IPC-2141 estimate) | ≈ 153 Ω (2-layer geometry; ≈ 90 Ω needs 4 layers) |
+| Power track width | 0.305 mm (100 of 118 segments), 0.254 mm neck-downs |
+| GND pour | top 1668.7 mm², bottom 2095.2 mm²; 41 stitching vias; antenna keep-out copper 0 mm² |
+| Silkscreen | 90 texts, min height 0.914 mm, min pad gap 0.358 mm |
+| Manufacturing package | Gerber + PTH/NPTH/via drills, BOM with LCSC on 18/18 lines, CPL (40 parts), PDF, `.epro` |
+| Failures logged / recovered in-session | 12 / 11 (one crash needed an EasyEDA reopen) |
+| Human interventions on the clock | 2 (EasyEDA reopen, Import Changes *Apply*) |
+
+### Examiner score breakdown
+| Electrical | Physical | Manufacturing | Evidence and process | Total |
+|---:|---:|---:|---:|---:|
+| 25 / 30 | 20 / 25 | 21 / 25 | 15 / 20 | 81 / 100 |
+
+### Hardware (Windows 11, 15.3 GB RAM, remote inference)
+| Metric | Value |
+|---|---|
+| CPU mean / peak | 57 % / 75.7 % |
+| Free RAM minimum | 553 MB (16 of 67 samples under 1 GB) |
+| EasyEDA private memory | ≈ 11–12 GB |
+| GPU | idle |
+
+An earlier run under the same requirements is kept in
+[`live-test/esp32-s3-plotus/`](live-test/esp32-s3-plotus/) as a baseline: 102.8 minutes, examiner score 50/100.
 
 ---
 
 ## Verification status
 
-The test suite was last run on 2026-11-12: 713 tests, 0 failures. Environment-dependent tests skip when their prerequisite is absent: a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` does not), the private project-one fixture, `shapely`, a free EasyEDA bridge port, Node with Backpass, and the git-ignored WATCH routing fixture. `test_orchestrator` 07/10/11 still fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell. CI runs the suite on Linux, Windows and macOS.
+The test suite was last run on 2026-11-12: 717 tests, 0 failures (9 skips). Environment-dependent tests skip when their prerequisite is absent: a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` does not), the private project-one fixture, `shapely`, a free EasyEDA bridge port, Node with Backpass, and the git-ignored WATCH routing fixture. `test_orchestrator` 07/10/11 still fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell. CI runs the suite on Linux, Windows and macOS.
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -241,7 +255,7 @@ The test suite was last run on 2026-11-12: 713 tests, 0 failures. Environment-de
 | Component intelligence, BOM, JLCPCB | Offline tested with fixture catalogue | `tests/test_ci_*.py`, `tests/test_jlcpcb_integration.py` |
 | EasyEDA Pro read-back | Live verified (read-only sessions) | [`docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md`](docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md) |
 | NVIDIA NIM tool-calling agent | Live verified against the NIM endpoint, 2026-11-12 | `desk/orchestrator/agent_loop.py` |
-| EasyEDA Pro live mutation (placement, copper, routing write-back) | **Exercised live once** in the timed ESP32-S3 benchmark: blocks built, 38 parts placed, SES imported, API-only GND fills written, all read back. The benchmark verdict was FAIL; DRC reached 0 after the benchmark. Other paths are still not live verified. | [`live-test/`](live-test/README.md), [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
+| EasyEDA Pro live mutation (placement, copper, routing write-back) | **Exercised live in two timed ESP32-S3 benchmarks**: blocks built, 40 parts placed, rounded outline, SES imported, API-only GND fills and stitching written, silkscreen moved, all read back. Metrics in [`live-test/`](live-test/README.md). Other paths are still not live verified. | [`live-test/`](live-test/README.md), [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
 | API-only copper planes (`pcb_PrimitiveFill`) | Live exercised (Plotus); offline tested. Needs the optional `shapely` package (the tests skip without it) | `tests/test_copper_fill.py`, [`desk/copper_fill.py`](desk/copper_fill.py) |
 | Weft orchestration (node contracts, node service, workflows) | Offline tested; workflows compile under upstream's compiler and runs pass upstream's admission check. Linux validation procedure written, **not yet run**. **No run on a Weft runtime yet** | `tests/test_weft_*.py`, [`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md) |
 | Freerouting stopped-job SES with full connectivity | **Not confirmed** | [`docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`](docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md) |
@@ -250,8 +264,8 @@ The test suite was last run on 2026-11-12: 713 tests, 0 failures. Environment-de
 
 ## Known limitations
 
-- Live board mutation through the EasyEDA bridge has been exercised once, in the timed ESP32-S3 benchmark, which
-  failed. No controlled live test of each mutation path exists yet; paths not exercised there are marked not live
+- Live board mutation through the EasyEDA bridge has been exercised in two timed ESP32-S3 benchmarks
+  (metrics in [`live-test/`](live-test/README.md)). No controlled live test of each mutation path exists yet; paths not exercised there are marked not live
   verified in source.
 - Trace width uses the IPC-2221 power law, not IPC-2152 chart data. Results are conservative for external layers.
 - Placement refinement is single pass. It proposes moves; it does not iterate with the router.
@@ -266,8 +280,14 @@ The test suite was last run on 2026-11-12: 713 tests, 0 failures. Environment-de
   - macOS with Python 3.11: 1 failure in `test_bridge_port_discovery`.
   - Weft runs are not part of CI (see the Weft section).
 - Weft workflows have not been executed by a Weft runtime: durable waits, approval pauses and recovery are unproven, and 22 of the 32 DESK nodes are declared but fail closed until their engine adapter is written.
-- One timed end-to-end benchmark exists ([`live-test/`](live-test/README.md)). It **failed** at the copper stage after
-  102.8 of 225 minutes. Treat the other time targets in the docs as targets, not measurements.
+- Two timed end-to-end benchmarks exist ([`live-test/`](live-test/README.md)):
+  - The latest run took 66.7 of 225 minutes; the earlier baseline took 102.8 minutes.
+
+  Treat the other time targets in the docs as targets, not measurements.
+- On a 2-layer 1.6 mm board, USB D+/D− cannot reach 90 Ω differential within the module and ESD pad pitch (run 2
+  measured about 153 Ω). Use a 4-layer stack-up when impedance control is required.
+- `clear_block` leaves frame rectangles, and deleted schematic texts can persist as orphan TEXT records that neither
+  the API nor the GUI removes (run 2 R2-F-001/002).
 - EasyEDA Pro 3.2's DRC does not reliably connect a via to an API-created fill. `tools/stitch_orphans.py` therefore
   adds explicit tracks.
 - `desk/copper_fill.py` is the one module that needs a third-party package (`shapely`). It is imported lazily, so

@@ -1,0 +1,51 @@
+{
+  "start_wall": "2026-11-12T16:11:05.240+05:30",
+  "start_mono_ns": 85446171000000,
+  "total_budget_min": 180,
+  "deadline_wall": "2026-11-12T19:11:05+05:30",
+  "clock": "time.monotonic_ns (system-wide, Windows QueryUnbiasedInterruptTime)",
+  "note": "start reference captured by the builder's first tool call at task receipt",
+  "stage_budgets_min": {
+    "1": 35,
+    "2": 35,
+    "3": 65,
+    "4": 20,
+    "5": 10,
+    "6": 15
+  },
+  "stages": {
+    "1": {
+      "duration_min": 26.439,
+      "budget_min": 35,
+      "result": "PASS"
+    },
+    "2": {
+      "duration_min": 13.853,
+      "budget_min": 35,
+      "result": "PASS"
+    },
+    "3": {
+      "duration_min": 31.31,
+      "budget_min": 65,
+      "result": "FAIL"
+    },
+    "4": {
+      "duration_min": 0.671,
+      "budget_min": 20,
+      "result": "FAIL"
+    },
+    "5": {
+      "duration_min": 0.683,
+      "budget_min": 10,
+      "result": "FAIL"
+    },
+    "6": {
+      "duration_min": 3.789,
+      "budget_min": 15,
+      "result": "PASS"
+    }
+  },
+  "end_wall": "2026-11-12T17:29:18.146+05:30",
+  "end_mono_ns": 90139078000000,
+  "total_elapsed_min": 78.215
+}

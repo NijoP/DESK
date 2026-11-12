@@ -1,0 +1,1212 @@
+{
+ "classification": {
+  "primary_archetype": "half_bridge_converter",
+  "secondary_archetypes": [
+   "buck_converter",
+   "current_voltage_measurement"
+  ],
+  "required_overlays": [
+   "switching_power",
+   "galvanic_isolation",
+   "thermal_management",
+   "emi_emc",
+   "mains_safety_isolation",
+   "high_current",
+   "industrial_interfaces",
+   "motor_drive",
+   "can_interface"
+  ],
+  "required_component_families": [
+   "pwm_controller",
+   "mosfet",
+   "gate_driver",
+   "power_transformer",
+   "output_capacitor",
+   "input_capacitor",
+   "inductor",
+   "digital_isolator",
+   "isolated_dc_dc_module",
+   "heatsink",
+   "ntc_thermistor",
+   "common_mode_choke",
+   "ferrite_bead",
+   "tvs_diode",
+   "fuse",
+   "mov_varistor",
+   "x_capacitor",
+   "y_capacitor",
+   "bulk_capacitor",
+   "current_sense_resistor",
+   "terminal_block",
+   "dc_link_capacitor",
+   "can_transceiver"
+  ],
+  "candidates": [
+   {
+    "archetype_id": "half_bridge_converter",
+    "domain": "dcdc_power",
+    "score": 21.0,
+    "reasons": [
+     "keyword 'half-bridge' (+10)",
+     "keyword 'resonant' (+5)",
+     "converter ['half_bridge'] (+4)",
+     "isolation requirement matches (+2)"
+    ],
+    "penalties": []
+   },
+   {
+    "archetype_id": "buck_converter",
+    "domain": "dcdc_power",
+    "score": 14.0,
+    "reasons": [
+     "keyword 'buck' (+10)",
+     "converter ['buck'] (+4)"
+    ],
+    "penalties": []
+   },
+   {
+    "archetype_id": "current_voltage_measurement",
+    "domain": "analog_sensors",
+    "score": 10.0,
+    "reasons": [
+     "keyword 'current sensing' (+10)"
+    ],
+    "penalties": []
+   },
+   {
+    "archetype_id": "ac_motor_controller",
+    "domain": "ac_mains_hv",
+    "score": 8.0,
+    "reasons": [
+     "keyword 'inverter' (+6)",
+     "motor ['ac'] (+4)"
+    ],
+    "penalties": [
+     "no mains source mentioned (-2)"
+    ]
+   },
+   {
+    "archetype_id": "stm32_controller",
+    "domain": "embedded_mcu",
+    "score": 8.0,
+    "reasons": [
+     "keyword 'stm32' (+10)"
+    ],
+    "penalties": [
+     "input 100 V far outside 3-36 V (-2)"
+    ]
+   },
+   {
+    "archetype_id": "can_bus_interface",
+    "domain": "interfaces_comms",
+    "score": 7.0,
+    "reasons": [
+     "keyword 'can' (+4)",
+     "protocols ['can'] (+3)"
+    ],
+    "penalties": []
+   },
+   {
+    "archetype_id": "isolated_ac_dc",
+    "domain": "ac_mains_hv",
+    "score": 3.0,
+    "reasons": [
+     "keyword 'isolated' (+3)",
+     "isolation requirement matches (+2)"
+    ],
+    "penalties": [
+     "no mains source mentioned (-2)"
+    ]
+   },
+   {
+    "archetype_id": "obd_can_telematics",
+    "domain": "automotive",
+    "score": 3.0,
+    "reasons": [
+     "protocols ['can'] (+3)"
+    ],
+    "penalties": []
+   },
+   {
+    "archetype_id": "dual_active_bridge",
+    "domain": "dcdc_power",
+    "score": 2.0,
+    "reasons": [
+     "isolation requirement matches (+2)"
+    ],
+    "penalties": []
+   },
+   {
+    "archetype_id": "flyback_converter",
+    "domain": "dcdc_power",
+    "score": 2.0,
+    "reasons": [
+     "isolation requirement matches (+2)"
+    ],
+    "penalties": []
+   }
+  ],
+  "missing_information": [
+   "confirm for half_bridge_converter: Input (often PFC output 380-400 V)",
+   "confirm for half_bridge_converter: Output",
+   "confirm for half_bridge_converter: Resonant or PWM",
+   "confirm for half_bridge_converter: Isolation"
+  ],
+  "conflicts": [
+   "possible mains/high-voltage involvement; a mains archetype scored or mains was detected while the primary is not a mains archetype",
+   "motor mentioned but the primary archetype is not a motor-control archetype; motor_drive overlay applied"
+  ],
+  "confidence": 0.6,
+  "classification_status": "REVIEW_REQUIRED",
+  "evidence": [
+   "half_bridge_converter: keyword 'half-bridge' (+10)",
+   "half_bridge_converter: keyword 'resonant' (+5)",
+   "half_bridge_converter: converter ['half_bridge'] (+4)",
+   "half_bridge_converter: isolation requirement matches (+2)",
+   "overlay high_current from features",
+   "overlay industrial_interfaces from features",
+   "overlay motor_drive from features",
+   "overlay can_interface from features"
+  ],
+  "features": {
+   "voltages_v": [
+    3.3,
+    5.0,
+    12.0,
+    20.0,
+    24.0,
+    58.4,
+    100.0
+   ],
+   "input_voltage_v": 100.0,
+   "current_a": 10.0,
+   "peak_current_a": 10.0,
+   "switching_frequency_hz": 20000,
+   "protocols": [
+    "can",
+    "uart"
+   ],
+   "power_source": [
+    "dc_input"
+   ],
+   "motor": [
+    "ac"
+   ],
+   "converter": [
+    "buck",
+    "half_bridge"
+   ],
+   "isolation": "functional",
+   "max_ambient_c": 40.0,
+   "enclosure": true,
+   "manufacturing": true,
+   "voltage_rails": {
+    "VIN_RAW": 58.4,
+    "VBUS": 58.4,
+    "PHASE": 58.4,
+    "SW": 58.4,
+    "GH": 70.4,
+    "BST": 70.4,
+    "VOUT_EXT": 58.4,
+    "12V": 12.6,
+    "5V": 5.2,
+    "3V3": 3.4,
+    "GND": 0.0,
+    "VBUS_SNS": 3.3,
+    "VOUT_SNS": 3.3,
+    "SW12": 58.4,
+    "BST12": 70.4,
+    "RIP12": 58.4,
+    "EN12": 5.3,
+    "SW5": 12.6,
+    "BOOT5": 17.6,
+    "BSTR": 12.6
+   },
+   "current_limits_A": {
+    "VIN_RAW": 10.0,
+    "VBUS": 10.0,
+    "PHASE": 10.0,
+    "SW": 10.0,
+    "GND": 10.0,
+    "12V": 0.5,
+    "5V": 0.3,
+    "3V3": 0.3,
+    "VOUT_EXT": 0.01,
+    "GH": 0.5,
+    "BST": 0.5,
+    "VBUS_SNS": 0.01,
+    "VOUT_SNS": 0.01,
+    "SW12": 1.5,
+    "BST12": 0.1,
+    "RIP12": 0.01,
+    "EN12": 0.01,
+    "SW5": 2.0,
+    "BOOT5": 0.1,
+    "BSTR": 0.5
+   },
+   "continuous_current_a": 5.0,
+   "fet_id_rating_a": 90.0,
+   "switching_node_net": "SW",
+   "layer_count": 4,
+   "pollution_degree": 2,
+   "material_group": "IIIa",
+   "mains": false
+  }
+ },
+ "compiled": {
+  "project_id": "projects/UPS_1000",
+  "primary_archetype": "half_bridge_converter",
+  "secondary_archetypes": [
+   "buck_converter",
+   "current_voltage_measurement"
+  ],
+  "overlays": [
+   "switching_power",
+   "galvanic_isolation",
+   "thermal_management",
+   "emi_emc",
+   "mains_safety_isolation",
+   "high_current",
+   "industrial_interfaces",
+   "motor_drive",
+   "can_interface"
+  ],
+  "component_families": [
+   "pwm_controller",
+   "mosfet",
+   "gate_driver",
+   "power_transformer",
+   "output_capacitor",
+   "input_capacitor",
+   "inductor",
+   "digital_isolator",
+   "isolated_dc_dc_module",
+   "heatsink",
+   "ntc_thermistor",
+   "common_mode_choke",
+   "ferrite_bead",
+   "tvs_diode",
+   "fuse",
+   "mov_varistor",
+   "x_capacitor",
+   "y_capacitor",
+   "bulk_capacitor",
+   "current_sense_resistor",
+   "terminal_block",
+   "dc_link_capacitor",
+   "can_transceiver"
+  ],
+  "rule_ids": [
+   "COPPER-BARRIER-044",
+   "ELEC-CREEP-004",
+   "MAINS-DECL-160",
+   "MAINS-INS-163",
+   "PLACE-ISO-016",
+   "ROUTE-HV-025",
+   "PWR-ROUTE-170",
+   "MOTOR-PEAK-140",
+   "DCDC-VIN-121",
+   "COPPER-ZONE-041",
+   "DCDC-ISAT-120",
+   "ELEC-CLEAR-003",
+   "ELEC-UNKNOWN-002",
+   "ELEC-WIDTH-001",
+   "MFG-MIN-070",
+   "PLACE-KEEPOUT-011",
+   "MAINS-FUSE-161",
+   "ELEC-DROP-006",
+   "ELEC-VIA-005",
+   "EMI-SURGE-063",
+   "ROUTE-POLY-026",
+   "MOTOR-OC-141",
+   "ROUTE-RETURN-027",
+   "THERM-TJ-050",
+   "EMI-LOOP-060",
+   "PLACE-HOTLOOP-012",
+   "ROUTE-SW-023",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ISLAND-043",
+   "ELEC-RATING-007",
+   "EMI-ESD-062",
+   "MAINS-XDIS-162",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "PLACE-DECAP-010",
+   "PLACE-SENSE-018",
+   "ROUTE-KELVIN-024",
+   "ROUTE-PRIO-020",
+   "MFG-COAT-073",
+   "MFG-SLOT-074",
+   "COPPER-THERMVIA-046",
+   "ROUTE-ENC-029",
+   "ROUTE-GATE-028",
+   "EMI-FILTER-061",
+   "PLACE-FB-013",
+   "PLACE-THERM-017",
+   "THERM-COPPER-051",
+   "COPPER-RELIEF-042"
+  ],
+  "enforced_rule_ids": [
+   "COPPER-BARRIER-044",
+   "ELEC-CREEP-004",
+   "MAINS-DECL-160",
+   "MAINS-INS-163",
+   "PLACE-ISO-016",
+   "ROUTE-HV-025",
+   "PWR-ROUTE-170",
+   "MOTOR-PEAK-140",
+   "DCDC-VIN-121",
+   "COPPER-ZONE-041",
+   "DCDC-ISAT-120",
+   "ELEC-CLEAR-003",
+   "ELEC-UNKNOWN-002",
+   "ELEC-WIDTH-001",
+   "MFG-MIN-070",
+   "PLACE-KEEPOUT-011",
+   "MAINS-FUSE-161",
+   "ELEC-DROP-006",
+   "ROUTE-POLY-026",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ISLAND-043",
+   "MAINS-XDIS-162",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "PLACE-DECAP-010",
+   "ROUTE-PRIO-020",
+   "MFG-COAT-073",
+   "COPPER-RELIEF-042"
+  ],
+  "advisory_rule_ids": [
+   "ELEC-VIA-005",
+   "EMI-SURGE-063",
+   "MOTOR-OC-141",
+   "EMI-LOOP-060",
+   "PLACE-HOTLOOP-012",
+   "ROUTE-SW-023",
+   "ROUTE-DIFF-021",
+   "EMI-ESD-062",
+   "PLACE-SENSE-018",
+   "ROUTE-KELVIN-024",
+   "MFG-SLOT-074",
+   "COPPER-THERMVIA-046",
+   "ROUTE-ENC-029",
+   "ROUTE-GATE-028",
+   "EMI-FILTER-061",
+   "PLACE-FB-013",
+   "PLACE-THERM-017",
+   "THERM-COPPER-051"
+  ],
+  "unsupported_rule_ids": [
+   "THERM-TJ-050",
+   "ELEC-RATING-007"
+  ],
+  "evaluations": [
+   {
+    "rule_id": "COPPER-BARRIER-044",
+    "outcome": "DEFERRED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "copper",
+    "message": "applied by the copper subsystem when the board exists (check_polygon_boundary against keep-outs; tests/test_copper_geometry.py)",
+    "details": {}
+   },
+   {
+    "rule_id": "COPPER-GND-040",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "copper",
+    "message": "applied by the copper subsystem when the board exists (CopperPlaneEngine.generate_ground_planes / synthesize_stitching_vias; tests/test_copper_en)",
+    "details": {}
+   },
+   {
+    "rule_id": "COPPER-ISLAND-043",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "copper",
+    "message": "applied by the copper subsystem when the board exists (CopperPlaneEngine.detect_copper_islands; tests/test_copper_geometry.py)",
+    "details": {}
+   },
+   {
+    "rule_id": "COPPER-RELIEF-042",
+    "outcome": "DEFERRED",
+    "severity": "WARNING",
+    "mode": "ENFORCED",
+    "subsystem": "copper",
+    "message": "applied by the copper subsystem when the board exists (ConnectionRuleResolver.resolve_connection; tests/test_copper_engine.py)",
+    "details": {}
+   },
+   {
+    "rule_id": "COPPER-THERMVIA-046",
+    "outcome": "ADVISORY",
+    "severity": "WARNING",
+    "mode": "ADVISORY",
+    "subsystem": "copper",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "COPPER-ZONE-041",
+    "outcome": "DEFERRED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "copper",
+    "message": "applied by the copper subsystem when the board exists (CopperZoneSpec.clearance_mil = profile.derive_clearance_mil (F-03 fix 2026-11-12); tests/t)",
+    "details": {}
+   },
+   {
+    "rule_id": "DCDC-ISAT-120",
+    "outcome": "NOT_EVALUATED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "quality.gate",
+    "message": "requires output_current_a and inductor_isat_a",
+    "details": {}
+   },
+   {
+    "rule_id": "DCDC-VIN-121",
+    "outcome": "NOT_EVALUATED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "quality.gate",
+    "message": "requires input_voltage_v and ic_vin_min/ic_vin_max",
+    "details": {}
+   },
+   {
+    "rule_id": "ELEC-CLEAR-003",
+    "outcome": "PASS",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "routing.clearance",
+    "message": "clearance derived for 20 rails (IPC-2221B B2, fabricator floor)",
+    "details": {
+     "clearance_mil": {
+      "12V": 3.94,
+      "3V3": 3.94,
+      "5V": 3.94,
+      "BOOT5": 3.94,
+      "BST": 51.18,
+      "BST12": 51.18,
+      "BSTR": 3.94,
+      "EN12": 3.94,
+      "GH": 51.18,
+      "GND": 3.94,
+      "PHASE": 49.21,
+      "RIP12": 49.21,
+      "SW": 49.21,
+      "SW12": 49.21,
+      "SW5": 3.94,
+      "VBUS": 49.21,
+      "VBUS_SNS": 3.94,
+      "VIN_RAW": 49.21,
+      "VOUT_EXT": 49.21,
+      "VOUT_SNS": 3.94
+     }
+    }
+   },
+   {
+    "rule_id": "ELEC-CREEP-004",
+    "outcome": "PASS",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "routing.clearance",
+    "message": "creepage 1.30 mm for working voltage 70.4 V, PD2, group IIIa, basic insulation (table transcription unverified)",
+    "details": {
+     "creepage_mm": 1.3,
+     "working_voltage_v": 70.4,
+     "verified_against_standard": false
+    }
+   },
+   {
+    "rule_id": "ELEC-DROP-006",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "power.distribution",
+    "message": "applied by the power.distribution subsystem when the board exists (desk.power_distribution.PowerDistributionPlanner drop estimate; tests/test_power_distribut)",
+    "details": {}
+   },
+   {
+    "rule_id": "ELEC-RATING-007",
+    "outcome": "ADVISORY",
+    "severity": "ERROR",
+    "mode": "UNSUPPORTED",
+    "subsystem": "none",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "ELEC-UNKNOWN-002",
+    "outcome": "PASS",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "quality.gate",
+    "message": "20 nets declared",
+    "details": {
+     "issues": []
+    }
+   },
+   {
+    "rule_id": "ELEC-VIA-005",
+    "outcome": "PASS",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "routing.vias",
+    "message": "parallel vias per net at 12 mil drill: {'GND': 14, 'PHASE': 14, 'SW': 14, 'SW12': 2, 'SW5': 3, 'VBUS': 14, 'VIN_RAW': 14} (advisory: the autorouter does not place them)",
+    "details": {
+     "vias_required": {
+      "GND": 14,
+      "PHASE": 14,
+      "SW": 14,
+      "SW12": 2,
+      "SW5": 3,
+      "VBUS": 14,
+      "VIN_RAW": 14
+     }
+    }
+   },
+   {
+    "rule_id": "ELEC-WIDTH-001",
+    "outcome": "PASS",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "routing.width",
+    "message": "20 power nets sized from declared currents (IPC-2221, applied by tools/route.py)",
+    "details": {
+     "widths_mil": {
+      "12V": 4.6,
+      "3V3": 3.5,
+      "5V": 3.5,
+      "BOOT5": 3.5,
+      "BST": 4.6,
+      "BST12": 3.5,
+      "BSTR": 4.6,
+      "EN12": 3.5,
+      "GH": 4.6,
+      "GND": 284.9,
+      "PHASE": 284.9,
+      "RIP12": 3.5,
+      "SW": 284.9,
+      "SW12": 20.8,
+      "SW5": 30.9,
+      "VBUS": 284.9,
+      "VBUS_SNS": 3.5,
+      "VIN_RAW": 284.9,
+      "VOUT_EXT": 3.5,
+      "VOUT_SNS": 3.5
+     }
+    }
+   },
+   {
+    "rule_id": "EMI-ESD-062",
+    "outcome": "ADVISORY",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "none",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "EMI-FILTER-061",
+    "outcome": "ADVISORY",
+    "severity": "WARNING",
+    "mode": "ADVISORY",
+    "subsystem": "none",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "EMI-LOOP-060",
+    "outcome": "ADVISORY",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "placement",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "EMI-SURGE-063",
+    "outcome": "ADVISORY",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "none",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "MAINS-DECL-160",
+    "outcome": "PASS",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "quality.gate",
+    "message": "20 nets declared",
+    "details": {
+     "issues": []
+    }
+   },
+   {
+    "rule_id": "MAINS-FUSE-161",
+    "outcome": "NOT_EVALUATED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "quality.gate",
+    "message": "applicability conditions not met",
+    "details": {}
+   },
+   {
+    "rule_id": "MAINS-INS-163",
+    "outcome": "NOT_EVALUATED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "quality.gate",
+    "message": "applicability conditions not met",
+    "details": {}
+   },
+   {
+    "rule_id": "MAINS-XDIS-162",
+    "outcome": "NOT_EVALUATED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "quality.gate",
+    "message": "requires the component family list (any of ['discharge_resistor'])",
+    "details": {}
+   },
+   {
+    "rule_id": "MFG-COAT-073",
+    "outcome": "NOT_EVALUATED",
+    "severity": "WARNING",
+    "mode": "ENFORCED",
+    "subsystem": "routing.clearance",
+    "message": "applicability conditions not met",
+    "details": {}
+   },
+   {
+    "rule_id": "MFG-DRILL-071",
+    "outcome": "PASS",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "routing",
+    "message": "jlcpcb_standard_4layer: min width 3.5 mil, clearance 3.5 mil, drill 8.0 mil applied as floors",
+    "details": {}
+   },
+   {
+    "rule_id": "MFG-EDGE-072",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "copper",
+    "message": "applied by the copper subsystem when the board exists (CopperPlaneEngine setback from profile.manufacturing.copper_to_edge_mil)",
+    "details": {}
+   },
+   {
+    "rule_id": "MFG-MIN-070",
+    "outcome": "PASS",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "routing",
+    "message": "jlcpcb_standard_4layer: min width 3.5 mil, clearance 3.5 mil, drill 8.0 mil applied as floors",
+    "details": {}
+   },
+   {
+    "rule_id": "MFG-SLOT-074",
+    "outcome": "ADVISORY",
+    "severity": "WARNING",
+    "mode": "ADVISORY",
+    "subsystem": "none",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "MOTOR-OC-141",
+    "outcome": "ADVISORY",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "none",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "MOTOR-PEAK-140",
+    "outcome": "PASS",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "quality.gate",
+    "message": "device rating 90.0 A vs 13.00 A (peak 10.0 A + margin)",
+    "details": {
+     "required_a": 13.0
+    }
+   },
+   {
+    "rule_id": "PLACE-DECAP-010",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "placement",
+    "message": "applied by the placement subsystem when the board exists (desk.placement_refine PlacementRefiner decoupling proximity objective; tests/test_dense_in)",
+    "details": {}
+   },
+   {
+    "rule_id": "PLACE-FB-013",
+    "outcome": "ADVISORY",
+    "severity": "WARNING",
+    "mode": "ADVISORY",
+    "subsystem": "placement",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "PLACE-HOTLOOP-012",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "placement",
+    "message": "applied by the placement subsystem when the board exists (Placement refiner hard rules (group proximity); loop area itself is not measured yet)",
+    "details": {}
+   },
+   {
+    "rule_id": "PLACE-ISO-016",
+    "outcome": "NOT_EVALUATED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "placement",
+    "message": "applicability conditions not met",
+    "details": {}
+   },
+   {
+    "rule_id": "PLACE-KEEPOUT-011",
+    "outcome": "DEFERRED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "placement",
+    "message": "applied by the placement subsystem when the board exists (desk.placement.check and routing preflight pads_inside_keepouts; tests/test_route_prefligh)",
+    "details": {}
+   },
+   {
+    "rule_id": "PLACE-SENSE-018",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "placement",
+    "message": "applied by the placement subsystem when the board exists (Placement refiner proximity)",
+    "details": {}
+   },
+   {
+    "rule_id": "PLACE-THERM-017",
+    "outcome": "ADVISORY",
+    "severity": "WARNING",
+    "mode": "ADVISORY",
+    "subsystem": "placement",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "PWR-ROUTE-170",
+    "outcome": "DEFERRED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "power.distribution",
+    "message": "applied by the power.distribution subsystem when the board exists (PowerDistributionPlanner strategies; tests/test_power_distribution.py)",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-DIFF-021",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "routing",
+    "message": "applied by the routing subsystem when the board exists (DiffPairProfile carried into DSN net classes (width/spacing); length matching and impedanc)",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-ENC-029",
+    "outcome": "ADVISORY",
+    "severity": "WARNING",
+    "mode": "ADVISORY",
+    "subsystem": "routing",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-GATE-028",
+    "outcome": "ADVISORY",
+    "severity": "WARNING",
+    "mode": "ADVISORY",
+    "subsystem": "routing",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-HV-025",
+    "outcome": "DEFERRED",
+    "severity": "BLOCKING",
+    "mode": "ENFORCED",
+    "subsystem": "routing",
+    "message": "applied by the routing subsystem when the board exists (Route keep-outs passed to Freerouting as keepout areas; verified by preflight)",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-KELVIN-024",
+    "outcome": "ADVISORY",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "routing",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-POLY-026",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "power.distribution",
+    "message": "applied by the power.distribution subsystem when the board exists (PowerDistributionPlanner rail strategy PLANE/POLYGON/WIDE_TRACE; tests/test_power_distribu)",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-PRIO-020",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "routing",
+    "message": "applied by the routing subsystem when the board exists (RoutingPriorityScheduler stages + density priority order -> Freerouting net classes; tests)",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-RETURN-027",
+    "outcome": "DEFERRED",
+    "severity": "ERROR",
+    "mode": "ENFORCED",
+    "subsystem": "copper",
+    "message": "applied by the copper subsystem when the board exists (CopperPlaneEngine.evaluate_return_path_continuity; tests/test_copper_engine.py)",
+    "details": {}
+   },
+   {
+    "rule_id": "ROUTE-SW-023",
+    "outcome": "ADVISORY",
+    "severity": "ERROR",
+    "mode": "ADVISORY",
+    "subsystem": "routing",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "THERM-COPPER-051",
+    "outcome": "ADVISORY",
+    "severity": "WARNING",
+    "mode": "ADVISORY",
+    "subsystem": "copper",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   },
+   {
+    "rule_id": "THERM-TJ-050",
+    "outcome": "ADVISORY",
+    "severity": "ERROR",
+    "mode": "UNSUPPORTED",
+    "subsystem": "none",
+    "message": "no deterministic evaluator; review item",
+    "details": {}
+   }
+  ],
+  "conflicts": [],
+  "blocking_issues": [],
+  "missing_information": [
+   "confirm for half_bridge_converter: Input (often PFC output 380-400 V)",
+   "confirm for half_bridge_converter: Output",
+   "confirm for half_bridge_converter: Resonant or PWM",
+   "confirm for half_bridge_converter: Isolation"
+  ],
+  "design_profile": {
+   "project_id": "projects/UPS_1000",
+   "version": "1.0.0",
+   "board_dimensions_mm": [
+    50.0,
+    50.0
+   ],
+   "layer_count": 4,
+   "stackup": [
+    {
+     "index": 1,
+     "name": "Top",
+     "layer_type": "signal",
+     "copper_thickness_oz": 1.0,
+     "thickness_mil": 1.37,
+     "dielectric_thickness_mil": 6.0,
+     "dielectric_er": 4.4,
+     "loss_tangent": 0.02,
+     "reference_layer_idx": 2
+    },
+    {
+     "index": 2,
+     "name": "Inner1_GND",
+     "layer_type": "plane",
+     "copper_thickness_oz": 1.0,
+     "thickness_mil": 1.37,
+     "dielectric_thickness_mil": 40.0,
+     "dielectric_er": 4.4,
+     "loss_tangent": 0.02,
+     "reference_layer_idx": null
+    },
+    {
+     "index": 3,
+     "name": "Inner2_PWR",
+     "layer_type": "plane",
+     "copper_thickness_oz": 1.0,
+     "thickness_mil": 1.37,
+     "dielectric_thickness_mil": 6.0,
+     "dielectric_er": 4.4,
+     "loss_tangent": 0.02,
+     "reference_layer_idx": null
+    },
+    {
+     "index": 4,
+     "name": "Bottom",
+     "layer_type": "signal",
+     "copper_thickness_oz": 1.0,
+     "thickness_mil": 1.37,
+     "dielectric_thickness_mil": 6.0,
+     "dielectric_er": 4.4,
+     "loss_tangent": 0.02,
+     "reference_layer_idx": 3
+    }
+   ],
+   "voltage_rails": {
+    "VIN_RAW": 58.4,
+    "VBUS": 58.4,
+    "PHASE": 58.4,
+    "SW": 58.4,
+    "GH": 70.4,
+    "BST": 70.4,
+    "VOUT_EXT": 58.4,
+    "12V": 12.6,
+    "5V": 5.2,
+    "3V3": 3.4,
+    "GND": 0.0,
+    "VBUS_SNS": 3.3,
+    "VOUT_SNS": 3.3,
+    "SW12": 58.4,
+    "BST12": 70.4,
+    "RIP12": 58.4,
+    "EN12": 5.3,
+    "SW5": 12.6,
+    "BOOT5": 17.6,
+    "BSTR": 12.6
+   },
+   "current_limits_A": {
+    "VIN_RAW": 10.0,
+    "VBUS": 10.0,
+    "PHASE": 10.0,
+    "SW": 10.0,
+    "GND": 10.0,
+    "12V": 0.5,
+    "5V": 0.3,
+    "3V3": 0.3,
+    "VOUT_EXT": 0.01,
+    "GH": 0.5,
+    "BST": 0.5,
+    "VBUS_SNS": 0.01,
+    "VOUT_SNS": 0.01,
+    "SW12": 1.5,
+    "BST12": 0.1,
+    "RIP12": 0.01,
+    "EN12": 0.01,
+    "SW5": 2.0,
+    "BOOT5": 0.1,
+    "BSTR": 0.5
+   },
+   "switching_frequencies_hz": {
+    "SW": 20000.0
+   },
+   "net_classes": {},
+   "diff_pairs": {},
+   "rf_lines": {},
+   "thermal": {
+    "max_ambient_temp_c": 40.0,
+    "max_junction_temp_c": 105.0,
+    "max_temperature_rise_c": 10.0,
+    "airflow_lfm": 0.0
+   },
+   "manufacturing": {
+    "name": "jlcpcb_standard_4layer",
+    "version": "2026.1",
+    "min_trace_width_mil": 3.5,
+    "min_clearance_mil": 3.5,
+    "min_drill_mil": 8.0,
+    "min_via_annular_ring_mil": 4.0,
+    "copper_to_edge_mil": 10.0,
+    "max_aspect_ratio": 10.0,
+    "impedance_control_available": true,
+    "layer_capabilities": {}
+   },
+   "critical_nets": [],
+   "keepouts": [],
+   "approved_exceptions": [],
+   "clearance_condition": "B2",
+   "pollution_degree": 2,
+   "material_group": "IIIa",
+   "unknown_current_policy": "fail",
+   "domain_profile": {
+    "primary_archetype": "half_bridge_converter",
+    "secondary_archetypes": [
+     "buck_converter",
+     "current_voltage_measurement"
+    ],
+    "overlays": [
+     "switching_power",
+     "galvanic_isolation",
+     "thermal_management",
+     "emi_emc",
+     "mains_safety_isolation",
+     "high_current",
+     "industrial_interfaces",
+     "motor_drive",
+     "can_interface"
+    ],
+    "component_families": [
+     "pwm_controller",
+     "mosfet",
+     "gate_driver",
+     "power_transformer",
+     "output_capacitor",
+     "input_capacitor",
+     "inductor",
+     "digital_isolator",
+     "isolated_dc_dc_module",
+     "heatsink",
+     "ntc_thermistor",
+     "common_mode_choke",
+     "ferrite_bead",
+     "tvs_diode",
+     "fuse",
+     "mov_varistor",
+     "x_capacitor",
+     "y_capacitor",
+     "bulk_capacitor",
+     "current_sense_resistor",
+     "terminal_block",
+     "dc_link_capacitor",
+     "can_transceiver"
+    ],
+    "rule_ids": [
+     "COPPER-BARRIER-044",
+     "ELEC-CREEP-004",
+     "MAINS-DECL-160",
+     "MAINS-INS-163",
+     "PLACE-ISO-016",
+     "ROUTE-HV-025",
+     "PWR-ROUTE-170",
+     "MOTOR-PEAK-140",
+     "DCDC-VIN-121",
+     "COPPER-ZONE-041",
+     "DCDC-ISAT-120",
+     "ELEC-CLEAR-003",
+     "ELEC-UNKNOWN-002",
+     "ELEC-WIDTH-001",
+     "MFG-MIN-070",
+     "PLACE-KEEPOUT-011",
+     "MAINS-FUSE-161",
+     "ELEC-DROP-006",
+     "ELEC-VIA-005",
+     "EMI-SURGE-063",
+     "ROUTE-POLY-026",
+     "MOTOR-OC-141",
+     "ROUTE-RETURN-027",
+     "THERM-TJ-050",
+     "EMI-LOOP-060",
+     "PLACE-HOTLOOP-012",
+     "ROUTE-SW-023",
+     "ROUTE-DIFF-021",
+     "COPPER-GND-040",
+     "COPPER-ISLAND-043",
+     "ELEC-RATING-007",
+     "EMI-ESD-062",
+     "MAINS-XDIS-162",
+     "MFG-DRILL-071",
+     "MFG-EDGE-072",
+     "PLACE-DECAP-010",
+     "PLACE-SENSE-018",
+     "ROUTE-KELVIN-024",
+     "ROUTE-PRIO-020",
+     "MFG-COAT-073",
+     "MFG-SLOT-074",
+     "COPPER-THERMVIA-046",
+     "ROUTE-ENC-029",
+     "ROUTE-GATE-028",
+     "EMI-FILTER-061",
+     "PLACE-FB-013",
+     "PLACE-THERM-017",
+     "THERM-COPPER-051",
+     "COPPER-RELIEF-042"
+    ],
+    "enforced_rule_ids": [
+     "COPPER-BARRIER-044",
+     "ELEC-CREEP-004",
+     "MAINS-DECL-160",
+     "MAINS-INS-163",
+     "PLACE-ISO-016",
+     "ROUTE-HV-025",
+     "PWR-ROUTE-170",
+     "MOTOR-PEAK-140",
+     "DCDC-VIN-121",
+     "COPPER-ZONE-041",
+     "DCDC-ISAT-120",
+     "ELEC-CLEAR-003",
+     "ELEC-UNKNOWN-002",
+     "ELEC-WIDTH-001",
+     "MFG-MIN-070",
+     "PLACE-KEEPOUT-011",
+     "MAINS-FUSE-161",
+     "ELEC-DROP-006",
+     "ROUTE-POLY-026",
+     "ROUTE-RETURN-027",
+     "COPPER-GND-040",
+     "COPPER-ISLAND-043",
+     "MAINS-XDIS-162",
+     "MFG-DRILL-071",
+     "MFG-EDGE-072",
+     "PLACE-DECAP-010",
+     "ROUTE-PRIO-020",
+     "MFG-COAT-073",
+     "COPPER-RELIEF-042"
+    ],
+    "advisory_rule_ids": [
+     "ELEC-VIA-005",
+     "EMI-SURGE-063",
+     "MOTOR-OC-141",
+     "EMI-LOOP-060",
+     "PLACE-HOTLOOP-012",
+     "ROUTE-SW-023",
+     "ROUTE-DIFF-021",
+     "EMI-ESD-062",
+     "PLACE-SENSE-018",
+     "ROUTE-KELVIN-024",
+     "MFG-SLOT-074",
+     "COPPER-THERMVIA-046",
+     "ROUTE-ENC-029",
+     "ROUTE-GATE-028",
+     "EMI-FILTER-061",
+     "PLACE-FB-013",
+     "PLACE-THERM-017",
+     "THERM-COPPER-051"
+    ],
+    "unsupported_rule_ids": [
+     "THERM-TJ-050",
+     "ELEC-RATING-007"
+    ],
+    "classification_status": "REVIEW_REQUIRED",
+    "confidence": 0.6,
+    "status": "REVIEW_REQUIRED",
+    "library_version": "1.0.0@2026-11-12",
+    "compiled_at": "2026-11-12T16:53:51"
+   },
+   "created_at": "",
+   "profile_hash": "58cbda577a99e1fe"
+  },
+  "status": "REVIEW_REQUIRED",
+  "compiled_at": "2026-11-12T16:53:51",
+  "library_version": "1.0.0@2026-11-12"
+ }
+}

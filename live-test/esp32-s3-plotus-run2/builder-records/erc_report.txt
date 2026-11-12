@@ -1,0 +1,46 @@
+ERC REPORT, ESP32-S3 dev board, run 2b. Generated 2026-11-12T14:04:59+0530. DESK 2c9de1a (latest GitHub main).
+Sheet a5b5ba31d2ccd917 in project "claude test"; EasyEDA window 17ea844c-a5d0-4a6a-b78a-b64521ae7895.
+
+1. EasyEDA native ERC: eda.sch_Drc.check(strict=true, userInterface=false, includeVerboseError=true)
+   Run with: python tools/erc.py <proj> --json
+   Result: ERRORS 0, WARNINGS 2.
+   Raw return value: [{"type":"warn","count":2}]
+   LIMITATION: even with includeVerboseError=true, this API build returns only an aggregate count.
+   It gives no per-warning text, net or designator, so the 2 warnings cannot be itemized from the API.
+   Run 1 showed the same 2-warning signature with the same circuit.
+   The audit below shows that no floating pin, single-pin net, duplicate designator or unmapped pin exists.
+   So the warnings are not one of the critical classes listed in ACCEPTANCE_CRITERIA S1.
+   Their exact text stays UNVERIFIED and is disclosed in failures/failure_register.json (R2-F-003).
+
+2. DESK offline checks (independent of EasyEDA)
+   lint.py (all 4 blocks): PASS
+   verify.py all:          VERIFIED. 40 parts, 43 nets, no single-pin nets.
+   Fan-out: GND 36, 3V3 14, 5V 9, EN 6, VBUS 5, USB_DN 5, USB_DP 5, GPIO0 5.
+
+3. Itemized pin audit, from the live readback (tools/sch_dump.py -> state/sch_dump.json)
+   netlist_ok=True, 40 parts, 176 pins, 43 nets
+   Floating pins (no net and not marked NC): NONE
+   Single-pin nets:                          NONE
+   Duplicate reference designators:          NONE
+   Intentional no-connects (14), each with an NC marker:
+     J1.A8 SBU1, J1.B8 SBU2      SBU is not used by USB 2.0 device mode
+     U1.6/7/9/10 NC              TPD4E05U06 package NC pins (datasheet pinout)
+     U2.4 NC                     AP2112K-3.3 pin 4 NC (datasheet)
+     U3.28/29/30 IO35/36/37      Used by the octal PSRAM of the N16R8 module; must not be used (ESP32-S3-WROOM-1 DS Table 3 note)
+     SW1.2/3, SW2.2/3            Only the diagonal pins 1 (net) and 4 (GND) are used. They switch under either internal pairing.
+
+4. Critical gate checklist (ACCEPTANCE_CRITERIA S1, "No Unresolved Critical ERC Errors")
+   No floating input pins (except intentional)      PASS (none floating; 14 NC pins are documented)
+   No shorted power nets                            PASS (VBUS, VBUS_PROT, 5V, 3V3 and GND are distinct nets)
+   No missing pin connections on critical parts     PASS (U3 power/EN/IO0/IO19/IO20 connected)
+   No incorrect pin types                           PASS (EasyEDA ERC: 0 errors)
+   All power pins connected to appropriate rails    PASS (verify.py)
+
+5. Layout and readability
+   2x2 functional grid: 01 USB-C/protection (100,1650), 02 3V3 LDO (1533,1650), 03 ESP32-S3 core (100,550), 04 headers (2210,550).
+   Each frame holds exactly one correct title (API readback: 4 texts, 4 rects).
+   DISCLOSED DEFECT (failures R2-F-002/R2-F-005): the saved sheet holds 17 orphan TEXT records. These are titles
+   deleted earlier through the API and the Captain's GUI wipe. EasyEDA keeps them in the .esch, and neither the API
+   nor the GUI can reach them. They print as stray title lines in the empty band ABOVE the four frames
+   (y >= 1755). None falls inside a frame or overlaps a symbol, wire or net label. They are not electrical
+   objects and have no netlist effect (netlist_ok=True).

@@ -1,0 +1,12 @@
+﻿# Evaluator limitations - run 2b
+- No access to EasyEDA or its bridge (forbidden): I never re-ran DRC/ERC, never viewed the layout, and cannot read the 2 ERC warnings. All "DRC 0" statements rest on the builder's saved raw JSON (drc_s3_8, drc_s4_1/2, drc_final_r2b: each exactly "[]"), whose enabled rule set cannot be listed through the API. A bare [] could mask disabled rules.
+- Connectivity 43/43 and the strict GND model come from the builder's own verifier/scripts; I did not re-run them. Pin-mapping and datasheet checks were not repeated this run (schematic spec identical to run 1 per hashes in the ledger; run 1's spot-check not re-done).
+- Gerber and drill contents not inspected (no viewer): I listed the zip entries and hashed the files only. No JLCPCB DFM run. LCSC stock/PN validity and footprint-to-part fit not queried.
+- The 17 orphan TEXT records were not independently confirmed (no .esch parsing by me).
+- Post-end refinement (15:02) overwrote the at-END state; I cannot reconstruct the pre-refinement files.
+- T+20..T+50 checkpoint reports were reconstructed retroactively (marked LATE/RETROACTIVE); I was not running during that window, so the live state at those times is inferred from mtimes.
+- Attempt 1 was observed for ~8 minutes only (T+10 report); its failures are known from the builder's register and the coordinator's account.
+- Run 1 comparison relies on run 1's examiner output; I did not re-audit run 1.
+- Telemetry: 30-60 s sampling, name-group aggregation; no per-window EasyEDA attribution; GPU counters give 0 (likely unsupported/none).
+- Human-intervention count is from the builder log plus coordinator messages; I cannot see the Captain's actions directly.
+- Subjective score components (category scores) are my judgement on the stated rubric.

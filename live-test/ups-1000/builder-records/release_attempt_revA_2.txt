@@ -1,0 +1,8 @@
+PASS lint --final: 0 errors
+PASS offline ERC: 0 errors
+PASS all blocks verified fresh
+PASS no pending live operations
+PASS EasyEDA ERC 0 errors: 0 errors
+FAIL EasyEDA DRC 0 violations: 1 violations
+PASS PCB designators == specs: missing [] extra []
+RELEASE BLOCKED (live gates). Nothing exported.

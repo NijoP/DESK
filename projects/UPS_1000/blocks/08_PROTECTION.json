@@ -1,0 +1,303 @@
+{
+ "id": "08_PROTECTION",
+ "title": "HARDWARE PROTECTION COMPARATORS",
+ "status": "draft",
+ "purpose": "LM339 quad comparator (12 V supply, open-collector wired-OR to FAULT_N): overcurrent both directions, over-temperature (NTC) and VBUS overvoltage. FAULT_N gates the driver inputs (block 06) and drives TIM1_BKIN.",
+ "ports": [
+  "12V",
+  "3V3",
+  "GND",
+  "ISENSE",
+  "NTC_SNS",
+  "VBUS_SNS",
+  "FAULT_N"
+ ],
+ "parts": [
+  {
+   "ref": "U9",
+   "mpn": "LM339DR",
+   "role": "quad comparator: C1 OC+, C2 OC-, C3 OT, C4 OV; outputs wired-OR FAULT_N",
+   "pins": {
+    "1": "FAULT_N",
+    "2": "FAULT_N",
+    "3": "12V",
+    "4": "REF_OCN",
+    "5": "ISENSE",
+    "6": "ISENSE",
+    "7": "REF_OCP",
+    "8": "REF_OT",
+    "9": "NTC_SNS",
+    "10": "VBUS_SNS",
+    "11": "REF_OV",
+    "12": "GND",
+    "13": "FAULT_N",
+    "14": "FAULT_N"
+   },
+   "nc": [],
+   "lcsc": "C7948",
+   "package": "SOIC-14_L8.7-W3.9-P1.27-LS6.0-BL"
+  },
+  {
+   "ref": "C50",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "LM339 VCC decoupling at pin 3",
+   "pins": {
+    "1": "12V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R29",
+   "mpn": "0603WAF1002T5E",
+   "role": "OC+ reference top",
+   "pins": {
+    "1": "3V3",
+    "2": "REF_OCP"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R30",
+   "mpn": "0603WAF4022T5E",
+   "role": "OC+ reference bottom",
+   "pins": {
+    "1": "REF_OCP",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C12447",
+   "package": "0603",
+   "value": "40.2k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C51",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "OC+ reference filter",
+   "pins": {
+    "1": "REF_OCP",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R31",
+   "mpn": "0603WAF4022T5E",
+   "role": "OC- reference top",
+   "pins": {
+    "1": "3V3",
+    "2": "REF_OCN"
+   },
+   "nc": [],
+   "lcsc": "C12447",
+   "package": "0603",
+   "value": "40.2k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R32",
+   "mpn": "0603WAF1002T5E",
+   "role": "OC- reference bottom",
+   "pins": {
+    "1": "REF_OCN",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C52",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "OC- reference filter",
+   "pins": {
+    "1": "REF_OCN",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R33",
+   "mpn": "0603WAF1003T5E",
+   "role": "OT reference top",
+   "pins": {
+    "1": "3V3",
+    "2": "REF_OT"
+   },
+   "nc": [],
+   "lcsc": "C25803",
+   "package": "0603",
+   "value": "100k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R34",
+   "mpn": "0603WAF1002T5E",
+   "role": "OT reference bottom",
+   "pins": {
+    "1": "REF_OT",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C53",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "OT reference filter",
+   "pins": {
+    "1": "REF_OT",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R35",
+   "mpn": "0603WAF1002T5E",
+   "role": "OV reference top",
+   "pins": {
+    "1": "3V3",
+    "2": "REF_OV"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R36",
+   "mpn": "0603WAF7502T5E",
+   "role": "OV reference bottom",
+   "pins": {
+    "1": "REF_OV",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C23242",
+   "package": "0603",
+   "value": "75k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C54",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "OV reference filter",
+   "pins": {
+    "1": "REF_OV",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R37",
+   "mpn": "0603WAF4701T5E",
+   "role": "FAULT_N pull-up (open-collector wired-OR)",
+   "pins": {
+    "1": "FAULT_N",
+    "2": "3V3"
+   },
+   "nc": [],
+   "lcsc": "C23162",
+   "package": "0603",
+   "value": "4.7k",
+   "rating": "1% 0.1W 75V"
+  }
+ ],
+ "qa": [
+  {
+   "item": "OC+ trip",
+   "formula": "ISENSE > REF_OCP: Itrip = (Vref-1.65)/(20*5mOhm)",
+   "result": "REF 2.643 V -> +9.93 A",
+   "limit": "~10 A",
+   "source": "calc (ratiometric to 3V3, same as INA240 REF)",
+   "pass": true
+  },
+  {
+   "item": "OC- trip",
+   "formula": "ISENSE < REF_OCN",
+   "result": "REF 0.657 V -> -9.93 A",
+   "limit": "~10 A",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "OT trip",
+   "formula": "NTC_SNS < REF_OT; R_ntc = 10k*V/(3.3-V); T = 1/(1/298.15 + ln(R/10k)/B), B25/50 = 3380 K (Murata NCP18XH series code XH; datasheet TO VERIFY)",
+   "result": "REF 0.300 V -> R_ntc 1.000 k -> 101.0 C (B=3380)",
+   "limit": "~100 C board/FET-case trip",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "OV trip",
+   "formula": "VBUS_SNS > REF_OV: VBUS = Vref/0.04852",
+   "result": "REF 2.912 V -> 60.0 V",
+   "limit": "> 58.4 V max operating, < 96.8 V clamp",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "LM339 CM range at 12 V",
+   "formula": "0..VCC-2 V over temp = 0..10 V",
+   "result": "all inputs <= 3.3 V",
+   "limit": "in range",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM339 s6.10 p10",
+   "pass": true
+  },
+  {
+   "item": "Output",
+   "formula": "open collector, wired-OR, 4.7k pull-up to 3V3",
+   "result": "0.7 mA sink when low",
+   "limit": "<= 6 mA min sink",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM339 s7.1 p19",
+   "pass": true
+  },
+  {
+   "item": "Response",
+   "formula": "INA240 + 1 us RC + LM339 (~1 us) + AND gate",
+   "result": "~2-3 us to gate-off (estimate, to be MEASURED at bring-up)",
+   "limit": "cycle-by-cycle; TIM1 BKIN latches",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Hysteresis",
+   "formula": "none (wired-OR)",
+   "result": "cycle-by-cycle limiting; latch is TIM1 BKIN in MCU",
+   "limit": "documented limitation",
+   "source": "design",
+   "pass": true
+  }
+ ]
+}

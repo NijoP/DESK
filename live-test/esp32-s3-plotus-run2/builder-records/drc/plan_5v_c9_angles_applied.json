@@ -1,0 +1,81 @@
+{
+ "plan": {
+  "note": "run 2b S5: remove two open 45-deg 5V junctions at C9 (angle_check.json); joins moved onto the C9.1 pad",
+  "min_clearance_mm": 0.152,
+  "delete_tracks": [
+   "7159e65ac8fbec05",
+   "8d1ef3be582fbc5a",
+   "b8311028ad23e9c7"
+  ],
+  "tracks": [
+   {
+    "net": "5V",
+    "layer": 1,
+    "w": 0.305,
+    "pts": [
+     [
+      26.581,
+      12.901
+     ],
+     [
+      26.581,
+      11.501
+     ]
+    ]
+   },
+   {
+    "net": "5V",
+    "layer": 1,
+    "w": 0.305,
+    "pts": [
+     [
+      26.581,
+      12.901
+     ],
+     [
+      27.399,
+      14.117
+     ]
+    ]
+   }
+  ],
+  "vias": []
+ },
+ "deleted": [
+  {
+   "id": "7159e65ac8fbec05",
+   "net": "5V",
+   "x1": 1030.6999999999998,
+   "y1": 507.9,
+   "x2": 1078.7,
+   "y2": 555.8,
+   "w": 12,
+   "layer": 1
+  },
+  {
+   "id": "8d1ef3be582fbc5a",
+   "net": "5V",
+   "x1": 1036,
+   "y1": 507.9,
+   "x2": 1046.5,
+   "y2": 497.40000000000003,
+   "w": 12,
+   "layer": 1
+  },
+  {
+   "id": "b8311028ad23e9c7",
+   "net": "5V",
+   "x1": 1046.5,
+   "y1": 497.40000000000003,
+   "x2": 1046.5,
+   "y2": 452.8,
+   "w": 12,
+   "layer": 1
+  }
+ ],
+ "track_ids": [
+  "e4e70d99ef1a19c4",
+  "c1f30b7b4aaec766"
+ ],
+ "via_ids": []
+}

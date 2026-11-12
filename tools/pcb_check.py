@@ -79,6 +79,8 @@ if "--json" in args:
     print(json.dumps(out))
 else:
     for side, m in M.items():
+        if side == "plan_sync" or not isinstance(m, dict) or not m.get("parts"):
+            continue                      # plan_sync (added by --gate) is not a per-side metrics dict
         if m["parts"]:
             print(f"side {side}: {m['parts']} parts, utilisation {m['utilisation']:.0%}, hotspots {m['hotspot_cells']}, "
                   f"largest free {m['largest_free_mm2']} mm2 at {m['largest_free_rect_mm']}, {m['pins_per_cm2']} pins/cm2")

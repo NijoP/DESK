@@ -1,0 +1,194 @@
+[
+{
+"num": "1",
+"name": "VBAT"
+},
+{
+"num": "2",
+"name": "PC13"
+},
+{
+"num": "3",
+"name": "PC14-OSC32_IN"
+},
+{
+"num": "4",
+"name": "PC15-OSC32_OUT"
+},
+{
+"num": "5",
+"name": "PF0-OSC_IN"
+},
+{
+"num": "6",
+"name": "PF1-OSC_OUT"
+},
+{
+"num": "7",
+"name": "PG10-NRST"
+},
+{
+"num": "8",
+"name": "PA0"
+},
+{
+"num": "9",
+"name": "PA1"
+},
+{
+"num": "10",
+"name": "PA2"
+},
+{
+"num": "11",
+"name": "PA3"
+},
+{
+"num": "12",
+"name": "PA4"
+},
+{
+"num": "13",
+"name": "PA5"
+},
+{
+"num": "14",
+"name": "PA6"
+},
+{
+"num": "15",
+"name": "PA7"
+},
+{
+"num": "16",
+"name": "PB0"
+},
+{
+"num": "17",
+"name": "PB1"
+},
+{
+"num": "18",
+"name": "PB2"
+},
+{
+"num": "19",
+"name": "VSSA"
+},
+{
+"num": "20",
+"name": "VREF+"
+},
+{
+"num": "21",
+"name": "VDDA"
+},
+{
+"num": "22",
+"name": "PB10"
+},
+{
+"num": "23",
+"name": "VSS"
+},
+{
+"num": "24",
+"name": "VDD"
+},
+{
+"num": "25",
+"name": "PB11"
+},
+{
+"num": "26",
+"name": "PB12"
+},
+{
+"num": "27",
+"name": "PB13"
+},
+{
+"num": "28",
+"name": "PB14"
+},
+{
+"num": "29",
+"name": "PB15"
+},
+{
+"num": "30",
+"name": "PA8"
+},
+{
+"num": "31",
+"name": "PA9"
+},
+{
+"num": "32",
+"name": "PA10"
+},
+{
+"num": "33",
+"name": "PA11"
+},
+{
+"num": "34",
+"name": "PA12"
+},
+{
+"num": "35",
+"name": "VSS"
+},
+{
+"num": "36",
+"name": "VDD"
+},
+{
+"num": "37",
+"name": "PA13"
+},
+{
+"num": "38",
+"name": "PA14"
+},
+{
+"num": "39",
+"name": "PA15"
+},
+{
+"num": "40",
+"name": "PB3"
+},
+{
+"num": "41",
+"name": "PB4"
+},
+{
+"num": "42",
+"name": "PB5"
+},
+{
+"num": "43",
+"name": "PB6"
+},
+{
+"num": "44",
+"name": "PB7"
+},
+{
+"num": "45",
+"name": "PB8-BOOT0"
+},
+{
+"num": "46",
+"name": "PB9"
+},
+{
+"num": "47",
+"name": "VSS"
+},
+{
+"num": "48",
+"name": "VDD"
+}
+]

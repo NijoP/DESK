@@ -1,0 +1,401 @@
+{
+ "id": "04_MCU",
+ "title": "STM32G431 CONTROLLER",
+ "status": "draft",
+ "purpose": "STM32G431CBT6 (170 MHz, TIM1 complementary PWM + break input, ADC12, FDCAN1, USART2) with datasheet decoupling, 12 MHz HSE, SWD and UART headers, fault LED.",
+ "ports": [
+  "3V3",
+  "GND",
+  "ISENSE",
+  "VBUS_SNS",
+  "NTC_SNS",
+  "VOUT_SNS",
+  "FAULT_N",
+  "PWM_H",
+  "PWM_L",
+  "DRV_DIS",
+  "FAN_PWM",
+  "CAN_TX",
+  "CAN_RX"
+ ],
+ "parts": [
+  {
+   "ref": "U4",
+   "mpn": "STM32G431CBT6",
+   "role": "MCU: PA8 TIM1_CH1=PWM_H, PA7 TIM1_CH1N=PWM_L, PA6 TIM1_BKIN=FAULT_N, ADC PA0/PA1/PB0/PB1, FDCAN1 PA11/PA12, USART2 PA2/PA3",
+   "pins": {
+    "1": "3V3",
+    "5": "HSE_IN",
+    "6": "HSE_OUT",
+    "7": "NRST",
+    "8": "ISENSE",
+    "9": "VBUS_SNS",
+    "10": "UART_TX",
+    "11": "UART_RX",
+    "14": "FAULT_N",
+    "15": "PWM_L",
+    "16": "VOUT_SNS",
+    "17": "NTC_SNS",
+    "19": "GND",
+    "20": "3V3",
+    "21": "3V3",
+    "23": "GND",
+    "24": "3V3",
+    "30": "PWM_H",
+    "33": "CAN_RX",
+    "34": "CAN_TX",
+    "35": "GND",
+    "36": "3V3",
+    "37": "SWDIO",
+    "38": "SWCLK",
+    "42": "LED_FLT",
+    "43": "FAN_PWM",
+    "44": "DRV_DIS",
+    "45": "BOOT0",
+    "47": "GND",
+    "48": "3V3"
+   },
+   "nc": [
+    "2",
+    "3",
+    "4",
+    "12",
+    "13",
+    "18",
+    "22",
+    "25",
+    "26",
+    "27",
+    "28",
+    "29",
+    "31",
+    "32",
+    "39",
+    "40",
+    "41",
+    "46"
+   ],
+   "lcsc": "C529355",
+   "package": "LQFP-48_L7.0-W7.0-P0.50-LS9.0-BL"
+  },
+  {
+   "ref": "C20",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VDD pin 24 decoupling",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C21",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VDD pin 36 decoupling",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C22",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VDD pin 48 decoupling",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C23",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VBAT pin 1 decoupling",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C24",
+   "mpn": "CL10A475KO8NNNC",
+   "role": "VDD bulk 4.7 uF",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C19666",
+   "package": "0603",
+   "value": "4.7uF",
+   "rating": "16V X5R"
+  },
+  {
+   "ref": "C25",
+   "mpn": "CL10B103KB8NNNC",
+   "role": "VDDA pin 21 10 nF",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1589",
+   "package": "0603",
+   "value": "10nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C26",
+   "mpn": "CL10A105KB8NNNC",
+   "role": "VDDA pin 21 1 uF",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C15849",
+   "package": "0603",
+   "value": "1uF",
+   "rating": "50V X5R"
+  },
+  {
+   "ref": "C27",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VREF+ pin 20 100 nF",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C28",
+   "mpn": "CL10A105KB8NNNC",
+   "role": "VREF+ pin 20 1 uF",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C15849",
+   "package": "0603",
+   "value": "1uF",
+   "rating": "50V X5R"
+  },
+  {
+   "ref": "C29",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "NRST 0.1 uF at pin 7",
+   "pins": {
+    "1": "NRST",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R12",
+   "mpn": "0603WAF1002T5E",
+   "role": "BOOT0 pull-down: boot from flash",
+   "pins": {
+    "1": "BOOT0",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "Y1",
+   "mpn": "X322512MSB4SI",
+   "role": "12 MHz HSE crystal 3225",
+   "pins": {
+    "1": "HSE_IN",
+    "3": "HSE_OUT",
+    "2": "GND",
+    "4": "GND"
+   },
+   "nc": [],
+   "lcsc": "C9002",
+   "package": "CRYSTAL-SMD_4P-L3.2-W2.5-BL",
+   "value": "12MHz",
+   "rating": "CL 20pF TO VERIFY"
+  },
+  {
+   "ref": "C30",
+   "mpn": "CL10C300JB8NNNC",
+   "role": "HSE load cap OSC_IN",
+   "pins": {
+    "1": "HSE_IN",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C22397",
+   "package": "0603",
+   "value": "30pF",
+   "rating": "50V C0G"
+  },
+  {
+   "ref": "C31",
+   "mpn": "CL10C300JB8NNNC",
+   "role": "HSE load cap OSC_OUT",
+   "pins": {
+    "1": "HSE_OUT",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C22397",
+   "package": "0603",
+   "value": "30pF",
+   "rating": "50V C0G"
+  },
+  {
+   "ref": "J2",
+   "mpn": "HDR-M_2.54_1x5P",
+   "role": "SWD header: 1 3V3, 2 SWCLK, 3 GND, 4 SWDIO, 5 NRST",
+   "pins": {
+    "1": "3V3",
+    "2": "SWCLK",
+    "3": "GND",
+    "4": "SWDIO",
+    "5": "NRST"
+   },
+   "nc": [],
+   "lcsc": "",
+   "package": "HDR-TH_5P-P2.54-V-M"
+  },
+  {
+   "ref": "J3",
+   "mpn": "HDR-M_2.54_1x3P",
+   "role": "UART header: 1 TX (MCU out), 2 RX (MCU in), 3 GND",
+   "pins": {
+    "1": "UART_TX",
+    "2": "UART_RX",
+    "3": "GND"
+   },
+   "nc": [],
+   "lcsc": "",
+   "package": "HDR-TH_3P-P2.54-V-M"
+  },
+  {
+   "ref": "R13",
+   "mpn": "0603WAF1001T5E",
+   "role": "fault LED resistor",
+   "pins": {
+    "1": "LED_FLT",
+    "2": "LEDF_A"
+   },
+   "nc": [],
+   "lcsc": "C21190",
+   "package": "0603",
+   "value": "1k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "D3",
+   "mpn": "KT-0603R",
+   "role": "FAULT LED (red), driven by PB5",
+   "pins": {
+    "1": "LEDF_A",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C2286",
+   "package": "LED-SMD_L1.6-W0.8-R-RD",
+   "rating": "Vf~2.0V"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Decoupling",
+   "formula": "per DS12589 Fig 16: VDD n x 100 nF + 4.7 uF; VDDA 10 nF + 1 uF; VREF+ 100 nF + 1 uF",
+   "result": "3 x 100 nF VDD + 100 nF VBAT + 4.7 uF; VDDA 10 nF + 1 uF; VREF+ 100 nF + 1 uF",
+   "limit": "matches",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md STM32 s5.1.6 p68",
+   "pass": true
+  },
+  {
+   "item": "VREF+",
+   "formula": "VREF+ = VDDA (tied to 3V3); VDDA >= 2 V",
+   "result": "3.3 V",
+   "limit": "2 V..VDDA",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md STM32 s3.11.1 p22",
+   "pass": true
+  },
+  {
+   "item": "Alternate functions",
+   "formula": "Table 13",
+   "result": "PA8 AF6 TIM1_CH1, PA7 AF6 TIM1_CH1N, PA6 AF6 TIM1_BKIN, PA11/PA12 AF9 FDCAN1, PA2/PA3 AF7 USART2, PA13/PA14 SWD",
+   "limit": "no conflicts (PA14 kept as SWCLK only)",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md STM32 Table 13 p61-62",
+   "pass": true
+  },
+  {
+   "item": "ADC inputs",
+   "formula": "Table 12",
+   "result": "PA0 ADC12_IN1 ISENSE, PA1 ADC12_IN2 VBUS_SNS, PB0 ADC1_IN15 VOUT_SNS, PB1 ADC1_IN12 NTC_SNS",
+   "limit": "all ADC capable",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md STM32 Table 12 p51-53",
+   "pass": true
+  },
+  {
+   "item": "NRST",
+   "formula": "0.1 uF to GND",
+   "result": "100 nF",
+   "limit": "matches",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md STM32 Fig 27 p121",
+   "pass": true
+  },
+  {
+   "item": "BOOT0",
+   "formula": "PB8-BOOT0 low = boot from flash (nBOOT_SEL default)",
+   "result": "10k pull-down",
+   "limit": "flash boot",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md STM32 s3.5 p19",
+   "pass": true
+  },
+  {
+   "item": "HSE load caps",
+   "formula": "C = 2*(CL - Cstray), CL 20 pF (part code S, TO VERIFY), Cstray 5 pF",
+   "result": "30 pF",
+   "limit": "crystal datasheet TO VERIFY",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Fault LED",
+   "formula": "(3.3-2.0)/1k",
+   "result": "1.3 mA",
+   "limit": "<= 20 mA GPIO",
+   "source": "calc",
+   "pass": true
+  }
+ ]
+}

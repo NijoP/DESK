@@ -1,0 +1,97 @@
+{
+ "note": "run 2b Stage 3 explicit GND links (gnd_links.py)",
+ "min_clearance_mm": 0.16,
+ "tracks": [
+  {
+   "net": "GND",
+   "layer": 1,
+   "w": 0.15,
+   "why": "U1 pin8 -> pin3 under the package (centre GND pins)",
+   "pts": [
+    [
+     11.2,
+     22.0
+    ],
+    [
+     12.0,
+     22.0
+    ]
+   ]
+  },
+  {
+   "net": "GND",
+   "layer": 1,
+   "w": 0.2,
+   "why": "U1 pin3 escape right between CC1 and USB_DN stubs",
+   "pts": [
+    [
+     12.0,
+     22.0
+    ],
+    [
+     13.3,
+     22.0
+    ]
+   ]
+  },
+  {
+   "net": "GND",
+   "layer": 2,
+   "w": 0.3,
+   "why": "explicit bottom GND link for group C5.2,C6.2,C7.2",
+   "pts": [
+    [
+     63.501,
+     34.0
+    ],
+    [
+     56.939,
+     41.801
+    ]
+   ]
+  },
+  {
+   "net": "GND",
+   "layer": 2,
+   "w": 0.3,
+   "why": "explicit bottom GND link for group C9.2",
+   "pts": [
+    [
+     27.939,
+     13.201
+    ],
+    [
+     21.379,
+     2.2
+    ]
+   ]
+  },
+  {
+   "net": "GND",
+   "layer": 2,
+   "w": 0.3,
+   "why": "explicit bottom GND link for group ",
+   "pts": [
+    [
+     8.961,
+     26.418
+    ],
+    [
+     6.906,
+     26.325
+    ]
+   ]
+  }
+ ],
+ "vias": [
+  {
+   "net": "GND",
+   "xy": [
+    13.3,
+    22.0
+   ],
+   "d": 0.6,
+   "drill": 0.3
+  }
+ ]
+}

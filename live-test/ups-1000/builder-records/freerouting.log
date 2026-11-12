@@ -1,0 +1,10 @@
+2026-11-12 17:16:25.643 INFO   Freerouting v2.1.0 (build-date: 2025-04-12)
+2026-11-12 17:16:25.777 WARN   No default constructor found for field: currentLocale
+2026-11-12 17:16:25.778 INFO   Settings were loaded from freerouting.json
+2026-11-12 17:16:27.622 INFO   New version available: v2.5.0
+2026-11-12 17:16:27.791 INFO   [CFF080\5FD4EF] Job 'CFF080\5FD4EF' started at 2026-11-12T11:46:27.790366Z
+2026-11-12 17:19:32.496 INFO   [CFF080\5FD4EF] Auto-router pass #1 on board '964fede29fe8dfbb4678fdffc360a7f3' was completed in 3 minutes 4.24 seconds with the score of 178.80 (106 unrouted), using 16179.75 CPU seconds and 41221 MB memory.
+2026-11-12 17:20:08.379 INFO   [CFF080\5FD4EF] Auto-router pass #2 on board '1cc537bd6ab1b13bb9df6a0be4f1cdfb' was completed in 35.67 seconds with the score of 97.24 (97 unrouted), using 23201.11 CPU seconds and 49832 MB memory.
+2026-11-12 17:20:43.492 INFO   [CFF080\5FD4EF] Auto-router pass #3 on board 'a803197cc3814cd6eb60b0f725b6438b' was completed in 34.94 seconds with the score of 142.92 (89 unrouted), using 31247.72 CPU seconds and 57890 MB memory.
+2026-11-12 17:22:50.020 INFO   [CFF080\5FD4EF] Auto-router pass #4 on board '755e688caddc940476bbee484dacf4ea' was completed in 2 minutes 6.35 seconds with the score of 135.20 (86 unrouted), using 69701.84 CPU seconds and 97658 MB memory.
+2026-11-12 17:23:16.608 INFO   [CFF080\5FD4EF] Auto-router pass #5 on board '7a829bd0cfad4f7429548c19c696fb94' was completed in 26.44 seconds with the score of 75.39 (70 unrouted), using 79994.95 CPU seconds and 105737 MB memory.

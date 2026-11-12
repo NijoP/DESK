@@ -1,0 +1,3 @@
+sheet: 123 parts, 58 nets | fan-out GND:97, 3V3:37, VBUS:19, 12V:17, SW:13, FAULT_N:9, 5V:7, VBUS_SNS:6
+single-pin nets (ok only if the other side is in a block not yet built): none
+VERIFIED

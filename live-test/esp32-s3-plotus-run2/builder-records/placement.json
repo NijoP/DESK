@@ -1,0 +1,493 @@
+{
+ "origin_mm": [
+  0,
+  0
+ ],
+ "board_mm": [
+  74.0,
+  44.0
+ ],
+ "layers": 2,
+ "grid_mm": 0.05,
+ "passive_gap_mm": 0.4,
+ "roles": {
+  "connectors": [
+   "J1",
+   "J2",
+   "J3"
+  ],
+  "heat": [
+   "U2"
+  ],
+  "rf": [
+   "U3"
+  ],
+  "esd": [
+   "U1",
+   "D1"
+  ]
+ },
+ "overhang_allowed": [
+  "J1"
+ ],
+ "keepouts": [
+  {
+   "name": "antenna keep-out (WROOM-1 antenna, full board width)",
+   "rect_mm": [
+    66.9,
+    0.0,
+    74.0,
+    44.0
+   ],
+   "side": "both",
+   "allow": [
+    "U3"
+   ]
+  },
+  {
+   "name": "mounting hole M1",
+   "rect_mm": [
+    0.75,
+    0.75,
+    6.25,
+    6.25
+   ],
+   "side": "both"
+  },
+  {
+   "name": "mounting hole M2",
+   "rect_mm": [
+    0.75,
+    37.75,
+    6.25,
+    43.25
+   ],
+   "side": "both"
+  },
+  {
+   "name": "mounting hole M3",
+   "rect_mm": [
+    61.25,
+    0.75,
+    66.75,
+    6.25
+   ],
+   "side": "both"
+  },
+  {
+   "name": "mounting hole M4",
+   "rect_mm": [
+    61.25,
+    37.75,
+    66.75,
+    43.25
+   ],
+   "side": "both"
+  }
+ ],
+ "rules": {
+  "decap_max_mm": 2.0,
+  "esd_max_mm": 3.0,
+  "connector_edge_mm": 1.0,
+  "rf_edge_mm": 0.5
+ },
+ "parts": [
+  [
+   "U3",
+   57.4,
+   22.0,
+   270,
+   "T",
+   "ESP32-S3 module at right short edge, antenna flush with board edge over full-width keep-out"
+  ],
+  [
+   "J1",
+   5.2,
+   22.0,
+   270,
+   "T",
+   "USB-C centred on left short edge, mouth flush with edge"
+  ],
+  [
+   "J2",
+   35.37,
+   41.8,
+   180,
+   "T",
+   "1x20 header on top long edge; pin1 at right next to module pins 1-14 (pad order matches)"
+  ],
+  [
+   "J3",
+   35.37,
+   2.2,
+   180,
+   "T",
+   "1x20 header on bottom long edge; pin1 at right next to module pins 27-40"
+  ],
+  [
+   "SW2",
+   5.0,
+   10.5,
+   0,
+   "T",
+   "BOOT button at left edge below USB-C (accessible beside connector)"
+  ],
+  [
+   "SW1",
+   5.0,
+   33.5,
+   0,
+   "T",
+   "RESET button at left edge above USB-C"
+  ],
+  [
+   "U1",
+   11.6,
+   22.0,
+   90,
+   "T",
+   "4-line ESD 2.3mm behind USB-C pads: leaves room for the D+/D- duplicate-pad crossing vias (routing recovery F-016)"
+  ],
+  [
+   "R1",
+   10.6,
+   25.0,
+   0,
+   "T",
+   "CC1 5.1k next to J1 CC pad"
+  ],
+  [
+   "R2",
+   10.6,
+   19.0,
+   0,
+   "T",
+   "CC2 5.1k next to J1 CC pad"
+  ],
+  [
+   "C1",
+   10.6,
+   27.5,
+   0,
+   "T",
+   "VBUS 100nF - USB column x=10.6"
+  ],
+  [
+   "TP7",
+   49.1,
+   33.2,
+   0,
+   "T",
+   "USB D+ test point IN-LINE: the D+ drop into U3 pin 14 (x=49.78) passes through its pad (rot 0; rot 90 at x=49.78 overlaps U3/TP8 bodies, gate-checked); 3V3 rerouted west of the pad"
+  ],
+  [
+   "TP8",
+   51.05,
+   36.4,
+   90,
+   "T",
+   "USB D- test point IN-LINE at the D- corner above U3 pin 13 (no stub; run 1 lesson)"
+  ],
+  [
+   "F1",
+   14.5,
+   15.0,
+   0,
+   "T",
+   "polyfuse - power row y=15, first in VBUS chain"
+  ],
+  [
+   "D1",
+   14.5,
+   11.5,
+   0,
+   "T",
+   "VBUS TVS directly below fuse, same column x=14.5"
+  ],
+  [
+   "D2",
+   21.5,
+   15.0,
+   180,
+   "T",
+   "Schottky - power row y=15, anode toward F1"
+  ],
+  [
+   "C2",
+   27.5,
+   15.5,
+   90,
+   "T",
+   "LDO input 10uF beside U2 VIN - power row"
+  ],
+  [
+   "U2",
+   30.5,
+   15.0,
+   270,
+   "T",
+   "LDO rot 270: inputs face left, VOUT faces right (left->right power flow); on GND copper"
+  ],
+  [
+   "C3",
+   33.6,
+   15.5,
+   90,
+   "T",
+   "LDO output 10uF beside VOUT - power row"
+  ],
+  [
+   "C4",
+   35.4,
+   15.5,
+   90,
+   "T",
+   "LDO output 100nF - power row, same orientation"
+  ],
+  [
+   "TP1",
+   14.5,
+   7.0,
+   0,
+   "T",
+   "VBUS test point - test row y=7, column x=14.5"
+  ],
+  [
+   "TP2",
+   19.0,
+   7.0,
+   0,
+   "T",
+   "5V test point - test row, 4.5mm pitch"
+  ],
+  [
+   "TP3",
+   23.5,
+   7.0,
+   0,
+   "T",
+   "3V3 test point - test row"
+  ],
+  [
+   "TP4",
+   28.0,
+   7.0,
+   0,
+   "T",
+   "GND test point - test row"
+  ],
+  [
+   "LED1",
+   33.0,
+   10.0,
+   0,
+   "T",
+   "power LED - indicator row y=10"
+  ],
+  [
+   "R3",
+   36.0,
+   10.0,
+   0,
+   "T",
+   "power LED resistor - indicator row"
+  ],
+  [
+   "LED2",
+   40.0,
+   10.0,
+   0,
+   "T",
+   "status LED GPIO48 - indicator row"
+  ],
+  [
+   "R9",
+   43.0,
+   10.0,
+   0,
+   "T",
+   "status LED resistor - indicator row"
+  ],
+  [
+   "R5",
+   46.0,
+   10.0,
+   0,
+   "T",
+   "GPIO0 pull-up - strap column x=46"
+  ],
+  [
+   "TP6",
+   52.5,
+   7.0,
+   0,
+   "T",
+   "GPIO0 test point - test row y=7 under NC pins 28-30"
+  ],
+  [
+   "R7",
+   46.0,
+   13.0,
+   0,
+   "T",
+   "GPIO45 pull-down - strap column x=46 at pin 26"
+  ],
+  [
+   "R6",
+   46.0,
+   31.5,
+   0,
+   "T",
+   "GPIO3 pull-up - strap column x=46"
+  ],
+  [
+   "R8",
+   46.0,
+   33.0,
+   0,
+   "T",
+   "GPIO46 pull-down - strap column x=46"
+  ],
+  [
+   "C7",
+   64.6,
+   33.3,
+   90,
+   "T",
+   "100nF at module 3V3 pin 2, left of C5"
+  ],
+  [
+   "C6",
+   66.2,
+   33.3,
+   90,
+   "T",
+   "1uF at module 3V3 pin 2, right of C5, inside x<66.9 antenna keep-out line"
+  ],
+  [
+   "C5",
+   62.9,
+   33.3,
+   90,
+   "T",
+   "10uF bulk directly above module 3V3 pin 2 (run 1 F-011 fix: <2mm)"
+  ],
+  [
+   "R4",
+   60.6,
+   35.0,
+   0,
+   "T",
+   "EN pull-up near module EN pin 3"
+  ],
+  [
+   "C8",
+   60.6,
+   36.6,
+   0,
+   "T",
+   "EN RC cap near module EN pin 3"
+  ],
+  [
+   "TP5",
+   14.5,
+   33.5,
+   0,
+   "T",
+   "EN test point - aligned with RESET row y=33.5 and column x=14.5"
+  ],
+  [
+   "C9",
+   27.0,
+   12.9,
+   0,
+   "T",
+   "5V 1uF at U2 input, column under C2 (x=27.5)"
+  ],
+  [
+   "C10",
+   27.0,
+   11.5,
+   0,
+   "T",
+   "5V 100nF at U2 input, column under C2 (x=27.5)"
+  ]
+ ],
+ "passives": [],
+ "copper_keepouts": [
+  {
+   "name": "J1 footprint slot region (lower) - DRC e56",
+   "rect_mm": [
+    5.4,
+    18.2,
+    7.8,
+    20.4
+   ]
+  },
+  {
+   "name": "J1 footprint slot region (upper) - DRC e55",
+   "rect_mm": [
+    5.4,
+    23.6,
+    7.8,
+    25.8
+   ]
+  },
+  {
+   "name": "rounded corner BL (R2 outline + 0.5mm edge)",
+   "rect_mm": [
+    0,
+    0,
+    2.5,
+    2.5
+   ]
+  },
+  {
+   "name": "rounded corner TL (R2 outline + 0.5mm edge)",
+   "rect_mm": [
+    0,
+    41.5,
+    2.5,
+    44
+   ]
+  },
+  {
+   "name": "rounded corner BR (R2 outline + 0.5mm edge)",
+   "rect_mm": [
+    71.5,
+    0,
+    74,
+    2.5
+   ]
+  },
+  {
+   "name": "rounded corner TR (R2 outline + 0.5mm edge)",
+   "rect_mm": [
+    71.5,
+    41.5,
+    74,
+    44
+   ]
+  }
+ ],
+ "reserved": [
+  {
+   "name": "USB pair vertical run x=21.0/21.5 (hand-routed, protected)",
+   "rect_mm": [
+    20.4,
+    20.2,
+    22.1,
+    37.0
+   ]
+  },
+  {
+   "name": "USB pair east run y=35.9/36.4 to TP7/TP8 and U3 IO19/IO20",
+   "rect_mm": [
+    20.4,
+    35.2,
+    52.0,
+    38.0
+   ]
+  }
+ ]
+}

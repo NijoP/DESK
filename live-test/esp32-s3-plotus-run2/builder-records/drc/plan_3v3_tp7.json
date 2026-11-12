@@ -1,0 +1,2 @@
+{"note":"run 2b S3: reroute 3V3 top segments west/south of TP7 pad (DRC SMD Pad to Track 0 mil)","min_clearance_mm":0.152,"delete_tracks":["263d532430f9b619","4c8c5a4c4ee3c66b"],"tracks":[{"net":"3V3","layer":1,"w":0.254,"pts":[[46.457,32.052],[47.2,32.795]]},{"net":"3V3","layer":1,"w":0.305,"pts":[[47.2,32.795],[47.2,34.465]]},{"net":"3V3","layer":1,"w":0.305,"pts":[[47.2,34.465],[48.209,34.465]]}],"vias":[]}
+

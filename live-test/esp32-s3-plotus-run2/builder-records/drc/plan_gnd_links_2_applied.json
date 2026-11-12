@@ -1,0 +1,132 @@
+{
+ "plan": {
+  "note": "run 2b Stage 3 explicit GND links (gnd_links.py)",
+  "min_clearance_mm": 0.16,
+  "tracks": [
+   {
+    "net": "GND",
+    "layer": 2,
+    "w": 0.3,
+    "why": "explicit bottom GND link for group R7.2,U3.1,U3.40,U3.41,U3.41,U3.41,U3.41,U3.41,U3.41,U3.41,U3.41,U3.41",
+    "pts": [
+     [
+      59.175,
+      24.9
+     ],
+     [
+      61.93,
+      36.652
+     ]
+    ]
+   },
+   {
+    "net": "GND",
+    "layer": 2,
+    "w": 0.3,
+    "why": "explicit bottom GND link for group C2.2,C3.2,C4.2,C9.2,C10.2,D1.2,LED1.1,R2.2,R8.2,TP4.1,U2.2",
+    "pts": [
+     [
+      28.02,
+      16.5
+     ],
+     [
+      28.02,
+      22.601
+     ]
+    ]
+   },
+   {
+    "net": "GND",
+    "layer": 2,
+    "w": 0.3,
+    "why": "explicit bottom GND link for group C2.2,C3.2,C4.2,C9.2,C10.2,D1.2,LED1.1,R2.2,R8.2,TP4.1,U2.2",
+    "pts": [
+     [
+      28.02,
+      22.601
+     ],
+     [
+      10.3,
+      22.601
+     ]
+    ]
+   },
+   {
+    "net": "GND",
+    "layer": 2,
+    "w": 0.3,
+    "why": "explicit bottom GND link for group LED2.1",
+    "pts": [
+     [
+      38.731,
+      9.7
+     ],
+     [
+      28.02,
+      16.5
+     ]
+    ]
+   },
+   {
+    "net": "GND",
+    "layer": 2,
+    "w": 0.3,
+    "why": "explicit bottom GND link for group ",
+    "pts": [
+     [
+      15.9,
+      27.025
+     ],
+     [
+      14.131,
+      21.282
+     ]
+    ]
+   },
+   {
+    "net": "GND",
+    "layer": 2,
+    "w": 0.3,
+    "why": "explicit bottom GND link for group ",
+    "pts": [
+     [
+      8.995,
+      26.475
+     ],
+     [
+      6.906,
+      26.325
+     ]
+    ]
+   },
+   {
+    "net": "GND",
+    "layer": 2,
+    "w": 0.3,
+    "why": "explicit bottom GND link for group ",
+    "pts": [
+     [
+      8.333,
+      18.399
+     ],
+     [
+      6.906,
+      17.676
+     ]
+    ]
+   }
+  ],
+  "vias": []
+ },
+ "deleted": [],
+ "track_ids": [
+  "35c9a328bb946af4",
+  "dc5893ae3d1e974e",
+  "7db26cd27fb82c78",
+  "9b6cd6d17505d6b0",
+  "3aff9eab2dc0537a",
+  "dba7df23f459c79f",
+  "cd95b30528d4b546"
+ ],
+ "via_ids": []
+}

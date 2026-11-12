@@ -1,0 +1,319 @@
+[
+ {
+  "name": "Clearance Error",
+  "list": [
+   {
+    "name": "SMD Pad to Track",
+    "list": [
+     {
+      "visible": true,
+      "errorType": "Clearance Error",
+      "errorObjType": "SMD Pad to Track",
+      "ruleName": "copperThickness1oz",
+      "ruleTypeName": "Safe Spacing",
+      "obj1": {
+       "typeName": "Track",
+       "suffix": "(GPIO7): e2552"
+      },
+      "obj2": {
+       "typeName": "SMD Pad",
+       "suffix": "(USB_DN): TP8_1"
+      },
+      "layer": "Top Layer",
+      "explanation": {
+       "str": "{obj1} to {obj2} distance is {minDistance}, should be {shouldBe}",
+       "param": {
+        "minDistance": "0.4mil",
+        "shouldBe": ">= 6mil",
+        "obj1": "Object 1",
+        "obj2": "object 2",
+        "type": "ClearanceError"
+       },
+       "errData": {
+        "globalIndex": "err1388",
+        "position": {
+         "x": 204.05535,
+         "y": 153.26794999999998
+        },
+        "name": "copperThickness1oz",
+        "obj1": "76ec45dfbd2d8577",
+        "obj1Type": "Track",
+        "obj2": "844a616e2579cd68e3",
+        "obj2Type": "SMD Pad",
+        "minDistance": 0.039744350213690105,
+        "clearance": 0.59843,
+        "errorType": "Safe Spacing",
+        "layerIds": [
+         1
+        ],
+        "obj1Suffix": "(GPIO7): e2552",
+        "obj2Suffix": "(USB_DN): TP8_1"
+       }
+      },
+      "objs": [
+       "76ec45dfbd2d8577",
+       "844a616e2579cd68e3"
+      ],
+      "globalIndex": "err1388",
+      "pos": {
+       "x": 204.05535,
+       "y": 153.26794999999998
+      },
+      "parentId": "DRCTab|_|Errors|_|Clearance Error|_|SMD Pad to Track"
+     },
+     {
+      "visible": true,
+      "errorType": "Clearance Error",
+      "errorObjType": "SMD Pad to Track",
+      "ruleName": "copperThickness1oz",
+      "ruleTypeName": "Safe Spacing",
+      "obj1": {
+       "typeName": "Track",
+       "suffix": "(GPIO15): e2556"
+      },
+      "obj2": {
+       "typeName": "SMD Pad",
+       "suffix": "(USB_DN): TP8_1"
+      },
+      "layer": "Top Layer",
+      "explanation": {
+       "str": "{obj1} to {obj2} distance is {minDistance}, should be {shouldBe}",
+       "param": {
+        "minDistance": "0mil",
+        "shouldBe": ">= 6mil",
+        "obj1": "Object 1",
+        "obj2": "object 2",
+        "type": "ClearanceError"
+       },
+       "errData": {
+        "globalIndex": "err1389",
+        "position": {
+         "x": 202.68003236994224,
+         "y": 153.1496
+        },
+        "name": "copperThickness1oz",
+        "obj1": "be1eb0f4c760a351",
+        "obj1Type": "Track",
+        "obj2": "844a616e2579cd68e3",
+        "obj2Type": "SMD Pad",
+        "minDistance": 0,
+        "clearance": 0.59843,
+        "errorType": "Safe Spacing",
+        "layerIds": [
+         1
+        ],
+        "obj1Suffix": "(GPIO15): e2556",
+        "obj2Suffix": "(USB_DN): TP8_1"
+       }
+      },
+      "objs": [
+       "be1eb0f4c760a351",
+       "844a616e2579cd68e3"
+      ],
+      "globalIndex": "err1389",
+      "pos": {
+       "x": 202.68003236994224,
+       "y": 153.1496
+      },
+      "parentId": "DRCTab|_|Errors|_|Clearance Error|_|SMD Pad to Track"
+     },
+     {
+      "visible": true,
+      "errorType": "Clearance Error",
+      "errorObjType": "SMD Pad to Track",
+      "ruleName": "copperThickness1oz",
+      "ruleTypeName": "Safe Spacing",
+      "obj1": {
+       "typeName": "Track",
+       "suffix": "(GPIO16): e2559"
+      },
+      "obj2": {
+       "typeName": "SMD Pad",
+       "suffix": "(USB_DN): TP8_1"
+      },
+      "layer": "Top Layer",
+      "explanation": {
+       "str": "{obj1} to {obj2} distance is {minDistance}, should be {shouldBe}",
+       "param": {
+        "minDistance": "0mil",
+        "shouldBe": ">= 6mil",
+        "obj1": "Object 1",
+        "obj2": "object 2",
+        "type": "ClearanceError"
+       },
+       "errData": {
+        "globalIndex": "err1390",
+        "position": {
+         "x": 201.31,
+         "y": 152.79000000000002
+        },
+        "name": "copperThickness1oz",
+        "obj1": "74019bbf60ddf381",
+        "obj1Type": "Track",
+        "obj2": "844a616e2579cd68e3",
+        "obj2Type": "SMD Pad",
+        "minDistance": 0,
+        "clearance": 0.59843,
+        "errorType": "Safe Spacing",
+        "layerIds": [
+         1
+        ],
+        "obj1Suffix": "(GPIO16): e2559",
+        "obj2Suffix": "(USB_DN): TP8_1"
+       }
+      },
+      "objs": [
+       "74019bbf60ddf381",
+       "844a616e2579cd68e3"
+      ],
+      "globalIndex": "err1390",
+      "pos": {
+       "x": 201.31,
+       "y": 152.79000000000002
+      },
+      "parentId": "DRCTab|_|Errors|_|Clearance Error|_|SMD Pad to Track"
+     },
+     {
+      "visible": true,
+      "errorType": "Clearance Error",
+      "errorObjType": "SMD Pad to Track",
+      "ruleName": "copperThickness1oz",
+      "ruleTypeName": "Safe Spacing",
+      "obj1": {
+       "typeName": "Track",
+       "suffix": "(GPIO16): e2560"
+      },
+      "obj2": {
+       "typeName": "SMD Pad",
+       "suffix": "(USB_DN): TP8_1"
+      },
+      "layer": "Top Layer",
+      "explanation": {
+       "str": "{obj1} to {obj2} distance is {minDistance}, should be {shouldBe}",
+       "param": {
+        "minDistance": "0mil",
+        "shouldBe": ">= 6mil",
+        "obj1": "Object 1",
+        "obj2": "object 2",
+        "type": "ClearanceError"
+       },
+       "errData": {
+        "globalIndex": "err1391",
+        "position": {
+         "x": 201.31,
+         "y": 152.79000000000002
+        },
+        "name": "copperThickness1oz",
+        "obj1": "81213f985be1f752",
+        "obj1Type": "Track",
+        "obj2": "844a616e2579cd68e3",
+        "obj2Type": "SMD Pad",
+        "minDistance": 0,
+        "clearance": 0.59843,
+        "errorType": "Safe Spacing",
+        "layerIds": [
+         1
+        ],
+        "obj1Suffix": "(GPIO16): e2560",
+        "obj2Suffix": "(USB_DN): TP8_1"
+       }
+      },
+      "objs": [
+       "81213f985be1f752",
+       "844a616e2579cd68e3"
+      ],
+      "globalIndex": "err1391",
+      "pos": {
+       "x": 201.31,
+       "y": 152.79000000000002
+      },
+      "parentId": "DRCTab|_|Errors|_|Clearance Error|_|SMD Pad to Track"
+     }
+    ],
+    "count": 4,
+    "title": [
+     "SMD Pad",
+     "to",
+     "Track",
+     "(4)"
+    ],
+    "visible": true
+   },
+   {
+    "name": "Fill Region to Track",
+    "list": [
+     {
+      "visible": true,
+      "errorType": "Clearance Error",
+      "errorObjType": "Fill Region to Track",
+      "ruleName": "copperThickness1oz",
+      "ruleTypeName": "Safe Spacing",
+      "obj1": {
+       "typeName": "Track",
+       "suffix": "(USB_DP): e2516"
+      },
+      "obj2": {
+       "typeName": "Fill Region",
+       "suffix": "(GND): e262"
+      },
+      "layer": "Top Layer",
+      "explanation": {
+       "str": "{obj1} to {obj2} distance is {minDistance}, should be {shouldBe}",
+       "param": {
+        "minDistance": "3.8mil",
+        "shouldBe": ">= 6mil",
+        "obj1": "Object 1",
+        "obj2": "object 2",
+        "type": "ClearanceError"
+       },
+       "errData": {
+        "globalIndex": "err1392",
+        "position": {
+         "x": 194.7649179074134,
+         "y": 139.96863761346714
+        },
+        "name": "copperThickness1oz",
+        "obj1": "5088c968b3d1d631",
+        "obj1Type": "Track",
+        "obj2": "240734445c42aff3",
+        "obj2Type": "Fill Region",
+        "minDistance": 0.3783079839614125,
+        "clearance": 0.59843,
+        "errorType": "Safe Spacing",
+        "layerIds": [
+         1
+        ],
+        "obj1Suffix": "(USB_DP): e2516",
+        "obj2Suffix": "(GND): e262"
+       }
+      },
+      "objs": [
+       "5088c968b3d1d631",
+       "240734445c42aff3"
+      ],
+      "globalIndex": "err1392",
+      "pos": {
+       "x": 194.7649179074134,
+       "y": 139.96863761346714
+      },
+      "parentId": "DRCTab|_|Errors|_|Clearance Error|_|Fill Region to Track"
+     }
+    ],
+    "count": 1,
+    "title": [
+     "Fill Region",
+     "to",
+     "Track",
+     "(1)"
+    ],
+    "visible": true
+   }
+  ],
+  "visible": true,
+  "count": 5,
+  "title": [
+   "Clearance Error",
+   "(5)"
+  ]
+ }
+]

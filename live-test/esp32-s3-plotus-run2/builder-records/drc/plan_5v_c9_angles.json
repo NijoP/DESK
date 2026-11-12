@@ -1,0 +1,1 @@
+{"note":"run 2b S5: remove two open 45-deg 5V junctions at C9 (angle_check.json); joins moved onto the C9.1 pad","min_clearance_mm":0.152,"delete_tracks":["7159e65ac8fbec05","8d1ef3be582fbc5a","b8311028ad23e9c7"],"tracks":[{"net":"5V","layer":1,"w":0.305,"pts":[[26.581,12.901],[26.581,11.501]]},{"net":"5V","layer":1,"w":0.305,"pts":[[26.581,12.901],[27.399,14.117]]}],"vias":[]}

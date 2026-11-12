@@ -47,6 +47,14 @@ class TestCopperFill(unittest.TestCase):
         self.assertIsNone(self.cf.explicit_link((4, 0), [(6, 0)], wall, 0.2, 0.25))
         self.assertIsNone(self.cf.explicit_link((4, 0), [(40, 0)], None, 0.2, 0.25))   # beyond max length
 
+    def test_absolute_polygon_pad_is_not_rotated_again(self):
+        # USB-C J1 A4B9 readback (Plotus run 2b): absolute, already-rotated polygon 1.3 x 0.6 mm, pad rot -90
+        pad = {"x": 302.1294, "y": 960.6317, "rot": -90.0,
+               "shape": ["POLYGON", [276.5374, 948.8177, "L", 276.5374, 972.4387, 327.7164, 972.4387, 327.7164, 948.8177]]}
+        x0, y0, x1, y1 = self.cf.pad_geometry(pad).bounds
+        self.assertAlmostEqual(x1 - x0, 1.3, places=2)
+        self.assertAlmostEqual(y1 - y0, 0.6, places=2)
+
 
 if __name__ == "__main__":
     unittest.main()

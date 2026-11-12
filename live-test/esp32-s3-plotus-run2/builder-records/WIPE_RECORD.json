@@ -1,0 +1,60 @@
+{
+ "pcb_before": {
+  "Component": 38,
+  "Line": 392,
+  "Via": 67,
+  "Fill": 16,
+  "Pour": 0,
+  "Poured": 0,
+  "Polyline": 1,
+  "Region": 0,
+  "Arc": 0,
+  "String": 0,
+  "Pad": 184,
+  "Dimension": 0,
+  "Image": 0,
+  "Object": 0,
+  "Attribute": 120
+ },
+ "pcb_after": {
+  "Component": 0,
+  "Line": 0,
+  "Via": 0,
+  "Fill": 0,
+  "Pour": 0,
+  "Poured": 0,
+  "Polyline": 0,
+  "Region": 0,
+  "Arc": 0,
+  "String": 0,
+  "Pad": 0,
+  "Dimension": 0,
+  "Image": 0,
+  "Object": 0,
+  "Attribute": 0
+ },
+ "sch_before": {
+  "Wire": 158,
+  "Component": 38,
+  "Text": 4,
+  "Rectangle": 4,
+  "Polygon": 0,
+  "Circle": 0,
+  "Arc": 0,
+  "Bus": 0,
+  "Pin": 0,
+  "Object": 0
+ },
+ "sch_after": {
+  "Wire": 0,
+  "Component": 0,
+  "Text": 0,
+  "Rectangle": 0,
+  "Polygon": 0,
+  "Circle": 0,
+  "Arc": 0,
+  "Bus": 0,
+  "Pin": 0,
+  "Object": 0
+ }
+}

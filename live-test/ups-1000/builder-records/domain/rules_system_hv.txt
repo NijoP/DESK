@@ -1,0 +1,44 @@
+ac_mains_input_protection overlays=['mains_safety_isolation', 'emi_emc', 'thermal_management', 'battery_management', 'galvanic_isolation', 'switching_power'] rules=43
+  COPPER-BARRIER-044 BLOCKING ENFORCED    OFFLINE_TESTED  No copper across the isolation barrier  <- overlay:galvanic_isolation,mains_safety_isolation
+  ELEC-CREEP-004     BLOCKING ENFORCED    OFFLINE_TESTED  Creepage from working voltage, pollution degree and material group (IEC 60664-1 Table F.4)  <- overlay:galvanic_isolation,mains_safety_isolation
+  MAINS-DECL-160     BLOCKING ENFORCED    OFFLINE_TESTED  Every mains/HV net declared in voltage_rails before any spacing is derived  <- overlay:mains_safety_isolation
+  MAINS-INS-163      BLOCKING ENFORCED    OFFLINE_TESTED  Insulation grade (basic/double/reinforced) declared for the barrier  <- overlay:mains_safety_isolation
+  PLACE-ISO-016      BLOCKING ENFORCED    OFFLINE_TESTED  Only isolating components bridge the isolation barrier  <- overlay:galvanic_isolation,mains_safety_isolation
+  ROUTE-HV-025       BLOCKING ENFORCED    OFFLINE_TESTED  No vias or signals inside the isolation barrier  <- overlay:galvanic_isolation,mains_safety_isolation
+  BAT-CHEM-130       BLOCKING ENFORCED    OFFLINE_TESTED  Charge voltage derived from the declared chemistry  <- overlay:battery_management
+  BAT-PROT-131       BLOCKING ENFORCED    OFFLINE_TESTED  Cell protection present and independent of the charger  <- overlay:battery_management
+  DCDC-VIN-121       BLOCKING ENFORCED    OFFLINE_TESTED  Input voltage range inside the converter IC rating  <- overlay:switching_power
+  COPPER-ZONE-041    BLOCKING ENFORCED    OFFLINE_TESTED  Zone clearance to other nets from the profile, never a literal  <- global
+  ELEC-CLEAR-003     BLOCKING ENFORCED    OFFLINE_TESTED  Electrical clearance from working voltage (IPC-2221B Table 6-1)  <- global
+  ELEC-UNKNOWN-002   BLOCKING ENFORCED    OFFLINE_TESTED  Unknown electrical inputs fail closed  <- global
+  ELEC-WIDTH-001     BLOCKING ENFORCED    OFFLINE_TESTED  Trace width from declared current (IPC-2221)  <- global
+  MFG-MIN-070        BLOCKING ENFORCED    OFFLINE_TESTED  Trace width and clearance at or above the fabricator minimum  <- global
+  PLACE-KEEPOUT-011  BLOCKING ENFORCED    OFFLINE_TESTED  Keep-outs (antenna, barrier, mechanical) are empty on every layer  <- global
+  MAINS-FUSE-161     ERROR    ENFORCED    OFFLINE_TESTED  Fuse first after the mains connector; MOV after the fuse  <- overlay:mains_safety_isolation
+  ELEC-DROP-006      ERROR    ENFORCED    OFFLINE_TESTED  Voltage drop on power paths within budget  <- overlay:battery_management,switching_power
+  ELEC-VIA-005       ERROR    ADVISORY    IMPLEMENTED     Via ampacity and parallel via count  <- overlay:switching_power
+  BAT-NTC-132        ERROR    ENFORCED    OFFLINE_TESTED  Thermistor at the cell feeding the charger/BMS  <- overlay:battery_management
+  ROUTE-RETURN-027   ERROR    ENFORCED    OFFLINE_TESTED  Return path continuity: no high-speed or switching nets across plane splits  <- overlay:switching_power
+  THERM-TJ-050       ERROR    UNSUPPORTED ADVISORY        Junction temperature below the datasheet limit at max ambient  <- overlay:switching_power,thermal_management
+  EMI-LOOP-060       ERROR    ADVISORY    ADVISORY        Hot-loop area minimised and recorded  <- overlay:switching_power
+  PLACE-HOTLOOP-012  ERROR    ADVISORY    IMPLEMENTED     Converter hot loop minimal: Cin, switches and rectifier adjacent  <- overlay:switching_power
+  ROUTE-SW-023       ERROR    ADVISORY    ADVISORY        Switch node short, wide, single layer; never under feedback  <- overlay:switching_power
+  COPPER-GND-040     ERROR    ENFORCED    OFFLINE_TESTED  Continuous ground plane; stitching vias near fast signals  <- global
+  COPPER-ISLAND-043  ERROR    ENFORCED    OFFLINE_TESTED  No unconnected copper islands  <- global
+  ELEC-RATING-007    ERROR    UNSUPPORTED ADVISORY        Component voltage/current ratings exceed applied stress with margin  <- global
+  EMI-ESD-062        ERROR    ADVISORY    ADVISORY        ESD protection on every externally accessible signal  <- global
+  MAINS-XDIS-162     ERROR    ENFORCED    OFFLINE_TESTED  Discharge resistor across X capacitors  <- family:x_capacitor
+  MFG-DRILL-071      ERROR    ENFORCED    IMPLEMENTED     Via drill and annular ring within the fabricator capability  <- global
+  MFG-EDGE-072       ERROR    ENFORCED    OFFLINE_TESTED  Copper setback from the board edge  <- global
+  PLACE-DECAP-010    ERROR    ENFORCED    OFFLINE_TESTED  Decoupling capacitor within 2 mm of the supply pin  <- global
+  ROUTE-PRIO-020     ERROR    ENFORCED    OFFLINE_TESTED  Route in priority order: diff pairs/RF, high-current, critical, power, signal  <- global
+  MFG-COAT-073       WARNING  ENFORCED    OFFLINE_TESTED  Conformal coating changes the clearance condition (B4)  <- overlay:mains_safety_isolation
+  MFG-SLOT-074       WARNING  ADVISORY    ADVISORY        Slot the board where creepage cannot be met in the barrier  <- overlay:mains_safety_isolation
+  COPPER-THERMVIA-046 WARNING  ADVISORY    ADVISORY        Thermal via array under exposed pads  <- overlay:switching_power,thermal_management
+  ROUTE-GATE-028     WARNING  ADVISORY    ADVISORY        Gate drive loops short with return on the adjacent layer  <- overlay:switching_power
+  EMI-FILTER-061     WARNING  ADVISORY    ADVISORY        Input filter footprints when the product is EMC tested  <- overlay:emi_emc
+  PLACE-FB-013       WARNING  ADVISORY    ADVISORY        Feedback network at the FB pin, away from the switch node and inductor  <- overlay:switching_power
+  PLACE-THERM-017    WARNING  ADVISORY    ADVISORY        Heat-sensitive parts away from dissipating parts  <- overlay:thermal_management
+  THERM-COPPER-051   WARNING  ADVISORY    ADVISORY        Copper area per watt from the device datasheet  <- overlay:thermal_management
+  COPPER-RELIEF-042  WARNING  ENFORCED    OFFLINE_TESTED  Thermal relief only where hand-soldered; solid on power pads  <- global
+  THERM-DERATE-052   WARNING  ADVISORY    ADVISORY        Continuous dissipators derated to 60-70 % of rating  <- family:discharge_resistor

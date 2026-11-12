@@ -1,0 +1,122 @@
+{
+ "id": "09_FAN_IO",
+ "title": "FAN DRIVE AND INSTRUMENT HEADER",
+ "status": "draft",
+ "purpose": "Low-side 12 V fan switch with flyback diode, and an 8-pin oscilloscope / instrument header carrying gated PWM, FAULT_N and all analog sense nodes.",
+ "ports": [
+  "12V",
+  "GND",
+  "FAN_PWM",
+  "INA_S",
+  "INB_S",
+  "FAULT_N",
+  "ISENSE",
+  "VBUS_SNS",
+  "NTC_SNS",
+  "VOUT_SNS"
+ ],
+ "parts": [
+  {
+   "ref": "J6",
+   "mpn": "HDR-M_2.54_1x2P",
+   "role": "fan header: 1 +12V, 2 FAN- (switched)",
+   "pins": {
+    "1": "12V",
+    "2": "FAN_N"
+   },
+   "nc": [],
+   "lcsc": "",
+   "package": "HDR-TH_2P-P2.54-V-M-1"
+  },
+  {
+   "ref": "Q3",
+   "mpn": "AO3400A",
+   "role": "fan low-side switch N-MOSFET",
+   "pins": {
+    "1": "FAN_G",
+    "2": "GND",
+    "3": "FAN_N"
+   },
+   "nc": [],
+   "lcsc": "C20917",
+   "package": "SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BR",
+   "rating": "30V 5.7A"
+  },
+  {
+   "ref": "D6",
+   "mpn": "1N4148W",
+   "role": "fan flyback diode (K = 12V, A = FAN_N)",
+   "pins": {
+    "1": "12V",
+    "2": "FAN_N"
+   },
+   "nc": [],
+   "lcsc": "C81598",
+   "package": "SOD-123F_L2.7-W1.6-LS3.8-RD"
+  },
+  {
+   "ref": "R38",
+   "mpn": "0603WAF1000T5E",
+   "role": "fan MOSFET gate resistor",
+   "pins": {
+    "1": "FAN_PWM",
+    "2": "FAN_G"
+   },
+   "nc": [],
+   "lcsc": "C22775",
+   "package": "0603",
+   "value": "100",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R39",
+   "mpn": "0603WAF1003T5E",
+   "role": "fan MOSFET gate pull-down (off at reset)",
+   "pins": {
+    "1": "FAN_G",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25803",
+   "package": "0603",
+   "value": "100k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "J7",
+   "mpn": "HDR-M_2.54_1x8P",
+   "role": "instrument header: 1 GND 2 INA_S 3 INB_S 4 FAULT_N 5 ISENSE 6 VBUS_SNS 7 NTC_SNS 8 VOUT_SNS",
+   "pins": {
+    "1": "GND",
+    "2": "INA_S",
+    "3": "INB_S",
+    "4": "FAULT_N",
+    "5": "ISENSE",
+    "6": "VBUS_SNS",
+    "7": "NTC_SNS",
+    "8": "VOUT_SNS"
+   },
+   "nc": [],
+   "lcsc": "",
+   "package": "HDR-TH_8P-P2.54-V-M"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Fan switch",
+   "formula": "AO3400A Vgs(th) vs 3.3 V drive, Id vs 0.25 A",
+   "result": "3.3 V gate drive adequate for 0.25 A (Rds(on)@2.5V ~ 50 mOhm class, TO VERIFY)",
+   "limit": ">= 0.25 A",
+   "source": "AO3400A datasheet TO VERIFY",
+   "pass": true
+  },
+  {
+   "item": "Flyback",
+   "formula": "1N4148W 75 V / 150 mA cont, fan current 0.25 A transient only",
+   "result": "decay current < 0.25 A for us",
+   "limit": "IFSM >> transient",
+   "source": "TO VERIFY",
+   "pass": true
+  }
+ ]
+}

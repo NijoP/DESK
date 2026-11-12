@@ -56,6 +56,35 @@ for ref, x, y, rot, side, why in plan.get("parts", []):
     target[ref] = [snap(x), snap(y), rot, side]
 
 gap = plan.get("passive_gap_mm", 0.4)
+
+
+def _rect(ref, x, y, rot):
+    """Body rectangle (mm) of `ref` placed at (x, y, rot), from the dump bbox (taken at the dump's rotation)."""
+    b = [v / MIL for v in dump[ref]["bbox"]]
+    hx, hy = max(abs(b[0]), abs(b[1])), max(abs(b[2]), abs(b[3]))
+    if int(round(((rot - (dump[ref].get("rot") or 0)) % 180))) == 90:
+        hx, hy = hy, hx
+    return (x - hx, y - hy, x + hx, y + hy)
+
+
+_board = plan.get("board_mm")
+_keep = [k["rect_mm"] for k in plan.get("keepouts", []) if k.get("rect_mm")]
+_occ = {r: _rect(r, t[0], t[1], t[2]) for r, t in target.items() if r in dump}
+
+
+def _free(rc, me):
+    """True when rect `rc` keeps `gap` from every placed body, stays on the board and out of keep-outs (UPS_1000 F-005)."""
+    if _board and (rc[0] < ox + 0.3 or rc[1] < oy + 0.3 or rc[2] > ox + _board[0] - 0.3 or rc[3] > oy + _board[1] - 0.3):
+        return False
+    for k in _keep:
+        if rc[0] < k[2] and rc[2] > k[0] and rc[1] < k[3] and rc[3] > k[1]:
+            return False
+    for r, o in _occ.items():
+        if r != me and rc[0] < o[2] + gap and rc[2] > o[0] - gap and rc[1] < o[3] + gap and rc[3] > o[1] - gap:
+            return False
+    return True
+
+
 for ref, ic, pin, why in plan.get("passives", []):
     if ic not in target: raise SystemExit(f"{ref}: anchor {ic} must be placed in 'parts' first")
     pad = next((p for p in dump[ic]["pads"] if str(p["num"]) == str(pin)), None)
@@ -69,7 +98,31 @@ for ref, ic, pin, why in plan.get("passives", []):
     k = half + gap + 0.6
     tx, ty = x + ux / n * k, y + uy / n * k
     prot = 0 if abs(ux) >= abs(uy) else 90
+    # Collision-aware legalisation: several passives on one pin used to land on the same spot (UPS_1000 F-005).
+    # Search outward along the pin direction, then tangentially, for the first spot clear of every placed body.
+    ex_, ey_ = ux / n, uy / n
+    best = None
+    if ref in dump:
+        r0 = _rect(ref, 0, 0, prot)
+        # Start the search at the serving PAD (pad + clearance + half the passive), not at the IC's half-diagonal:
+        # the half-diagonal start left decoupling caps 3-12 mm from big ICs (UPS_1000 interim review, PLACE-DECAP-010).
+        half_p = max(r0[2] - r0[0], r0[3] - r0[1]) / 2
+        tx, ty = px + ex_ * (gap + half_p + 0.6), py + ey_ * (gap + half_p + 0.6)
+        step = max(r0[2] - r0[0], r0[3] - r0[1]) + gap
+        for i in range(0, 8):
+            for j in (0, 1, -1, 2, -2, 3, -3):
+                cx = tx + ex_ * i * step * 0.6 - ey_ * j * step
+                cy = ty + ey_ * i * step * 0.6 + ex_ * j * step
+                if _free(_rect(ref, cx, cy, prot), ref):
+                    best = (cx, cy)
+                    break
+            if best:
+                break
+    if best:
+        tx, ty = best
     target[ref] = [snap(tx), snap(ty), prot, side]
+    if ref in dump:
+        _occ[ref] = _rect(ref, target[ref][0], target[ref][1], prot)
 
 # Validate footprint invariants before modifying PCB
 for ref in target:

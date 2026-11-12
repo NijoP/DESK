@@ -1,0 +1,77 @@
+{
+  "updated": "2026-11-12T15:02:15.322+05:30",
+  "engineering_elapsed_min": 68.11,
+  "engineering_remaining_min": 156.89,
+  "stages": {
+    "1": {
+      "name": "Schematic design and validation",
+      "budget_min": 45,
+      "state": "ended",
+      "start_wall": "2026-11-12T13:54:08.650+05:30",
+      "start_mono_ns": 77229593000000,
+      "deadline_wall": "2026-11-12T14:39:08+05:30",
+      "end_wall": "2026-11-12T14:05:21.453+05:30",
+      "end_mono_ns": 77902390000000,
+      "duration_min": 11.213,
+      "within_budget": true,
+      "result": "PASS",
+      "note": "4 blocks VERIFIED with DESK 2c9de1a (40 parts, 43 nets, 0 floating pins/single-pin nets/duplicate refs); EasyEDA ERC 0 errors / 2 warnings (API gives count only, R2-F-003) with itemized audit; 5V and 3V3 each have 10uF+1uF+100nF; 2x2 neat layout; ghost-title defect disclosed (R2-F-005); 2 env interventions (H-R2-001 wipe, EasyEDA reopen)"
+    },
+    "2": {
+      "name": "Component placement",
+      "budget_min": 45,
+      "state": "ended",
+      "start_wall": "2026-11-12T14:05:40.246+05:30",
+      "start_mono_ns": 77921187000000,
+      "deadline_wall": "2026-11-12T14:50:40+05:30",
+      "end_wall": "2026-11-12T14:17:58.521+05:30",
+      "end_mono_ns": 78659453000000,
+      "duration_min": 12.304,
+      "within_budget": true,
+      "result": "PASS",
+      "note": "40/40 placed; rounded 74x44 outline (R2 corners) + 4x3.2mm NPTH; pcb_check --gate PLACEMENT & ROUTABILITY OK, 0 errors, routability 0.88; C5/C6/C7 0.85-0.88mm from U3 pin 2; antenna keep-out clean; 1 human intervention (Import Apply)"
+    },
+    "3": {
+      "name": "Routing and connectivity",
+      "budget_min": 90,
+      "state": "ended",
+      "start_wall": "2026-11-12T14:18:04.224+05:30",
+      "start_mono_ns": 78665156000000,
+      "deadline_wall": "2026-11-12T15:48:04+05:30",
+      "end_wall": "2026-11-12T14:51:06.701+05:30",
+      "end_mono_ns": 80647640000000,
+      "duration_min": 33.041,
+      "within_budget": true,
+      "result": "PASS",
+      "note": "Routing complete: EasyEDA DRC 0 (drc_s3_8), DESK verifier 43/43 with fills, strict GND model 1 group, USB D+/D- in-line through U1 and TP7/TP8 (diff 0.71 mm), power 12 mil with neck-downs; failures R2-F-008..011 recorded"
+    },
+    "4": {
+      "name": "Copper pouring",
+      "budget_min": 30,
+      "state": "ended",
+      "start_wall": "2026-11-12T14:51:24.070+05:30",
+      "start_mono_ns": 80665015000000,
+      "deadline_wall": "2026-11-12T15:21:24+05:30",
+      "end_wall": "2026-11-12T14:54:28.754+05:30",
+      "end_mono_ns": 80849687000000,
+      "duration_min": 3.078,
+      "within_budget": true,
+      "result": "PASS",
+      "note": "GND pour both layers (0.3 mm clr, 0.5 mm edge, thermals on 8 THT GND pads, islands pruned), 35 grid stitching vias + 6 second vias (no single-via pieces), antenna keep-out 0 mm2 copper, DRC 0 (drc_s4_2), 43/43, saved"
+    },
+    "5": {
+      "name": "Manufacturing checks",
+      "budget_min": 15,
+      "state": "ended",
+      "start_wall": "2026-11-12T14:54:28.845+05:30",
+      "start_mono_ns": 80849781000000,
+      "deadline_wall": "2026-11-12T15:09:28+05:30",
+      "end_wall": "2026-11-12T15:00:50.651+05:30",
+      "end_mono_ns": 81231593000000,
+      "duration_min": 6.364,
+      "within_budget": true,
+      "result": "PASS",
+      "note": "Silkscreen PASS (90 texts >=0.91 mm, pad gap >=0.36 mm, branding top+bottom, TP + header pin labels), final DRC 0, 43/43, Gerber+drill zip, JLCPCB BOM with LCSC on all 18 lines, CPL, schematic PDF, .epro; no order placed"
+    }
+  }
+}

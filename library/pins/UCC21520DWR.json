@@ -1,0 +1,66 @@
+[
+{
+"num": "1",
+"name": "INA"
+},
+{
+"num": "2",
+"name": "INB"
+},
+{
+"num": "3",
+"name": "VCCI"
+},
+{
+"num": "4",
+"name": "GND"
+},
+{
+"num": "5",
+"name": "DISABLE"
+},
+{
+"num": "6",
+"name": "DT"
+},
+{
+"num": "7",
+"name": "NC"
+},
+{
+"num": "8",
+"name": "VCCI"
+},
+{
+"num": "9",
+"name": "VSSB"
+},
+{
+"num": "10",
+"name": "OUTB"
+},
+{
+"num": "11",
+"name": "VDDB"
+},
+{
+"num": "12",
+"name": "NC"
+},
+{
+"num": "13",
+"name": "NC"
+},
+{
+"num": "14",
+"name": "VSSA"
+},
+{
+"num": "15",
+"name": "OUTA"
+},
+{
+"num": "16",
+"name": "VDDA"
+}
+]

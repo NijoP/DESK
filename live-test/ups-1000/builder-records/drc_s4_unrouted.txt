@@ -1,0 +1,8 @@
+  349x Common
+
+DRC Total: 349 violations
+  Unconnected SMD Pads: 0
+  Clearance Violations: 0
+  Short Circuits:       0
+Recovery Plan: projects/UPS_1000\state\recovery_plan.json
+Readiness: REJECTED

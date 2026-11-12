@@ -1,0 +1,1536 @@
+{
+ "rule": "height >= 0.8 mm, pad gap >= 0.15 mm, >= 0.4 mm inside board, no text overlap",
+ "texts": [
+  {
+   "kind": "designator",
+   "id": "873cb5060359b537e2",
+   "text": "C1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    10.17,
+    28.23,
+    11.07,
+    29.14
+   ],
+   "pad_gap_mm": 0.455,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "b23de3a24883f33be18",
+   "text": "C2",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    26.96,
+    17.17,
+    28.07,
+    18.08
+   ],
+   "pad_gap_mm": 0.567,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "f90782f2531fba63e18",
+   "text": "C3",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    33.06,
+    17.17,
+    34.17,
+    18.08
+   ],
+   "pad_gap_mm": 0.567,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "2d1363349746c2f1e2",
+   "text": "C4",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    34.85,
+    16.6,
+    35.98,
+    17.51
+   ],
+   "pad_gap_mm": 0.429,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "4db8e32d99c9f8a3e18",
+   "text": "C5",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    62.36,
+    34.97,
+    63.47,
+    35.88
+   ],
+   "pad_gap_mm": 0.566,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "3963ec1ee2fa0cabe2",
+   "text": "C6",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    65.67,
+    34.4,
+    66.76,
+    35.31
+   ],
+   "pad_gap_mm": 0.429,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "f06267b3d7dd2ce1e2",
+   "text": "C7",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    64.06,
+    34.4,
+    65.17,
+    35.31
+   ],
+   "pad_gap_mm": 0.429,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "e49cd6bbea3d7871e2",
+   "text": "C8",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    60.06,
+    37.33,
+    61.17,
+    38.24
+   ],
+   "pad_gap_mm": 0.456,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "c2306d573176594ce2",
+   "text": "C9",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    24.84,
+    12.44,
+    25.93,
+    13.36
+   ],
+   "pad_gap_mm": 0.401,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "1b0ad57531221417e2",
+   "text": "C10",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    26.28,
+    9.86,
+    27.77,
+    10.77
+   ],
+   "pad_gap_mm": 0.456,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "eb92654f37891675e25",
+   "text": "D1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    14.08,
+    12.59,
+    14.95,
+    13.51
+   ],
+   "pad_gap_mm": 0.745,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "122aaae86c91fcf5e18",
+   "text": "D2",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    20.97,
+    16.66,
+    22.06,
+    17.57
+   ],
+   "pad_gap_mm": 0.919,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "9b46d253cfaa76dde16",
+   "text": "F1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    14.1,
+    16.32,
+    14.95,
+    17.23
+   ],
+   "pad_gap_mm": 0.609,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "cdaa4da2fd6adb86e2",
+   "text": "J1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    3.79,
+    27.08,
+    4.56,
+    27.99
+   ],
+   "pad_gap_mm": 0.47,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "9f818ad748ba429de45",
+   "text": "J2",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    34.87,
+    39.36,
+    35.86,
+    40.27
+   ],
+   "pad_gap_mm": 0.907,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "d0246c0fade56f3fe45",
+   "text": "J3",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    34.87,
+    3.73,
+    35.86,
+    4.64
+   ],
+   "pad_gap_mm": 0.907,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "b32b89c97ed0b6efe27",
+   "text": "LED1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    31.98,
+    10.98,
+    33.99,
+    11.9
+   ],
+   "pad_gap_mm": 0.582,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "d7414c8f36dd2892e27",
+   "text": "LED2",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    38.87,
+    10.98,
+    41.09,
+    11.9
+   ],
+   "pad_gap_mm": 0.582,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "c2421bd90671f837e16",
+   "text": "R1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    10.18,
+    25.72,
+    11.05,
+    26.64
+   ],
+   "pad_gap_mm": 0.453,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "fae746ae95adfa91e16",
+   "text": "R2",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    10.07,
+    17.36,
+    11.16,
+    18.28
+   ],
+   "pad_gap_mm": 0.453,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "b461f094da6d99b3e16",
+   "text": "R3",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    35.47,
+    10.72,
+    36.56,
+    11.64
+   ],
+   "pad_gap_mm": 0.454,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "7d55389bbbf3c519e16",
+   "text": "R4",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    60.06,
+    33.36,
+    61.17,
+    34.28
+   ],
+   "pad_gap_mm": 0.455,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "493d002f645e7722e16",
+   "text": "R5",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    45.47,
+    10.72,
+    46.56,
+    11.64
+   ],
+   "pad_gap_mm": 0.454,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "13d76ae605cc056be16",
+   "text": "R6",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    45.48,
+    29.86,
+    46.55,
+    30.78
+   ],
+   "pad_gap_mm": 0.455,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "f4a26904e7210bade16",
+   "text": "R7",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    45.47,
+    13.72,
+    46.56,
+    14.64
+   ],
+   "pad_gap_mm": 0.455,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "7b35e52f2aa15616e16",
+   "text": "R8",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    45.47,
+    33.72,
+    46.56,
+    34.64
+   ],
+   "pad_gap_mm": 0.455,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "9b60d9a38f834d58e16",
+   "text": "R9",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    42.48,
+    10.72,
+    43.55,
+    11.64
+   ],
+   "pad_gap_mm": 0.454,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "d0702e091efe20ace33",
+   "text": "SW1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    4.22,
+    36.33,
+    5.83,
+    37.24
+   ],
+   "pad_gap_mm": 1.767,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "0af79d12c3c80b0fe33",
+   "text": "SW2",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    4.1,
+    13.33,
+    5.93,
+    14.24
+   ],
+   "pad_gap_mm": 1.671,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "726e2c6e7d88e2a1e10",
+   "text": "TP1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    13.79,
+    8.29,
+    15.26,
+    9.21
+   ],
+   "pad_gap_mm": 0.542,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "d23a3fc78b951b0ce10",
+   "text": "TP2",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    18.18,
+    8.29,
+    19.86,
+    9.21
+   ],
+   "pad_gap_mm": 0.542,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "0d5134f6a60e318ee10",
+   "text": "TP3",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    22.68,
+    8.29,
+    24.36,
+    9.21
+   ],
+   "pad_gap_mm": 0.542,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "f0061d1523f82835e10",
+   "text": "TP4",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    27.17,
+    8.29,
+    28.88,
+    9.21
+   ],
+   "pad_gap_mm": 0.542,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "e62593f158c09e0ce10",
+   "text": "TP5",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    13.68,
+    34.79,
+    15.36,
+    35.71
+   ],
+   "pad_gap_mm": 0.542,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "2fc6a35f3d4d462fe10",
+   "text": "TP6",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    51.69,
+    8.29,
+    53.35,
+    9.21
+   ],
+   "pad_gap_mm": 0.542,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "f61702574873393ae10",
+   "text": "TP7",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    48.64,
+    34.45,
+    49.56,
+    36.14
+   ],
+   "pad_gap_mm": 0.502,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "844a616e2579cd68e10",
+   "text": "TP8",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    50.23,
+    38.33,
+    51.91,
+    39.24
+   ],
+   "pad_gap_mm": 0.528,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "8a903183e0de0f1ee28",
+   "text": "U1",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    11.41,
+    23.51,
+    12.33,
+    24.39
+   ],
+   "pad_gap_mm": 0.358,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "0c881c10d3eb6b7be25",
+   "text": "U2",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    29.97,
+    17.18,
+    31.06,
+    18.09
+   ],
+   "pad_gap_mm": 0.937,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "designator",
+   "id": "fe484d1a7f962ab5e126",
+   "text": "U3",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    54.31,
+    21.54,
+    55.39,
+    22.46
+   ],
+   "pad_gap_mm": 1.331,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "0e1f8e769aaa7ebe",
+   "text": "PLOTUS ESP32-S3 DEV  REV A",
+   "layer": 3,
+   "height_mm": 1.27,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    19.5,
+    29.36,
+    40.5,
+    30.63
+   ],
+   "pad_gap_mm": 4.177,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "08596692f4e6eae2",
+   "text": "PLOTUS ESP32-S3 DEVKIT  REV A  2026-11",
+   "layer": 4,
+   "height_mm": 1.27,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    18.18,
+    19.36,
+    47.82,
+    20.63
+   ],
+   "pad_gap_mm": 10.401,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "8e635fd509c9e913",
+   "text": "VBUS",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    13.34,
+    4.34,
+    15.67,
+    5.26
+   ],
+   "pad_gap_mm": 0.992,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "a17afbbc8d79c317",
+   "text": "5V",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    18.43,
+    4.34,
+    19.57,
+    5.26
+   ],
+   "pad_gap_mm": 0.992,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "96b09e88317d62a3",
+   "text": "3V3",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    22.63,
+    4.34,
+    24.37,
+    5.26
+   ],
+   "pad_gap_mm": 0.992,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "87f59cd590c10687",
+   "text": "GND",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    27.15,
+    4.34,
+    28.86,
+    5.26
+   ],
+   "pad_gap_mm": 0.992,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "9da18da0b5e74820",
+   "text": "EN",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    13.97,
+    30.84,
+    15.03,
+    31.76
+   ],
+   "pad_gap_mm": 0.992,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "7be2be99195c5277",
+   "text": "IO0",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    51.8,
+    4.34,
+    53.2,
+    5.26
+   ],
+   "pad_gap_mm": 0.992,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "275fb34b6bbc11e9",
+   "text": "D+",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    46.31,
+    34.94,
+    47.49,
+    35.86
+   ],
+   "pad_gap_mm": 1.014,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "53181afcac8e7963",
+   "text": "D-",
+   "layer": 3,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    52.66,
+    38.14,
+    53.84,
+    39.06
+   ],
+   "pad_gap_mm": 0.925,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "4dd80f141a93fb21",
+   "text": "3V3",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    59.02,
+    38.82,
+    59.94,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "8d4702f8714d1826",
+   "text": "GND",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    56.48,
+    38.84,
+    57.4,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "7c9bc5aaeac19ce2",
+   "text": "EN",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    53.94,
+    38.24,
+    54.86,
+    39.3
+   ],
+   "pad_gap_mm": 1.7,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "8db41f97e85ece50",
+   "text": "IO4",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    51.4,
+    39.13,
+    52.32,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "ce37ac5499c31066",
+   "text": "IO5",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    48.86,
+    39.15,
+    49.78,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "9c9593eea35eb810",
+   "text": "IO6",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    46.32,
+    39.17,
+    47.24,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "08f48b87f0090d43",
+   "text": "IO7",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    43.78,
+    39.15,
+    44.7,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "708539ccacbfe881",
+   "text": "IO15",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    41.24,
+    38.77,
+    42.16,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "5d100b1e39930c32",
+   "text": "IO16",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    38.7,
+    38.79,
+    39.62,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "b96e3433815f9d3b",
+   "text": "IO17",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    36.16,
+    38.77,
+    37.08,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "0e1f9ffec4811543",
+   "text": "IO18",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    33.62,
+    38.77,
+    34.54,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "e83c0c51002b395b",
+   "text": "IO8",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    31.08,
+    39.15,
+    32.0,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "4daa53c89167aeac",
+   "text": "IO3",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    28.54,
+    39.15,
+    29.46,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "f3bed1916d5c78ae",
+   "text": "IO46",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    26.0,
+    38.55,
+    26.92,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "125d81c44efffd65",
+   "text": "IO9",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    23.46,
+    39.17,
+    24.38,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "b530533f29a108f6",
+   "text": "IO10",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    20.92,
+    38.77,
+    21.84,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "167c6bf741fe3779",
+   "text": "IO11",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    18.38,
+    38.98,
+    19.3,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "a4c5cec64377769d",
+   "text": "IO12",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    15.84,
+    38.77,
+    16.76,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "2783ff7797f70db3",
+   "text": "IO13",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    13.3,
+    38.77,
+    14.22,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "81c52ac8510b6357",
+   "text": "IO14",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    10.76,
+    38.74,
+    11.68,
+    40.55
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "b846fce0d1de9850",
+   "text": "GND",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    59.02,
+    3.45,
+    59.94,
+    5.16
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "f256fce39260c83b",
+   "text": "TX",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    56.48,
+    3.45,
+    57.4,
+    4.53
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "55fdc88baca2b110",
+   "text": "RX",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    53.94,
+    3.45,
+    54.86,
+    4.53
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "7aeb9dd6e4a29b0d",
+   "text": "IO1",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    51.4,
+    3.45,
+    52.32,
+    4.64
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "7e60042fbc2eb4f3",
+   "text": "IO2",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    48.86,
+    3.45,
+    49.78,
+    4.85
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "606c5568ac9ee32c",
+   "text": "IO42",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    46.32,
+    3.45,
+    47.24,
+    5.47
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "3e9a39c205da0258",
+   "text": "IO41",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    43.78,
+    3.45,
+    44.7,
+    5.26
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "66e7d157e255baea",
+   "text": "IO40",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    41.24,
+    3.45,
+    42.16,
+    5.47
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "24443d3b10604133",
+   "text": "IO39",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    38.7,
+    3.45,
+    39.62,
+    5.43
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "84021a46c712e01a",
+   "text": "IO38",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    36.16,
+    3.45,
+    37.08,
+    5.45
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "a9a1337e7a9e829e",
+   "text": "IO0",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    33.62,
+    4.45,
+    34.54,
+    5.85
+   ],
+   "pad_gap_mm": 1.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "446bc09eb6881a44",
+   "text": "IO45",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    31.08,
+    3.45,
+    32.0,
+    5.47
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "09469c7b01c8f579",
+   "text": "IO48",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    28.54,
+    3.45,
+    29.46,
+    5.47
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "ab9abdc055139e4b",
+   "text": "IO47",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    26.0,
+    3.45,
+    26.92,
+    5.47
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "3a37e55545e8ff0b",
+   "text": "IO21",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    23.46,
+    3.45,
+    24.38,
+    5.24
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "761d3453596f9c9c",
+   "text": "GND",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    20.92,
+    3.45,
+    21.84,
+    5.16
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "6ba071bd8861bae1",
+   "text": "3V3",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    18.38,
+    3.45,
+    19.3,
+    5.18
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "3349debb8f0f8665",
+   "text": "5V",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    15.84,
+    3.45,
+    16.76,
+    4.58
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "c2084861a9966bea",
+   "text": "5V",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    13.3,
+    3.45,
+    14.22,
+    4.58
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  },
+  {
+   "kind": "string",
+   "id": "8930573ec42a6031",
+   "text": "GND",
+   "layer": 4,
+   "height_mm": 0.914,
+   "stroke_mm": 0.152,
+   "box_mm": [
+    10.76,
+    3.45,
+    11.68,
+    5.16
+   ],
+   "pad_gap_mm": 0.45,
+   "on_board": true,
+   "overlaps_text": []
+  }
+ ],
+ "issues": []
+}

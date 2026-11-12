@@ -1,0 +1,13 @@
+{
+ "passed": true,
+ "planes_declared": 2,
+ "planes_in_dsn": 2,
+ "plane_mismatches": [],
+ "outline_primitives": 1,
+ "outline_closed": true,
+ "dsn_boundary_closed": true,
+ "pads_checked": 381,
+ "pads_in_router_keepouts": [],
+ "errors": [],
+ "warnings": []
+}
