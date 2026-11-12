@@ -1,0 +1,34 @@
+# DeskRequirementValidator 1.0.0: Extract engineering features deterministically and report what is missing.
+Group(service: String, projectId: String, runId: String, requirementsHash: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], featureNames: List[String], missingInformation: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: desk.domain_intelligence.classifier.extract_requirements
+  type DeskRequirementValidatorEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { featureNames: List[String], missingInformation: List[String], .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskRequirementValidator"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    requirementsHash: self.requirementsHash
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskRequirementValidatorEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.featureNames = checked.value.outputs.featureNames
+  self.missingInformation = checked.value.outputs.missingInformation
+}

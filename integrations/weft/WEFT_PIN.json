@@ -1,0 +1,9 @@
+{
+  "upstream": "https://github.com/WeaveMindAI/weft",
+  "commit": "61fdacd44b69ef12ca16b30dd533123549e45514",
+  "commit_date": "2026-11-10",
+  "changelog_version": "0.2.292",
+  "rust_toolchain": "1.99.1",
+  "license": "O'Saasy License Agreement (not MIT, not Apache, not OSI-approved)",
+  "note": "Upstream publishes no semantic-versioning policy and states that breaking changes are still possible, so the pin is the commit. Moving it means re-running `python desk.py weft validate` and the test suite."
+}

@@ -1,0 +1,37 @@
+# DeskDomainClassifier 1.0.0: Classify the requirements into a PCB domain archetype with overlays.
+Group(service: String, projectId: String, runId: String, requirementsHash: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], primaryArchetype: String, classificationStatus: String, confidence: Number, overlays: List[String], missingInformation: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: desk.domain_intelligence.api.classify
+  type DeskDomainClassifierEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { primaryArchetype: String, classificationStatus: String, confidence: Number, overlays: List[String], missingInformation: List[String], .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskDomainClassifier"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    requirementsHash: self.requirementsHash
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskDomainClassifierEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.primaryArchetype = checked.value.outputs.primaryArchetype
+  self.classificationStatus = checked.value.outputs.classificationStatus
+  self.confidence = checked.value.outputs.confidence
+  self.overlays = checked.value.outputs.overlays
+  self.missingInformation = checked.value.outputs.missingInformation
+}

@@ -1,0 +1,42 @@
+# Release: DESK quality gates, human manufacturing approval, release gate and release generation
+Group(service: String, projectId: String, runId: String, ready: Boolean, profileHash: String, evidenceRef: String, subject: String) -> (passed: Boolean, approvalRef: String) {
+  # DESK's hard acceptance gates decide. Missing or stale evidence fails closed.
+  quality = @include("__catalog/desk/quality_gate.weft")
+  quality._should_flow = self.ready
+  quality.service = self.service
+  quality.projectId = self.projectId
+  quality.runId = self.runId
+  quality.profileHash = self.profileHash
+  quality.evidenceRef = self.evidenceRef
+
+  # A person approves manufacturing; the approval is bound to the profile hash.
+  approval = @include("__catalog/desk_stages/approve.weft")
+  approval._should_flow = quality.passed
+  approval.service = self.service
+  approval.projectId = self.projectId
+  approval.runId = self.runId
+  approval.stage = "manufacturing"
+  approval.title = "Release this board to manufacturing?"
+  approval.subject = self.subject
+  approval.subjectHash = self.profileHash
+  approval.details = quality.failures
+
+  # DESK re-checks the recorded approval and the gates before anything is released.
+  gate = @include("__catalog/desk/release_gate.weft")
+  gate._should_flow = approval.approved
+  gate.service = self.service
+  gate.projectId = self.projectId
+  gate.runId = self.runId
+  gate.profileHash = self.profileHash
+  gate.evidenceRef = self.evidenceRef
+  gate.approvalRef = approval.approvalRef
+
+  generate = @include("__catalog/desk/release_generator.weft")
+  generate._should_flow = gate.passed
+  generate.service = self.service
+  generate.projectId = self.projectId
+  generate.runId = self.runId
+
+  self.passed = generate.passed
+  self.approvalRef = approval.approvalRef
+}

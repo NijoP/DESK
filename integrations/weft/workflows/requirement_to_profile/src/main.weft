@@ -1,0 +1,48 @@
+# DESK requirement-to-profile workflow.
+# Weft orchestrates; every engineering result below comes from a deterministic DESK engine behind a DESK node.
+# Start it with: python desk.py weft run requirement_to_profile --project <P> --requirements <file>
+
+# Run inputs. `desk.py weft run` supplies these three values. The placeholders never reach an engine as they
+# stand, because the node service refuses a project it does not know.
+service = Text { value: "http://127.0.0.1:14500" }
+projectId = Text { value: "UNSET" }
+requirements = Text { value: "UNSET" }
+
+# Traceability: the run is tagged with the DESK project, and every node call carries the run id.
+run = GetRunId
+tag = TagRun { project: projectId.value }
+
+understand = @include("__catalog/desk_stages/understand.weft")
+understand.service = service.value
+understand.projectId = projectId.value
+understand.runId = run.runId
+understand.requirements = requirements.value
+
+families = @include("__catalog/desk/component_family_resolver.weft")
+families._should_flow = understand.passed
+families.service = service.value
+families.projectId = projectId.value
+families.runId = run.runId
+families.profileHash = understand.profileHash
+
+power = @include("__catalog/desk/power_distribution_analyzer.weft")
+power._should_flow = understand.passed
+power.service = service.value
+power.projectId = projectId.value
+power.runId = run.runId
+power.profileHash = understand.profileHash
+
+# A hardware engineer approves the compiled profile before any design work starts.
+engineeringReady = All { families: families.passed, power: power.passed }
+approve = @include("__catalog/desk_stages/approve.weft")
+approve._should_flow = engineeringReady.yes
+approve.service = service.value
+approve.projectId = projectId.value
+approve.runId = run.runId
+approve.stage = "profile"
+approve.title = "Approve the engineering design profile?"
+approve.subject = understand.archetype
+approve.subjectHash = understand.profileHash
+approve.details = understand.missingInformation
+
+result = Debug { _should_flow: approve.approved, data: approve.approvalRef }

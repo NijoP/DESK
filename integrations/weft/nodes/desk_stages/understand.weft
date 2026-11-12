@@ -1,0 +1,35 @@
+# Requirements to compiled engineering profile: intake, validation, domain classification, profile compilation
+Group(service: String, projectId: String, runId: String, requirements: String) -> (passed: Boolean, requirementsHash: String, archetype: String, missingInformation: List[String], profileHash: String) {
+  intake = @include("__catalog/desk/requirement_intake.weft")
+  intake.service = self.service
+  intake.projectId = self.projectId
+  intake.runId = self.runId
+  intake.requirements = self.requirements
+
+  validate = @include("__catalog/desk/requirement_validator.weft")
+  validate._should_flow = intake.passed
+  validate.service = self.service
+  validate.projectId = self.projectId
+  validate.runId = self.runId
+  validate.requirementsHash = intake.requirementsHash
+
+  classify = @include("__catalog/desk/domain_classifier.weft")
+  classify._should_flow = validate.passed
+  classify.service = self.service
+  classify.projectId = self.projectId
+  classify.runId = self.runId
+  classify.requirementsHash = intake.requirementsHash
+
+  profile = @include("__catalog/desk/design_profile_compiler.weft")
+  profile._should_flow = classify.passed
+  profile.service = self.service
+  profile.projectId = self.projectId
+  profile.runId = self.runId
+  profile.requirementsHash = intake.requirementsHash
+
+  self.passed = profile.passed
+  self.requirementsHash = intake.requirementsHash
+  self.archetype = classify.primaryArchetype
+  self.missingInformation = classify.missingInformation
+  self.profileHash = profile.profileHash
+}

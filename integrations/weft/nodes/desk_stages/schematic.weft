@@ -1,0 +1,34 @@
+# Schematic: block planning, pin maps, schematic compilation, ERC and netlist verification
+Group(service: String, projectId: String, runId: String, ready: Boolean) -> (passed: Boolean) {
+  blocks = @include("__catalog/desk/block_planner.weft")
+  blocks._should_flow = self.ready
+  blocks.service = self.service
+  blocks.projectId = self.projectId
+  blocks.runId = self.runId
+
+  pins = @include("__catalog/desk/pin_map_validator.weft")
+  pins._should_flow = blocks.passed
+  pins.service = self.service
+  pins.projectId = self.projectId
+  pins.runId = self.runId
+
+  compile = @include("__catalog/desk/schematic_compiler.weft")
+  compile._should_flow = pins.passed
+  compile.service = self.service
+  compile.projectId = self.projectId
+  compile.runId = self.runId
+
+  erc = @include("__catalog/desk/erc_validator.weft")
+  erc._should_flow = compile.passed
+  erc.service = self.service
+  erc.projectId = self.projectId
+  erc.runId = self.runId
+
+  netlist = @include("__catalog/desk/netlist_verifier.weft")
+  netlist._should_flow = erc.passed
+  netlist.service = self.service
+  netlist.projectId = self.projectId
+  netlist.runId = self.runId
+
+  self.passed = netlist.passed
+}

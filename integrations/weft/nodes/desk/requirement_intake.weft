@@ -1,0 +1,34 @@
+# DeskRequirementIntake 1.0.0: Store the client requirement text as a DESK record and hand back its hash.
+Group(service: String, projectId: String, runId: String, requirements: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], requirementsHash: String, charCount: Number) {
+  # Generated from desk/weft/contracts.py. Engine: desk.weft.store.RecordStore.put_requirements
+  type DeskRequirementIntakeEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { requirementsHash: String, charCount: Number, .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskRequirementIntake"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    requirements: self.requirements
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskRequirementIntakeEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.requirementsHash = checked.value.outputs.requirementsHash
+  self.charCount = checked.value.outputs.charCount
+}

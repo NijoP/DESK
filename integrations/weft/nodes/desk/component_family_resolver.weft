@@ -1,0 +1,34 @@
+# DeskComponentFamilyResolver 1.0.0: Resolve the component families the compiled profile requires.
+Group(service: String, projectId: String, runId: String, profileHash: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], families: List[String], unknownFamilies: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: desk.domain_intelligence.registry.DomainLibrary.family
+  type DeskComponentFamilyResolverEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { families: List[String], unknownFamilies: List[String], .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskComponentFamilyResolver"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    profileHash: self.profileHash
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskComponentFamilyResolverEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.families = checked.value.outputs.families
+  self.unknownFamilies = checked.value.outputs.unknownFamilies
+}

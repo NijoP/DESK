@@ -190,13 +190,32 @@ def check_project(project: Optional[str]) -> List[Check]:
     return out
 
 
+def check_weft() -> Check:
+    """Weft is the workflow runtime for orchestrated runs. Missing Weft is a warning here: the deterministic
+    engines and every other tool work without it; `desk.py weft run` itself refuses to start."""
+    try:
+        from desk.weft import runtime as weft_runtime
+        st = weft_runtime.WeftRuntime().status()
+    except Exception as e:
+        return Check("weft", WARN, f"could not probe Weft: {e}", "python tools/desk.py weft status")
+    if not st["available"]:
+        return Check("weft", WARN, f"Weft runtime not installed ({st['reason']}); orchestrated workflows cannot run",
+                     "install the pinned Weft: docs/weft/02_INSTALL.md (Windows needs WSL2 and Docker)")
+    if st.get("pinMatch") is False:
+        return Check("weft", FAIL, f"Weft checkout {str(st.get('checkoutCommit'))[:12]} differs from the DESK pin {st['pin'][:12]}",
+                     "check out the pinned commit and re-run its setup.sh")
+    if not st["daemon"]["running"]:
+        return Check("weft", WARN, f"Weft {st.get('version')} installed but its runtime is not running", "weft daemon start")
+    return Check("weft", OK, f"Weft {st.get('version')} ({st['kind']}), runtime running, pin {st['pin'][:12]}")
+
+
 def run(project: Optional[str] = None) -> List[Check]:
     checks = [
         check_python(), check_bridge(), check_node(), check_java(), check_freerouting(),
         check_easyeda_cli(),
         check_model_cli("pi", "DESK_PI_PATH", ["pi", "pi.cmd"]),
         check_model_cli("agy", "DESK_AGY_PATH", ["agy", "agy.exe"]),
-        check_model_config(), check_nvidia_key(),
+        check_model_config(), check_nvidia_key(), check_weft(),
     ]
     checks.extend(check_project(project))
     return checks
