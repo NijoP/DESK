@@ -1,0 +1,2 @@
+WARN  ERC 06_GATE_DRV/U7.16 (VDDA) on BST: no capacitor from BST to ground anywhere
+PASS

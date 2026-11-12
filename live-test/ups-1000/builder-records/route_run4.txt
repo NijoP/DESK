@@ -1,0 +1,17 @@
+Warning: Failed to load design profile: LayerStackup.__init__() got an unexpected keyword argument 'name_note'
+ASSUMED: VBUS: power-net current undeclared; width from name heuristic (ASSUMED)
+ASSUMED: VBUS: clearance = fabricator minimum 4.02 mil; no declared voltage (ASSUMED)
+ASSUMED: GND: power-net current undeclared; width from name heuristic (ASSUMED)
+ASSUMED: GND: clearance = fabricator minimum 4.02 mil; no declared voltage (ASSUMED)
+ASSUMED: VBUS_SNS: power-net current undeclared; width from name heuristic (ASSUMED)
+ASSUMED: VBUS_SNS: clearance = fabricator minimum 4.02 mil; no declared voltage (ASSUMED)
+ASSUMED: 12V: power-net current undeclared; width from name heuristic (ASSUMED)
+ASSUMED: 12V: clearance = fabricator minimum 4.02 mil; no declared voltage (ASSUMED)
+ASSUMED: 5V: power-net current undeclared; width from name heuristic (ASSUMED)
+ASSUMED: 5V: clearance = fabricator minimum 4.02 mil; no declared voltage (ASSUMED)
+ASSUMED: 3V3: power-net current undeclared; width from name heuristic (ASSUMED)
+ASSUMED: 3V3: clearance = fabricator minimum 4.02 mil; no declared voltage (ASSUMED)
+ASSUMED: VIN_RAW: power-net current undeclared; width from name heuristic (ASSUMED)
+ASSUMED: VIN_RAW: clearance = fabricator minimum 4.02 mil; no declared voltage (ASSUMED)
+ELECTRICAL UNKNOWN: PROFILE: no DesignProfile supplied; currents come from name heuristics and clearances from the fabricator minimum (ASSUMED). Declare a DesignProfile before routing.
+STOP: 1 undeclared electrical input(s) listed above. Declare them in design_profile.json (current_limits_A / voltage_rails) or rerun with --allow-unknown-electrical to size them heuristically (not for manufacturing).

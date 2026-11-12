@@ -1,0 +1,914 @@
+{
+ "archetype_id": "half_bridge_converter",
+ "overlays": [
+  "switching_power",
+  "galvanic_isolation",
+  "thermal_management",
+  "emi_emc",
+  "can_interface",
+  "industrial_interfaces"
+ ],
+ "rules": [
+  {
+   "rule_id": "COPPER-BARRIER-044",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "copper",
+   "human_review_required": true,
+   "verification_method": "check_polygon_boundary against keep-outs; tests/test_copper_geometry.py",
+   "references": [
+    {
+     "id": "IEC-60664-1",
+     "title": "Insulation coordination for equipment within low-voltage supply systems",
+     "clause_notes": "Table F.4 creepage vs working voltage, pollution degree and material group (values used by desk.ipc.creepage_mm); Table F.2 clearance"
+    }
+   ],
+   "rationale": "",
+   "name": "No copper across the isolation barrier",
+   "category": "copper",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.copper.zone_boundary",
+   "scope_reason": [
+    "overlay:galvanic_isolation"
+   ]
+  },
+  {
+   "rule_id": "ELEC-CREEP-004",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "routing.clearance",
+   "human_review_required": true,
+   "verification_method": "desk.ipc.creepage_mm; max(clearance, creepage, fabricator minimum) becomes the net-pair spacing; tests/test_ipc_models.py",
+   "references": [
+    {
+     "id": "IEC-60664-1",
+     "title": "Insulation coordination for equipment within low-voltage supply systems",
+     "clause_notes": "Table F.4 creepage vs working voltage, pollution degree and material group (values used by desk.ipc.creepage_mm); Table F.2 clearance"
+    }
+   ],
+   "rationale": "Human review required because the table transcription is unverified against the IEC text.",
+   "name": "Creepage from working voltage, pollution degree and material group (IEC 60664-1 Table F.4)",
+   "category": "electrical",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.profile.creepage",
+   "scope_reason": [
+    "overlay:galvanic_isolation"
+   ]
+  },
+  {
+   "rule_id": "PLACE-ISO-016",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "placement",
+   "human_review_required": true,
+   "verification_method": "Barrier declared as a keep-out polygon on all layers; pads inside it fail preflight",
+   "references": [
+    {
+     "id": "IEC-60664-1",
+     "title": "Insulation coordination for equipment within low-voltage supply systems",
+     "clause_notes": "Table F.4 creepage vs working voltage, pollution degree and material group (values used by desk.ipc.creepage_mm); Table F.2 clearance"
+    },
+    {
+     "id": "IEC-62368-1",
+     "title": "Audio/video, information and communication technology equipment - Safety requirements",
+     "clause_notes": "Insulation classes (basic/double/reinforced), accessible parts, capacitor discharge"
+    }
+   ],
+   "rationale": "",
+   "name": "Only isolating components bridge the isolation barrier",
+   "category": "placement",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.placement.keepout",
+   "scope_reason": [
+    "overlay:galvanic_isolation"
+   ]
+  },
+  {
+   "rule_id": "ROUTE-HV-025",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "routing",
+   "human_review_required": true,
+   "verification_method": "Route keep-outs passed to Freerouting as keepout areas; verified by preflight",
+   "references": [
+    {
+     "id": "IEC-60664-1",
+     "title": "Insulation coordination for equipment within low-voltage supply systems",
+     "clause_notes": "Table F.4 creepage vs working voltage, pollution degree and material group (values used by desk.ipc.creepage_mm); Table F.2 clearance"
+    }
+   ],
+   "rationale": "",
+   "name": "No vias or signals inside the isolation barrier",
+   "category": "routing",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.routing.keepout",
+   "scope_reason": [
+    "overlay:galvanic_isolation"
+   ]
+  },
+  {
+   "rule_id": "DCDC-VIN-121",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "quality.gate",
+   "human_review_required": false,
+   "verification_method": "Deterministic range check; tests/test_rule_engine.py",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Input voltage range inside the converter IC rating",
+   "category": "electrical",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.rules.range_within",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "COPPER-ZONE-041",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "copper",
+   "human_review_required": false,
+   "verification_method": "CopperZoneSpec.clearance_mil = profile.derive_clearance_mil (F-03 fix 2026-11-12); tests/test_copper_engine.py",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    },
+    {
+     "id": "IEC-60664-1",
+     "title": "Insulation coordination for equipment within low-voltage supply systems",
+     "clause_notes": "Table F.4 creepage vs working voltage, pollution degree and material group (values used by desk.ipc.creepage_mm); Table F.2 clearance"
+    }
+   ],
+   "rationale": "",
+   "name": "Zone clearance to other nets from the profile, never a literal",
+   "category": "copper",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.copper.zone_clearance",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "ELEC-CLEAR-003",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "routing.clearance",
+   "human_review_required": false,
+   "verification_method": "DesignProfile.derive_clearance_mil -> desk.ipc.required_spacing_mil; written to DSN net classes; tests/test_hardware_reference_values.py",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    },
+    {
+     "id": "JLCPCB-CAPABILITIES",
+     "title": "JLCPCB PCB manufacturing capabilities",
+     "clause_notes": "Min trace/space per copper weight, drills, annular rings (values in ManufacturerProfile presets)"
+    }
+   ],
+   "rationale": "Table values are transcribed, not yet verified against the standard text (ipc.verified_against_standard=False).",
+   "name": "Electrical clearance from working voltage (IPC-2221B Table 6-1)",
+   "category": "electrical",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.profile.clearance",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "ELEC-UNKNOWN-002",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "quality.gate",
+   "human_review_required": false,
+   "verification_method": "DesignProfile.validate_electrical_inputs lists undeclared rails; RoutingPlan.blocking_issues stops tools/route.py; tests/test_profile_hardening.py",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    }
+   ],
+   "rationale": "No assumed value may replace a missing engineering input.",
+   "name": "Unknown electrical inputs fail closed",
+   "category": "electrical",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.profile.validate_electrical_inputs",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "ELEC-WIDTH-001",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "routing.width",
+   "human_review_required": false,
+   "verification_method": "tools/route.py sizes every net from DesignProfile.derive_trace_width_mil; tests/test_ipc_models.py, tests/test_hardware_reference_values.py",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    },
+    {
+     "id": "JLCPCB-CAPABILITIES",
+     "title": "JLCPCB PCB manufacturing capabilities",
+     "clause_notes": "Min trace/space per copper weight, drills, annular rings (values in ManufacturerProfile presets)"
+    }
+   ],
+   "rationale": "A power net sized without its current is a guess; DESK refuses (unknown_current_policy=fail).",
+   "name": "Trace width from declared current (IPC-2221)",
+   "category": "electrical",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.ipc.trace_width",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "MFG-MIN-070",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "routing",
+   "human_review_required": false,
+   "verification_method": "ManufacturerProfile floors applied in width/clearance derivation; DRC with the fabricator rule set",
+   "references": [
+    {
+     "id": "JLCPCB-CAPABILITIES",
+     "title": "JLCPCB PCB manufacturing capabilities",
+     "clause_notes": "Min trace/space per copper weight, drills, annular rings (values in ManufacturerProfile presets)"
+    }
+   ],
+   "rationale": "",
+   "name": "Trace width and clearance at or above the fabricator minimum",
+   "category": "manufacturing",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.profile.manufacturing_floor",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "PLACE-KEEPOUT-011",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "placement",
+   "human_review_required": false,
+   "verification_method": "desk.placement.check and routing preflight pads_inside_keepouts; tests/test_route_preflight.py, tests/test_placement.py",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Keep-outs (antenna, barrier, mechanical) are empty on every layer",
+   "category": "placement",
+   "severity": "BLOCKING",
+   "evaluation_method": "desk.placement.keepout",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "ELEC-DROP-006",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "power.distribution",
+   "human_review_required": false,
+   "verification_method": "desk.power_distribution.PowerDistributionPlanner drop estimate; tests/test_power_distribution.py",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    }
+   ],
+   "rationale": "",
+   "name": "Voltage drop on power paths within budget",
+   "category": "electrical",
+   "severity": "ERROR",
+   "evaluation_method": "desk.power_distribution.voltage_drop",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "ELEC-VIA-005",
+   "version": "1.0.0",
+   "status": "IMPLEMENTED",
+   "mode": "ADVISORY",
+   "subsystem": "routing.vias",
+   "human_review_required": false,
+   "verification_method": "desk.ipc.via_current_a / vias_required; reported by tools/route.py; not yet enforced in DSN (router places vias freely)",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    }
+   ],
+   "rationale": "The engine computes the count; the autorouter does not yet honour it, so the rule is advisory.",
+   "name": "Via ampacity and parallel via count",
+   "category": "electrical",
+   "severity": "ERROR",
+   "evaluation_method": "desk.ipc.via_current",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "EMI-SURGE-063",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "none",
+   "human_review_required": false,
+   "verification_method": "BOM review",
+   "references": [
+    {
+     "id": "IEC-61000-4-5",
+     "title": "EMC - Surge immunity test",
+     "clause_notes": "Surge levels"
+    },
+    {
+     "id": "IEC-61000-4-4",
+     "title": "EMC - Electrical fast transient/burst immunity test",
+     "clause_notes": "Burst levels"
+    },
+    {
+     "id": "ISO-7637-2",
+     "title": "Road vehicles - Electrical disturbances from conduction and coupling",
+     "clause_notes": "Load dump and transient pulses"
+    }
+   ],
+   "rationale": "",
+   "name": "Surge/burst protection at every field terminal",
+   "category": "emi_emc",
+   "severity": "ERROR",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:industrial_interfaces"
+   ]
+  },
+  {
+   "rule_id": "ROUTE-RETURN-027",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "copper",
+   "human_review_required": false,
+   "verification_method": "CopperPlaneEngine.evaluate_return_path_continuity; tests/test_copper_engine.py",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    }
+   ],
+   "rationale": "",
+   "name": "Return path continuity: no high-speed or switching nets across plane splits",
+   "category": "routing",
+   "severity": "ERROR",
+   "evaluation_method": "desk.copper.return_path",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "THERM-TJ-050",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "UNSUPPORTED",
+   "subsystem": "none",
+   "human_review_required": true,
+   "verification_method": "Not computed by DESK (no per-device dissipation model); recorded in REQUIREMENTS.md section 6",
+   "references": [
+    {
+     "id": "JESD51",
+     "title": "Methodology for the Thermal Measurement of Component Packages",
+     "clause_notes": "Theta-JA/JB definitions"
+    },
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Junction temperature below the datasheet limit at max ambient",
+   "category": "thermal",
+   "severity": "ERROR",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:switching_power,thermal_management"
+   ]
+  },
+  {
+   "rule_id": "EMI-LOOP-060",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "placement",
+   "human_review_required": false,
+   "verification_method": "Review",
+   "references": [
+    {
+     "id": "CISPR-32",
+     "title": "EMC of multimedia equipment - Emission requirements",
+     "clause_notes": "Class A/B emissions"
+    }
+   ],
+   "rationale": "",
+   "name": "Hot-loop area minimised and recorded",
+   "category": "emi_emc",
+   "severity": "ERROR",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "PLACE-HOTLOOP-012",
+   "version": "1.0.0",
+   "status": "IMPLEMENTED",
+   "mode": "ADVISORY",
+   "subsystem": "placement",
+   "human_review_required": false,
+   "verification_method": "Placement refiner hard rules (group proximity); loop area itself is not measured yet",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "Grouping enforced; loop area reported only.",
+   "name": "Converter hot loop minimal: Cin, switches and rectifier adjacent",
+   "category": "placement",
+   "severity": "ERROR",
+   "evaluation_method": "desk.placement.group_proximity",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "ROUTE-SW-023",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "routing",
+   "human_review_required": false,
+   "verification_method": "Routing review",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Switch node short, wide, single layer; never under feedback",
+   "category": "routing",
+   "severity": "ERROR",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "ROUTE-DIFF-021",
+   "version": "1.0.0",
+   "status": "IMPLEMENTED",
+   "mode": "ADVISORY",
+   "subsystem": "routing",
+   "human_review_required": false,
+   "verification_method": "DiffPairProfile carried into DSN net classes (width/spacing); length matching and impedance are not verified by DESK (router.DiffPairVerification not wired)",
+   "references": [
+    {
+     "id": "USB-2.0",
+     "title": "Universal Serial Bus Specification Revision 2.0",
+     "clause_notes": "90 ohm differential, VBUS limits"
+    },
+    {
+     "id": "IEEE-802.3",
+     "title": "Ethernet",
+     "clause_notes": "MDI 100 ohm pairs, 1500 V isolation (Clause 14/25/40)"
+    },
+    {
+     "id": "PCIe-CEM",
+     "title": "PCI Express Card Electromechanical Specification",
+     "clause_notes": "Card-edge geometry, 85 ohm lanes (Gen3+)"
+    },
+    {
+     "id": "ISO-11898-2",
+     "title": "Road vehicles - CAN - High-speed physical layer",
+     "clause_notes": "120 ohm termination, bus levels"
+    },
+    {
+     "id": "TIA-485-A",
+     "title": "Electrical Characteristics of Generators and Receivers for Balanced Digital Multipoint Systems",
+     "clause_notes": "RS-485 termination, common-mode range"
+    }
+   ],
+   "rationale": "Geometry is applied; the result is not verified, so advisory until DiffPairVerification is wired into quality gates.",
+   "name": "Differential pairs at the interface impedance with matched length",
+   "category": "routing",
+   "severity": "ERROR",
+   "evaluation_method": "desk.routing.diff_pair",
+   "scope_reason": [
+    "overlay:can_interface,industrial_interfaces"
+   ]
+  },
+  {
+   "rule_id": "COPPER-GND-040",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "copper",
+   "human_review_required": false,
+   "verification_method": "CopperPlaneEngine.generate_ground_planes / synthesize_stitching_vias; tests/test_copper_engine.py",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    }
+   ],
+   "rationale": "",
+   "name": "Continuous ground plane; stitching vias near fast signals",
+   "category": "copper",
+   "severity": "ERROR",
+   "evaluation_method": "desk.copper.ground_plane",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "COPPER-ISLAND-043",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "copper",
+   "human_review_required": false,
+   "verification_method": "CopperPlaneEngine.detect_copper_islands; tests/test_copper_geometry.py",
+   "references": [],
+   "rationale": "",
+   "name": "No unconnected copper islands",
+   "category": "copper",
+   "severity": "ERROR",
+   "evaluation_method": "desk.copper.islands",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "ELEC-RATING-007",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "UNSUPPORTED",
+   "subsystem": "none",
+   "human_review_required": true,
+   "verification_method": "Not evaluated by DESK: ratings are not in the BOM model yet (component intelligence roadmap)",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Component voltage/current ratings exceed applied stress with margin",
+   "category": "electrical",
+   "severity": "ERROR",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "EMI-ESD-062",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "none",
+   "human_review_required": false,
+   "verification_method": "ERC/BOM review",
+   "references": [
+    {
+     "id": "IEC-61000-4-2",
+     "title": "EMC - Electrostatic discharge immunity test",
+     "clause_notes": "ESD levels (contact/air)"
+    }
+   ],
+   "rationale": "",
+   "name": "ESD protection on every externally accessible signal",
+   "category": "emi_emc",
+   "severity": "ERROR",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "MFG-DRILL-071",
+   "version": "1.0.0",
+   "status": "IMPLEMENTED",
+   "mode": "ENFORCED",
+   "subsystem": "routing",
+   "human_review_required": false,
+   "verification_method": "Via definitions vs ManufacturerProfile",
+   "references": [
+    {
+     "id": "JLCPCB-CAPABILITIES",
+     "title": "JLCPCB PCB manufacturing capabilities",
+     "clause_notes": "Min trace/space per copper weight, drills, annular rings (values in ManufacturerProfile presets)"
+    }
+   ],
+   "rationale": "",
+   "name": "Via drill and annular ring within the fabricator capability",
+   "category": "manufacturing",
+   "severity": "ERROR",
+   "evaluation_method": "desk.profile.manufacturing_floor",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "MFG-EDGE-072",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "copper",
+   "human_review_required": false,
+   "verification_method": "CopperPlaneEngine setback from profile.manufacturing.copper_to_edge_mil",
+   "references": [
+    {
+     "id": "JLCPCB-CAPABILITIES",
+     "title": "JLCPCB PCB manufacturing capabilities",
+     "clause_notes": "Min trace/space per copper weight, drills, annular rings (values in ManufacturerProfile presets)"
+    }
+   ],
+   "rationale": "",
+   "name": "Copper setback from the board edge",
+   "category": "manufacturing",
+   "severity": "ERROR",
+   "evaluation_method": "desk.copper.edge_setback",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "PLACE-DECAP-010",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "placement",
+   "human_review_required": false,
+   "verification_method": "desk.placement_refine PlacementRefiner decoupling proximity objective; tests/test_dense_intelligence.py",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Decoupling capacitor within 2 mm of the supply pin",
+   "category": "placement",
+   "severity": "ERROR",
+   "evaluation_method": "desk.placement.decoupling_proximity",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "ROUTE-PRIO-020",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "routing",
+   "human_review_required": false,
+   "verification_method": "RoutingPriorityScheduler stages + density priority order -> Freerouting net classes; tests/test_routing_priority.py",
+   "references": [
+    {
+     "id": "IPC-2221B",
+     "title": "Generic Standard on Printed Board Design",
+     "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)"
+    }
+   ],
+   "rationale": "",
+   "name": "Route in priority order: diff pairs/RF, high-current, critical, power, signal",
+   "category": "routing",
+   "severity": "ERROR",
+   "evaluation_method": "desk.routing.priority",
+   "scope_reason": [
+    "global"
+   ]
+  },
+  {
+   "rule_id": "COPPER-THERMVIA-046",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "copper",
+   "human_review_required": false,
+   "verification_method": "Review",
+   "references": [
+    {
+     "id": "JESD51",
+     "title": "Methodology for the Thermal Measurement of Component Packages",
+     "clause_notes": "Theta-JA/JB definitions"
+    },
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Thermal via array under exposed pads",
+   "category": "copper",
+   "severity": "WARNING",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:switching_power,thermal_management"
+   ]
+  },
+  {
+   "rule_id": "ROUTE-GATE-028",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "routing",
+   "human_review_required": false,
+   "verification_method": "Routing review",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Gate drive loops short with return on the adjacent layer",
+   "category": "routing",
+   "severity": "WARNING",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "EMI-FILTER-061",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "none",
+   "human_review_required": false,
+   "verification_method": "Review",
+   "references": [
+    {
+     "id": "CISPR-32",
+     "title": "EMC of multimedia equipment - Emission requirements",
+     "clause_notes": "Class A/B emissions"
+    },
+    {
+     "id": "CISPR-25",
+     "title": "Vehicles, boats and internal combustion engines - Radio disturbance characteristics",
+     "clause_notes": "Automotive emissions"
+    }
+   ],
+   "rationale": "",
+   "name": "Input filter footprints when the product is EMC tested",
+   "category": "emi_emc",
+   "severity": "WARNING",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:emi_emc"
+   ]
+  },
+  {
+   "rule_id": "PLACE-FB-013",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "placement",
+   "human_review_required": false,
+   "verification_method": "Placement review",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Feedback network at the FB pin, away from the switch node and inductor",
+   "category": "placement",
+   "severity": "WARNING",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:switching_power"
+   ]
+  },
+  {
+   "rule_id": "PLACE-THERM-017",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "placement",
+   "human_review_required": false,
+   "verification_method": "Placement review",
+   "references": [
+    {
+     "id": "JESD51",
+     "title": "Methodology for the Thermal Measurement of Component Packages",
+     "clause_notes": "Theta-JA/JB definitions"
+    }
+   ],
+   "rationale": "",
+   "name": "Heat-sensitive parts away from dissipating parts",
+   "category": "placement",
+   "severity": "WARNING",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:thermal_management"
+   ]
+  },
+  {
+   "rule_id": "THERM-COPPER-051",
+   "version": "1.0.0",
+   "status": "ADVISORY",
+   "mode": "ADVISORY",
+   "subsystem": "copper",
+   "human_review_required": false,
+   "verification_method": "Review",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Copper area per watt from the device datasheet",
+   "category": "thermal",
+   "severity": "WARNING",
+   "evaluation_method": "advisory",
+   "scope_reason": [
+    "overlay:thermal_management"
+   ]
+  },
+  {
+   "rule_id": "COPPER-RELIEF-042",
+   "version": "1.0.0",
+   "status": "OFFLINE_TESTED",
+   "mode": "ENFORCED",
+   "subsystem": "copper",
+   "human_review_required": false,
+   "verification_method": "ConnectionRuleResolver.resolve_connection; tests/test_copper_engine.py",
+   "references": [
+    {
+     "id": "MFR-DATASHEET",
+     "title": "Component manufacturer datasheet (per part)",
+     "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins"
+    }
+   ],
+   "rationale": "",
+   "name": "Thermal relief only where hand-soldered; solid on power pads",
+   "category": "copper",
+   "severity": "WARNING",
+   "evaluation_method": "desk.copper.connection_rule",
+   "scope_reason": [
+    "global"
+   ]
+  }
+ ],
+ "conflicts": [],
+ "dropped": []
+}

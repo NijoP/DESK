@@ -1,0 +1,406 @@
+{
+ "id": "06_GATE_DRV",
+ "title": "ISOLATED GATE DRIVER",
+ "status": "draft",
+ "purpose": "UCC21520 dual isolated gate driver (8 V UVLO) for the half-bridge with bootstrap high side, 200 ns hardware dead time, default-disabled DIS, and 74LVC2G08 AND gating of both PWM inputs with FAULT_N (hardware shutdown independent of firmware).",
+ "ports": [
+  "3V3",
+  "12V",
+  "GND",
+  "PWM_H",
+  "PWM_L",
+  "FAULT_N",
+  "DRV_DIS",
+  "GH",
+  "GL",
+  "SW",
+  "INA_S",
+  "INB_S"
+ ],
+ "parts": [
+  {
+   "ref": "U6",
+   "mpn": "SN74LVC2G08DCUR",
+   "role": "dual AND: INA_S = PWM_H & FAULT_N, INB_S = PWM_L & FAULT_N",
+   "pins": {
+    "1": "PWM_H",
+    "2": "FAULT_N",
+    "7": "INA_S",
+    "5": "PWM_L",
+    "6": "FAULT_N",
+    "3": "INB_S",
+    "4": "GND",
+    "8": "3V3"
+   },
+   "nc": [],
+   "lcsc": "C91875",
+   "package": "VSSOP-8_L2.4-W2.1-P0.50-LS3.2-BR"
+  },
+  {
+   "ref": "C33",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "AND gate VCC decoupling",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R15",
+   "mpn": "0603WAF1002T5E",
+   "role": "PWM_H pull-down (gate off while MCU in reset)",
+   "pins": {
+    "1": "PWM_H",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R16",
+   "mpn": "0603WAF1002T5E",
+   "role": "PWM_L pull-down (gate off while MCU in reset)",
+   "pins": {
+    "1": "PWM_L",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "U7",
+   "mpn": "UCC21520DWR",
+   "role": "isolated dual gate driver; A = high side (VSSA=SW), B = low side (VSSB=GND)",
+   "pins": {
+    "1": "INA_S",
+    "2": "INB_S",
+    "3": "3V3",
+    "4": "GND",
+    "5": "DRV_DIS",
+    "6": "DT",
+    "8": "3V3",
+    "9": "GND",
+    "10": "GLO",
+    "11": "12V",
+    "14": "SW",
+    "15": "GHO",
+    "16": "BST"
+   },
+   "nc": [
+    "7",
+    "12",
+    "13"
+   ],
+   "lcsc": "C601651",
+   "package": "SOIC-16_L10.3-W7.5-P1.27-LS10.3-BL"
+  },
+  {
+   "ref": "C34",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VCCI 100 nF at pin 3/8",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C35",
+   "mpn": "CL10A105KB8NNNC",
+   "role": "VCCI bulk 1 uF",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C15849",
+   "package": "0603",
+   "value": "1uF",
+   "rating": "50V X5R"
+  },
+  {
+   "ref": "R17",
+   "mpn": "0603WAF1002T5E",
+   "role": "DIS pull-up: driver DISABLED at reset (MCU drives low to enable)",
+   "pins": {
+    "1": "DRV_DIS",
+    "2": "3V3"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C36",
+   "mpn": "CL10B102KB8NNNC",
+   "role": "DIS pin 1 nF bypass",
+   "pins": {
+    "1": "DRV_DIS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1588",
+   "package": "0603",
+   "value": "1nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R18",
+   "mpn": "0603WAF2002T5E",
+   "role": "dead-time resistor 20k -> 200 ns",
+   "pins": {
+    "1": "DT",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C4184",
+   "package": "0603",
+   "value": "20k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C37",
+   "mpn": "CL10B102KB8NNNC",
+   "role": "1 nF parallel with RDT (RDT > 5k)",
+   "pins": {
+    "1": "DT",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1588",
+   "package": "0603",
+   "value": "1nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C38",
+   "mpn": "CL21A106KAYNNNE",
+   "role": "VDDB 10 uF at pin 11",
+   "pins": {
+    "1": "12V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C15850",
+   "package": "0805",
+   "value": "10uF",
+   "rating": "25V X5R 0805"
+  },
+  {
+   "ref": "C39",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VDDB 100 nF at pin 11",
+   "pins": {
+    "1": "12V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R19",
+   "mpn": "0603WAF100JT5E",
+   "role": "bootstrap series resistor",
+   "pins": {
+    "1": "12V",
+    "2": "BSTR"
+   },
+   "nc": [],
+   "lcsc": "C22859",
+   "package": "0603",
+   "value": "10",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "D5",
+   "mpn": "STPS1H100A",
+   "role": "bootstrap diode 100 V Schottky (A = BSTR, K = BST)",
+   "pins": {
+    "2": "BSTR",
+    "1": "BST"
+   },
+   "nc": [],
+   "lcsc": "C165701",
+   "package": "SMA_L4.3-W2.6-LS5.2-RD",
+   "rating": "100V 1A"
+  },
+  {
+   "ref": "C40",
+   "mpn": "CL10A105KB8NNNC",
+   "role": "bootstrap cap 1 uF (VDDA-VSSA)",
+   "pins": {
+    "1": "BST",
+    "2": "SW"
+   },
+   "nc": [],
+   "lcsc": "C15849",
+   "package": "0603",
+   "value": "1uF",
+   "rating": "50V X5R"
+  },
+  {
+   "ref": "C41",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "bootstrap HF cap 100 nF",
+   "pins": {
+    "1": "BST",
+    "2": "SW"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R20",
+   "mpn": "0603WAF100JT5E",
+   "role": "high-side gate resistor",
+   "pins": {
+    "1": "GHO",
+    "2": "GH"
+   },
+   "nc": [],
+   "lcsc": "C22859",
+   "package": "0603",
+   "value": "10",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R21",
+   "mpn": "0603WAF100JT5E",
+   "role": "low-side gate resistor",
+   "pins": {
+    "1": "GLO",
+    "2": "GL"
+   },
+   "nc": [],
+   "lcsc": "C22859",
+   "package": "0603",
+   "value": "10",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R22",
+   "mpn": "0603WAF1002T5E",
+   "role": "high-side gate-source pull-down",
+   "pins": {
+    "1": "GH",
+    "2": "SW"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R23",
+   "mpn": "0603WAF1002T5E",
+   "role": "low-side gate-source pull-down",
+   "pins": {
+    "1": "GL",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  }
+ ],
+ "qa": [
+  {
+   "item": "VDD vs UVLO",
+   "formula": "UCC21520 (8 V UVLO): VDD ROC 9.2-25 V, UVLO rise 8.5 V typ",
+   "result": "VDDB 12.1 V; VDDA = 12.1 - VF(0.77) - I*R ~ 11.2 V",
+   "limit": "> 9.2 V ROC",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md UCC21520 s6.3 p5 / s6.8 p8",
+   "pass": true
+  },
+  {
+   "item": "Dead time",
+   "formula": "tDT(ns) = 10*RDT(kOhm)",
+   "result": "20k -> 200 ns (160-240); +1 nF parallel",
+   "limit": "RDT 2-500k",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md UCC21520 s8.4.2.2 p23",
+   "pass": true
+  },
+  {
+   "item": "DIS default",
+   "formula": "DIS active high, internal pull-down; external 10k pull-up to VCCI",
+   "result": "outputs disabled at reset / MCU in reset",
+   "limit": "fail-safe",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md UCC21520 Table 5-1 p4, s8.4.1 p23",
+   "pass": true
+  },
+  {
+   "item": "Bootstrap cap",
+   "formula": "C >= 10 x Qg/dV; Qg 55 nC max, dV 0.5 V",
+   "result": "1.1 uF -> 1 uF + 100 nF (TI example 1 uF + 100 nF)",
+   "limit": "accepted",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md BSC070N10NS3 Table 6 p4; UCC21520 s9.2.2.7.2 p32",
+   "pass": true
+  },
+  {
+   "item": "Bootstrap diode",
+   "formula": "VRRM >= VBUS max + VDD",
+   "result": "100 V >= 58.4+12 = 70.4 V (70 %)",
+   "limit": "<= 80 %",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md STPS1H100 Table 2 p2 (automotive -Y datasheet variant, commercial A TO VERIFY)",
+   "pass": true
+  },
+  {
+   "item": "Gate drive current",
+   "formula": "Ipk = VDD/(Rg + Rdrv) ~ 12/10",
+   "result": "1.2 A peak",
+   "limit": "<= 4 A source / 6 A sink",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md UCC21520 s6.9 p9",
+   "pass": true
+  },
+  {
+   "item": "Gate charge power",
+   "formula": "P = Qg*VDD*f per FET = 55n*12*20k",
+   "result": "13.2 mW per channel",
+   "limit": "negligible",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Isolation",
+   "formula": "UCC21520 DW: VIOTM 8000 Vpk, CPG/CLR > 8 mm",
+   "result": "functional only on rev A: GND on both sides (single reference, SELV). Barrier preserved in copper by keep-out.",
+   "limit": "NO safety isolation claimed",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md UCC21520 s6.6 p7",
+   "pass": true
+  },
+  {
+   "item": "AND gate",
+   "formula": "74LVC2G08: INA_S = PWM_H AND FAULT_N",
+   "result": "FAULT_N low forces both driver inputs low within gate tpd (ns), independent of firmware",
+   "limit": "hardware shutdown",
+   "source": "logic",
+   "pass": true
+  }
+ ]
+}

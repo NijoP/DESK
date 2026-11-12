@@ -287,6 +287,18 @@ class RoutingEngineOrchestrator:
             if "Both an input file and an output file must be specified" in combined or proc.returncode in (0, 1):
                 return (True, ver)
             return (False, "Execution failed")
+        except subprocess.TimeoutExpired as e:
+            # Freerouting 2.1.0 prints its banner within ~2 s and then blocks on its online version check
+            # ("New version available") for > 60 s, so `--help` times out although the JVM loaded the JAR.
+            # A banner without UnsupportedClassVersionError proves class-version compatibility (UPS_1000 F-007).
+            out = e.stdout or b""
+            err = e.stderr or b""
+            combined = (out.decode("utf-8", "replace") if isinstance(out, bytes) else out) + \
+                       (err.decode("utf-8", "replace") if isinstance(err, bytes) else err)
+            if "Freerouting v" in combined and "UnsupportedClassVersionError" not in combined:
+                ver = "v" + combined.split("Freerouting v", 1)[1].split()[0].strip()
+                return (True, ver)
+            return (False, f"probe timed out without a Freerouting banner: {e}")
         except Exception as e:
             return (False, str(e))
 

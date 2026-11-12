@@ -1,0 +1,370 @@
+{
+ "id": "02_AUX_12V",
+ "title": "AUX 12V BUCK",
+ "status": "draft",
+ "purpose": "LM5164 100 V COT buck VBUS -> 12 V / 0.5 A for the gate driver, comparators, fan and the 5 V buck; EN/UVLO divider keeps the aux rails off below ~16.5 V.",
+ "ports": [
+  "VBUS",
+  "12V",
+  "GND"
+ ],
+ "parts": [
+  {
+   "ref": "U1",
+   "mpn": "LM5164DDAR",
+   "role": "100 V 1 A COT buck",
+   "pins": {
+    "1": "GND",
+    "2": "VBUS",
+    "3": "EN12",
+    "4": "RON12",
+    "5": "FB12",
+    "7": "BST12",
+    "8": "SW12",
+    "9": "GND"
+   },
+   "nc": [
+    "6"
+   ],
+   "lcsc": "C477928",
+   "package": "SO-8_L4.9-W3.9-P1.27-LS6.0-BL-EP"
+  },
+  {
+   "ref": "C5",
+   "mpn": "CL31B105KCHNNNE",
+   "role": "U VIN cap #1 at pin 2",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C13832",
+   "package": "1206",
+   "value": "1uF",
+   "rating": "100V X7R 1206"
+  },
+  {
+   "ref": "C6",
+   "mpn": "CL31B105KCHNNNE",
+   "role": "U VIN cap #2 at pin 2",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C13832",
+   "package": "1206",
+   "value": "1uF",
+   "rating": "100V X7R 1206"
+  },
+  {
+   "ref": "R3",
+   "mpn": "0603WAF1103T5E",
+   "role": "EN/UVLO divider top",
+   "pins": {
+    "1": "VBUS",
+    "2": "EN12"
+   },
+   "nc": [],
+   "lcsc": "C25805",
+   "package": "0603",
+   "value": "110k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R4",
+   "mpn": "0603WAF1002T5E",
+   "role": "EN/UVLO divider bottom",
+   "pins": {
+    "1": "EN12",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R5",
+   "mpn": "0603WAF1003T5E",
+   "role": "RON: sets fsw 300 kHz",
+   "pins": {
+    "1": "RON12",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25803",
+   "package": "0603",
+   "value": "100k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C7",
+   "mpn": "CL10B222KB8NNNC",
+   "role": "BST cap 2.2 nF (datasheet-mandated 1.5-2.5 nF)",
+   "pins": {
+    "1": "BST12",
+    "2": "SW12"
+   },
+   "nc": [],
+   "lcsc": "C16033",
+   "package": "0603",
+   "value": "2.2nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "L1",
+   "mpn": "SWPA6045S470MT",
+   "role": "12 V buck inductor 47 uH",
+   "pins": {
+    "1": "SW12",
+    "2": "12V"
+   },
+   "nc": [],
+   "lcsc": "C36414",
+   "package": "IND-SMD_L6.0-W6.0_SWPA6045S",
+   "value": "47uH",
+   "rating": "Isat TO VERIFY >= 1.5 A"
+  },
+  {
+   "ref": "R6",
+   "mpn": "0603WAF7502T5E",
+   "role": "Type-3 ripple injection RA (SW side)",
+   "pins": {
+    "1": "SW12",
+    "2": "RIP12"
+   },
+   "nc": [],
+   "lcsc": "C23242",
+   "package": "0603",
+   "value": "75k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C8",
+   "mpn": "CL10B103KB8NNNC",
+   "role": "Type-3 ripple injection CA (across inductor with RA)",
+   "pins": {
+    "1": "RIP12",
+    "2": "12V"
+   },
+   "nc": [],
+   "lcsc": "C1589",
+   "package": "0603",
+   "value": "10nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C9",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "Type-3 ripple injection CB (AC-couples ripple into FB)",
+   "pins": {
+    "1": "RIP12",
+    "2": "FB12"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R7",
+   "mpn": "0603WAF9102T5E",
+   "role": "FB divider top RFB1",
+   "pins": {
+    "1": "12V",
+    "2": "FB12"
+   },
+   "nc": [],
+   "lcsc": "C23265",
+   "package": "0603",
+   "value": "91k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R8",
+   "mpn": "0603WAF1002T5E",
+   "role": "FB divider bottom RFB2",
+   "pins": {
+    "1": "FB12",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C10",
+   "mpn": "CL31A226KAHNNNE",
+   "role": "12 V output cap #1",
+   "pins": {
+    "1": "12V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C12891",
+   "package": "1206",
+   "value": "22uF",
+   "rating": "25V X5R 1206"
+  },
+  {
+   "ref": "C11",
+   "mpn": "CL31A226KAHNNNE",
+   "role": "12 V output cap #2",
+   "pins": {
+    "1": "12V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C12891",
+   "package": "1206",
+   "value": "22uF",
+   "rating": "25V X5R 1206"
+  },
+  {
+   "ref": "R9",
+   "mpn": "0603WAF4701T5E",
+   "role": "12 V power LED resistor",
+   "pins": {
+    "1": "12V",
+    "2": "LED12"
+   },
+   "nc": [],
+   "lcsc": "C23162",
+   "package": "0603",
+   "value": "4.7k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "D2",
+   "mpn": "KT-0603G",
+   "role": "12V power LED (green)",
+   "pins": {
+    "2": "LED12",
+    "1": "GND"
+   },
+   "nc": [],
+   "lcsc": "C12624",
+   "package": "LED0603-RD",
+   "rating": "Vf~2.0V"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Vout",
+   "formula": "VOUT = VREF*(1+RFB1/RFB2), VREF 1.2 V (1.181-1.218)",
+   "result": "12.12 V (range 11.93-12.30 V)",
+   "limit": "11.5-12.6 V; UCC21520 VDD 9.2-25 V",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM5164 s5.5 p5",
+   "pass": true
+  },
+  {
+   "item": "fsw",
+   "formula": "FSW(kHz) = VOUT*2500/RON(kOhm)",
+   "result": "303 kHz",
+   "limit": "<= 1000 kHz",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM5164 Eq.1 p10",
+   "pass": true
+  },
+  {
+   "item": "tON range",
+   "formula": "tON(us) = RON/(VIN*2.5)",
+   "result": "685 ns @58.4 V .. 2000 ns @20 V",
+   "limit": "tON >= 50 ns; tON>=300 ns so tOFF min 50 ns",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM5164 Eq.11 p12, s6.3.7 p13",
+   "pass": true
+  },
+  {
+   "item": "Max duty / dropout at 20 V",
+   "formula": "D = 12/20 = 0.6; tOFF = (1-D)/fsw",
+   "result": "1 ns",
+   "limit": ">= 50 ns min off",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Type-3 CA",
+   "formula": "CA >= 10/(FSW*(RFB1||RFB2))",
+   "result": "CA >= 3.66 nF -> 10 nF chosen (3.3 nF would FAIL)",
+   "limit": "10 nF >= limit",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM5164 Eq.7 Table 6-1 p11 (|| assumed, check drawn eq.)",
+   "pass": true
+  },
+  {
+   "item": "Type-3 RA*CA",
+   "formula": "RA*CA <= tON*(VIN-VOUT)/20mV (evaluated at VIN_min 20 V, worst case)",
+   "result": "75k*10nF = 7.5e-4 <= 8.00e-04; FB ripple 26.7 mV @24 V",
+   "limit": ">= 20 mV ripple",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM5164 Eq.8 p11",
+   "pass": true
+  },
+  {
+   "item": "Type-3 CB",
+   "formula": "CB >= t_settle/(3*RFB1) with t_settle 30 us",
+   "result": ">= 110 pF -> 100 nF",
+   "limit": "satisfied",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM5164 Eq.9 p11",
+   "pass": true
+  },
+  {
+   "item": "EN/UVLO",
+   "formula": "VIN_on = 1.5 V*(110k+10k)/10k; off = 1.4 V*12",
+   "result": "on 18.0 V / off 16.8 V",
+   "limit": "below 20 V min operating",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM5164 s5.5 p5",
+   "pass": true
+  },
+  {
+   "item": "Inductor ripple",
+   "formula": "dI = (VIN-VOUT)*D/(L*fsw) at 58.4 V",
+   "result": "0.67 A pp; Ipk = 0.34+0.33 = 0.67 A",
+   "limit": "< 1.5 A peak current limit",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Load",
+   "formula": "sum of 12 V loads (REQUIREMENTS s3)",
+   "result": "0.343 A max",
+   "limit": "<= 1 A rating (34 %)",
+   "source": "REQUIREMENTS.md s3",
+   "pass": true
+  },
+  {
+   "item": "BST cap",
+   "formula": "datasheet requirement",
+   "result": "2.2 nF 50 V X7R",
+   "limit": "1.5-2.5 nF",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md LM5164 p3/p12",
+   "pass": true
+  },
+  {
+   "item": "Cin voltage derating",
+   "formula": "58.4/100",
+   "result": "58 %",
+   "limit": "<= 80 %",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Cout derating",
+   "formula": "12/25",
+   "result": "48 % (X5R DC-bias derate to ~40 % C accepted; 2 caps)",
+   "limit": "<= 80 % voltage",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "LED current",
+   "formula": "(12-2.0)/4.7k",
+   "result": "2.1 mA",
+   "limit": "<= 20 mA",
+   "source": "calc",
+   "pass": true
+  }
+ ]
+}

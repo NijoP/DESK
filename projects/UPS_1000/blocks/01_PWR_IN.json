@@ -1,0 +1,194 @@
+{
+ "id": "01_PWR_IN",
+ "title": "POWER INPUT AND PROTECTION",
+ "status": "draft",
+ "purpose": "Current-limited lab DC input (20-58.4 V, bring-up 24 V): fuse, TVS clamp (reverse polarity NOT fully protected: RK-01), bulk capacitance and VBUS sense divider. SELV only; no mains.",
+ "ports": [
+  "VBUS",
+  "VBUS_SNS",
+  "GND"
+ ],
+ "parts": [
+  {
+   "ref": "J1",
+   "mpn": "WJ128V-5.0-02P-14-00A",
+   "role": "Lab DC input terminal 5.0 mm, pin1 VIN+, pin2 GND",
+   "pins": {
+    "1": "VIN_RAW",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C8269",
+   "package": "CONN-TH_2P-P5.00_WJ128V-5.0-2P"
+  },
+  {
+   "ref": "F1",
+   "mpn": "0451007.MRL",
+   "role": "7 A fast fuse in series with VIN+ (first element after J1)",
+   "pins": {
+    "1": "VIN_RAW",
+    "2": "VBUS"
+   },
+   "nc": [],
+   "lcsc": "C99548",
+   "package": "FUSE-SMD_L6.1-W2.7",
+   "value": "7A",
+   "rating": "125V 7A fast"
+  },
+  {
+   "ref": "D1",
+   "mpn": "SMBJ60A",
+   "role": "TVS VBUS clamp (reverse-polarity protection only if supply current exceeds F1 rating, see RK-01)",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C163661",
+   "package": "SMB_L4.6-W3.6-LS5.3-RD",
+   "rating": "VRWM 60V VC 96.8V"
+  },
+  {
+   "ref": "C1",
+   "mpn": "MAL214099812E3",
+   "role": "VBUS bulk electrolytic #1 (pin1 = +, verify on footprint)",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C2163701",
+   "package": "CAP-SMD_BD12.5-L13.0-W13.0-LS13.7-FD_RYVT100V100UF12X13",
+   "value": "100uF",
+   "rating": "100V Al 12.5mm"
+  },
+  {
+   "ref": "C2",
+   "mpn": "MAL214099812E3",
+   "role": "VBUS bulk electrolytic #2 (pin1 = +, verify on footprint)",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C2163701",
+   "package": "CAP-SMD_BD12.5-L13.0-W13.0-LS13.7-FD_RYVT100V100UF12X13",
+   "value": "100uF",
+   "rating": "100V Al 12.5mm"
+  },
+  {
+   "ref": "C3",
+   "mpn": "CL31B105KCHNNNE",
+   "role": "VBUS HF ceramic at input",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C13832",
+   "package": "1206",
+   "value": "1uF",
+   "rating": "100V X7R 1206"
+  },
+  {
+   "ref": "R1",
+   "mpn": "0603WAF1003T5E",
+   "role": "VBUS sense divider top",
+   "pins": {
+    "1": "VBUS",
+    "2": "VBUS_SNS"
+   },
+   "nc": [],
+   "lcsc": "C25803",
+   "package": "0603",
+   "value": "100k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R2",
+   "mpn": "0603WAF5101T5E",
+   "role": "VBUS sense divider bottom",
+   "pins": {
+    "1": "VBUS_SNS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C23186",
+   "package": "0603",
+   "value": "5.1k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C4",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VBUS_SNS ADC/comparator filter cap",
+   "pins": {
+    "1": "VBUS_SNS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  }
+ ],
+ "qa": [
+  {
+   "item": "VBUS_SNS scale",
+   "formula": "Vs = VBUS*5.1k/(100k+5.1k)",
+   "result": "0.04853 V/V; 58.4 V -> 2.834 V; 60 V -> 2.912 V",
+   "limit": "< 3.3 V ADC full scale",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Divider dissipation",
+   "formula": "P = V^2/R",
+   "result": "34.3 mW at 60 V in R 100k 0603",
+   "limit": "<= 100 mW (0603 0.1 W), 75 V element rating",
+   "source": "UniOhm 0603WAF series rating",
+   "pass": true
+  },
+  {
+   "item": "TVS standoff vs max operating",
+   "formula": "VRWM >= VBUS_max",
+   "result": "60.0 V >= 58.4 V",
+   "limit": "no conduction in operation",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md SMBJ60A p2",
+   "pass": true
+  },
+  {
+   "item": "TVS clamp vs 100 V parts",
+   "formula": "VC(IPP) <= VDS(Q) / VIN_abs(LM5164)",
+   "result": "96.8 V vs 100 V (3% margin at full IPP 6.2 A); INA240 CM ROC 80 V is BELOW clamp -> risk only under surge, lab supply only",
+   "limit": "documented risk",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md SMBJ60A p2, INA240 s7.3 p4",
+   "pass": true
+  },
+  {
+   "item": "Fuse rating",
+   "formula": "I_fuse >= 1.25 x I_cont_in; I_cont_in <= lab CL 6 A",
+   "result": "7 A >= 1.25 x 5 A RMS load. Reverse polarity: NOT protected when lab CL (<=6 A) < fuse rating - see REQUIREMENTS RK-01",
+   "limit": "Littelfuse 451 7 A fast",
+   "source": "builder calc; fuse datasheet TO VERIFY (littelfuse.com 403)",
+   "pass": true
+  },
+  {
+   "item": "Bulk cap ripple",
+   "formula": "Icin_rms ~= Io*sqrt(D(1-D)) = 5*0.5",
+   "result": "2.5 A RMS shared by 3x2.2uF MLCC (block 07) + 2x100uF Al",
+   "limit": "Al ripple rating TO VERIFY from Vishay 140 CRH datasheet",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Bulk cap voltage derating",
+   "formula": "V_op/V_rated",
+   "result": "58.4/100 = 58 %",
+   "limit": "<= 80 %",
+   "source": "calc",
+   "pass": true
+  }
+ ]
+}

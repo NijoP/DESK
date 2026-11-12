@@ -1,0 +1,25 @@
+Dense-board analysis (271 ms): congestion 0.589, 112 overloaded cells, 117 hotspot regions, 151 crossings, escape {'EASY_ESCAPE': 257, 'RESTRICTED_ESCAPE': 58, 'NO_LEGAL_ESCAPE_FOUND': 64}
+  H1 (156.21, 63.5, 157.48, 69.85) mm score 2.0: power trunk through signal corridor, layer scarcity, pad-blocked -> POWER_TO_POLYGON
+  H2 (156.21, 48.26, 157.48, 53.34) mm score 2.0: layer scarcity, pad-blocked -> PLACEMENT_REFINE_THEN_ROUTE
+  H3 (102.87, 71.12, 106.68, 73.66) mm score 2.0: demand exceeds supply -> CORRIDOR_RESERVE_LAYER_SPLIT
+  H4 (41.91, 62.23, 49.53, 64.77) mm score 2.0: keep-out or pad crossing (detour required), layer scarcity, pad-blocked -> PLACEMENT_REFINE_THEN_ROUTE
+  H5 (6.35, 66.04, 7.62, 69.85) mm score 2.0: keep-out or pad crossing (detour required), power trunk through signal corridor, layer scarcity, pad-blocked -> POWER_TO_POLYGON
+Routing Mode: PRECISION (Pass Budget: 16, Stackup: ['Top', 'Inner1_GND', 'Inner2_PWR', 'Bottom'])
+  Stage 1: 1 nets (GND)
+  Stage 2: 10 nets (NRST, ISENSE, NTC_SNS, CANH, CANL...)
+  Stage 3: 5 nets (SWCLK, UART_TX, UART_RX, CAN_RX, CAN_TX)
+  Stage 4: 4 nets (PWM_H, PWM_L, ISENSE_RAW, FAN_PWM)
+  Stage 5: 19 nets (VBUS, VBUS_SNS, SW12, BST12, 12V...)
+  Stage 6: 19 nets (FB12, HSE_IN, HSE_OUT, DRV_DIS, DT...)
+DSN raw: projects/UPS_1000\state\route\desk_route 55911 B
+Power widening targets (mil): {'PHASE': 120.0, 'VIN_RAW': 120.0, 'SW12': 10.4, 'SW': 120.0, 'SW5': 15.5, 'GND': 120.0, 'VBUS': 120.0}
+DSN plane: GND on Inner1 (4 vertices)
+DSN plane: GND on Inner2 (4 vertices)
+DSN tuned -> projects/UPS_1000\state\route\desk_route_tuned.dsn
+Pin escape congestion: 0.247 (veto above 1.00)
+Pre-flight OK: planes 2/2, outline primitives 1, pads in router keep-outs 0
+Engine smoke run: v2.1.0 SUCCESS in 4.62s, SES True
+  chunk 1: TIMEOUT unrouted 103 -> 90 in 420.55s (3 passes)
+Engine v2.1.0: 3 passes, best None unrouted at pass None, last None, restores 0
+Routing Engine Result: TIMEOUT in 445.7s (v2.1.0)
+STOP: Routing failed (TIMEOUT): Routing engine exceeded timeout budget of 300.0s

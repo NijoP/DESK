@@ -1,7 +1,9 @@
 """API-only copper planes (no GUI "Rebuild copper" click): computes plane copper with desk/copper_fill.py from live
 readback and writes it as pcb_PrimitiveFill polygons on the plane net. Re-run after any routing change (it first
 deletes the fills it created earlier, recorded in state/copper_fills.json).
-Usage: python tools/copper_fill.py projects/<P> [--net GND] [--layers 1,2] [--clearance 0.3] [--dry]
+Usage: python tools/copper_fill.py projects/<P> [--net GND] [--layers 1,2] [--clearance 0.3] [--dry] [--remove]
+--remove: only delete the fills recorded in state/copper_fills.json (pour AFTER routing: EasyEDA exports
+          existing fills into the DSN as pseudo-pins and Freerouting 2.1 cannot load them, UPS_1000 F-010).
 Board polygon = placement.json board_mm rectangle; keep-outs = placement.json keepouts (antenna, holes) + copper_keepouts (copper-only, e.g. footprint slot regions
 that pad readback does not expose)."""
 import sys, os, json
@@ -25,6 +27,12 @@ state_f = os.path.join(proj, "state", "copper_fills.json")
 old = json.load(open(state_f)) if os.path.exists(state_f) else {"ids": []}
 if old["ids"] and not dry:
     check(ex(G + 'await eda.pcb_PrimitiveFill.delete(%s); return true;' % json.dumps(old["ids"]), window_id=W, timeout=120))
+if "--remove" in args:
+    if not dry:
+        old["ids"] = []; old["layers"] = {}
+        json.dump(old, open(state_f, "w"), indent=1)
+    print(json.dumps({"removed": not dry, "state": state_f}))
+    sys.exit(0)
 pads = check(ex(G + '''const out=[]; const cs=await eda.pcb_PrimitiveComponent.getAll();
 for(const c of cs){ const ps=await eda.pcb_PrimitiveComponent.getAllPinsByPrimitiveId(c.getState_PrimitiveId())||[];
  for(const p of ps){ out.push({ref:c.getState_Designator(),num:p.getState_PadNumber(),net:p.getState_Net(),x:p.getState_X(),y:p.getState_Y(),rot:p.getState_Rotation(),shape:p.getState_Pad(),layer:p.getState_Layer()}); } }

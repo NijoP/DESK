@@ -1,0 +1,907 @@
+{
+ "origin_mm": [
+  0,
+  0
+ ],
+ "board_mm": [
+  160.0,
+  120.0
+ ],
+ "layers": 4,
+ "grid_mm": 0.05,
+ "passive_gap_mm": 0.5,
+ "roles": {
+  "connectors": [
+   "J1",
+   "J2",
+   "J3",
+   "J4",
+   "J5",
+   "J6",
+   "J7"
+  ],
+  "heat": [
+   "Q1",
+   "Q2",
+   "U1",
+   "R24"
+  ],
+  "esd": [
+   "D4",
+   "D1"
+  ]
+ },
+ "overhang_allowed": [],
+ "keepouts": [
+  {
+   "name": "M4 mounting hole MH1 (washer 9 mm)",
+   "rect_mm": [
+    0.5,
+    0.5,
+    9.5,
+    9.5
+   ],
+   "side": "both"
+  },
+  {
+   "name": "M4 mounting hole MH2 (washer 9 mm)",
+   "rect_mm": [
+    150.5,
+    0.5,
+    159.5,
+    9.5
+   ],
+   "side": "both"
+  },
+  {
+   "name": "M4 mounting hole MH3 (washer 9 mm)",
+   "rect_mm": [
+    0.5,
+    110.5,
+    9.5,
+    119.5
+   ],
+   "side": "both"
+  },
+  {
+   "name": "M4 mounting hole MH4 (washer 9 mm)",
+   "rect_mm": [
+    150.5,
+    110.5,
+    159.5,
+    119.5
+   ],
+   "side": "both"
+  }
+ ],
+ "rules": {
+  "decap_max_mm": 2.0,
+  "esd_max_mm": 3.0,
+  "connector_edge_mm": 1.5
+ },
+ "copper_keepouts": [
+  {
+   "name": "UCC21520 isolation barrier (functional on rev A) - no copper under body between pad rows, all layers",
+   "rect_mm": [
+    53.0,
+    61.5,
+    59.0,
+    70.5
+   ]
+  }
+ ],
+ "parts": [
+  [
+   "J1",
+   6.4,
+   100,
+   90,
+   "T",
+   "lab DC input terminal on left edge (power entry), wire entry facing edge"
+  ],
+  [
+   "J5",
+   6.5,
+   60,
+   90,
+   "T",
+   "4-way output terminal (PHASE/VBUS/GND/VOUT_EXT) on left edge next to the half-bridge"
+  ],
+  [
+   "F1",
+   20,
+   108,
+   0,
+   "T",
+   "fuse first element after J1 (MAINS-FUSE-161 analogue for the DC input)"
+  ],
+  [
+   "D1",
+   20,
+   101,
+   0,
+   "T",
+   "TVS right after fuse, short path to GND"
+  ],
+  [
+   "C3",
+   20,
+   95.5,
+   0,
+   "T",
+   "VBUS HF ceramic at input"
+  ],
+  [
+   "C1",
+   36,
+   104,
+   0,
+   "T",
+   "bulk electrolytic #1 between input and half-bridge"
+  ],
+  [
+   "C2",
+   36,
+   88,
+   0,
+   "T",
+   "bulk electrolytic #2 feeding the hot-loop region"
+  ],
+  [
+   "Q1",
+   32,
+   72,
+   0,
+   "T",
+   "high-side FET: power core, drain on VBUS copper"
+  ],
+  [
+   "Q2",
+   32,
+   60,
+   0,
+   "T",
+   "low-side FET directly below Q1: SW node shared, minimal hot loop"
+  ],
+  [
+   "C42",
+   40,
+   71,
+   90,
+   "T",
+   "hot-loop MLCC column between Q1 drain and Q2 source"
+  ],
+  [
+   "C43",
+   43.8,
+   71,
+   90,
+   "T",
+   "hot-loop MLCC column"
+  ],
+  [
+   "C44",
+   47.6,
+   71,
+   90,
+   "T",
+   "hot-loop MLCC column"
+  ],
+  [
+   "C45",
+   40,
+   63.5,
+   90,
+   "T",
+   "HF hot-loop MLCC closest to FETs"
+  ],
+  [
+   "R24",
+   20,
+   66,
+   90,
+   "T",
+   "phase shunt between SW copper and J5 PHASE pin"
+  ],
+  [
+   "U8",
+   20,
+   75,
+   0,
+   "T",
+   "INA240 Kelvin-adjacent to shunt R24"
+  ],
+  [
+   "RT1",
+   32,
+   53,
+   0,
+   "T",
+   "NTC at low-side FET (thermal coupling via GND copper)"
+  ],
+  [
+   "U7",
+   56,
+   66,
+   0,
+   "T",
+   "UCC21520: output side faces the FETs, input side faces control; isolation keep-out under body"
+  ],
+  [
+   "U6",
+   68,
+   66,
+   0,
+   "T",
+   "AND gating between MCU PWM and driver inputs"
+  ],
+  [
+   "D5",
+   50,
+   79,
+   0,
+   "T",
+   "bootstrap diode near U7 VDDA"
+  ],
+  [
+   "U1",
+   76,
+   104,
+   0,
+   "T",
+   "LM5164 12 V aux buck, top power band"
+  ],
+  [
+   "L1",
+   86,
+   104,
+   0,
+   "T",
+   "12 V inductor next to U1 SW"
+  ],
+  [
+   "U2",
+   100,
+   104,
+   0,
+   "T",
+   "TPS54202 5 V buck"
+  ],
+  [
+   "L2",
+   107,
+   104,
+   0,
+   "T",
+   "5 V inductor"
+  ],
+  [
+   "U3",
+   117,
+   104,
+   0,
+   "T",
+   "AP2112K 3V3 LDO"
+  ],
+  [
+   "U4",
+   118,
+   64,
+   0,
+   "T",
+   "STM32G431 centre of control zone"
+  ],
+  [
+   "Y1",
+   104,
+   72,
+   0,
+   "T",
+   "HSE crystal close to PF0/PF1"
+  ],
+  [
+   "U9",
+   86,
+   46,
+   0,
+   "T",
+   "LM339 protection comparators between sense nodes and MCU"
+  ],
+  [
+   "U5",
+   140,
+   32,
+   0,
+   "T",
+   "CAN transceiver near CAN header"
+  ],
+  [
+   "J4",
+   157.2,
+   32,
+   90,
+   "T",
+   "CAN header right edge"
+  ],
+  [
+   "D4",
+   151.8,
+   32,
+   0,
+   "T",
+   "CAN ESD at the connector"
+  ],
+  [
+   "J2",
+   157.2,
+   70,
+   90,
+   "T",
+   "SWD header right edge"
+  ],
+  [
+   "J3",
+   157.2,
+   52,
+   90,
+   "T",
+   "UART header right edge"
+  ],
+  [
+   "J7",
+   110,
+   2.7,
+   0,
+   "T",
+   "instrument / scope header bottom edge"
+  ],
+  [
+   "J6",
+   30,
+   2.7,
+   0,
+   "T",
+   "12 V fan header bottom edge below the power stage (airflow over FETs)"
+  ],
+  [
+   "Q3",
+   38,
+   8,
+   0,
+   "T",
+   "fan low-side switch"
+  ],
+  [
+   "D6",
+   30,
+   8,
+   0,
+   "T",
+   "fan flyback diode at J6"
+  ]
+ ],
+ "passives": [
+  [
+   "C5",
+   "U1",
+   "2",
+   "LM5164 VIN cap at pin 2"
+  ],
+  [
+   "C6",
+   "U1",
+   "2",
+   "LM5164 VIN cap at pin 2"
+  ],
+  [
+   "R3",
+   "U1",
+   "3",
+   "EN/UVLO divider"
+  ],
+  [
+   "R4",
+   "U1",
+   "3",
+   "EN/UVLO divider"
+  ],
+  [
+   "R5",
+   "U1",
+   "4",
+   "RON"
+  ],
+  [
+   "C7",
+   "U1",
+   "7",
+   "BST cap"
+  ],
+  [
+   "R7",
+   "U1",
+   "5",
+   "FB network at FB pin"
+  ],
+  [
+   "R8",
+   "U1",
+   "5",
+   "FB network at FB pin"
+  ],
+  [
+   "C9",
+   "U1",
+   "5",
+   "FB network at FB pin"
+  ],
+  [
+   "R6",
+   "L1",
+   "1",
+   "ripple injection across inductor"
+  ],
+  [
+   "C8",
+   "L1",
+   "1",
+   "ripple injection across inductor"
+  ],
+  [
+   "C10",
+   "L1",
+   "2",
+   "12V output caps"
+  ],
+  [
+   "C11",
+   "L1",
+   "2",
+   "12V output caps"
+  ],
+  [
+   "R9",
+   "L1",
+   "2",
+   "12V LED"
+  ],
+  [
+   "D2",
+   "L1",
+   "2",
+   "12V LED"
+  ],
+  [
+   "C12",
+   "U2",
+   "3",
+   "VIN caps"
+  ],
+  [
+   "C13",
+   "U2",
+   "3",
+   "VIN caps"
+  ],
+  [
+   "C14",
+   "U2",
+   "6",
+   "BOOT cap"
+  ],
+  [
+   "R10",
+   "U2",
+   "4",
+   "FB divider"
+  ],
+  [
+   "R11",
+   "U2",
+   "4",
+   "FB divider"
+  ],
+  [
+   "C15",
+   "L2",
+   "2",
+   "5V out caps"
+  ],
+  [
+   "C16",
+   "L2",
+   "2",
+   "5V out caps"
+  ],
+  [
+   "C17",
+   "U3",
+   "1",
+   "LDO in cap"
+  ],
+  [
+   "C18",
+   "U3",
+   "5",
+   "LDO out caps"
+  ],
+  [
+   "C19",
+   "U3",
+   "5",
+   "LDO out caps"
+  ],
+  [
+   "C20",
+   "U4",
+   "24",
+   "VDD decap"
+  ],
+  [
+   "C24",
+   "U4",
+   "24",
+   "VDD decap"
+  ],
+  [
+   "C21",
+   "U4",
+   "36",
+   "VDD decap"
+  ],
+  [
+   "C22",
+   "U4",
+   "48",
+   "VDD decap"
+  ],
+  [
+   "C23",
+   "U4",
+   "1",
+   "VBAT decap"
+  ],
+  [
+   "C25",
+   "U4",
+   "21",
+   "VDDA decap"
+  ],
+  [
+   "C26",
+   "U4",
+   "21",
+   "VDDA decap"
+  ],
+  [
+   "C27",
+   "U4",
+   "20",
+   "VREF+ decap"
+  ],
+  [
+   "C28",
+   "U4",
+   "20",
+   "VREF+ decap"
+  ],
+  [
+   "C29",
+   "U4",
+   "7",
+   "NRST cap"
+  ],
+  [
+   "R12",
+   "U4",
+   "45",
+   "BOOT0 pull-down"
+  ],
+  [
+   "C30",
+   "Y1",
+   "1",
+   "HSE load cap"
+  ],
+  [
+   "C31",
+   "Y1",
+   "3",
+   "HSE load cap"
+  ],
+  [
+   "R13",
+   "U4",
+   "42",
+   "fault LED"
+  ],
+  [
+   "D3",
+   "U4",
+   "42",
+   "fault LED"
+  ],
+  [
+   "C32",
+   "U5",
+   "3",
+   "VCC decap"
+  ],
+  [
+   "R14",
+   "U5",
+   "7",
+   "termination"
+  ],
+  [
+   "C33",
+   "U6",
+   "8",
+   "VCC decap"
+  ],
+  [
+   "R15",
+   "U6",
+   "1",
+   "PWM_H pull-down"
+  ],
+  [
+   "R16",
+   "U6",
+   "5",
+   "PWM_L pull-down"
+  ],
+  [
+   "C34",
+   "U7",
+   "3",
+   "VCCI decap"
+  ],
+  [
+   "C35",
+   "U7",
+   "3",
+   "VCCI decap"
+  ],
+  [
+   "R17",
+   "U7",
+   "5",
+   "DIS pull-up + bypass"
+  ],
+  [
+   "C36",
+   "U7",
+   "5",
+   "DIS pull-up + bypass"
+  ],
+  [
+   "R18",
+   "U7",
+   "6",
+   "DT network"
+  ],
+  [
+   "C37",
+   "U7",
+   "6",
+   "DT network"
+  ],
+  [
+   "C38",
+   "U7",
+   "11",
+   "VDDB decap"
+  ],
+  [
+   "C39",
+   "U7",
+   "11",
+   "VDDB decap"
+  ],
+  [
+   "R19",
+   "D5",
+   "2",
+   "bootstrap R"
+  ],
+  [
+   "C40",
+   "U7",
+   "16",
+   "bootstrap caps VDDA-VSSA"
+  ],
+  [
+   "C41",
+   "U7",
+   "16",
+   "bootstrap caps VDDA-VSSA"
+  ],
+  [
+   "R20",
+   "U7",
+   "15",
+   "HS gate R"
+  ],
+  [
+   "R21",
+   "U7",
+   "10",
+   "LS gate R"
+  ],
+  [
+   "R22",
+   "Q1",
+   "4",
+   "HS gate pull-down"
+  ],
+  [
+   "R23",
+   "Q2",
+   "4",
+   "LS gate pull-down"
+  ],
+  [
+   "C46",
+   "U8",
+   "5",
+   "VS decap"
+  ],
+  [
+   "R25",
+   "U8",
+   "8",
+   "output RC"
+  ],
+  [
+   "C47",
+   "U8",
+   "8",
+   "output RC"
+  ],
+  [
+   "R26",
+   "RT1",
+   "1",
+   "NTC network"
+  ],
+  [
+   "C48",
+   "RT1",
+   "1",
+   "NTC network"
+  ],
+  [
+   "R27",
+   "U4",
+   "16",
+   "VOUT sense divider at ADC pin"
+  ],
+  [
+   "R28",
+   "U4",
+   "16",
+   "VOUT sense divider at ADC pin"
+  ],
+  [
+   "C49",
+   "U4",
+   "16",
+   "VOUT sense divider at ADC pin"
+  ],
+  [
+   "C50",
+   "U9",
+   "3",
+   "VCC decap"
+  ],
+  [
+   "R29",
+   "U9",
+   "7",
+   "OC+ ref"
+  ],
+  [
+   "R30",
+   "U9",
+   "7",
+   "OC+ ref"
+  ],
+  [
+   "C51",
+   "U9",
+   "7",
+   "OC+ ref"
+  ],
+  [
+   "R31",
+   "U9",
+   "4",
+   "OC- ref"
+  ],
+  [
+   "R32",
+   "U9",
+   "4",
+   "OC- ref"
+  ],
+  [
+   "C52",
+   "U9",
+   "4",
+   "OC- ref"
+  ],
+  [
+   "R33",
+   "U9",
+   "8",
+   "OT ref"
+  ],
+  [
+   "R34",
+   "U9",
+   "8",
+   "OT ref"
+  ],
+  [
+   "C53",
+   "U9",
+   "8",
+   "OT ref"
+  ],
+  [
+   "R35",
+   "U9",
+   "11",
+   "OV ref"
+  ],
+  [
+   "R36",
+   "U9",
+   "11",
+   "OV ref"
+  ],
+  [
+   "C54",
+   "U9",
+   "11",
+   "OV ref"
+  ],
+  [
+   "R37",
+   "U9",
+   "1",
+   "FAULT_N pull-up"
+  ],
+  [
+   "R1",
+   "U9",
+   "10",
+   "VBUS sense divider at comparator/ADC end"
+  ],
+  [
+   "R2",
+   "U9",
+   "10",
+   "VBUS sense divider at comparator/ADC end"
+  ],
+  [
+   "C4",
+   "U9",
+   "10",
+   "VBUS sense divider at comparator/ADC end"
+  ],
+  [
+   "R38",
+   "Q3",
+   "1",
+   "fan gate network"
+  ],
+  [
+   "R39",
+   "Q3",
+   "1",
+   "fan gate network"
+  ]
+ ]
+}

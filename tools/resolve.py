@@ -2,11 +2,16 @@
 Usage:
   python tools/resolve.py projects/<product>          # every MPN used in the product's blocks
   python tools/resolve.py --mpn TPS62840DLCR C12345   # explicit MPNs or LCSC codes
-Rule: exact name match wins; otherwise the candidates are printed and NOTHING is saved -> human picks with --pick."""
+  python tools/resolve.py --refresh --mpn A B          # re-resolve cached entries (e.g. stale ones without lcsc/footprint)
+Rule: exact name match wins; otherwise the candidates are printed and NOTHING is saved -> human picks with --pick.
+--refresh only overwrites a cached entry on an exact match; a non-exact result leaves the cache untouched."""
 import sys, json
 from _common import ex, S
 
 args = sys.argv[1:]
+refresh = "--refresh" in args
+if refresh:
+    args.remove("--refresh")
 pick = None
 if "--pick" in args:                       # --pick <MPN> <index>
     i = args.index("--pick"); pick = (args[i + 1], int(args[i + 2])); del args[i:i + 3]
@@ -15,7 +20,7 @@ if args and args[0] == "--mpn":
 else:
     want = sorted({p["mpn"] for b in S.load_blocks(args[0]) for p in b["parts"]})
 lib = S.load_library()
-todo = [m for m in want if m not in lib] if not pick else [pick[0]]
+todo = [m for m in want if refresh or m not in lib] if not pick else [pick[0]]
 for q in todo:
     r = ex('const r=await eda.lib_Device.search(%s); return (r||[]).slice(0,8).map(d=>({name:d.name,lcsc:d.supplierId,'
            'mfr:d.manufacturerId,footprint:d.footprintName,uuid:d.uuid,libraryUuid:d.libraryUuid}));' % json.dumps(q))

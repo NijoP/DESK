@@ -1,0 +1,36 @@
+Dense-board analysis (162 ms): congestion 1.064, 416 overloaded cells, 115 hotspot regions, 166 crossings, escape {'EASY_ESCAPE': 257, 'RESTRICTED_ESCAPE': 58, 'NO_LEGAL_ESCAPE_FOUND': 64}
+  H1 (39.37, 54.61, 69.85, 80.01) mm score 2.0: signal crossing hotspot, power trunk through signal corridor -> POWER_TO_POLYGON
+  H2 (107.95, 62.23, 127.0, 69.85) mm score 2.0: fine-pitch escape, signal crossing hotspot, power trunk through signal corridor -> ESCAPE_FIRST
+  H3 (68.58, 96.52, 93.98, 113.03) mm score 2.0: power trunk through signal corridor -> POWER_TO_POLYGON
+  H4 (11.43, 60.96, 25.4, 80.01) mm score 2.0: power trunk through signal corridor -> POWER_TO_POLYGON
+  H5 (110.49, 59.69, 114.3, 66.04) mm score 2.0: fine-pitch escape, power trunk through signal corridor -> ESCAPE_FIRST
+Routing Mode: BALANCED (Pass Budget: 30, Stackup: ['Top', 'Inner1_GND', 'Inner2_PWR', 'Bottom'])
+  Stage 1: 1 nets (GND)
+  Stage 2: 10 nets (NRST, ISENSE, NTC_SNS, CANH, CANL...)
+  Stage 3: 5 nets (SWCLK, UART_TX, UART_RX, CAN_RX, CAN_TX)
+  Stage 4: 4 nets (PWM_H, PWM_L, ISENSE_RAW, FAN_PWM)
+  Stage 5: 19 nets (VBUS, VBUS_SNS, SW12, BST12, 12V...)
+  Stage 6: 19 nets (FB12, HSE_IN, HSE_OUT, DRV_DIS, DT...)
+DSN raw: projects/UPS_1000\state\route\desk_route 55540 B
+Power widening targets (mil): {'SW5': 30.9, 'SW': 120.0, 'SW12': 20.8, 'VBUS': 120.0, 'PHASE': 120.0, 'GND': 120.0, 'VIN_RAW': 120.0}
+DSN tuned -> projects/UPS_1000\state\route\desk_route_tuned.dsn
+Pin escape congestion: 0.247 (veto above 1.00)
+PRE-FLIGHT WARNING: no planes declared in placement.json; every GND/power pin will be routed as a trace
+PRE-FLIGHT WARNING: placement.json has 'keepouts' but no 'route_keepouts'; placement keep-outs are not routing keep-outs
+Pre-flight OK: planes 0/0, outline primitives 1, pads in router keep-outs 0
+Traceback (most recent call last):
+  File "C:\nemotron test\DESK\tools\route.py", line 26, in <module>
+    sys.exit(run(sys.argv[1:]))
+             ^^^^^^^^^^^^^^^^^
+  File "C:\nemotron test\DESK\desk\routing\pipeline.py", line 299, in run
+    _smoke = orchestrator.smoke_test(os.path.join(_smoke_dir, "smoke.dsn"), _smoke_dir)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\nemotron test\DESK\desk\routing\orchestrator.py", line 669, in smoke_test
+    res = self.execute_routing(dsn_path=dsn_path, ses_path=ses, max_passes=max_passes, timeout_sec=timeout_sec,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\nemotron test\DESK\desk\routing\orchestrator.py", line 595, in execute_routing
+    engine_type, engine_path, engine_ver = self.discover_engine(explicit_engine)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\nemotron test\DESK\desk\routing\orchestrator.py", line 250, in discover_engine
+    raise RuntimeError(
+RuntimeError: No compatible Freerouting engine found in 'C:\nemotron test\DESK\library\tools'. Install a Java runtime matching the JAR (v2.2+ needs Java 25) or set FREEROUTING_JAR.

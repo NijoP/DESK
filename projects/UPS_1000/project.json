@@ -1,0 +1,25 @@
+{
+ "name": "UPS_1000",
+ "easyeda_project_name": "ups claude test",
+ "project_uuid": "41d5060e3af143dfbfbbc17bb1afb243",
+ "board": "Board1",
+ "sheet_uuid": "d0c994c03394bf9f",
+ "schematic_uuid": "85bc1ee98bd72937",
+ "pcb_uuid": "91492012a8032517",
+ "panel_uuid": "865dd9451c4186b7",
+ "window_id": "a03bf2c1-71a5-437a-831b-dee7d20fc160",
+ "gateway_port": 49620,
+ "top": 3200,
+ "row_max": 5200,
+ "block_order": [
+  "01_PWR_IN",
+  "02_AUX_12V",
+  "03_AUX_5V_3V3",
+  "04_MCU",
+  "05_CAN",
+  "06_GATE_DRV",
+  "07_HALF_BRIDGE",
+  "08_PROTECTION",
+  "09_FAN_IO"
+ ]
+}

@@ -1,0 +1,48 @@
+..................C:\nemotron test\DESK\tests\test_archetype_registry.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\tmpcw4rfose\\lib\\rule_sets\\core.json' mode='r' encoding='utf-8'>
+  data = json.load(open(p, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+...C:\nemotron test\DESK\tests\test_archetype_registry.py:32: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\tmpggwcagy6\\lib\\archetypes\\buck_converter.json' mode='r' encoding='utf-8'>
+  data = json.load(open(p, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.C:\nemotron test\DESK\tests\test_archetype_registry.py:47: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\tmpxezdsybd\\lib\\rule_sets\\core.json' mode='r' encoding='utf-8'>
+  data = json.load(open(p, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..........s...............................Error querying supplier 'fail_supp' for 'TPS62840': Mock supplier network timeout
+............................................................................................................C:\nemotron test\DESK\tests\test_dense_intelligence.py:147: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_plan_4d3eif3j\\placement.json' mode='w' encoding='utf-8'>
+  json.dump(plan, open(path, "w", encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+C:\nemotron test\DESK\tests\test_dense_intelligence.py:152: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_plan_4d3eif3j\\placement.json' mode='r' encoding='utf-8'>
+  saved = json.load(open(path, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..........................................................................................................s............................................................................................................................................................................................................................C:\nemotron test\DESK\tests\test_routing_chunked.py:26: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk__3be2e_j\\b.dsn' mode='w' encoding='cp1252'>
+  open(self.dsn, "w").write("(pcb)")
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.C:\nemotron test\DESK\tests\test_routing_chunked.py:26: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_lkk8bm1r\\b.dsn' mode='w' encoding='cp1252'>
+  open(self.dsn, "w").write("(pcb)")
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.C:\nemotron test\DESK\tests\test_routing_chunked.py:26: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_6850jcba\\b.dsn' mode='w' encoding='cp1252'>
+  open(self.dsn, "w").write("(pcb)")
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+C:\nemotron test\DESK\tests\test_routing_chunked.py:50: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_6850jcba\\out.ses' mode='r' encoding='cp1252'>
+  self.assertIn("(unrouted 7)", open(res.ses_path).read())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.C:\nemotron test\DESK\tests\test_routing_chunked.py:26: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_7nwnmn14\\b.dsn' mode='w' encoding='cp1252'>
+  open(self.dsn, "w").write("(pcb)")
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..............s....s...C:\nemotron test\DESK\tests\test_routing_pass_tracker.py:115: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_fr_sjmr3j7y\\freerouting\\freerouting.json' mode='r' encoding='utf-8'>
+  live = json.load(open(path, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+C:\nemotron test\DESK\tests\test_routing_pass_tracker.py:122: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_fr_sjmr3j7y\\freerouting\\freerouting.json' mode='r' encoding='utf-8'>
+  restored = json.load(open(path, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+......................C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py:579: ResourceWarning: unclosed file <_io.TextIOWrapper name=3 encoding='cp1252'>
+  if method() is not None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py:579: ResourceWarning: unclosed file <_io.TextIOWrapper name=4 encoding='cp1252'>
+  if method() is not None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..................................................................................................................................................................s.s....ss..s
+----------------------------------------------------------------------
+Ran 721 tests in 41.461s
+
+OK (skipped=9)
