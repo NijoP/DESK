@@ -41,7 +41,9 @@ from desk import placement
 from desk import spec as S
 from desk import ledger as LG
 
-def run_profiling(project_dir: str = "projects/WATCH"):
+def run_profiling(project_dir: str):
+    if not project_dir:
+        raise SystemExit("run_profiling needs a project directory (python tools/profile_perf.py projects/<P>)")
     collector = TelemetryCollector.get_instance()
     t_start = time.perf_counter()
 
@@ -190,7 +192,9 @@ def run_profiling(project_dir: str = "projects/WATCH"):
     return summary
 
 if __name__ == "__main__":
-    proj = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else "projects/WATCH"
+    proj = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else os.environ.get("DESK_PROJECT", "")
+    if not proj:
+        raise SystemExit("usage: python tools/profile_perf.py projects/<P> [--json]  (or set DESK_PROJECT)")
     res = run_profiling(proj)
     if "--json" in sys.argv:
         print(json.dumps(res, indent=2))

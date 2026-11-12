@@ -270,8 +270,9 @@ class StageState:
 class ExecutionProjection:
     """Consolidated state projector maintaining real-time execution telemetry."""
 
-    def __init__(self, project_id: str = "projects/WATCH", event_bus: Optional[EventBus] = None) -> None:
-        self.project_id = project_id
+    def __init__(self, project_id: Optional[str] = None, event_bus: Optional[EventBus] = None) -> None:
+        # No built-in project: the id comes from the caller, `set_project`, or DESK_PROJECT. Empty = unbound.
+        self.project_id = project_id or os.environ.get("DESK_PROJECT", "")
         self.event_bus = event_bus or get_event_bus()
         self._lock = threading.RLock()
 
@@ -339,6 +340,8 @@ class ExecutionProjection:
     def _resolve_project_dir(self, proj_id: Optional[str] = None) -> str:
         """Resolves the active project directory across varying working directories."""
         pid = proj_id or self.project_id
+        if not pid:
+            return ""
         if os.path.isabs(pid):
             return pid
         if os.path.exists(pid):
@@ -350,7 +353,12 @@ class ExecutionProjection:
 
     def _state_file_path(self) -> str:
         proj_dir = self._resolve_project_dir()
-        d = os.path.join(proj_dir, "state") if os.path.exists(proj_dir) else "state"
+        if proj_dir and os.path.exists(proj_dir):
+            d = os.path.join(proj_dir, "state")
+        else:
+            # Unbound or missing project: never litter the working directory or the repository root.
+            import tempfile
+            d = os.path.join(tempfile.gettempdir(), "desk_unbound_state")
         os.makedirs(d, exist_ok=True)
         return os.path.join(d, "execution_state.json")
 
@@ -966,7 +974,7 @@ class ExecutionProjection:
 _GLOBAL_PROJECTION: Optional[ExecutionProjection] = None
 
 
-def get_execution_projection(project_id: str = "projects/WATCH") -> ExecutionProjection:
+def get_execution_projection(project_id: Optional[str] = None) -> ExecutionProjection:
     """Returns or initializes the global execution state projection."""
     global _GLOBAL_PROJECTION
     if _GLOBAL_PROJECTION is None:

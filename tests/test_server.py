@@ -28,8 +28,6 @@ class TestDeskServer(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.server.stop()
-        from desk.runtime.projection import get_execution_projection
-        get_execution_projection().sync_from_project_artifacts("projects/WATCH")
 
     def _fetch(self, path: str, headers: dict = None) -> tuple[int, bytes, dict]:
         req = urllib.request.Request(f"{self.url}{path}", headers=headers or {})

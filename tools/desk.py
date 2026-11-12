@@ -25,6 +25,14 @@ import webbrowser
 from _common import S  # noqa: F401
 from desk import ops
 
+
+def _default_project() -> str:
+    """The project is always explicit: --project projects/<P> or DESK_PROJECT. No built-in default."""
+    p = os.environ.get("DESK_PROJECT", "").strip()
+    if not p:
+        raise SystemExit("no project given: pass --project projects/<P> (or a project path) or set DESK_PROJECT")
+    return p
+
 a = sys.argv[1:]
 if not a or a[0] == "tools":
     here = os.path.dirname(os.path.abspath(__file__))
@@ -39,7 +47,7 @@ if not a or a[0] == "tools":
 
 if a[0] == "dashboard":
     port = int(a[a.index("--port") + 1]) if "--port" in a else 49630
-    proj = a[a.index("--project") + 1] if "--project" in a else "projects/WATCH"
+    proj = a[a.index("--project") + 1] if "--project" in a else _default_project()
     if not os.path.exists(proj) and os.path.exists(os.path.join(S.ROOT, proj)):
         proj = os.path.join(S.ROOT, proj)
     from desk.runtime.projection import get_execution_projection
@@ -73,7 +81,7 @@ if a[0] == "dashboard":
 
 if a[0] == "serve":
     port = int(a[a.index("--port") + 1]) if "--port" in a else 49630
-    proj = a[a.index("--project") + 1] if "--project" in a else "projects/WATCH"
+    proj = a[a.index("--project") + 1] if "--project" in a else _default_project()
     if not os.path.exists(proj) and os.path.exists(os.path.join(S.ROOT, proj)):
         proj = os.path.join(S.ROOT, proj)
     from desk.runtime.projection import get_execution_projection
@@ -85,7 +93,7 @@ if a[0] == "serve":
     sys.exit(0)
 
 if a[0] == "status":
-    proj = a[a.index("--project") + 1] if "--project" in a else "projects/WATCH"
+    proj = a[a.index("--project") + 1] if "--project" in a else _default_project()
     if not os.path.exists(proj) and os.path.exists(os.path.join(S.ROOT, proj)):
         proj = os.path.join(S.ROOT, proj)
     from desk.runtime.projection import CANONICAL_STAGES, STAGE_NAMES, get_execution_projection
@@ -152,7 +160,7 @@ if a[0] == "rework":
 
     sub = a[1] if len(a) > 1 and not a[1].startswith("-") else "status"
     proj_arg = [arg for arg in a[1:] if arg.startswith("projects/") or (os.path.isdir(arg) and not arg.startswith("-"))]
-    proj = proj_arg[0] if proj_arg else (os.environ.get("DESK_PROJECT") or "projects/WATCH")
+    proj = proj_arg[0] if proj_arg else _default_project()
     norm_proj = os.path.abspath(proj)
 
     if sub == "start":

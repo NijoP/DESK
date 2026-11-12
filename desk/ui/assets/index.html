@@ -411,7 +411,7 @@
         DESK
       </div>
       <span class="badge badge-primary">Mission Control v1.0</span>
-      <span class="badge badge-gray" id="project-badge">projects/WATCH</span>
+      <span class="badge badge-gray" id="project-badge">no project bound</span>
     </div>
     <div class="header-meta">
       <div>Status: <span class="badge badge-gray" id="exec-status">IDLE</span></div>
@@ -582,7 +582,7 @@
   <script>
     let state = {
       execution_id: "",
-      project_id: "projects/WATCH",
+      project_id: "",
       status: "IDLE",
       overall_progress: 0.0,
       current_stage: "",
@@ -674,7 +674,7 @@
 
     function render() {
       // Header
-      document.getElementById("project-badge").textContent = state.project_id || "projects/WATCH";
+      document.getElementById("project-badge").textContent = state.project_id || "no project bound";
       const statusBadge = document.getElementById("exec-status");
       statusBadge.textContent = state.status;
       statusBadge.className = "badge " + (
@@ -890,7 +890,8 @@
     function esc(t) { return String(t == null ? "" : t).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
     async function fetchRoute() {
       try {
-        const proj = (state && state.project_id) ? encodeURIComponent(state.project_id) : "projects/WATCH";
+        if (!(state && state.project_id)) { return; }
+        const proj = encodeURIComponent(state.project_id);
         const res = await fetch("/api/v1/route/progress?project=" + proj);
         if (!res.ok) return;
         const d = await res.json();

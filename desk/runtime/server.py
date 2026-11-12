@@ -189,7 +189,7 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         elif path in {"/api/route/progress", "/api/v1/route/progress"}:
             # Routing-stage status from state/route/*.json (progress, pre-flight, dense analysis); file-backed, no ECAD call.
             from desk.runtime.route_progress import load_route_progress
-            proj_id = query.get("project", ["projects/WATCH"])[0]
+            proj_id = query.get("project", [get_execution_projection().project_id])[0]
             self._send_json(200, load_route_progress(proj_id))
         elif path == "/api/v1/health":
             self._handle_health()
@@ -295,7 +295,7 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def _handle_project_select(self, query: Dict[str, List[str]]) -> None:
         """Switches active project and re-syncs state."""
-        proj_id = query.get("project", ["projects/WATCH"])[0]
+        proj_id = query.get("project", [get_execution_projection().project_id])[0]
         projection = get_execution_projection()
         projection.set_project(proj_id)
         projection.sync_from_project_artifacts(proj_id)
@@ -402,7 +402,7 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def _handle_rework_session(self, query: Dict[str, List[str]]) -> None:
         """Returns the active or latest rework session."""
-        proj_id = query.get("project", ["projects/WATCH"])[0]
+        proj_id = query.get("project", [get_execution_projection().project_id])[0]
         try:
             from desk.rework import get_latest_rework_session
             session = get_latest_rework_session(proj_id)
@@ -415,7 +415,7 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def _handle_rework_issues(self, query: Dict[str, List[str]]) -> None:
         """Returns the issues inventory for the active rework session."""
-        proj_id = query.get("project", ["projects/WATCH"])[0]
+        proj_id = query.get("project", [get_execution_projection().project_id])[0]
         try:
             from desk.rework import get_latest_rework_session
             session = get_latest_rework_session(proj_id)
@@ -442,7 +442,7 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def _handle_rework_plan(self, query: Dict[str, List[str]]) -> None:
         """Returns the repair plan for the active rework session."""
-        proj_id = query.get("project", ["projects/WATCH"])[0]
+        proj_id = query.get("project", [get_execution_projection().project_id])[0]
         try:
             from desk.rework import get_latest_rework_session, RepairPlanner
             session = get_latest_rework_session(proj_id)
@@ -467,7 +467,7 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
 
     def _handle_rework_history(self, query: Dict[str, List[str]]) -> None:
         """Returns execution history log of completed repairs."""
-        proj_id = query.get("project", ["projects/WATCH"])[0]
+        proj_id = query.get("project", [get_execution_projection().project_id])[0]
         try:
             from desk.rework import get_latest_rework_session
             session = get_latest_rework_session(proj_id)
