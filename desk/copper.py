@@ -75,7 +75,9 @@ class ConnectionConfig:
     connection_type: str = "thermal_relief"  # "solid" | "thermal_relief"
     spoke_count: int = 4
     spoke_width_mil: float = 12.0
-    clearance_mil: float = 8.0
+    # Pad-to-pour spacing is never a literal here: CopperZoneSpec.clearance_mil comes from
+    # DesignProfile.derive_clearance_mil(net, "GND") when the zone is planned. None = derived by the zone.
+    clearance_mil: Optional[float] = None
 
 
 @dataclass
@@ -136,7 +138,6 @@ class ConnectionRuleResolver:
                 connection_type="solid",
                 spoke_count=0,
                 spoke_width_mil=0.0,
-                clearance_mil=10.0
             )
 
         # Standard thermal relief with width proportional to current
@@ -145,7 +146,6 @@ class ConnectionRuleResolver:
             connection_type="thermal_relief",
             spoke_count=4,
             spoke_width_mil=spoke_w,
-            clearance_mil=8.0
         )
 
 
