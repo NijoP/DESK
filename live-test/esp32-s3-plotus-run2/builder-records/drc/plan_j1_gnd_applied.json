@@ -1,0 +1,44 @@
+{
+ "plan": {
+  "note": "run 2b: explicit top tracks J1 GND pins -> existing GND stitch vias (DESK verifier counted these pads as edge-only fill contacts)",
+  "min_clearance_mm": 0.16,
+  "tracks": [
+   {
+    "net": "GND",
+    "layer": 1,
+    "w": 0.25,
+    "pts": [
+     [
+      7.674,
+      25.2
+     ],
+     [
+      8.995,
+      26.475
+     ]
+    ]
+   },
+   {
+    "net": "GND",
+    "layer": 1,
+    "w": 0.25,
+    "pts": [
+     [
+      7.674,
+      18.8
+     ],
+     [
+      8.333,
+      18.399
+     ]
+    ]
+   }
+  ]
+ },
+ "deleted": [],
+ "track_ids": [
+  "37186c11fd44363e",
+  "4ab4b2aafe8d73e2"
+ ],
+ "via_ids": []
+}

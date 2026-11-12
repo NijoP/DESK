@@ -1,0 +1,4 @@
+{"tracks": [
+  {"net": "GND", "layer": 1, "w": 0.15, "pts": [[11.2, 22.0], [12.0, 22.0]], "why": "U1 pin8 -> pin3 under the package (centre GND pins)"},
+  {"net": "GND", "layer": 1, "w": 0.2, "pts": [[12.0, 22.0], [13.3, 22.0]], "why": "U1 pin3 escape right between CC1 and USB_DN stubs"}],
+ "vias": [{"net": "GND", "xy": [13.3, 22.0], "d": 0.6, "drill": 0.3}]}

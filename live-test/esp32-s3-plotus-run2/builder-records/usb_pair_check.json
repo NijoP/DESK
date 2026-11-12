@@ -1,0 +1,52 @@
+{
+ "USB_DP": {
+  "segments": 16,
+  "total_copper_mm": 65.82,
+  "J1_to_U3_path_mm": 63.05,
+  "widths_mm": [
+   0.15,
+   0.254
+  ],
+  "vias": [],
+  "non_pad_branch_nodes": {},
+  "dangling_ends": [],
+  "pads_on_net": [
+   "J1.A6",
+   "J1.B6",
+   "TP7.1",
+   "U1.1",
+   "U3.14"
+  ]
+ },
+ "USB_DN": {
+  "segments": 15,
+  "total_copper_mm": 66.96,
+  "J1_to_U3_path_mm": 63.76,
+  "widths_mm": [
+   0.15,
+   0.254
+  ],
+  "vias": [
+   [
+    13.101,
+    21.501
+   ],
+   [
+    9.2,
+    21.849
+   ]
+  ],
+  "non_pad_branch_nodes": {
+   "via(9.2, 21.849)": 3,
+   "via(13.101, 21.501)": 3
+  },
+  "dangling_ends": [],
+  "pads_on_net": [
+   "J1.A7",
+   "J1.B7",
+   "TP8.1",
+   "U1.2",
+   "U3.13"
+  ]
+ }
+}

@@ -1,0 +1,23 @@
+{
+  "start_wall": "2026-11-12T12:12:46.325+05:30",
+  "start_mono_ns": 71147265000000,
+  "total_budget_min": 225,
+  "deadline_wall": "2026-11-12T15:57:46+05:30",
+  "clock": "time.monotonic_ns (system-wide)",
+  "stage_budgets_min": {
+    "1": 45,
+    "2": 45,
+    "3": 90,
+    "4": 30,
+    "5": 15
+  },
+  "stages": {
+    "1": {
+      "duration_min": 100.862,
+      "result": "ABORTED"
+    }
+  },
+  "end_wall": "2026-11-12T13:53:38.342+05:30",
+  "end_mono_ns": 77199281000000,
+  "total_elapsed_min": 100.867
+}

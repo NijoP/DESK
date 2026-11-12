@@ -1,0 +1,39 @@
+{
+ "note": "run 2b: D+ drop re-segmented through TP7 at (49.1,33.2) rot 0",
+ "min_clearance_mm": 0.16,
+ "delete_tracks": [
+  "0805848afe1713df"
+ ],
+ "tracks": [
+  {
+   "net": "USB_DP",
+   "layer": 1,
+   "w": 0.254,
+   "pts": [
+    [
+     49.78,
+     35.4
+    ],
+    [
+     49.784,
+     33.2
+    ]
+   ]
+  },
+  {
+   "net": "USB_DP",
+   "layer": 1,
+   "w": 0.254,
+   "pts": [
+    [
+     49.784,
+     33.2
+    ],
+    [
+     49.784,
+     30.749
+    ]
+   ]
+  }
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "run": "run2",
+ "failures": [
+  {
+   "id": "R2-F-001",
+   "timestamp": "2026-11-12T12:18+05:30",
+   "stage": 1,
+   "operation": "tools/clear_block.py 03_MCU_CORE / 04_HEADERS (2x2 relayout)",
+   "component": "block frame rectangles",
+   "error": "clear_block left the frame rectangles in place",
+   "expected": "block fully removed",
+   "actual": "rects e584e720e242c756 (03) and 74a1d81a268a0bd7 (04) remained after the clear",
+   "root_cause": "CONFIRMED known DESK bug F-005 (run 1): clear_block matches the rect by +y while the API stores -y",
+   "recovery": "deleted both rects by id with sch_PrimitiveRectangle.delete; readback shows the 4 expected rects",
+   "status": "RECOVERED",
+   "time_lost_min": 1
+  },
+  {
+   "id": "R2-F-002",
+   "timestamp": "2026-11-12T12:15+05:30",
+   "stage": 1,
+   "operation": "wipe of the run 1 schematic",
+   "component": "7 run-1 block title texts (e0-e6)",
+   "error": "texts present in .esch and rendered in PDF/PNG, but invisible to the API",
+   "expected": "wipe removes all texts",
+   "actual": "sch_PrimitiveText.getAllPrimitiveId/get/delete, getPrimitiveAtPoint and region select all fail to see them",
+   "root_cause": "SUSPECTED: legacy text primitive type not exposed by this API build",
+   "recovery": "Captain GUI delete requested (counts as a human intervention)",
+   "status": "OPEN",
+   "time_lost_min": 3
+  },
+  {
+   "id": "R2-F-003",
+   "timestamp": "2026-11-12T12:22+05:30",
+   "stage": 1,
+   "operation": "tools/erc.py (sch_Drc.check strict, verbose)",
+   "component": "ERC report",
+   "error": "API returns only an aggregate count [{type:warn,count:2}], with no per-warning detail",
+   "expected": "itemized warnings",
+   "actual": "0 errors, 2 warnings, text unavailable",
+   "root_cause": "CONFIRMED API limitation (includeVerboseError has no effect in this build)",
+   "recovery": "independent itemized pin audit from the live readback (no floating pins, single-pin nets or duplicate refs; 14 documented NCs), in schematic/reports/erc_report.txt",
+   "status": "MITIGATED (warning text UNVERIFIED)",
+   "time_lost_min": 2
+  }
+ ]
+}

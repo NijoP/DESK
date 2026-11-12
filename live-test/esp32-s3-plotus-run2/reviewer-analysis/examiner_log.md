@@ -1,0 +1,8 @@
+﻿- 2026-11-12T12:13:02.2757194+05:30 examiner started; telemetry collector PID 33504 launched
+- 2026-11-12T12:21:11.6327834+05:30 wrote T_PLUS_010.md
+- 2026-11-12T13:54:07.5294987+05:30 attempt1 aborted (H-R2-001); moved T_PLUS_010.md to attempt1\; collector still running; awaiting run 2b clock
+- 2026-11-12T14:06:07.3477104+05:30 wrote run2b T_PLUS_010.md (LATE ~2min); T+20 due 14:14:08
+- 2026-11-12T14:51:47.6115118+05:30 wrote RETROACTIVE T_PLUS_020..050
+- 2026-11-12T14:52:02.5836059+05:30 wrote T_PLUS_060.md (evidence cut 14:51:47)
+- 2026-11-12T15:04:27.8647941+05:30 wrote FINAL_INDEPENDENT_EVALUATION.md (PARTIAL PASS 81/100)
+- 2026-11-12T15:04:53.8139362+05:30 wrote comparison, hardware, limitations; stopped telemetry collector PID 33504

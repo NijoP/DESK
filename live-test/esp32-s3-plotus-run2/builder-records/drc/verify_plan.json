@@ -1,0 +1,6 @@
+{
+ "note": "run 2b Stage 3 explicit GND links (gnd_links.py)",
+ "min_clearance_mm": 0.16,
+ "tracks": [],
+ "vias": []
+}
