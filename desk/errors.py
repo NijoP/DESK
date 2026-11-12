@@ -81,3 +81,31 @@ class ApprovalRequired(DeskError):
 
 class ConfigError(DeskError):
     """A configuration value failed validation (see `python desk.py config show`)."""
+
+
+# ---- reliability layer (desk/reliability) ---------------------------------------------------------------
+class IdentityUnverified(BridgeError):
+    """The expected project/document identity could not be established for a live window: no window hosts the
+    project, more than one does, or the active document is not the bound one. A mutation must not proceed."""
+
+
+class BridgeWindowRotated(BridgeError):
+    """The gateway reported that the bound window id is no longer connected (ids rotate on every reconnect).
+    The script did not execute; the session must be rebound by project/document uuid before any retry."""
+
+
+class CircuitOpen(DeskError):
+    """A circuit breaker refused the call because the service kept failing; wait for the recovery timeout."""
+
+
+class RecoveryRefused(DeskError):
+    """The recovery policy refused an action (risk class REFUSE, approval missing, or attempts exhausted)."""
+
+
+class EngineeringDecisionRequired(DeskError):
+    """A spacing or safety rule cannot be met by the geometry and must not be changed automatically; a human
+    decision is recorded as blocking until the Captain signs it off."""
+
+
+class DesignProfileInvalid(DeskError):
+    """design_profile.json could not be loaded (unknown key, bad type); names the offending field."""

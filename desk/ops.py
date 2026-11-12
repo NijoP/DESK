@@ -286,13 +286,20 @@ def write_op(
     force_unlock: bool = False,
     classification: str = OP_NON_IDEMPOTENT_MUTATION,
     approval: Optional[str] = None,
+    **identity: Any,
 ):
     """with write_op(P, "build", "02_PWR_3V3", approval=aid) as rec: ... -> policy check + atomic lock + begin/end journal.
 
     `approval` is the id returned by record_approval()/cli_approval() (or a rework RW-APR token). It is written
-    into the begin record together with the policy in force and the registry's side_effect flag for `op`."""
+    into the begin record together with the policy in force and the registry's side_effect flag for `op`.
+
+    `identity` (reliability layer, desk/reliability/mutation.py): `window_id`, `document_uuid`, `before_fingerprint`,
+    `idempotency_key`, `methods` are written into the begin record so the journal says WHICH live document an
+    operation touched and what the state looked like before it. Keys the caller sets on `rec` during the block
+    (`execution_state`, `after_fingerprint`, `verified`) are copied into the end/fail record."""
     lock = os.path.join(_state(project), "write.lock")
     policy = MutationPolicy.check(project, op, target, classification, approval)
+    identity = {k: v for k, v in identity.items() if v not in (None, "", [], {})}
 
     stuck = [p for p in pending(project) if p["target"] == target]
     if stuck:
@@ -312,11 +319,13 @@ def write_op(
         "pid": my_pid,
         "pid_start_time": get_process_start_time(my_pid),
         **policy,
+        **identity,
     }
 
     acquire_atomic_lock(lock, rec, force_unlock=force_unlock)
     _log(project, rec)
 
+    _VERDICT_KEYS = ("execution_state", "after_fingerprint", "verified")
     try:
         yield rec
         _log(project, {
@@ -326,6 +335,7 @@ def write_op(
             "classification": classification,
             "phase": "end",
             "ts": time.time(),
+            **{k: rec[k] for k in _VERDICT_KEYS if k in rec},
         })
     except BaseException as e:
         if rec.get("dirty"):
@@ -347,6 +357,7 @@ def write_op(
             "ts": time.time(),
             "error": str(e)[:300],
             "dirty": is_dirty,
+            **{k: rec[k] for k in _VERDICT_KEYS if k in rec},
         })
         raise
     finally:

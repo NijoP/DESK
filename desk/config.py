@@ -55,6 +55,13 @@ SCHEMA: List[Setting] = [
     Setting("EDA_WINDOW_ID", STR, None, "bridge", "EasyEDA window to target when project.json has none."),
     Setting("EASYEDA_API_REF", PATH, None, "bridge", "Alternative EasyEDA API reference file for tools/ctx.py api."),
     Setting("DESK_TELEMETRY", BOOL, "1", "project", "Append tool runs to .desk_learn/runs.jsonl (0 disables)."),
+    Setting("DESK_ALLOW_UNBOUND_WINDOW", BOOL, "0", "safety",
+            "1 lets a mutating bridge call run without a verified window binding (it then hits the ACTIVE window). "
+            "Default 0 refuses (KF-20261112-008, UPS_1000 F-001)."),
+    Setting("DESK_RELIABILITY_AUTORECOVER", BOOL, "1", "safety",
+            "0 turns the self-healing supervisor's AUTO recoveries into proposals only."),
+    Setting("DESK_FR_CHUNK_SAFETY", FLOAT, "0.6", "routing",
+            "Fraction of a routing chunk's time window the adaptive planner fills with measured pass time (0.3-0.9)."),
     Setting("DESK_MUTATION_POLICY", ENUM, "record", "safety",
             "record: journal whether a human approval accompanied each live mutation; "
             "require: refuse non-idempotent mutations without one.", choices=("record", "require")),
