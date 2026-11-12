@@ -34,6 +34,8 @@ class TestRoutingE2EProjectOne(unittest.TestCase):
         cls.p1_ses_path = os.path.join(base_doc, "project-one", "03_hardware_design", "pcb", "desk_route.ses")
         cls.watch_dsn_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "projects", "WATCH", "state", "route", "desk_route_tune.dsn")
 
+        if not os.path.exists(cls.p1_dump_path):
+            raise unittest.SkipTest(f"private project-one fixture not present: {cls.p1_dump_path}")
         with open(cls.p1_dump_path, "r", encoding="utf-8") as f:
             cls.dump = json.load(f)
 

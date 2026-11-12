@@ -15,12 +15,19 @@ from desk.runtime.projection import get_execution_projection
 from desk.runtime.server import DeskServer
 
 
+def _free_port() -> int:
+    """A port the OS will let this process bind right now (hosted Windows runners reserve fixed 49xxx ranges)."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        return s.getsockname()[1]
+
+
 class TestDeskServer(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         # Use an ephemeral high port range for tests
-        cls.server = DeskServer(host="127.0.0.1", port=49700)
+        cls.server = DeskServer(host="127.0.0.1", port=_free_port())
         cls.url, cls.port = cls.server.start(background=True)
         # Give thread time to bind
         time.sleep(0.1)
@@ -157,17 +164,17 @@ class TestDeskServer(unittest.TestCase):
         self.assertIn(b"DESK Local Mission Control", body)
 
     def test_port_collision_resolution(self):
-        # Occupy port 49750
+        # Occupy a free port; DeskServer asked for the same port must bump past it
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.bind(("127.0.0.1", 49750))
+        sock.bind(("127.0.0.1", 0))
         sock.listen(1)
+        occupied = sock.getsockname()[1]
 
         try:
-            # DeskServer requested port 49750 should bump to 49751
-            srv = DeskServer(host="127.0.0.1", port=49750)
+            srv = DeskServer(host="127.0.0.1", port=occupied)
             url, port = srv.start(background=True)
-            self.assertEqual(port, 49751)
-            self.assertIn("49751", url)
+            self.assertGreater(port, occupied)
+            self.assertIn(str(port), url)
             srv.stop()
         finally:
             sock.close()
@@ -206,7 +213,7 @@ class TestEngineeringIntegrity(unittest.TestCase):
         from desk.router import RoutingPriorityScheduler
 
         # Start a local test server
-        server = DeskServer(host="127.0.0.1", port=49780)
+        server = DeskServer(host="127.0.0.1", port=_free_port())
         url, _ = server.start(background=True)
         time.sleep(0.05)
 
@@ -238,7 +245,7 @@ class TestEngineeringIntegrity(unittest.TestCase):
 
     def test_monitoring_endpoints_are_strictly_read_only(self):
         """Validates that POST / PUT / DELETE mutations are refused."""
-        server = DeskServer(host="127.0.0.1", port=49790)
+        server = DeskServer(host="127.0.0.1", port=_free_port())
         url, _ = server.start(background=True)
         time.sleep(0.05)
 

@@ -229,7 +229,7 @@ DESK's first timed end-to-end run against a live EasyEDA Pro project. Full recor
 
 ## Verification status
 
-The test suite was last run on 2026-11-12: 713 tests, 0 failures, 3 skips (one needs a free EasyEDA bridge port, one Node and Backpass, one a git-ignored WATCH routing fixture; the 2 shapely tests ran because shapely is installed there). Four tests are environment-dependent: `test_orchestrator` 07/10/11 fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell, and `test_routing_orchestrator` engine discovery needs a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` there does not).
+The test suite was last run on 2026-11-12: 713 tests, 0 failures. Environment-dependent tests skip when their prerequisite is absent: a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` does not), the private project-one fixture, `shapely`, a free EasyEDA bridge port, Node with Backpass, and the git-ignored WATCH routing fixture. `test_orchestrator` 07/10/11 still fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell. CI runs the suite on Linux, Windows and macOS.
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -258,16 +258,13 @@ The test suite was last run on 2026-11-12: 713 tests, 0 failures, 3 skips (one n
 - No switching-loop area minimisation and no RF-specific ground-plane synthesis yet. Those rules are ADVISORY in the domain library.
 - Junction-temperature and component-rating rules are UNSUPPORTED: DESK lists them, it cannot evaluate them.
 - JLCPCB constraints are a static declaration; there is no live DFM or quoting API call.
-- Developed and tested on Windows 11. On GitHub CI (run 43181379155, 2026-11-12, same tree as `main` at `d590d54`)
-  the suite is **not yet green on any platform**:
-  - Ubuntu, Python 3.11 and 3.12: 707 tests, 2 errors, both missing local resources (a private OneDrive routing
-    fixture and a Freerouting jar).
-  - macOS: also a bridge port-discovery failure, and on Python 3.9 SQLite has no `unixepoch`.
-  - Python 3.9: the job fails before testing, because the runner has no 3.9.
-  - Windows (Python 3.11): 694 tests, 12 errors, mostly because the runner's workspace is on `D:` while temporary
-    folders are on `C:` (`os.path.relpath` across drives), plus dashboard test ports and the Freerouting jar.
-
-  A fix for these CI environment issues is in progress.
+- Developed and tested on Windows 11. GitHub CI on `main` at `b168be9` (run 43181657514, 2026-11-12) passes on **5 of 8**
+  jobs:
+  - Passing: Ubuntu with Python 3.11 and 3.12, Windows with 3.11 and 3.12, macOS with 3.12.
+  - Python 3.9 on Ubuntu 22.04 and Windows: 4 errors in `test_ci_storage`, because that Python's SQLite has no
+    `unixepoch`.
+  - macOS with Python 3.11: 1 failure in `test_bridge_port_discovery`.
+  - Weft runs are not part of CI (see the Weft section).
 - Weft workflows have not been executed by a Weft runtime: durable waits, approval pauses and recovery are unproven, and 22 of the 32 DESK nodes are declared but fail closed until their engine adapter is written.
 - One timed end-to-end benchmark exists ([`live-test/`](live-test/README.md)). It **failed** at the copper stage after
   102.8 of 225 minutes. Treat the other time targets in the docs as targets, not measurements.
