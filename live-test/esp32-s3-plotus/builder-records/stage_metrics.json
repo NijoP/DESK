@@ -1,0 +1,60 @@
+{
+  "stages": {
+    "1": {
+      "name": "Schematic design and validation",
+      "budget_min": 45,
+      "state": "ended",
+      "start_wall": "2026-11-12T04:50:28.508+05:30",
+      "start_mono_ns": 44609390000000,
+      "deadline_wall": "2026-11-12T05:35:28+05:30",
+      "end_wall": "2026-11-12T05:18:46.642+05:30",
+      "end_mono_ns": 46307515000000,
+      "duration_min": 28.302,
+      "within_budget": true,
+      "result": "PASS",
+      "note": "4 blocks, 38 parts, 43 nets; verify.py VERIFIED; lint --final PASS; EasyEDA ERC 0 errors; native schematic saved; layout tidied per Captain"
+    },
+    "2": {
+      "name": "Component placement",
+      "budget_min": 45,
+      "state": "ended",
+      "start_wall": "2026-11-12T05:18:56.062+05:30",
+      "start_mono_ns": 46316937000000,
+      "deadline_wall": "2026-11-12T06:03:56+05:30",
+      "end_wall": "2026-11-12T05:30:51.437+05:30",
+      "end_mono_ns": 47032312000000,
+      "duration_min": 11.923,
+      "within_budget": true,
+      "result": "PASS_WITH_DEVIATION",
+      "note": "neat grid-aligned rework per Captain; 38/38 readback-matched; 0 spacing warnings; 1 gate error C5 bulk decap 2.7mm (F-011); 1 human intervention (import Apply)"
+    },
+    "3": {
+      "name": "Routing and connectivity",
+      "budget_min": 90,
+      "state": "ended",
+      "start_wall": "2026-11-12T05:31:00.930+05:30",
+      "start_mono_ns": 47041812000000,
+      "deadline_wall": "2026-11-12T07:01:00+05:30",
+      "end_wall": "2026-11-12T06:09:06.348+05:30",
+      "end_mono_ns": 49327218000000,
+      "duration_min": 38.09,
+      "within_budget": true,
+      "result": "PASS_WITH_DEVIATION",
+      "note": "42/43 nets copper-connected (GND -> Stage 4 pour by design), EasyEDA DRC 0 clearance/0 short, power 10mil, USB mismatch ~2.8mm; deviations: GND via pour, USB not impedance-controlled, TP stubs on USB"
+    },
+    "4": {
+      "name": "Copper pouring",
+      "budget_min": 30,
+      "state": "ended",
+      "start_wall": "2026-11-12T06:09:14.962+05:30",
+      "start_mono_ns": 49335843000000,
+      "deadline_wall": "2026-11-12T06:39:14+05:30",
+      "end_wall": "2026-11-12T06:32:31.605+05:30",
+      "end_mono_ns": 50732484000000,
+      "duration_min": 23.277,
+      "within_budget": true,
+      "result": "FAIL",
+      "note": "GND top+bottom planes (API fill, DESK new capability), 35 stitching/orphan vias, thermal spokes on TH GND, 0 clearance/0 short; HARD GATE NOT MET: 5 GND connection errors (U1.3/U1.8/R2.2/C8.2 + one fill piece) F-019"
+    }
+  }
+}

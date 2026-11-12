@@ -9,11 +9,15 @@ Requirements in, verified and manufacturable boards out, with the physics done b
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-stdlib%20only-success.svg)](desk/)
-[![Tests](https://img.shields.io/badge/tests-549%20passing-success.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-553-informational.svg)](tests/)
 [![ECAD](https://img.shields.io/badge/ecad-EasyEDA%20Pro-orange.svg)](https://pro.easyeda.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-Developed by Tusk Innovations Global Pvt Ltd. Pure Python standard library, no pip packages.
+Developed by Tusk Innovations Global Pvt Ltd. Pure Python standard library, no pip packages. The one exception is
+the optional API-only copper fill, which needs `shapely`.
+
+**Live test:** a timed ESP32-S3 board benchmark with independent review, its graded result and revision A output
+files. See [`live-test/`](live-test/README.md).
 
 ---
 
@@ -121,7 +125,7 @@ Requirements: Python 3.9 or newer (3.11 or 3.12 recommended), Windows 11 is the 
 git clone https://github.com/NijoP/DESK.git
 cd DESK
 
-python -m unittest discover -s tests -p "test_*.py"   # 549 tests, no network, no ECAD needed
+python -m unittest discover -s tests -p "test_*.py"   # 553 tests, no network, no ECAD needed
 python desk.py doctor                                 # Python, Java, Freerouting, EasyEDA bridge, project binding
 python desk.py tools                                  # one line per tool
 
@@ -150,9 +154,47 @@ Working on an existing board rather than a new one: `python desk.py rework start
 
 ---
 
+## Live test: ESP32-S3 development board (timed benchmark, 2026-11-12)
+
+DESK's first timed end-to-end run against a live EasyEDA Pro project. Full record:
+[`live-test/`](live-test/README.md).
+
+- **Setup:** Claude Opus 5.5 drove DESK from frozen requirements to an ESP32-S3-WROOM-1 dev board (2 layers,
+  74 × 44 mm, 38 parts). It had a 225-minute budget split by stage (45 / 45 / 90 / 30 / 15). A separate Claude
+  Sonnet examiner graded the run independently.
+- **Benchmark verdict: FAIL**, scored 50/100 by the examiner, with 102.8 minutes used:
+
+  | Stage | Result |
+  |---|---|
+  | Schematic | PASS |
+  | Placement | Pass with deviations |
+  | Routing | Pass with deviations |
+  | Copper | **FAIL**: 5 GND opens |
+  | Manufacturing | Not started (stop rule) |
+
+- **Human help:** a window reconnect before the clock, an *Apply* click in Import Changes, and approval to
+  download Freerouting.
+- **After the benchmark (not graded):** EasyEDA DRC went from 5 errors to **0**. Revision A Gerber, schematic PDF,
+  BOM with LCSC numbers, CPL and the `.epro` project are in
+  [`live-test/esp32-s3-plotus/manufacturing-revA/`](live-test/esp32-s3-plotus/manufacturing-revA/). The board is
+  not production-released.
+- **DESK gained from the run:**
+  - API-only GND planes (`tools/copper_fill.py`), needed because EasyEDA's pour rebuild cannot be driven through
+    the API in Pro 3.2;
+  - explicit via links in `tools/stitch_orphans.py`;
+  - refreshed library entries.
+- **Defects it exposed:** the DRC summary miscount (0 reported against 174 real errors), the outline JS signature
+  and origin, and stale library UUIDs. These are listed in the run's failure register.
+- **Reviewer analysis:** uploaded unchanged in
+  [`live-test/esp32-s3-plotus/reviewer-analysis/`](live-test/esp32-s3-plotus/reviewer-analysis/). It includes the
+  10-minute reports (five were written after the fact), hardware telemetry and the Opus-vs-Nemotron comparison,
+  which found nothing to compare because no Nemotron board exists.
+
+---
+
 ## Verification status
 
-The test suite was last run on 2026-11-12: 549 tests, 0 failures, 3 live-only skips.
+The test suite was last run on 2026-11-12 on the live-test machine: 553 tests, 3 live-only skips, and 4 environment-dependent failures (`test_orchestrator` 07/10/11 depend on the local model-provider configuration; `test_routing_orchestrator` engine discovery needs a Freerouting jar in `library/tools`). The same 4 also fail on the unmodified upstream `main` on that machine. An earlier run on the development machine reported 549 tests and 0 failures.
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -164,7 +206,8 @@ The test suite was last run on 2026-11-12: 549 tests, 0 failures, 3 live-only sk
 | Component intelligence, BOM, JLCPCB | Offline tested with fixture catalogue | `tests/test_ci_*.py`, `tests/test_jlcpcb_integration.py` |
 | EasyEDA Pro read-back | Live verified (read-only sessions) | [`docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md`](docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md) |
 | NVIDIA NIM tool-calling agent | Live verified against the NIM endpoint, 2026-11-12 | `desk/orchestrator/agent_loop.py` |
-| EasyEDA Pro live mutation (placement, copper, routing write-back) | **Implemented, not live verified** | [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
+| EasyEDA Pro live mutation (placement, copper, routing write-back) | **Exercised live once** in the timed ESP32-S3 benchmark: blocks built, 38 parts placed, SES imported, API-only GND fills written, all read back. The benchmark verdict was FAIL; DRC reached 0 after the benchmark. Other paths are still not live verified. | [`live-test/`](live-test/README.md), [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
+| API-only copper planes (`pcb_PrimitiveFill`) | Live exercised (Plotus); offline tested. Needs the optional `shapely` package (the tests skip without it) | `tests/test_copper_fill.py`, [`desk/copper_fill.py`](desk/copper_fill.py) |
 | Freerouting stopped-job SES with full connectivity | **Not confirmed** | [`docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`](docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md) |
 
 ---
@@ -178,7 +221,12 @@ The test suite was last run on 2026-11-12: 549 tests, 0 failures, 3 live-only sk
 - Junction-temperature and component-rating rules are UNSUPPORTED: DESK lists them, it cannot evaluate them.
 - JLCPCB constraints are a static declaration; there is no live DFM or quoting API call.
 - Developed and tested on Windows 11. Linux and macOS should work (stdlib only) but have no test evidence yet.
-- No timed end-to-end benchmark exists. Time targets in the docs are targets, not measurements.
+- One timed end-to-end benchmark exists ([`live-test/`](live-test/README.md)). It **failed** at the copper stage after
+  102.8 of 225 minutes. Treat the other time targets in the docs as targets, not measurements.
+- EasyEDA Pro 3.2's DRC does not reliably connect a via to an API-created fill. `tools/stitch_orphans.py` therefore
+  adds explicit tracks.
+- `desk/copper_fill.py` is the one module that needs a third-party package (`shapely`). It is imported lazily, so
+  the rest of DESK still runs on the standard library only.
 
 ---
 

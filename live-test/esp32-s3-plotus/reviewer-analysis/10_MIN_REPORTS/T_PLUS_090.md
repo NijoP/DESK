@@ -1,0 +1,8 @@
+# T+90 Report (T+90 = 06:20:28)
+**LATE and RETROACTIVE.** Written at wall 2026-11-12 ~06:35 +05:30 (about T+104.5), after the clock ended at 06:33:18, reconstructed from file mtimes, the failure register and the CSV. My run was not active at 06:20 (no live supervision for this window).
+
+## State at T+90 (reconstructed, pcb/copper/ mtimes)
+- Stage 4 elapsed ~11.3 of 30 min. 06:10:57 stitching_vias.json (5.08 mm grid, 0.3/0.6 mm vias). 06:10-06:14 attempt to use EasyEDA's native copper pour: pcb_PrimitivePour.create + rebuildCopperRegion threw "TypeError ... reading 'length'" (F-018; drc_after_rebuild_try.json 06:13:58). H-003: builder asked the Captain for a GUI copper rebuild at ~06:11; the Captain declined ("this is an exam"). 06:15:54 first fill DRC (drc_fill_1.json): 2 Fill-to-Track + 4 Fill-to-Slot clearance errors + 10 GND connection errors (I counted). Subsequent fill iterations 06:16-06:18 (drc_fill_2..4).
+- F-018 root cause: builder claims a live-read source defect (rebuildCopperRegion result handling). I could not reproduce (EasyEDA off-limits) but the repeated identical TypeError across R/L/complex polygons per register is plausible; accept as an environment/API defect, not a design error. The workaround (DESK-side shapely plane written as pcb_PrimitiveFill polygons) is a substantive new DESK capability written in the exam window, which is an engineering recovery but also a deviation from "native copper pours".
+## Hardware 06:09-06:19 (CSV)
+- CPU 58-84 %; EasyEDA 39-43 % CPU, WS 2.0-2.9 GB; Claude WS ~2.0 GB (up from 1.5-1.6 GB at T+60; slow growth); RAM available 1.25-2.1 GB; net bursts of 5.4 MB/s at 06:10:54 and 06:18:55 (source not identified; not the jar). GPU 0 %/0 MB/idle.
