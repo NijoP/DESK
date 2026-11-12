@@ -215,7 +215,7 @@ DESK's first timed end-to-end run against a live EasyEDA Pro project. Full recor
 
 ## Verification status
 
-The test suite was last run on 2026-11-12: 689 tests, 0 failures, 5 skips (3 live-only, 2 need the optional shapely package). Four tests are environment-dependent: `test_orchestrator` 07/10/11 fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell, and `test_routing_orchestrator` engine discovery needs a Freerouting jar (`library/tools` or `FREEROUTING_JAR`) and Java 25.
+The test suite was last run on 2026-11-12: 689 tests, 0 failures, 5 skips (3 live-only, 2 need the optional shapely package). Environment-dependent tests skip when their prerequisite is absent (a Freerouting jar and Java for engine discovery, the private project-one fixture, `shapely`); `test_orchestrator` 07/10/11 still fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell. CI runs the suite on Linux, Windows and macOS.
 
 | Area | Status | Evidence |
 |---|---|---|

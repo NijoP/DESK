@@ -30,6 +30,15 @@ TOK = 4  # chars per token (estimate)
 FORMAT = 4  # bump when chunk format changes -> old caches are rebuilt
 
 
+
+def _rel(path: str, start: str = None) -> str:
+    """Relative path with forward slashes for display in commands; falls back to the absolute path when
+    `path` is on another drive than the current directory (os.path.relpath raises ValueError on Windows)."""
+    try:
+        return os.path.relpath(path, start or os.getcwd()).replace("\\", "/")
+    except ValueError:
+        return os.path.abspath(path).replace("\\", "/")
+
 def _json(path, default=None):
     if not os.path.exists(path): return default
     with open(path, encoding="utf-8") as f: return json.load(f)
@@ -291,7 +300,7 @@ class Engine:
         elif ver != "fresh": gate, todo = "G7", f"python tools/verify.py <P> {bid}" + ("  (spec changed since last verify: STALE)" if ver == "stale" else "")
         elif b.get("status") != "accepted": gate, todo = "ACCEPT", "set status accepted, RESULT.md row, EasyEDA revision, git commit"
         else: gate, todo = "DONE", "-"
-        return {"gate": gate, "todo": todo.replace("<P>", os.path.relpath(self.project, os.getcwd()).replace("\\", "/")),
+        return {"gate": gate, "todo": todo.replace("<P>", _rel(self.project)),
                 "errors": errs, "warnings": warns, "hash": h, "built": built, "verified": ver}
 
     def gate_doc(self, gate):
@@ -336,7 +345,7 @@ class Engine:
                                       f"{len(dom.get('unsupported_rule_ids', []))} unsupported; status {dom.get('status', '?')}\n"
                                       f"context: python tools/desk.py domains rules {dom['primary_archetype']}")
         else:
-            P.add(1, "domain (DDIS)", "not classified yet -> python tools/desk.py domains validate " + os.path.relpath(self.project).replace(chr(92), "/") + "/REQUIREMENTS.md --project " + os.path.relpath(self.project).replace(chr(92), "/"))
+            P.add(1, "domain (DDIS)", "not classified yet -> python tools/desk.py domains validate " + _rel(self.project) + "/REQUIREMENTS.md --project " + _rel(self.project))
         order = self.pj.get("block_order") or sorted(self.blocks)
         rows, nxt = [], None
         for bid in [x for x in order if x in self.blocks] + sorted(set(self.blocks) - set(order)):
@@ -346,12 +355,12 @@ class Engine:
         P.add(0, "blocks (state derived from library/pins/lint/layout/ledger)", "\n".join(rows) or "none yet - see BLOCK_PLAN.md")
         if nxt:
             P.add(0, "next action", f"{nxt[0]}: gate {nxt[1]['gate']} -> {nxt[1]['todo']}\n"
-                                    f"get its pack: python tools/ctx.py {os.path.relpath(self.project).replace(chr(92), '/')} block {nxt[0]}")
+                                    f"get its pack: python tools/ctx.py {_rel(self.project)} block {nxt[0]}")
         from desk import ops
         pend = ops.pending(self.project)
         if pend:
             P.add(0, "PENDING live operations (recover first)", "; ".join(f"{r['op']} {r['target']} op={r['id']}" + (" DIRTY" if r.get("dirty") else "") for r in pend)
-                  + " -> python tools/desk.py recover " + os.path.relpath(self.project).replace(chr(92), "/"))
+                  + " -> python tools/desk.py recover " + _rel(self.project))
         P.add(1, "rules (AGENTS.md)", self.rules(), "AGENTS.md#never")
         led = [l for l in self.ledger_for() if "[built" not in l and "[verified" not in l]
         P.add(2, "recent decisions / facts (LEDGER)", "\n".join(led[-8:]))
@@ -364,7 +373,7 @@ class Engine:
             bid = hit[0]
         b, st = self.blocks[bid], self.state(bid)
         P = Pack(f"BLOCK {bid} — next gate {st['gate']}", 10 ** 9 if full else budget)
-        P.add(0, "task", f"{st['todo']}\nspec file: {os.path.relpath(os.path.join(self.project, 'blocks', b['_file'])).replace(chr(92), '/')}"
+        P.add(0, "task", f"{st['todo']}\nspec file: {_rel(os.path.join(self.project, 'blocks', b['_file']))}"
                          f"  spec_hash={st['hash']}  built={st['built']}  verify={st['verified']}")
         if st["errors"] or st["warnings"]:
             P.add(0, "live lint", "\n".join([f"ERROR {e}" for e in st["errors"]] + [f"WARN  {w}" for w in st["warnings"]]))
