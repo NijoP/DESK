@@ -1,0 +1,362 @@
+{
+ "type": "EVIDENCE MANIFEST - NOT A FABRICATION RELEASE",
+ "generated": "2026-11-12T17:25:23+0530",
+ "release_status": "BLOCKED: tools/release.py revA live gate 'EasyEDA DRC 0 violations' FAIL (board unrouted, F-012). No Gerber/drill/CPL/schematic PDF/.epro exported.",
+ "files": [
+  {
+   "path": "live-test/ups-1000/manufacturing-revA/FAB_AND_ASSEMBLY_NOTES.md",
+   "sha256": "102ca2b2e719fd620718269ba7d7959feedfdd685ba13e2006882ec5c1cd0cc5",
+   "bytes": 2954
+  },
+  {
+   "path": "live-test/ups-1000/manufacturing-revA/THERMAL_ASSESSMENT.md",
+   "sha256": "b94a3228069eeed2c446a28bf6c56c22be15aaeec9008ec53dc650aff2f7256e",
+   "bytes": 2837
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/autockpt.log",
+   "sha256": "c8050f6181c4d0ea2c43a039a63323b1079d5beb632e30edc756a11cfb680b89",
+   "bytes": 2577
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/baseline_tests.txt",
+   "sha256": "a7b04f974a315c093d7721ba75651b7e68bc53056300fd122b38329d1aa91f62",
+   "bytes": 7300
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/conductor_sizing.txt",
+   "sha256": "2d53f68d6ee266e6fcb3d0f0ce2b50979991abc3c4b3c11a7b299fc334d279ad",
+   "bytes": 2220
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/drc_s4_unrouted.json",
+   "sha256": "d7720b826dc8c2b892ed9eb5d15e2a8c560f321887cd980c97312363ca5734cd",
+   "bytes": 1074
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/drc_s4_unrouted.txt",
+   "sha256": "4a303028ca2f61bc8a50aafa3e4d43c679b130833b14cb7776384ef2e5c70592",
+   "bytes": 205
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/erc_report_s1.txt",
+   "sha256": "1b6c79ed7acef1c8b547556c0fe6f3ba768c2bae2fbaace318ff1d7062966c6e",
+   "bytes": 63
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/execution.jsonl",
+   "sha256": "29d250830cd06832ccc968af08cedd92bc8ef09fcf525885ffd005025f9859c8",
+   "bytes": 13419
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/failure_register.json",
+   "sha256": "b9f9668ebfbb6a4e9efd40ca4fec5389c310f268470c1cfd1b520a2a9513569d",
+   "bytes": 7047
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/freerouting.log",
+   "sha256": "671c41c77f8e5349dce939db4785af2d8af7800ab35df0d14e1451725194a555",
+   "bytes": 1577
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/lint_final_s1.txt",
+   "sha256": "eef2a38198ba45ed45a2b9aeb0ddd5431bde6fe3beea22a65f8b1f9c28b2fd0a",
+   "bytes": 91
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/placement.json",
+   "sha256": "bb867c33d95520e615593ac21a450c217babac8b8d338238e55a91b38b8a976a",
+   "bytes": 10302
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/placement_check_final.txt",
+   "sha256": "0ddedc03ec6977160d4fcc7002d58fe6d33bc7d0cc1757db208c461e5694aa9a",
+   "bytes": 949
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/preflight.json",
+   "sha256": "37bf5fbf8fcc5663fe88aae396108e5255a4db6119492ea0c01827474aa1d802",
+   "bytes": 269
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/progress.json",
+   "sha256": "549cc046c7148262f8e41d1b5fbc7beb361b7c3e27272ca93872f91e276670cb",
+   "bytes": 4372
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/progress_chunks.json",
+   "sha256": "7ff8d8ee0a295ec4f9427761fb88fc864e4078e57340c78dd90d5918852ed848",
+   "bytes": 854
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/release_attempt_revA.txt",
+   "sha256": "a5944a9ee7f2401f28848c07af3095b146542bddf3fed3bde0b5495cfa305cff",
+   "bytes": 185
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/release_attempt_revA_2.txt",
+   "sha256": "8a87e762e16fa5a6d7b7b6777bb741b3f2e043c9343874b3db660caec1ee4276",
+   "bytes": 305
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/resource_metrics.csv",
+   "sha256": "6bc9e9d9c37ef54a33b9913e3cc2b040aa6475ee4d24a495c88e875c04622274",
+   "bytes": 526
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/route_run1.txt",
+   "sha256": "e8067e308fea6cc28dfbf24b407a1427a24305c5075bb3a91ed90fc0e90b70e2",
+   "bytes": 3112
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/route_run2.txt",
+   "sha256": "26dd0b6778bd35749d1b349a6ae9d5fb78d9107afc5885b4841fabca87ad45a1",
+   "bytes": 3022
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/route_run3.txt",
+   "sha256": "630be5e794ec4221fa461e7e33b06a23db43ab3cad146e126cdb12beec356333",
+   "bytes": 2039
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/route_run4.txt",
+   "sha256": "dbe6c38b36f8e14335b28a1d1a70d701e1f797a75e59bd347487f74cb8fcc20c",
+   "bytes": 1703
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/route_run5.txt",
+   "sha256": "4ffa8c3708aa895de1bf8bcbecfedf360b02989dafe2b4f6944c19360dbab41f",
+   "bytes": 2074
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/sch_netlist.json",
+   "sha256": "a0918c0657b8259f5406b40ba46259960ac9a8f881f748c0a862070716b025d7",
+   "bytes": 294112
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/stage_metrics.json",
+   "sha256": "4304f2a212ee6ea834e27ba1dbc5d30f3f0380832db457ab07b329f35d37b156",
+   "bytes": 3753
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/tests_after_changes.txt",
+   "sha256": "cd6605dde2c177802bbe4f121c76988208906c429ff43e181f256fd3edb0a484",
+   "bytes": 5512
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/tests_after_changes2.txt",
+   "sha256": "b4d24330cfe292b2c1ef5e852482cabd98bcd08523fa48c17202acab7eaaa63c",
+   "bytes": 5515
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/tests_after_changes3.txt",
+   "sha256": "8cc19e14c741cfe48cce781a3a776d284588d1b2c57b3fab3fc5b95cebb3ee12",
+   "bytes": 5515
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/timing.json",
+   "sha256": "076aa1025edeec736cdf7914abee375515109d5ff9d4bc52791d22bb338a150d",
+   "bytes": 969
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/verify_all_s1.txt",
+   "sha256": "581dda6e3ee00bf0891e831798a3dba3dc062b6984609137569f6afbe20f35be",
+   "bytes": 194
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/verify_all_s5.txt",
+   "sha256": "581dda6e3ee00bf0891e831798a3dba3dc062b6984609137569f6afbe20f35be",
+   "bytes": 194
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/domain/rules_lv_prototype.json",
+   "sha256": "8d1b5b8a62c07c00ea5cb2a4e3060308d4f78741095f4a68c7247f18cbdd6c37",
+   "bytes": 30981
+  },
+  {
+   "path": "live-test/ups-1000/builder-records/domain/rules_system_hv.txt",
+   "sha256": "1b92bbfced427e62432f09642dadd45ac988904531a370543d3251f9301de57b",
+   "bytes": 6222
+  },
+  {
+   "path": "live-test/ups-1000/requirements/DATASHEET_FACTS.md",
+   "sha256": "7a6c7db2472e922b9078302b05027f03fb2f52e9b34eae2eab34d8d29ccdc7d9",
+   "bytes": 14016
+  },
+  {
+   "path": "projects/UPS_1000/BLOCK_PLAN.md",
+   "sha256": "358a2a9dc8f3b258376fb7dc63684023732bf92a0c4a4803eaf591a46d4c9cdb",
+   "bytes": 2118
+  },
+  {
+   "path": "projects/UPS_1000/bom.csv",
+   "sha256": "94138f364eef07630d60f1556b991160a5d81cf72d189a3931314c547410674d",
+   "bytes": 4365
+  },
+  {
+   "path": "projects/UPS_1000/BOM_SELECTION.md",
+   "sha256": "466d50b2e5254857f1bc09930ee5c537c3bb8ecb8c1367481daefd9d23d07f42",
+   "bytes": 5643
+  },
+  {
+   "path": "projects/UPS_1000/design_profile.json",
+   "sha256": "aca7c67265660622a5d206e42542e7d636bae45565c10709526104c2b6f8d5af",
+   "bytes": 6825
+  },
+  {
+   "path": "projects/UPS_1000/domain_validate.json",
+   "sha256": "36b8744c966afb21ddf72ca818cfad0bf747ecb46129c933236ebab412ddc073",
+   "bytes": 31120
+  },
+  {
+   "path": "projects/UPS_1000/LEDGER.jsonl",
+   "sha256": "3fc9632d90337d39f244cc18682611bf3f93392bee49c1834c83be62e39dbc44",
+   "bytes": 8772
+  },
+  {
+   "path": "projects/UPS_1000/placement.json",
+   "sha256": "1063364525bd3f1ab31676d6022b21ce25faf52ad279baab80b0687e54e69791",
+   "bytes": 11719
+  },
+  {
+   "path": "projects/UPS_1000/PROFILE_NOTES.md",
+   "sha256": "df93c11b2e121f28cf3c8c4d824f1c94ee477fd16d55378619e0fff6ad11ec0e",
+   "bytes": 218
+  },
+  {
+   "path": "projects/UPS_1000/project.json",
+   "sha256": "c69b66026a5b018f7e33fe79904442e544e47cf22d029d33d874a98e46096e44",
+   "bytes": 582
+  },
+  {
+   "path": "projects/UPS_1000/requirements.json",
+   "sha256": "53e5c1410e243bee5660d09ae35b909b014208145ea7a92852f767c0504975ac",
+   "bytes": 1795
+  },
+  {
+   "path": "projects/UPS_1000/REQUIREMENTS.md",
+   "sha256": "decc8bedaa6a07fb5cf9434cda0529378914a7c793c378cfe92acc629ecd205b",
+   "bytes": 15433
+  },
+  {
+   "path": "projects/UPS_1000/RESULT.md",
+   "sha256": "6203bcf47d4ee20ce6286fd9704ac5cf6c59d3c6dc2bf3372a2944b150fa16ed",
+   "bytes": 366
+  },
+  {
+   "path": "projects/UPS_1000/blocks/01_PWR_IN.json",
+   "sha256": "1281897d8b0dc217e0c4ae5abddb2460f845c028b87b66622d587b6e69813646",
+   "bytes": 5002
+  },
+  {
+   "path": "projects/UPS_1000/blocks/02_AUX_12V.json",
+   "sha256": "844a9274183e406a04e8a67d582fe6bbd6cfab467f0b6c71263d08e3e4c72bfe",
+   "bytes": 8319
+  },
+  {
+   "path": "projects/UPS_1000/blocks/03_AUX_5V_3V3.json",
+   "sha256": "e20814298d05743c620a01b7ebaab3406663031060f4183f080ec9c911bd908a",
+   "bytes": 5645
+  },
+  {
+   "path": "projects/UPS_1000/blocks/04_MCU.json",
+   "sha256": "7301de429577c4ae3b0d1574392aafdd179a9bd4d4b5532f5273f574cb3feb08",
+   "bytes": 8418
+  },
+  {
+   "path": "projects/UPS_1000/blocks/05_CAN.json",
+   "sha256": "eca54e7b47c679cc1fd266c58a50cc34c3a609954231526af404d1e232bc12f3",
+   "bytes": 2391
+  },
+  {
+   "path": "projects/UPS_1000/blocks/06_GATE_DRV.json",
+   "sha256": "ef1632f7fd56e2aaa13ab8d4c49d07582ea5202d8909af3a8597faf071c4c962",
+   "bytes": 9109
+  },
+  {
+   "path": "projects/UPS_1000/blocks/07_HALF_BRIDGE.json",
+   "sha256": "2b8c3aed8773a0b11907d95ae40fe8a0ec4ef03ad713c4c8dae339cc8233b2ef",
+   "bytes": 8712
+  },
+  {
+   "path": "projects/UPS_1000/blocks/08_PROTECTION.json",
+   "sha256": "33472502f6bd269a4f7194b1d3b246af22031e9fe362a0bed58c5ea0a5084d96",
+   "bytes": 6601
+  },
+  {
+   "path": "projects/UPS_1000/blocks/09_FAN_IO.json",
+   "sha256": "3176744e952b26b9ba1a51a7e73c364946a1d86dbebbfbcca25fd3896825d061",
+   "bytes": 2669
+  },
+  {
+   "path": "projects/UPS_1000/design/gen_blocks.py",
+   "sha256": "3fe0dd6a407d95476b6e5820ad7f98697da35bee86a2b2e0b810672fee4ef314",
+   "bytes": 31099
+  },
+  {
+   "path": "projects/UPS_1000/state/check.txt",
+   "sha256": "1a5b4422641a37cb7419551b0fc2d26c4916b0b86664ddcd9a449dc9419fd670",
+   "bytes": 684
+  },
+  {
+   "path": "projects/UPS_1000/state/copper_fills.json",
+   "sha256": "7605a244d4217bb1867fd0c1deca71007a041a765f5e838b2774ade42d8afc5a",
+   "bytes": 110
+  },
+  {
+   "path": "projects/UPS_1000/state/ctx_index.json",
+   "sha256": "1e8a60491e2b7979d0ad86e8987e6c846431c87f02a9c27a236148aca2060aad",
+   "bytes": 270500
+  },
+  {
+   "path": "projects/UPS_1000/state/ctx_served.json",
+   "sha256": "62f1912c60092c422d3a01ba9b0bcb1f456e9647050c087e8532cb49fd738bb2",
+   "bytes": 30334
+  },
+  {
+   "path": "projects/UPS_1000/state/layout.json",
+   "sha256": "a8d2b5f096a9d057e2c339c331dd6daa33b5ca7a6f3bdb1189ce72372712c5f3",
+   "bytes": 818
+  },
+  {
+   "path": "projects/UPS_1000/state/netlist.net",
+   "sha256": "e79dd76037fe6cb2d40c1322b237c05d687e3970085e9ab67ca60ad62dc97774",
+   "bytes": 101762
+  },
+  {
+   "path": "projects/UPS_1000/state/ops.jsonl",
+   "sha256": "0d8fb44b814470a79dad707a9dc133e8e91df5ce8d3cc7568b4301036781b60d",
+   "bytes": 44948
+  },
+  {
+   "path": "projects/UPS_1000/state/pcb_dump.json",
+   "sha256": "452400c2b7fd0de00cfcb30ef7fefe8c877686a47070e4b61b92428e2c29695e",
+   "bytes": 88955
+  },
+  {
+   "path": "projects/UPS_1000/state/placement_frozen.json",
+   "sha256": "1ab5cfd005061aad9064e31ad582e4a14ddb44ff0f6da5e55be26a6dd4935bb6",
+   "bytes": 9874
+  },
+  {
+   "path": "projects/UPS_1000/state/placement_target.json",
+   "sha256": "3a346d75cf72fbb5f7c65ca8a319a09f78a0017090e585d5229a19c2834d25d5",
+   "bytes": 8120
+  },
+  {
+   "path": "projects/UPS_1000/state/readiness_report.json",
+   "sha256": "1a04872b4dc061d23e5caca0fa868412855edff72c09942761ade38ef8a0da29",
+   "bytes": 419
+  },
+  {
+   "path": "projects/UPS_1000/state/recovery_plan.json",
+   "sha256": "2807c3f8be5f6f4e1b78406c401db6c0a9acaf2a048545a40353dd1a61e4a34c",
+   "bytes": 308
+  },
+  {
+   "path": "projects/UPS_1000/state/snapshot.json",
+   "sha256": "ebcbfeba2287f73f84be914083822d81b5caf1dd37d6517bdb04de7397e36951",
+   "bytes": 44701
+  }
+ ]
+}

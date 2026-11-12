@@ -1,0 +1,112 @@
+{
+  "failures": [
+    {
+      "id": "F-001",
+      "stage": 1,
+      "wall": "2026-11-12T16:13:11.091+05:30",
+      "elapsed_min": 2.098,
+      "description": "Gateway has 3 connected windows; activeWindowId=10b1d581 (project 'light'). Unbound DESK calls (tools/ping.py) go to the active window, NOT the UPS window 671ec3d9 ('ups claude test', project uuid 41d5060e3af143dfbfbbc17bb1afb243). Mutating unbound would hit the wrong project.",
+      "recovery": "No mutation performed. Bound all DESK ops to window 671ec3d9 via project.json window_id + verified by readback.",
+      "recovered": true
+    },
+    {
+      "id": "F-002",
+      "stage": 1,
+      "wall": "2026-11-12T16:18:40.868+05:30",
+      "elapsed_min": 7.594,
+      "description": "Gateway reconnected mid-session; all 3 window IDs rotated (671ec3d9 -> a03bf2c1). resolve.py failed closed with 'window no longer connected' (no wrong-window call).",
+      "recovery": "rebind.py: re-identify window by project_uuid 41d5060e... (not active window), update project.json, log REBIND",
+      "recovered": true
+    },
+    {
+      "id": "F-003",
+      "stage": 1,
+      "wall": "2026-11-12T16:23:09.904+05:30",
+      "elapsed_min": 12.078,
+      "description": "DESK bug: tools/desk.py domains validate <file> --project <P> kept the --project value in the path join, so the requirements JSON was never read and the run reported UNCLASSIFIED/0 rails (silent wrong result).",
+      "recovery": "Reusable fix in tools/desk.py (drop values of --project/--overlays); regression test tests/test_domains_cli_args.py fails before / passes after.",
+      "recovered": true
+    },
+    {
+      "id": "F-004",
+      "stage": 2,
+      "wall": "2026-11-12T16:45:10.580+05:30",
+      "elapsed_min": 34.089,
+      "description": "BLOCKER B-001: schematic->PCB sync impossible through the approved API. pcb_Document.importChanges() (no arg, schematic uuid, sheet uuid) returns true but only opens the Import Changes dialog: PCB components stay 0 (readback 0 after 8 s / 30 s). pcb_Net.setNetlist('JLCEDA', <schematic netlist 285 kB>) returns true but instantiates 0 components (assigns nets to existing footprints only). sch_Netlist.getNetlist() hung 120 s (timeout); sch_ManufactureData.getNetlistFile works. Known since INC-20261111-006 (Run 2 needed a Captain Apply click).",
+      "recovery": "No custom component-creation JS (AGENTS.md G). Directive s10: no dependence on Captain GUI -> PCB placement/routing/copper/DRC/Gerber cannot be performed live. Continue with offline deterministic engineering (placement plan, conductor sizing, rules), schematic manufacturing artefacts, and the independent review. Import Changes dialog may remain open in the UPS window (harmless, nothing applied).",
+      "recovered": false
+    },
+    {
+      "id": "F-005",
+      "stage": 2,
+      "wall": "2026-11-12T16:52:36.128+05:30",
+      "elapsed_min": 41.515,
+      "description": "DESK limitation: tools/pcb_place.py put every passive attached to the same pin on one identical spot (no collision check) -> 277 placement-gate errors (140 body overlaps).",
+      "recovery": "Reusable fix in tools/pcb_place.py: collision-aware outward/tangential legalisation against placed bodies, board and keep-outs. Gate 277 -> 4 -> 0 errors.",
+      "recovered": true
+    },
+    {
+      "id": "F-006",
+      "stage": 3,
+      "wall": "2026-11-12T16:57:59.945+05:30",
+      "elapsed_min": 46.912,
+      "description": "route.py attempt 1 aborted before any mutation: FREEROUTING_JAR given as POSIX path (/c/...), unresolvable by Windows Python (builder error). Pre-flight also warned: no planes declared.",
+      "recovery": "Windows path; GND planes poured on Inner1/Inner2 (copper_fill.py, 0.6 mm clearance) and declared in placement.json planes; route_keepouts added (barrier + M4 holes).",
+      "recovered": true
+    },
+    {
+      "id": "F-007",
+      "stage": 3,
+      "wall": "2026-11-12T17:04:12.428+05:30",
+      "elapsed_min": 53.12,
+      "description": "Freerouting 2.1.0 probe (java -jar --help) prints its banner in ~2 s then blocks on the online version check > 60 s; DESK probe timeout 25 s -> 'No compatible Freerouting engine'.",
+      "recovery": "Reusable fix desk/routing/orchestrator.py: banner without UnsupportedClassVersionError on timeout = compatible; tests/test_freerouting_probe_timeout.py (3 cases).",
+      "recovered": true
+    },
+    {
+      "id": "F-008",
+      "stage": 3,
+      "wall": "2026-11-12T17:04:12.529+05:30",
+      "elapsed_min": 53.122,
+      "description": "Interim examiner MAJOR: hot loop 17.6 mm stack / MLCC 8-17 mm, gate driver ~22 mm from gates, decaps 3-12 mm. pcb_check --gate passes although decap distances are 3.7-14.7 mm (> PLACE-DECAP-010 2 mm): gate does not evaluate them (DESK gate defect).",
+      "recovery": "Re-placed power core as side-by-side commutation cell (C45 2.6/3.4 mm from Q1 D/Q2 S), U7 to x=47 (gate 10.4/6.7 mm), gate R at FET gates; pcb_place passive search now starts at the pad. Decap 2 mm rule still NOT met -> open failure, not waived.",
+      "recovered": false
+    },
+    {
+      "id": "F-009",
+      "stage": 3,
+      "wall": "2026-11-12T17:05:14.036+05:30",
+      "elapsed_min": 54.147,
+      "description": "DESK limitation: domains profile compiler leaves board_dimensions_mm [50,50], 1 oz copper on all layers and default stackup (it maps no mechanical/stackup fields from requirements). Router widths therefore computed for 1 oz outer (conservative: wider).",
+      "recovery": "design_profile.json patched after compile: 160x120 mm, 2/1/1/2 oz, Tj max 150 C; dielectric thickness left as default and marked TBD (M-13).",
+      "recovered": true
+    },
+    {
+      "id": "F-010",
+      "stage": 3,
+      "wall": "2026-11-12T17:12:39.168+05:30",
+      "elapsed_min": 61.566,
+      "description": "route attempt 3: Freerouting 0 passes in 420s chunk (TIMEOUT), smoke run OK",
+      "recovery": "inspect DSN size/widths, retry with longer budget or narrower power widths",
+      "recovered": false
+    },
+    {
+      "id": "F-011",
+      "stage": 3,
+      "wall": "2026-11-12T17:15:19.167+05:30",
+      "elapsed_min": 64.232,
+      "description": "route attempt 4 refused: builder hand-patch put free-text keys (name_note/notes) in design_profile.json, loader TypeError -> currents undeclared -> STOP",
+      "recovery": "notes moved to PROFILE_NOTES.md, DesignProfile.load verified",
+      "recovered": true
+    },
+    {
+      "id": "F-012",
+      "stage": 3,
+      "wall": "2026-11-12T17:23:54.765+05:30",
+      "elapsed_min": 72.826,
+      "description": "route attempt 5 (retry 2/2): engine ran, 106->70 unrouted in 5 passes (~84 s/pass), chunk 420 s > 300 s budget, no SES imported; live board 0 tracks/0 vias",
+      "recovery": "RETRY CEILING REACHED - not retried. Next: route power nets as polygons, narrow router widths, or PRECISION mode with longer budget (Captain decision)",
+      "recovered": false
+    }
+  ]
+}

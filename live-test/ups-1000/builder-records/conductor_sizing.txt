@@ -1,0 +1,23 @@
+UPS_1000 conductor sizing - desk.ipc (IPC-2221 charts, deterministic). dT = 10 C and 20 C
+VBUS/SW/PHASE/GND power (10 A pk design)   I=10.00 A dT=10C  outer 2oz   142.4 mil ( 3.62 mm) | inner 1oz   741.1 mil (18.82 mm)
+VBUS/SW/PHASE/GND power (10 A pk design)   I=10.00 A dT=20C  outer 2oz    93.5 mil ( 2.38 mm) | inner 1oz   486.6 mil (12.36 mm)
+5 A RMS continuous                         I= 5.00 A dT=10C  outer 2oz    54.8 mil ( 1.39 mm) | inner 1oz   284.9 mil ( 7.24 mm)
+5 A RMS continuous                         I= 5.00 A dT=20C  outer 2oz    36.0 mil ( 0.91 mm) | inner 1oz   187.1 mil ( 4.75 mm)
+12V aux                                    I= 0.50 A dT=10C  outer 2oz     2.3 mil ( 0.06 mm) | inner 1oz    11.9 mil ( 0.30 mm)
+12V aux                                    I= 0.50 A dT=20C  outer 2oz     1.5 mil ( 0.04 mm) | inner 1oz     7.8 mil ( 0.20 mm)
+5V                                         I= 0.30 A dT=10C  outer 2oz     1.1 mil ( 0.03 mm) | inner 1oz     5.9 mil ( 0.15 mm)
+5V                                         I= 0.30 A dT=20C  outer 2oz     0.7 mil ( 0.02 mm) | inner 1oz     3.9 mil ( 0.10 mm)
+3V3                                        I= 0.30 A dT=10C  outer 2oz     1.1 mil ( 0.03 mm) | inner 1oz     5.9 mil ( 0.15 mm)
+3V3                                        I= 0.30 A dT=20C  outer 2oz     0.7 mil ( 0.02 mm) | inner 1oz     3.9 mil ( 0.10 mm)
+Gate drive peak (avg ~0.03 A)              I= 1.20 A dT=10C  outer 2oz     7.7 mil ( 0.19 mm) | inner 1oz    39.8 mil ( 1.01 mm)
+Gate drive peak (avg ~0.03 A)              I= 1.20 A dT=20C  outer 2oz     5.0 mil ( 0.13 mm) | inner 1oz    26.1 mil ( 0.66 mm)
+
+via drill 12 mil: 0.97 A each (dT 10C, 1 mil plating); vias for 10 A: 13; for 5 A: 7
+via drill 16 mil: 1.18 A each (dT 10C, 1 mil plating); vias for 10 A: 11; for 5 A: 6
+via drill 20 mil: 1.38 A each (dT 10C, 1 mil plating); vias for 10 A: 10; for 5 A: 5
+
+clearance B2 @ 58.4 V: 0.600 mm | creepage PD2 IIIa: 1.25 mm
+clearance B2 @ 70.4 V: 0.600 mm | creepage PD2 IIIa: 1.3 mm
+clearance B2 @ 12.6 V: 0.100 mm | creepage PD2 IIIa: 0.04 mm
+clearance B2 @ 5.2 V: 0.100 mm | creepage PD2 IIIa: 0.04 mm
+clearance B2 @ 3.4 V: 0.100 mm | creepage PD2 IIIa: 0.04 mm

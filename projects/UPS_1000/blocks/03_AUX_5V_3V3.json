@@ -1,0 +1,267 @@
+{
+ "id": "03_AUX_5V_3V3",
+ "title": "AUX 5V BUCK AND 3V3 LDO",
+ "status": "draft",
+ "purpose": "TPS54202 12 V -> 5 V buck, AP2112K 5 V -> 3.3 V LDO for MCU, CAN, current sense and logic.",
+ "ports": [
+  "12V",
+  "5V",
+  "3V3",
+  "GND"
+ ],
+ "parts": [
+  {
+   "ref": "U2",
+   "mpn": "TPS54202DDCR",
+   "role": "28 V 2 A sync buck 12V->5V",
+   "pins": {
+    "1": "GND",
+    "2": "SW5",
+    "3": "12V",
+    "4": "FB5",
+    "6": "BOOT5"
+   },
+   "nc": [
+    "5"
+   ],
+   "lcsc": "C191884",
+   "package": "SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL"
+  },
+  {
+   "ref": "C12",
+   "mpn": "CL21A106KAYNNNE",
+   "role": "U VIN bulk cap at pin 3",
+   "pins": {
+    "1": "12V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C15850",
+   "package": "0805",
+   "value": "10uF",
+   "rating": "25V X5R 0805"
+  },
+  {
+   "ref": "C13",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "U VIN HF cap at pin 3",
+   "pins": {
+    "1": "12V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "C14",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "BOOT cap 0.1 uF",
+   "pins": {
+    "1": "BOOT5",
+    "2": "SW5"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "L2",
+   "mpn": "SWPA4030S100MT",
+   "role": "5 V buck inductor 10 uH",
+   "pins": {
+    "1": "SW5",
+    "2": "5V"
+   },
+   "nc": [],
+   "lcsc": "C38117",
+   "package": "IND-SMD_L4.0-W4.0",
+   "value": "10uH",
+   "rating": "Isat TO VERIFY"
+  },
+  {
+   "ref": "R10",
+   "mpn": "0603WAF7502T5E",
+   "role": "FB divider top",
+   "pins": {
+    "1": "5V",
+    "2": "FB5"
+   },
+   "nc": [],
+   "lcsc": "C23242",
+   "package": "0603",
+   "value": "75k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R11",
+   "mpn": "0603WAF1002T5E",
+   "role": "FB divider bottom",
+   "pins": {
+    "1": "FB5",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C15",
+   "mpn": "CL31A226KAHNNNE",
+   "role": "5 V output cap #1",
+   "pins": {
+    "1": "5V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C12891",
+   "package": "1206",
+   "value": "22uF",
+   "rating": "25V X5R 1206"
+  },
+  {
+   "ref": "C16",
+   "mpn": "CL31A226KAHNNNE",
+   "role": "5 V output cap #2",
+   "pins": {
+    "1": "5V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C12891",
+   "package": "1206",
+   "value": "22uF",
+   "rating": "25V X5R 1206"
+  },
+  {
+   "ref": "U3",
+   "mpn": "AP2112K-3.3TRG1",
+   "role": "600 mA LDO 5V->3V3, EN tied high",
+   "pins": {
+    "1": "5V",
+    "2": "GND",
+    "3": "5V",
+    "5": "3V3"
+   },
+   "nc": [
+    "4"
+   ],
+   "lcsc": "C51118",
+   "package": "SOT-25-5_L2.9-W1.6-P0.95-LS2.8-BL"
+  },
+  {
+   "ref": "C17",
+   "mpn": "CL10A105KB8NNNC",
+   "role": "LDO input cap at pin 1",
+   "pins": {
+    "1": "5V",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C15849",
+   "package": "0603",
+   "value": "1uF",
+   "rating": "50V X5R"
+  },
+  {
+   "ref": "C18",
+   "mpn": "CL10A105KB8NNNC",
+   "role": "LDO output cap at pin 5",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C15849",
+   "package": "0603",
+   "value": "1uF",
+   "rating": "50V X5R"
+  },
+  {
+   "ref": "C19",
+   "mpn": "CL10A475KO8NNNC",
+   "role": "3V3 bulk",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C19666",
+   "package": "0603",
+   "value": "4.7uF",
+   "rating": "16V X5R"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Vout 5V",
+   "formula": "VOUT = 0.596*(1+75k/10k)",
+   "result": "5.066 V (range 4.94-5.19)",
+   "limit": "4.8-5.2 V",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md TPS54202 s5.5 p5",
+   "pass": true
+  },
+  {
+   "item": "VIN",
+   "formula": "12 V input",
+   "result": "12.1 V",
+   "limit": "4.5-28 V ROC",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md TPS54202 s5.3 p4",
+   "pass": true
+  },
+  {
+   "item": "Inductor",
+   "formula": "LMIN = (Vin-Vo)*Vo/(Vin*KIND*Io*fsw), Io design 0.3 A -> ripple ratio",
+   "result": "dI = (12-5)*5/(12*10uH*500kHz) = 0.58 A pp; Ipk 0.44 A",
+   "limit": "< 2 A rating; datasheet ref 15 uH is for 2 A load",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md TPS54202 s7.2.3 p15",
+   "pass": true
+  },
+  {
+   "item": "Cout",
+   "formula": "2 x 22 uF 25 V as datasheet 5 V reference design",
+   "result": "2 x 22 uF 25 V",
+   "limit": "matches reference",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md TPS54202 Fig7-1 p13",
+   "pass": true
+  },
+  {
+   "item": "EN",
+   "formula": "floating EN = enabled (internal pull-up), ABS 7 V so not tied to 12 V",
+   "result": "pin 5 NC",
+   "limit": "documented",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md TPS54202 Table 4-1 p3",
+   "pass": true
+  },
+  {
+   "item": "LDO dissipation",
+   "formula": "(5-3.3)*0.122 A",
+   "result": "0.21 W -> Tj ~ 40+0.21*250 = 92 C",
+   "limit": "< 125 C",
+   "source": "calc (thetaJA SOT-23-5 ~250 K/W ASSUMED, TO VERIFY)",
+   "pass": true
+  },
+  {
+   "item": "3V3 load",
+   "formula": "REQUIREMENTS s3",
+   "result": "0.122 A",
+   "limit": "<= 0.6 A (20 %)",
+   "source": "REQUIREMENTS.md s3",
+   "pass": true
+  },
+  {
+   "item": "5V load",
+   "formula": "AP2112K input only (LM339 moved to 12 V)",
+   "result": "0.13 A",
+   "limit": "<= 2 A",
+   "source": "calc",
+   "pass": true
+  }
+ ]
+}

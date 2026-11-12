@@ -1,0 +1,113 @@
+{
+ "id": "05_CAN",
+ "title": "CAN TRANSCEIVER",
+ "status": "draft",
+ "purpose": "SN65HVD230 3.3 V CAN transceiver (high-speed mode, RS to GND), fixed 120 Ohm termination, CAN ESD array, 3-pin header. RS485 not populated on rev A.",
+ "ports": [
+  "3V3",
+  "GND",
+  "CAN_TX",
+  "CAN_RX"
+ ],
+ "parts": [
+  {
+   "ref": "U5",
+   "mpn": "SN65HVD230DR",
+   "role": "3.3 V CAN transceiver",
+   "pins": {
+    "1": "CAN_TX",
+    "2": "GND",
+    "3": "3V3",
+    "4": "CAN_RX",
+    "6": "CANL",
+    "7": "CANH",
+    "8": "GND"
+   },
+   "nc": [
+    "5"
+   ],
+   "lcsc": "C12084",
+   "package": "SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL"
+  },
+  {
+   "ref": "C32",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "U VCC decoupling at pin 3",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R14",
+   "mpn": "0603WAF1200T5E",
+   "role": "bus termination 120 Ohm (fixed; board is a bus end)",
+   "pins": {
+    "1": "CANH",
+    "2": "CANL"
+   },
+   "nc": [],
+   "lcsc": "C22787",
+   "package": "0603",
+   "value": "120",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "D4",
+   "mpn": "NUP2105LT1G",
+   "role": "CAN bus ESD protection (pins 1/2 CANH/CANL, 3 GND)",
+   "pins": {
+    "1": "CANH",
+    "2": "CANL",
+    "3": "GND"
+   },
+   "nc": [],
+   "lcsc": "C2976509",
+   "package": "SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BR"
+  },
+  {
+   "ref": "J4",
+   "mpn": "HDR-M_2.54_1x3P",
+   "role": "CAN header: 1 CANH, 2 CANL, 3 GND",
+   "pins": {
+    "1": "CANH",
+    "2": "CANL",
+    "3": "GND"
+   },
+   "nc": [],
+   "lcsc": "",
+   "package": "HDR-TH_3P-P2.54-V-M"
+  }
+ ],
+ "qa": [
+  {
+   "item": "Supply",
+   "formula": "3.0-3.6 V",
+   "result": "3.3 V",
+   "limit": "in range",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md SN65HVD230 s8.3 p6",
+   "pass": true
+  },
+  {
+   "item": "RS mode",
+   "formula": "RS strong pull-down = high speed",
+   "result": "RS = GND",
+   "limit": "1 Mb/s capable",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md SN65HVD230 p5",
+   "pass": true
+  },
+  {
+   "item": "Termination",
+   "formula": "Z0 120 Ohm bus end",
+   "result": "120 Ohm 0603",
+   "limit": "P = (2V)^2/120 = 33 mW <= 100 mW",
+   "source": "calc",
+   "pass": true
+  }
+ ]
+}

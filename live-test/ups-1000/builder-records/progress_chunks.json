@@ -1,0 +1,51 @@
+{
+ "chunks": [
+  {
+   "chunk": 1,
+   "status": "TIMEOUT",
+   "passes": 5,
+   "seconds": 420.24,
+   "initial_unrouted": 106,
+   "final_unrouted": 70,
+   "ses": false,
+   "pass_history": [
+    {
+     "pass": 1,
+     "seconds": null,
+     "score": null,
+     "unrouted": 106
+    },
+    {
+     "pass": 2,
+     "seconds": 35.67,
+     "score": 97.24,
+     "unrouted": 97,
+     "violations": null
+    },
+    {
+     "pass": 3,
+     "seconds": 34.94,
+     "score": 142.92,
+     "unrouted": 89,
+     "violations": null
+    },
+    {
+     "pass": 4,
+     "seconds": null,
+     "score": null,
+     "unrouted": 86
+    },
+    {
+     "pass": 5,
+     "seconds": 26.44,
+     "score": 75.39,
+     "unrouted": 70,
+     "violations": null
+    }
+   ]
+  }
+ ],
+ "best_unrouted": null,
+ "elapsed_s": 445.4,
+ "budget_s": 300.0
+}

@@ -1,0 +1,38 @@
+[
+{
+"num": "1",
+"name": "GND"
+},
+{
+"num": "2",
+"name": "VIN"
+},
+{
+"num": "3",
+"name": "EN/UVLO"
+},
+{
+"num": "4",
+"name": "RON"
+},
+{
+"num": "5",
+"name": "FB"
+},
+{
+"num": "6",
+"name": "PGOOD"
+},
+{
+"num": "7",
+"name": "BST"
+},
+{
+"num": "8",
+"name": "SW"
+},
+{
+"num": "9",
+"name": "EP"
+}
+]

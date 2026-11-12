@@ -1,0 +1,77 @@
+..................C:\nemotron test\DESK\tests\test_archetype_registry.py:62: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\tmplpo94wex\\lib\\rule_sets\\core.json' mode='r' encoding='utf-8'>
+  data = json.load(open(p, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+...C:\nemotron test\DESK\tests\test_archetype_registry.py:32: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\tmpaucnt_oi\\lib\\archetypes\\buck_converter.json' mode='r' encoding='utf-8'>
+  data = json.load(open(p, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.C:\nemotron test\DESK\tests\test_archetype_registry.py:47: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\tmpx2l7mzsr\\lib\\rule_sets\\core.json' mode='r' encoding='utf-8'>
+  data = json.load(open(p, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..........s...............................Error querying supplier 'fail_supp' for 'TPS62840': Mock supplier network timeout
+............................................................................................................C:\nemotron test\DESK\tests\test_dense_intelligence.py:147: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_plan_ctg0r88o\\placement.json' mode='w' encoding='utf-8'>
+  json.dump(plan, open(path, "w", encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+C:\nemotron test\DESK\tests\test_dense_intelligence.py:152: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_plan_ctg0r88o\\placement.json' mode='r' encoding='utf-8'>
+  saved = json.load(open(path, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+......................................................................................................s...............................................................F..EF........................................................................................................................................................C:\nemotron test\DESK\tests\test_routing_chunked.py:26: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_26vhmak9\\b.dsn' mode='w' encoding='cp1252'>
+  open(self.dsn, "w").write("(pcb)")
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.C:\nemotron test\DESK\tests\test_routing_chunked.py:26: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_dq_jjejo\\b.dsn' mode='w' encoding='cp1252'>
+  open(self.dsn, "w").write("(pcb)")
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.C:\nemotron test\DESK\tests\test_routing_chunked.py:26: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_im7rx_5b\\b.dsn' mode='w' encoding='cp1252'>
+  open(self.dsn, "w").write("(pcb)")
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+C:\nemotron test\DESK\tests\test_routing_chunked.py:50: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_im7rx_5b\\out.ses' mode='r' encoding='cp1252'>
+  self.assertIn("(unrouted 7)", open(res.ses_path).read())
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.C:\nemotron test\DESK\tests\test_routing_chunked.py:26: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_chunk_40dnxxvk\\b.dsn' mode='w' encoding='cp1252'>
+  open(self.dsn, "w").write("(pcb)")
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..............s....s...C:\nemotron test\DESK\tests\test_routing_pass_tracker.py:115: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_fr_vcm8z629\\freerouting\\freerouting.json' mode='r' encoding='utf-8'>
+  live = json.load(open(path, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+C:\nemotron test\DESK\tests\test_routing_pass_tracker.py:122: ResourceWarning: unclosed file <_io.TextIOWrapper name='C:\\Users\\HP\\AppData\\Local\\Temp\\desk_fr_vcm8z629\\freerouting\\freerouting.json' mode='r' encoding='utf-8'>
+  restored = json.load(open(path, encoding="utf-8"))
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+......................C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py:579: ResourceWarning: unclosed file <_io.TextIOWrapper name=3 encoding='cp1252'>
+  if method() is not None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+C:\Users\HP\AppData\Local\Programs\Python\Python311\Lib\unittest\case.py:579: ResourceWarning: unclosed file <_io.TextIOWrapper name=4 encoding='cp1252'>
+  if method() is not None:
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..................................................................................................................................................................s.s....ss..s
+======================================================================
+ERROR: test_10_l4_uses_configured_frontier_model (test_orchestrator.TestOrchestrator.test_10_l4_uses_configured_frontier_model)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\nemotron test\DESK\tests\test_orchestrator.py", line 204, in test_10_l4_uses_configured_frontier_model
+    self.assertEqual(seen["model"], "test-frontier-model")
+                     ~~~~^^^^^^^^^
+KeyError: 'model'
+
+======================================================================
+FAIL: test_07_fallback_does_not_leak_provider_model (test_orchestrator.TestOrchestrator.test_07_fallback_does_not_leak_provider_model)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\nemotron test\DESK\tests\test_orchestrator.py", line 144, in test_07_fallback_does_not_leak_provider_model
+    self.assertIsNone(seen["pi"])              # pi runs with its own default, not the Gemini name
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'nvidia/nemotron-3.5-lightning-30b-a3b' is not None
+
+======================================================================
+FAIL: test_11_l4_falls_back_to_provider_reported_model (test_orchestrator.TestOrchestrator.test_11_l4_falls_back_to_provider_reported_model)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\nemotron test\DESK\tests\test_orchestrator.py", line 223, in test_11_l4_falls_back_to_provider_reported_model
+    self.assertEqual(res.model, "gemini-3.8-pro")
+AssertionError: 'mock-model' != 'gemini-3.8-pro'
+- mock-model
++ gemini-3.8-pro
+
+
+----------------------------------------------------------------------
+Ran 717 tests in 62.546s
+
+FAILED (failures=2, errors=1, skipped=9)

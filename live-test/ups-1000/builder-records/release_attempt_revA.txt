@@ -1,0 +1,5 @@
+PASS lint --final: 0 errors
+PASS offline ERC: 0 errors
+FAIL all blocks verified fresh: 01_PWR_IN
+PASS no pending live operations
+RELEASE BLOCKED (offline gates). Nothing exported.

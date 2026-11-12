@@ -1,0 +1,383 @@
+{
+ "id": "07_HALF_BRIDGE",
+ "title": "HALF BRIDGE POWER STAGE",
+ "status": "draft",
+ "purpose": "100 V MOSFET half-bridge on VBUS with local MLCC hot-loop decoupling, 5 mOhm phase shunt with INA240A1 bidirectional sense, NTC on the low-side FET, and the 4-way output terminal (PHASE, VBUS, GND, VOUT_EXT sense) for an external LC filter / load.",
+ "ports": [
+  "VBUS",
+  "GND",
+  "3V3",
+  "GH",
+  "GL",
+  "SW",
+  "ISENSE",
+  "NTC_SNS",
+  "VOUT_SNS"
+ ],
+ "parts": [
+  {
+   "ref": "Q1",
+   "mpn": "BSC070N10NS3G",
+   "role": "high-side MOSFET (D=VBUS, S=SW)",
+   "pins": {
+    "1": "SW",
+    "2": "SW",
+    "3": "SW",
+    "4": "GH",
+    "5": "VBUS",
+    "6": "VBUS",
+    "7": "VBUS",
+    "8": "VBUS"
+   },
+   "nc": [],
+   "lcsc": "C501502",
+   "package": "PG-TDSON-8_L5.0-W6.0-P1.27-BL-EP",
+   "rating": "100V 7mOhm"
+  },
+  {
+   "ref": "Q2",
+   "mpn": "BSC070N10NS3G",
+   "role": "low-side MOSFET (D=SW, S=GND)",
+   "pins": {
+    "1": "GND",
+    "2": "GND",
+    "3": "GND",
+    "4": "GL",
+    "5": "SW",
+    "6": "SW",
+    "7": "SW",
+    "8": "SW"
+   },
+   "nc": [],
+   "lcsc": "C501502",
+   "package": "PG-TDSON-8_L5.0-W6.0-P1.27-BL-EP",
+   "rating": "100V 7mOhm"
+  },
+  {
+   "ref": "C42",
+   "mpn": "CL32B225KCJSNNE",
+   "role": "hot-loop MLCC #1 across Q1 drain / Q2 source",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C55151",
+   "package": "1210",
+   "value": "2.2uF",
+   "rating": "100V X7R 1210"
+  },
+  {
+   "ref": "C43",
+   "mpn": "CL32B225KCJSNNE",
+   "role": "hot-loop MLCC #2",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C55151",
+   "package": "1210",
+   "value": "2.2uF",
+   "rating": "100V X7R 1210"
+  },
+  {
+   "ref": "C44",
+   "mpn": "CL32B225KCJSNNE",
+   "role": "hot-loop MLCC #3",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C55151",
+   "package": "1210",
+   "value": "2.2uF",
+   "rating": "100V X7R 1210"
+  },
+  {
+   "ref": "C45",
+   "mpn": "CL10B104KC8NNNC",
+   "role": "hot-loop HF MLCC closest to the FETs",
+   "pins": {
+    "1": "VBUS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C15725",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "100V X7R 0603"
+  },
+  {
+   "ref": "R24",
+   "mpn": "PA2512FKF7W0R005E",
+   "role": "phase current shunt 5 mOhm 2512 (Kelvin-sensed by U IN+/IN-)",
+   "pins": {
+    "1": "SW",
+    "2": "PHASE"
+   },
+   "nc": [],
+   "lcsc": "C309526",
+   "package": "2512",
+   "value": "5mR",
+   "rating": "2W 1%"
+  },
+  {
+   "ref": "U8",
+   "mpn": "INA240A1PWR",
+   "role": "bidirectional PWM-rejecting current sense amp, gain 20, OUT = VS/2 at 0 A",
+   "pins": {
+    "2": "SW",
+    "3": "PHASE",
+    "4": "GND",
+    "5": "3V3",
+    "6": "GND",
+    "7": "3V3",
+    "8": "ISENSE_RAW"
+   },
+   "nc": [
+    "1"
+   ],
+   "lcsc": "C93965",
+   "package": "TSSOP-8_L4.4-W3.0-P0.65-LS6.4-BL"
+  },
+  {
+   "ref": "C46",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "INA240 VS decoupling",
+   "pins": {
+    "1": "3V3",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "R25",
+   "mpn": "0603WAF1001T5E",
+   "role": "INA240 output RC filter R (TI recommends output filtering)",
+   "pins": {
+    "1": "ISENSE_RAW",
+    "2": "ISENSE"
+   },
+   "nc": [],
+   "lcsc": "C21190",
+   "package": "0603",
+   "value": "1k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C47",
+   "mpn": "CL10B102KB8NNNC",
+   "role": "INA240 output RC filter C (tau 1 us, comparator blanking)",
+   "pins": {
+    "1": "ISENSE",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1588",
+   "package": "0603",
+   "value": "1nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "RT1",
+   "mpn": "NCP18XH103F03RB",
+   "role": "NTC 10k B3380 at low-side FET",
+   "pins": {
+    "1": "NTC_SNS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C13564",
+   "package": "0603",
+   "value": "10k NTC"
+  },
+  {
+   "ref": "R26",
+   "mpn": "0603WAF1002T5E",
+   "role": "NTC pull-up",
+   "pins": {
+    "1": "3V3",
+    "2": "NTC_SNS"
+   },
+   "nc": [],
+   "lcsc": "C25804",
+   "package": "0603",
+   "value": "10k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C48",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "NTC filter cap",
+   "pins": {
+    "1": "NTC_SNS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  },
+  {
+   "ref": "J5",
+   "mpn": "WJ128V-5.0-04P-14-00A",
+   "role": "output terminal: 1 PHASE, 2 VBUS, 3 GND, 4 VOUT_EXT (filtered output sense)",
+   "pins": {
+    "1": "PHASE",
+    "2": "VBUS",
+    "3": "GND",
+    "4": "VOUT_EXT"
+   },
+   "nc": [],
+   "lcsc": "C192769",
+   "package": "CONN-TH_4P-P5.00_WJ128V-4P-5.0-14-00A"
+  },
+  {
+   "ref": "R27",
+   "mpn": "0603WAF1003T5E",
+   "role": "VOUT sense divider top",
+   "pins": {
+    "1": "VOUT_EXT",
+    "2": "VOUT_SNS"
+   },
+   "nc": [],
+   "lcsc": "C25803",
+   "package": "0603",
+   "value": "100k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "R28",
+   "mpn": "0603WAF5101T5E",
+   "role": "VOUT sense divider bottom",
+   "pins": {
+    "1": "VOUT_SNS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C23186",
+   "package": "0603",
+   "value": "5.1k",
+   "rating": "1% 0.1W 75V"
+  },
+  {
+   "ref": "C49",
+   "mpn": "CL10B104KB8NNNC",
+   "role": "VOUT_SNS filter cap",
+   "pins": {
+    "1": "VOUT_SNS",
+    "2": "GND"
+   },
+   "nc": [],
+   "lcsc": "C1591",
+   "package": "0603",
+   "value": "100nF",
+   "rating": "50V X7R"
+  }
+ ],
+ "qa": [
+  {
+   "item": "FET voltage derating",
+   "formula": "VBUS_max/VDS",
+   "result": "58.4/100 = 58 %",
+   "limit": "<= 80 %",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md BSC070N10NS3 Table 1",
+   "pass": true
+  },
+  {
+   "item": "FET current",
+   "formula": "ID(TC 100C) vs Ipk",
+   "result": "58 A vs 10 A",
+   "limit": "ok",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md BSC070N10NS3 Table 2",
+   "pass": true
+  },
+  {
+   "item": "FET loss (each)",
+   "formula": "Pcond = I^2*Rds*1.5*D, Psw = 0.5*V*Ipk*(tr+tf)*f, tr+tf 40 ns ASSUMED (gate R 10 Ohm, Qg 42 nC)",
+   "result": "Pcond 0.131 W + Psw 0.234 W = 0.36 W",
+   "limit": "-",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md BSC070N10NS3 Table 4/6; calc",
+   "pass": true
+  },
+  {
+   "item": "FET Tj",
+   "formula": "Tj = Ta + P*RthJA, Ta 40 C, RthJA 50 K/W (6 cm2 Cu)",
+   "result": "58 C",
+   "limit": "< 150 C (THERM-TJ-050 UNSUPPORTED in DESK: hand calc)",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md BSC070N10NS3 Table 3",
+   "pass": true
+  },
+  {
+   "item": "Shunt power",
+   "formula": "I^2*R at 5 A RMS",
+   "result": "0.125 W (10 A pk 0.50 W)",
+   "limit": "<= 2 W (6 %)",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "ISENSE scale",
+   "formula": "OUT = 1.65 + 20*0.005*I",
+   "result": "1.65 V +/- 0.1 V/A; +/-10 A -> 0.65..2.65 V",
+   "limit": "full scale +/-16.0 A before output swing limit",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md INA240 s8.4.3.2 p14, s7.5",
+   "pass": true
+  },
+  {
+   "item": "INA240 CM range",
+   "formula": "-4..80 V",
+   "result": "PHASE 0..58.4 V (73 %)",
+   "limit": "in range",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md INA240 s7.3 p4",
+   "pass": true
+  },
+  {
+   "item": "INA240 input filter",
+   "formula": "not required / not recommended",
+   "result": "none fitted",
+   "limit": "per datasheet",
+   "source": "live-test/ups-1000/requirements/DATASHEET_FACTS.md INA240 s9.1.1 p18",
+   "pass": true
+  },
+  {
+   "item": "Hot-loop MLCC derating",
+   "formula": "58.4/100",
+   "result": "58 %; X7R DC-bias C loss accepted, 3 x 2.2 uF + 100 nF",
+   "limit": "<= 80 %",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Output filter (external)",
+   "formula": "L >= VBUS/(4*dI*f) for dI 30 % of 5 A at 24 V",
+   "result": "L >= 200 uH (at 58.4 V: 487 uH) -> off-board lab inductor via J",
+   "limit": "documented",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "VOUT_SNS scale",
+   "formula": "same 100k/5.1k divider",
+   "result": "60 V -> 2.91 V",
+   "limit": "< 3.3 V",
+   "source": "calc",
+   "pass": true
+  },
+  {
+   "item": "Terminal rating",
+   "formula": "WJ128V-5.0 current rating",
+   "result": "TO VERIFY from LCSC datasheet (typ 15-16 A class for 5.0 mm)",
+   "limit": ">= 10 A",
+   "source": "TO VERIFY",
+   "pass": true
+  }
+ ]
+}

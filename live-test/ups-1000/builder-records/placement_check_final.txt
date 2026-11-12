@@ -1,0 +1,12 @@
+Placement FROZEN -> projects/UPS_1000\state\placement_frozen.json (hash: 5807858cff02)
+side T: 123 parts, utilisation 12%, hotspots 97, largest free 14425.0 mm2 at [0.0, 0.0, 160.0, 120.0], 2.0 pins/cm2
+Routability Score: 0.70 (Ratsnest Crossings: 151, MST Length: 3466.7 mm, Escape Congestion: 0.25)
+WARN  C42 <-> C45: body gap 0.21 mm < 0.25 (p0402/p0603)
+WARN  C42 <-> C43: body gap 0.09 mm < 0.2 (p0402/p0402)
+WARN  C43 <-> C44: body gap 0.09 mm < 0.2 (p0402/p0402)
+WARN  D1: ESD for J5/VBUS is 28.9 mm away (> 3.0)
+WARN  Q1 <-> Q2: heat sources 1.9 mm apart (< 3.0)
+WARN  Q1 <-> R24: heat sources 0.4 mm apart (< 3.0)
+WARN  side T: 97 hotspot cells (≥85% filled with ≥4 crowded neighbours) around [(3.8, 53.8), (3.8, 56.2), (3.8, 58.8), (3.8, 61.2)]
+WARN  side T: unbalanced — hotspots while a 14425 mm² free region exists at [0.0, 0.0, 160.0, 120.0]; spread parts into it or declare it 'reserved'
+PLACEMENT & ROUTABILITY OK
