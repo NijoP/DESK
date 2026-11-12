@@ -97,8 +97,12 @@ SCHEMA: List[Setting] = [
     Setting("DESK_WEFT_TOKEN", SECRET, None, "weft", "Bearer token for the node service (else the token file)."),
     Setting("DESK_WEFT_MODEL", STR, None, "weft", "Model for model-backed Weft nodes (falls back to DESK_AGENT_MODEL)."),
     Setting("DESK_WEFT_VALIDATOR", PATH, None, "weft", "Path to the built Weft validator binary."),
-    Setting("DESK_WEFT_CHECKOUT", STR, None, "weft", "Commit of the Weft checkout, compared with the DESK pin."),
+    Setting("DESK_WEFT_CHECKOUT", PATH, None, "weft", "Pinned Weft checkout directory the compiler harness reads the catalog from."),
     Setting("DESK_WEFT_PROJECTS_ROOT", PATH, None, "weft", "Root directory Weft runs may touch."),
+    Setting("DESK_WEFT_DISPATCHER", STR, "http://127.0.0.1:14111", "weft",
+            "Weft dispatcher address desk.py weft signals/answer talk to (the default install's)."),
+    Setting("DESK_WEFT_SIGNAL_TOKEN", SECRET, None, "weft",
+            "Weft signal token (weft token mint) for listing and answering waiting approvals."),
 ]
 
 _EXACT: Dict[str, Setting] = {s.key: s for s in SCHEMA if not s.pattern}

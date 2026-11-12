@@ -49,7 +49,9 @@ def _find_values(text: str, units: Iterable[str]) -> List[float]:
     for u in units:
         for m in re.finditer(_NUM + r"\s*" + u + r"(?![a-z])", text):
             vals.append(_num(m.group(1)) * _UNIT[u])
-        for m in re.finditer(_NUM + r"\s*(?:-|to|–|..)\s*" + _NUM + r"\s*" + u + r"(?![a-z])", text):
+        # A range written with one unit after it: "4.5-5.5 V", "3 to 5 A", "3–5 A", "3..5 A". The ".." is literal; an
+        # unescaped one matched any two characters, so "24 V, 2 A" read as a 24..2 A range and reported 24 A.
+        for m in re.finditer(_NUM + r"\s*(?:-|to|–|\.\.)\s*" + _NUM + r"\s*" + u + r"(?![a-z])", text):
             vals.append(_num(m.group(1)) * _UNIT[u]); vals.append(_num(m.group(2)) * _UNIT[u])
     return vals
 
