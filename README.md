@@ -113,6 +113,21 @@ The agent reads the live sheet, plans and explains. It mutates only with `--allo
 
 ---
 
+## Workflow orchestration (Weft)
+
+Orchestrated workflows are written in [Weft](https://github.com/WeaveMindAI/weft), a typed workflow language with durable runs and human approval steps. Weft orchestrates; DESK engineers: every stage of a workflow is a DESK node that calls one deterministic DESK engine through a local, token-protected service, and only a DESK engine can pass a gate.
+
+```powershell
+python desk.py weft status                 # is Weft installed, does it match the pin, is the node service up
+python desk.py weft nodes                  # which nodes are backed by an engine, which fail closed and why
+python desk.py weft validate               # compile-check the workflows with the Weft compiler
+python desk.py weft run hardware_design --project projects/MY_BOARD --requirements requirements.json
+```
+
+Weft is not bundled. It is pinned to an upstream commit, needs Docker, and on Windows runs inside WSL2. Without it the engines and every other tool work as before; `weft run` refuses to start and there is no fallback orchestrator. **Status: the workflows compile under the real Weft compiler and the DESK side is tested, but no workflow has been run by a Weft runtime yet.** See [`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md).
+
+---
+
 ## Quick start
 
 Requirements: Python 3.9 or newer (3.11 or 3.12 recommended), Windows 11 is the tested platform. Optional: EasyEDA Pro for live work, Java 17 or newer for Freerouting (Java 25 with Freerouting 2.5.0 is what has been exercised).
@@ -121,7 +136,7 @@ Requirements: Python 3.9 or newer (3.11 or 3.12 recommended), Windows 11 is the 
 git clone https://github.com/NijoP/DESK.git
 cd DESK
 
-python -m unittest discover -s tests -p "test_*.py"   # 549 tests, no network, no ECAD needed
+python -m unittest discover -s tests -p "test_*.py"   # 625 tests, no network, no ECAD needed
 python desk.py doctor                                 # Python, Java, Freerouting, EasyEDA bridge, project binding
 python desk.py tools                                  # one line per tool
 
@@ -145,6 +160,7 @@ Working on an existing board rather than a new one: `python desk.py rework start
 | [`projects/`](projects/) | One directory per board: requirements, block plan, block specs, design profile, ledger |
 | [`docs/`](docs/) | Workflow (00 to 09), engineering notes, ecosystem integration, domain intelligence, rework mode, verification |
 | [`tests/`](tests/) | Offline unit and fixture tests; live-only checks are skipped unless an ECAD session is present |
+| [`integrations/weft/`](integrations/weft/) | Weft workflows, the DESK node library (typed Weft groups) and the pinned upstream commit; Python side in `desk/weft/` |
 | [`learning/`](learning/) | Incidents, lessons and playbooks captured from real sessions |
 | [`.agents/skills/`](.agents/skills/) | Procedural skills loaded by AI agents; [`AGENTS.md`](AGENTS.md) is the operating manual |
 
@@ -152,7 +168,7 @@ Working on an existing board rather than a new one: `python desk.py rework start
 
 ## Verification status
 
-The test suite was last run on 2026-11-12: 549 tests, 0 failures, 3 live-only skips.
+The test suite was last run on 2026-11-12: 625 tests, 0 failures, 3 live-only skips.
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -165,6 +181,7 @@ The test suite was last run on 2026-11-12: 549 tests, 0 failures, 3 live-only sk
 | EasyEDA Pro read-back | Live verified (read-only sessions) | [`docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md`](docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md) |
 | NVIDIA NIM tool-calling agent | Live verified against the NIM endpoint, 2026-11-12 | `desk/orchestrator/agent_loop.py` |
 | EasyEDA Pro live mutation (placement, copper, routing write-back) | **Implemented, not live verified** | [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
+| Weft orchestration (node contracts, node service, workflows) | Offline tested; workflows compile under upstream's compiler. **No run on a Weft runtime yet** | `tests/test_weft_*.py`, [`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md) |
 | Freerouting stopped-job SES with full connectivity | **Not confirmed** | [`docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`](docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md) |
 
 ---
@@ -178,6 +195,7 @@ The test suite was last run on 2026-11-12: 549 tests, 0 failures, 3 live-only sk
 - Junction-temperature and component-rating rules are UNSUPPORTED: DESK lists them, it cannot evaluate them.
 - JLCPCB constraints are a static declaration; there is no live DFM or quoting API call.
 - Developed and tested on Windows 11. Linux and macOS should work (stdlib only) but have no test evidence yet.
+- Weft workflows have not been executed by a Weft runtime: durable waits, approval pauses and recovery are unproven, and 22 of the 32 DESK nodes are declared but fail closed until their engine adapter is written.
 - No timed end-to-end benchmark exists. Time targets in the docs are targets, not measurements.
 
 ---
@@ -195,6 +213,7 @@ The test suite was last run on 2026-11-12: 549 tests, 0 failures, 3 live-only sk
 | EasyEDA Pro, LCSC, JLCPCB | [`docs/ecosystem/02_EASYEDA_PRO_INTEGRATION.md`](docs/ecosystem/02_EASYEDA_PRO_INTEGRATION.md), [`docs/ecosystem/LCSC_INTEGRATION_ARCHITECTURE.md`](docs/ecosystem/LCSC_INTEGRATION_ARCHITECTURE.md), [`docs/ecosystem/JLCPCB_MANUFACTURING_ARCHITECTURE.md`](docs/ecosystem/JLCPCB_MANUFACTURING_ARCHITECTURE.md) |
 | Rework mode for existing boards | [`docs/rework/01_REWORK_MODE_OVERVIEW.md`](docs/rework/01_REWORK_MODE_OVERVIEW.md) |
 | Context engine and learning | [`docs/07_CONTEXT_ENGINE.md`](docs/07_CONTEXT_ENGINE.md), [`docs/08_LEARNING_ENGINE.md`](docs/08_LEARNING_ENGINE.md) |
+| Weft orchestration | [`docs/weft/01_ARCHITECTURE.md`](docs/weft/01_ARCHITECTURE.md), [`02_INSTALL.md`](docs/weft/02_INSTALL.md), [`03_LICENCE.md`](docs/weft/03_LICENCE.md), [`04_STATUS.md`](docs/weft/04_STATUS.md) |
 | Mission Control dashboard | [`docs/local-dashboard.md`](docs/local-dashboard.md) |
 | Live test status and checklist | [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md), [`docs/LIVE_INTEGRATION_CHECKLIST.md`](docs/LIVE_INTEGRATION_CHECKLIST.md) |
 | Agent operating manual | [`AGENTS.md`](AGENTS.md) |
