@@ -27,9 +27,11 @@ python -m unittest discover -s tests -p "test_*.py"
 
 Expected output:
 ```text
-Ran 195+ tests in ~7.5s
-OK
+Ran 4xx tests in 20-30s
+OK (skipped=3)
 ```
+The exact count grows with every release; what matters is `OK` with zero failures and zero errors. The
+three skips are live-only checks (bridge port discovery, optional CLIs).
 
 ---
 

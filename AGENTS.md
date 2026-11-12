@@ -56,7 +56,7 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
 
 - **Actual Execution Standard:** Never claim tests passed unless they were actually executed in the current session.
 - **Full Suite Verification:** Run `python -m unittest discover -s tests -p "test_*.py"` before concluding any code change.
-- **Zero Regressions:** All 195+ core tests must pass with zero failures and zero errors.
+- **Zero Regressions:** The whole suite (`tests/test_*.py`) must pass with zero failures and zero errors; a skip is acceptable only for live-only checks.
 
 ---
 

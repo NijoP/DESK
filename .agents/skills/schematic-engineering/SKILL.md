@@ -34,7 +34,7 @@ Governs the creation, verification, and compilation of electrical schematics int
    - Detect floating or unterminated inputs.
    - Disallow conflicting output-to-output connections without explicit open-drain pullups.
 3. **Invoke M1 Schematic Engine**:
-   - Execute `desk.schematic.compile_netlist(netlist_data, profile)`.
+   - Read the live netlist back with `python tools/verify.py projects/<P> <block>` (comparison in `desk.netcheck.compare`); there is no separate `desk.schematic` compiler module.
 4. **Evidence Generation**:
    - Produce schematic validation record in `evidence_ledger`.
    - Forward validated netlist to M2 placement engine.

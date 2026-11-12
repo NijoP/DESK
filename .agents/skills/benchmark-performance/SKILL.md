@@ -27,7 +27,7 @@ Benchmarks core computational algorithms (spatial indexing, trace width calculat
 ## Procedural Execution Checklist
 
 1. **Hardware Tier Identification**:
-   - Query `desk.runtime.resource_profile.detect_resource_profile()`.
+   - Query `desk.runtime.resource_profile.ResourceDetector.detect()` (returns a `HardwareProfile`).
 2. **Execute Benchmark Scenarios**:
    - Micro-scenarios: spatial grid indexing, trace calculation, fingerprint hashing, snapshot deepcopy.
    - Macro-scenarios: full end-to-end M1–M6 synthetic pipeline.
