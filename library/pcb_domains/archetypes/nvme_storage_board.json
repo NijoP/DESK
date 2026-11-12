@@ -1,0 +1,145 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "nvme_storage_board",
+ "name": "NVMe / storage board",
+ "domain": "high_speed_digital",
+ "description": "M.2 NVMe or SATA storage interface with the host PCIe/SATA lanes, power and mechanical keying.",
+ "intended_applications": [
+  "edge servers",
+  "recorders",
+  "NAS appliances"
+ ],
+ "typical_input_requirements": [
+  "Interface (PCIe lanes/SATA)",
+  "Form factor (M.2 key)",
+  "Power",
+  "Thermal"
+ ],
+ "electrical_characteristics": [
+  "PCIe pairs to the M.2 socket with AC coupling where required",
+  "3.3 V at up to 3 A for NVMe",
+  "M.2 keying and standoff positions"
+ ],
+ "operating_voltage_ranges": {
+  "m2": "3.3 V"
+ },
+ "current_power_characteristics": "up to 3 A",
+ "typical_component_families": [
+  "m2_connector",
+  "pcie_endpoint",
+  "buck_regulator",
+  "clock_generator",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "m2_connector",
+  "buck_regulator",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "pcie_endpoint",
+  "clock_generator"
+ ],
+ "critical_electrical_constraints": [
+  "Lane impedance per PCIe generation",
+  "3.3 V regulator sized for SSD peak current",
+  "Standoff and key position per the M.2 spec"
+ ],
+ "stackup_recommendations": [
+  "4 to 8 layers with every high-speed layer adjacent to a reference plane; stackup from the fabricator's impedance table recorded in the profile",
+  "Differential 90/100 ohm and single-ended 50 ohm geometries computed per layer"
+ ],
+ "placement_rules": [
+  "Memory close to the controller along the bus direction; series terminations at the driver",
+  "Decoupling per the SoC/FPGA power-delivery guidance (count and value per rail)",
+  "Connectors for high-speed interfaces at the board edge with the shortest path to the PHY/SerDes",
+  "Clock generators central to their loads"
+ ],
+ "routing_rules": [
+  "Length match within the interface specification (DDR byte lanes, differential intra-pair, lane-to-lane)",
+  "No reference-plane crossings; stitching capacitors where a reference change is unavoidable",
+  "Via count minimised on multi-gigabit lanes; back-drill or short stubs when the fabricator offers it",
+  "Differential pairs with symmetric routing and spacing from other signals >= 3x the trace width"
+ ],
+ "copper_ground_requirements": [
+  "Unbroken reference planes; plane splits never under high-speed routes",
+  "Ground stitching vias at every layer transition of a high-speed signal"
+ ],
+ "thermal_considerations": [
+  "SoC/FPGA power dissipation at full load with heatsink or copper area per the datasheet"
+ ],
+ "emi_emc_considerations": [
+  "Edge-rate control, termination and reference continuity; clock spread spectrum where allowed",
+  "Shielded connectors with a chassis ground ring"
+ ],
+ "protection_requirements": [
+  "ESD on every external high-speed port with low-capacitance TVS placed at the connector"
+ ],
+ "verification_requirements": [
+  "Impedance per layer verified against the fabricator calculator",
+  "Length-matching report per interface",
+  "Reference-plane continuity check for every high-speed net",
+  "Power sequencing recorded from the SoC datasheet"
+ ],
+ "manufacturing_constraints": [
+  "Controlled impedance order; ENIG; via-in-pad with fill where BGA pitch requires",
+  "Fabricator capability check for the finest pitch and smallest via"
+ ],
+ "applicable_standards": [
+  "PCIe-CEM",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "3.3 V from a 1 A regulator"
+ ],
+ "typical_overlays": [
+  "high_speed_digital",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "nvme": 10,
+   "m.2": 8,
+   "m2 ssd": 8,
+   "sata": 8,
+   "ssd": 6,
+   "storage": 4
+  },
+  "features": {
+   "protocols_any": [
+    "pcie",
+    "sata"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

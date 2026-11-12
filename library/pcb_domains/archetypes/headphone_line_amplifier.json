@@ -1,0 +1,133 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "headphone_line_amplifier",
+ "name": "Headphone / line amplifier",
+ "domain": "audio_video",
+ "description": "Low-noise analog amplification for headphones or line level with volume control, output protection and clean supply.",
+ "intended_applications": [
+  "hi-fi",
+  "instruments",
+  "test equipment"
+ ],
+ "typical_input_requirements": [
+  "Load impedance",
+  "Output level",
+  "Supply (single/bipolar)",
+  "Noise target"
+ ],
+ "electrical_characteristics": [
+  "Op-amp or dedicated headphone driver",
+  "Output series resistor and DC blocking",
+  "Bipolar or charge-pump supply"
+ ],
+ "operating_voltage_ranges": {
+  "analog": "±5-15 V or 3.3/5 V"
+ },
+ "current_power_characteristics": "< 300 mA",
+ "typical_component_families": [
+  "op_amp",
+  "headphone_driver",
+  "audio_jack",
+  "film_capacitor",
+  "precision_resistor",
+  "ldo_regulator",
+  "esd_protection",
+  "potentiometer"
+ ],
+ "required_component_roles": [
+  "op_amp",
+  "audio_jack",
+  "film_capacitor"
+ ],
+ "optional_component_roles": [
+  "headphone_driver",
+  "precision_resistor",
+  "ldo_regulator",
+  "esd_protection",
+  "potentiometer"
+ ],
+ "critical_electrical_constraints": [
+  "Short input traces; ground star; output protection",
+  "Supply rails filtered"
+ ],
+ "stackup_recommendations": [
+  "2 layers for small amplifiers; 4 layers with a solid ground for codecs, microphone arrays and HDMI"
+ ],
+ "placement_rules": [
+  "Audio input stage away from the output stage and the power supply",
+  "Class-D output LC filter at the amplifier pins; speaker connector adjacent",
+  "Codec crystal and PLL filter next to the codec; MCLK source close"
+ ],
+ "routing_rules": [
+  "Audio inputs as short shielded-by-ground traces; differential where the source allows",
+  "Class-D outputs as short wide pairs to the filter",
+  "Digital audio (I2S) as a group with matched lengths; MCLK away from analog",
+  "HDMI TMDS pairs 100 ohm, length matched"
+ ],
+ "copper_ground_requirements": [
+  "Single ground plane; partition by placement, star return for the power amplifier"
+ ],
+ "thermal_considerations": [
+  "Amplifier dissipation at rated power into the minimum load impedance; thermal pad vias"
+ ],
+ "emi_emc_considerations": [
+  "Class-D filter and ferrites on speaker lines; HDMI common-mode chokes where required"
+ ],
+ "protection_requirements": [
+  "ESD on audio jacks and HDMI; speaker output short-circuit protection by the amplifier"
+ ],
+ "verification_requirements": [
+  "Noise floor and gain structure recorded",
+  "Ground partition reviewed in placement",
+  "Netlist read-back and DRC"
+ ],
+ "manufacturing_constraints": [
+  "Audio jacks and HDMI connectors through-hole or with mechanical anchors"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Driving low-impedance headphones from a general op-amp without output current rating"
+ ],
+ "typical_overlays": [
+  "precision_analog"
+ ],
+ "classification": {
+  "keywords": {
+   "headphone amplifier": 10,
+   "headphone": 6,
+   "line amplifier": 8,
+   "preamp": 8,
+   "preamplifier": 8,
+   "hi-fi": 5
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-GUARD-030",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

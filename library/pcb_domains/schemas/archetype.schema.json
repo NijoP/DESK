@@ -1,0 +1,45 @@
+{
+ "schema_version": "1.0.0",
+ "required": {
+  "schema_version": "string",
+  "archetype_id": "string",
+  "name": "string",
+  "domain": "string",
+  "description": "string",
+  "intended_applications": "list",
+  "typical_input_requirements": "list",
+  "electrical_characteristics": "list",
+  "operating_voltage_ranges": "dict",
+  "current_power_characteristics": "string",
+  "typical_component_families": "list",
+  "required_component_roles": "list",
+  "optional_component_roles": "list",
+  "critical_electrical_constraints": "list",
+  "stackup_recommendations": "list",
+  "placement_rules": "list",
+  "routing_rules": "list",
+  "copper_ground_requirements": "list",
+  "thermal_considerations": "list",
+  "emi_emc_considerations": "list",
+  "protection_requirements": "list",
+  "verification_requirements": "list",
+  "manufacturing_constraints": "list",
+  "applicable_standards": "list",
+  "unsupported_conditions": "list",
+  "typical_overlays": "list",
+  "classification": "dict",
+  "maturity": "dict"
+ },
+ "enums": {
+  "maturity.status": [
+   "DRAFT",
+   "ADVISORY",
+   "IMPLEMENTED",
+   "OFFLINE_TESTED",
+   "VERIFIED_AGAINST_SOURCE",
+   "LIVE_VERIFIED",
+   "NEEDS_HARDWARE_VALIDATION",
+   "BLOCKED"
+  ]
+ }
+}

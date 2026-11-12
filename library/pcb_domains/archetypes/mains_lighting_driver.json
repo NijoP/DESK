@@ -1,0 +1,183 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "mains_lighting_driver",
+ "name": "Mains LED lighting driver",
+ "domain": "ac_mains_hv",
+ "description": "Offline LED driver (isolated flyback or non-isolated buck) with constant-current output, PFC where required, and dimming.",
+ "intended_applications": [
+  "LED bulbs and tubes",
+  "luminaires",
+  "street lighting"
+ ],
+ "typical_input_requirements": [
+  "LED string voltage/current",
+  "Isolation",
+  "PFC requirement (> 25 W)",
+  "Dimming method"
+ ],
+ "electrical_characteristics": [
+  "Constant-current output",
+  "PFC for > 25 W in most markets",
+  "Thermal limits in enclosed luminaires"
+ ],
+ "operating_voltage_ranges": {
+  "mains": "85-264 V AC",
+  "led_string": "12-200 V"
+ },
+ "current_power_characteristics": "3-150 W",
+ "typical_component_families": [
+  "led_driver_offline",
+  "flyback_transformer",
+  "mosfet",
+  "schottky_diode",
+  "bridge_rectifier",
+  "bulk_capacitor",
+  "fuse",
+  "mov_varistor",
+  "current_sense_resistor",
+  "output_capacitor",
+  "x_capacitor"
+ ],
+ "required_component_roles": [
+  "led_driver_offline",
+  "bridge_rectifier",
+  "bulk_capacitor",
+  "fuse",
+  "current_sense_resistor",
+  "output_capacitor"
+ ],
+ "optional_component_roles": [
+  "flyback_transformer",
+  "mosfet",
+  "schottky_diode",
+  "mov_varistor",
+  "x_capacitor",
+  "ntc_inrush_limiter"
+ ],
+ "critical_electrical_constraints": [
+  "Creepage/clearance per the isolation grade; non-isolated designs treat the LED string as mains",
+  "Output open/short handling by the driver",
+  "Component temperatures at the luminaire's ambient"
+ ],
+ "stackup_recommendations": [
+  "Single or double sided FR-4 with the isolation barrier as a physical slot or an unbroken creepage distance",
+  "Thicker board (1.6 mm) for mechanical and dielectric robustness"
+ ],
+ "placement_rules": [
+  "Primary and secondary sides physically separated by the isolation barrier; only isolating components (transformer, optocoupler, Y-capacitor) bridge it",
+  "Fuse first in the path after the mains input connector; MOV/TVS across the input after the fuse",
+  "No low-voltage logic within the creepage distance of mains nets",
+  "Mains connectors and relays at a board edge with the enclosure clearance in mind"
+ ],
+ "routing_rules": [
+  "Mains traces sized for the inrush and the fuse let-through, not only the RMS current",
+  "Creepage and clearance from IEC 60664-1 for the working voltage, pollution degree and material group (desk.ipc)",
+  "No vias in the isolation barrier; slot the board where creepage cannot be met",
+  "Keep gate-drive and control traces away from mains edges"
+ ],
+ "copper_ground_requirements": [
+  "No ground pour across the isolation barrier",
+  "Copper setback from board edge on mains nets per the enclosure's accessible-surface rules"
+ ],
+ "thermal_considerations": [
+  "Bleeder, snubber and dropper resistors dissipate continuously: compute and derate at 60-70 % of rating",
+  "Rectifier and switching devices need copper or heatsinking sized for the full load"
+ ],
+ "emi_emc_considerations": [
+  "X and Y capacitors and common-mode choke placement per the EMI filter topology",
+  "Y-capacitor return to the protective earth or secondary ground as the safety standard permits"
+ ],
+ "protection_requirements": [
+  "Fuse, MOV, inrush limiter, and where required a GDT; creepage and clearance verified for the overvoltage category",
+  "Double or reinforced insulation across the barrier per IEC 62368-1 / 60335-1 as applicable",
+  "Discharge resistor across X capacitors"
+ ],
+ "verification_requirements": [
+  "Every mains and HV net declared in voltage_rails (unknown voltage blocks clearance derivation)",
+  "Creepage/clearance table per net pair recorded in the design profile",
+  "Isolation barrier verified as a keep-out on all layers",
+  "Dielectric strength (hipot) test plan recorded; this is a hardware-validation item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Slot or routed gap for the isolation barrier in the outline",
+  "Solder-mask-defined spacing noted; conformal coating changes the clearance condition (B4) and must be declared"
+ ],
+ "applicable_standards": [
+  "IEC-61347-1",
+  "IEC-60664-1",
+  "CISPR-15",
+  "IPC-2221B",
+  "MFR-DATASHEET"
+ ],
+ "unsupported_conditions": [
+  "Non-isolated driver with user-accessible LED terminals"
+ ],
+ "typical_overlays": [
+  "mains_safety_isolation",
+  "switching_power",
+  "thermal_management",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "led driver": 6,
+   "mains led": 8,
+   "luminaire": 6,
+   "lighting driver": 8,
+   "offline led": 8,
+   "bulb": 4
+  },
+  "features": {
+   "mains": true
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-ISO-016",
+   "PLACE-THERM-017",
+   "PLACE-SENSE-018",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-KELVIN-024",
+   "ROUTE-HV-025",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "MFG-SLOT-074",
+   "DCDC-VIN-121",
+   "MAINS-DECL-160",
+   "MAINS-FUSE-161",
+   "MAINS-XDIS-162",
+   "MAINS-INS-163"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

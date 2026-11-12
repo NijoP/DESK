@@ -1,0 +1,129 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "microphone_array_board",
+ "name": "Microphone array board",
+ "domain": "audio_video",
+ "description": "Multiple MEMS microphones (PDM/I2S) with matched clock distribution, acoustic ports and a processor or codec.",
+ "intended_applications": [
+  "voice assistants",
+  "conferencing",
+  "beamforming"
+ ],
+ "typical_input_requirements": [
+  "Microphone count and geometry",
+  "Interface (PDM/I2S)",
+  "Acoustic port design",
+  "Processor"
+ ],
+ "electrical_characteristics": [
+  "PDM clock fan-out with matched lengths",
+  "Acoustic port holes with gasket sealing",
+  "Microphone supply quiet"
+ ],
+ "operating_voltage_ranges": {
+  "mic": "1.8/3.3 V",
+  "logic": "1.8/3.3 V"
+ },
+ "current_power_characteristics": "< 100 mA",
+ "typical_component_families": [
+  "mems_microphone",
+  "mcu",
+  "audio_codec",
+  "ldo_regulator",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "mems_microphone",
+  "ldo_regulator",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "mcu",
+  "audio_codec"
+ ],
+ "critical_electrical_constraints": [
+  "Port hole geometry per the microphone datasheet; no solder mask or copper in the port keep-out",
+  "Clock lines matched; decoupling at every microphone",
+  "Geometry symmetrical for beamforming"
+ ],
+ "stackup_recommendations": [
+  "2 layers for small amplifiers; 4 layers with a solid ground for codecs, microphone arrays and HDMI"
+ ],
+ "placement_rules": [
+  "Audio input stage away from the output stage and the power supply",
+  "Class-D output LC filter at the amplifier pins; speaker connector adjacent",
+  "Codec crystal and PLL filter next to the codec; MCLK source close"
+ ],
+ "routing_rules": [
+  "Audio inputs as short shielded-by-ground traces; differential where the source allows",
+  "Class-D outputs as short wide pairs to the filter",
+  "Digital audio (I2S) as a group with matched lengths; MCLK away from analog",
+  "HDMI TMDS pairs 100 ohm, length matched"
+ ],
+ "copper_ground_requirements": [
+  "Single ground plane; partition by placement, star return for the power amplifier"
+ ],
+ "thermal_considerations": [
+  "Amplifier dissipation at rated power into the minimum load impedance; thermal pad vias"
+ ],
+ "emi_emc_considerations": [
+  "Class-D filter and ferrites on speaker lines; HDMI common-mode chokes where required"
+ ],
+ "protection_requirements": [
+  "ESD on audio jacks and HDMI; speaker output short-circuit protection by the amplifier"
+ ],
+ "verification_requirements": [
+  "Noise floor and gain structure recorded",
+  "Ground partition reviewed in placement",
+  "Netlist read-back and DRC"
+ ],
+ "manufacturing_constraints": [
+  "Audio jacks and HDMI connectors through-hole or with mechanical anchors"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Port hole blocked by the enclosure gasket design"
+ ],
+ "typical_overlays": [
+  "precision_analog"
+ ],
+ "classification": {
+  "keywords": {
+   "microphone array": 10,
+   "mems microphone": 10,
+   "pdm": 8,
+   "beamforming": 8,
+   "voice": 4,
+   "microphone": 6
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-GUARD-030",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

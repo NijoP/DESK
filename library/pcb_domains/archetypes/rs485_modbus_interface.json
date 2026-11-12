@@ -1,0 +1,146 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "rs485_modbus_interface",
+ "name": "RS-485 / Modbus interface",
+ "domain": "interfaces_comms",
+ "description": "Half- or full-duplex RS-485 transceiver with fail-safe biasing, termination, surge protection and optional isolation.",
+ "intended_applications": [
+  "industrial buses",
+  "building automation",
+  "solar inverters"
+ ],
+ "typical_input_requirements": [
+  "Baud rate and cable length",
+  "Nodes",
+  "Isolation",
+  "Surge level"
+ ],
+ "electrical_characteristics": [
+  "120 ohm pair, termination at both ends, bias resistors at one point",
+  "Driver enable timing",
+  "Common-mode range -7..+12 V"
+ ],
+ "operating_voltage_ranges": {
+  "transceiver": "3.3/5 V"
+ },
+ "current_power_characteristics": "< 100 mA",
+ "typical_component_families": [
+  "rs485_transceiver",
+  "tvs_diode",
+  "terminal_block",
+  "digital_isolator",
+  "isolated_dc_dc_module",
+  "precision_resistor",
+  "gdt"
+ ],
+ "required_component_roles": [
+  "rs485_transceiver",
+  "tvs_diode",
+  "terminal_block"
+ ],
+ "optional_component_roles": [
+  "digital_isolator",
+  "isolated_dc_dc_module",
+  "precision_resistor",
+  "gdt"
+ ],
+ "critical_electrical_constraints": [
+  "Fail-safe bias and termination values recorded",
+  "Surge protection (TVS and series impedance; GDT for high surge)",
+  "Isolation creepage when isolated"
+ ],
+ "stackup_recommendations": [
+  "2 layers for low-speed buses; 4 layers when USB or Ethernet differential pairs are present"
+ ],
+ "placement_rules": [
+  "Transceiver as close to its connector as the protection parts allow; protection between connector and transceiver",
+  "Termination resistors at the bus end; bias resistors at the transceiver",
+  "Isolated interfaces: isolator straddles the barrier, isolated supply next to it"
+ ],
+ "routing_rules": [
+  "Differential pairs (USB 90 ohm, Ethernet 100 ohm, CAN/RS-485 120 ohm) per the standard; matched lengths",
+  "Shield/chassis ground ring at the connector, joined to logic ground at one point or via a capacitor per the product grounding plan",
+  "Short stubs on multidrop buses; no vias in the differential pair where avoidable"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under transceivers; keep-out under the isolation barrier"
+ ],
+ "thermal_considerations": [
+  "Bus-powered boards: regulator dissipation at the maximum port voltage"
+ ],
+ "emi_emc_considerations": [
+  "Common-mode chokes on USB/Ethernet where the product is EMC tested; ferrite on shield ground"
+ ],
+ "protection_requirements": [
+  "TVS on every bus line rated for the bus voltage and the surge/ESD level required",
+  "Fuse or current limiter on supplied power (VBUS, PoE, bus power)"
+ ],
+ "verification_requirements": [
+  "Differential pair geometry recorded against the fabricator stackup",
+  "Termination and bias values from the transceiver datasheet",
+  "ESD placement and clearance verified",
+  "Interface compliance (eye diagram, bit-error) is a hardware test"
+ ],
+ "manufacturing_constraints": [
+  "Connector footprints from the manufacturer drawing; through-hole connectors for mechanical strain"
+ ],
+ "applicable_standards": [
+  "TIA-485-A",
+  "IEC-61000-4-5",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Bias at every node (loading the bus)"
+ ],
+ "typical_overlays": [
+  "industrial_interfaces",
+  "galvanic_isolation",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "rs-485": 10,
+   "rs485": 10,
+   "modbus": 10,
+   "half-duplex": 4,
+   "max485": 6,
+   "sp3485": 6
+  },
+  "features": {
+   "protocols_any": [
+    "rs485"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ISO-016",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-HV-025",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

@@ -1,0 +1,127 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "i2c_spi_expander_board",
+ "name": "I2C/SPI expander and level-shift board",
+ "domain": "interfaces_comms",
+ "description": "GPIO expanders, multiplexers and level shifters extending a host's buses to peripherals at other voltages.",
+ "intended_applications": [
+  "peripheral boards",
+  "HATs/shields",
+  "test adapters"
+ ],
+ "typical_input_requirements": [
+  "Host voltage and bus",
+  "Peripheral voltages",
+  "Channel count",
+  "Speed"
+ ],
+ "electrical_characteristics": [
+  "I2C pull-ups computed for the bus capacitance",
+  "Auto-direction level shifters have limits on speed and drive",
+  "Address selection"
+ ],
+ "operating_voltage_ranges": {
+  "host": "1.8/3.3 V",
+  "peripheral": "3.3/5 V"
+ },
+ "current_power_characteristics": "< 100 mA",
+ "typical_component_families": [
+  "gpio_expander",
+  "i2c_multiplexer",
+  "level_shifter",
+  "esd_protection",
+  "pin_header",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "gpio_expander",
+  "level_shifter",
+  "pin_header",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "i2c_multiplexer",
+  "esd_protection"
+ ],
+ "critical_electrical_constraints": [
+  "Pull-up values recorded with the capacitance estimate",
+  "Level shifter type matched to the bus (push-pull vs open-drain)"
+ ],
+ "stackup_recommendations": [
+  "2 layers for low-speed buses; 4 layers when USB or Ethernet differential pairs are present"
+ ],
+ "placement_rules": [
+  "Transceiver as close to its connector as the protection parts allow; protection between connector and transceiver",
+  "Termination resistors at the bus end; bias resistors at the transceiver",
+  "Isolated interfaces: isolator straddles the barrier, isolated supply next to it"
+ ],
+ "routing_rules": [
+  "Differential pairs (USB 90 ohm, Ethernet 100 ohm, CAN/RS-485 120 ohm) per the standard; matched lengths",
+  "Shield/chassis ground ring at the connector, joined to logic ground at one point or via a capacitor per the product grounding plan",
+  "Short stubs on multidrop buses; no vias in the differential pair where avoidable"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under transceivers; keep-out under the isolation barrier"
+ ],
+ "thermal_considerations": [
+  "Bus-powered boards: regulator dissipation at the maximum port voltage"
+ ],
+ "emi_emc_considerations": [
+  "Common-mode chokes on USB/Ethernet where the product is EMC tested; ferrite on shield ground"
+ ],
+ "protection_requirements": [
+  "TVS on every bus line rated for the bus voltage and the surge/ESD level required",
+  "Fuse or current limiter on supplied power (VBUS, PoE, bus power)"
+ ],
+ "verification_requirements": [
+  "Differential pair geometry recorded against the fabricator stackup",
+  "Termination and bias values from the transceiver datasheet",
+  "ESD placement and clearance verified",
+  "Interface compliance (eye diagram, bit-error) is a hardware test"
+ ],
+ "manufacturing_constraints": [
+  "Connector footprints from the manufacturer drawing; through-hole connectors for mechanical strain"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Auto-direction shifters on SPI above their rated speed"
+ ],
+ "typical_overlays": [],
+ "classification": {
+  "keywords": {
+   "gpio expander": 10,
+   "level shifter": 10,
+   "i2c expander": 10,
+   "pca9": 6,
+   "mcp23": 6,
+   "multiplexer": 4
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

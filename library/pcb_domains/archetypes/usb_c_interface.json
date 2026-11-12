@@ -1,0 +1,150 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "usb_c_interface",
+ "name": "USB-C interface board",
+ "domain": "interfaces_comms",
+ "description": "USB Type-C receptacle with CC logic (5.1 k pull-downs or a PD controller), USB 2.0/3.x data, VBUS protection and ESD.",
+ "intended_applications": [
+  "any USB-C product",
+  "chargers",
+  "docks"
+ ],
+ "typical_input_requirements": [
+  "Role (sink/source/DRP)",
+  "Data speed",
+  "Power (5 V/3 A or PD)",
+  "Alt modes"
+ ],
+ "electrical_characteristics": [
+  "CC1/CC2 define role and current; 5.1 k Rd for a sink",
+  "D+/D- 90 ohm pair; SSTX/RX 90 ohm for USB 3",
+  "VBUS up to 20 V with PD: components rated accordingly"
+ ],
+ "operating_voltage_ranges": {
+  "vbus": "5 V (up to 20 V with PD)",
+  "logic": "3.3 V"
+ },
+ "current_power_characteristics": "0.5-5 A",
+ "typical_component_families": [
+  "usb_c_connector",
+  "usb_pd_controller",
+  "esd_protection",
+  "tvs_diode",
+  "load_switch",
+  "usb_mux",
+  "decoupling_capacitor",
+  "ferrite_bead"
+ ],
+ "required_component_roles": [
+  "usb_c_connector",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "usb_pd_controller",
+  "tvs_diode",
+  "load_switch",
+  "usb_mux",
+  "ferrite_bead"
+ ],
+ "critical_electrical_constraints": [
+  "Rd/Rp configuration correct for the role",
+  "VBUS components rated for 20 V when PD is possible",
+  "90 ohm pairs with ESD at the connector",
+  "Shield to ground per the product grounding plan"
+ ],
+ "stackup_recommendations": [
+  "2 layers for low-speed buses; 4 layers when USB or Ethernet differential pairs are present"
+ ],
+ "placement_rules": [
+  "Transceiver as close to its connector as the protection parts allow; protection between connector and transceiver",
+  "Termination resistors at the bus end; bias resistors at the transceiver",
+  "Isolated interfaces: isolator straddles the barrier, isolated supply next to it"
+ ],
+ "routing_rules": [
+  "Differential pairs (USB 90 ohm, Ethernet 100 ohm, CAN/RS-485 120 ohm) per the standard; matched lengths",
+  "Shield/chassis ground ring at the connector, joined to logic ground at one point or via a capacitor per the product grounding plan",
+  "Short stubs on multidrop buses; no vias in the differential pair where avoidable"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under transceivers; keep-out under the isolation barrier"
+ ],
+ "thermal_considerations": [
+  "Bus-powered boards: regulator dissipation at the maximum port voltage"
+ ],
+ "emi_emc_considerations": [
+  "Common-mode chokes on USB/Ethernet where the product is EMC tested; ferrite on shield ground"
+ ],
+ "protection_requirements": [
+  "TVS on every bus line rated for the bus voltage and the surge/ESD level required",
+  "Fuse or current limiter on supplied power (VBUS, PoE, bus power)"
+ ],
+ "verification_requirements": [
+  "Differential pair geometry recorded against the fabricator stackup",
+  "Termination and bias values from the transceiver datasheet",
+  "ESD placement and clearance verified",
+  "Interface compliance (eye diagram, bit-error) is a hardware test"
+ ],
+ "manufacturing_constraints": [
+  "Connector footprints from the manufacturer drawing; through-hole connectors for mechanical strain"
+ ],
+ "applicable_standards": [
+  "USB-Type-C-2.2",
+  "USB-PD-3.1",
+  "USB-2.0",
+  "USB-3.2",
+  "IEC-61000-4-2",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "VBUS parts rated for 5 V in a PD-capable port",
+  "Missing CC pull-downs (device not recognised)"
+ ],
+ "typical_overlays": [
+  "usb_interface",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "usb-c": 10,
+   "usb c": 10,
+   "type-c": 10,
+   "usb type-c": 10,
+   "cc1": 5,
+   "usb": 4
+  },
+  "features": {
+   "protocols_any": [
+    "usb"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "OFFLINE_TESTED",
+  "evidence": "rule set evaluated against synthetic fixtures in tests/test_cross_domain_cases.py",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-USB-102",
+   "USBC-CC-150",
+   "USBC-VBUS-151"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

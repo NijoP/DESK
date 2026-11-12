@@ -1,0 +1,144 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "can_bus_interface",
+ "name": "CAN bus interface",
+ "domain": "interfaces_comms",
+ "description": "CAN/CAN-FD transceiver with termination, common-mode choke, ESD/TVS and optional isolation to the controller.",
+ "intended_applications": [
+  "vehicles",
+  "industrial networks",
+  "robotics"
+ ],
+ "typical_input_requirements": [
+  "CAN or CAN-FD bit rate",
+  "Isolation",
+  "Termination (node/end)",
+  "Bus voltage transients"
+ ],
+ "electrical_characteristics": [
+  "120 ohm differential pair, split termination optional",
+  "Transceiver 5 V (or 3.3 V CAN) with 3.3 V logic",
+  "Isolated variants need an isolated supply"
+ ],
+ "operating_voltage_ranges": {
+  "transceiver": "5 V",
+  "logic": "3.3 V"
+ },
+ "current_power_characteristics": "< 100 mA",
+ "typical_component_families": [
+  "can_transceiver",
+  "tvs_diode",
+  "common_mode_choke",
+  "terminal_block",
+  "digital_isolator",
+  "isolated_dc_dc_module",
+  "esd_protection"
+ ],
+ "required_component_roles": [
+  "can_transceiver",
+  "tvs_diode",
+  "terminal_block"
+ ],
+ "optional_component_roles": [
+  "common_mode_choke",
+  "digital_isolator",
+  "isolated_dc_dc_module",
+  "esd_protection"
+ ],
+ "critical_electrical_constraints": [
+  "CANH/CANL as a pair to the connector; termination only at bus ends (jumper)",
+  "TVS rated for the bus's fault voltage",
+  "Isolation creepage when isolated"
+ ],
+ "stackup_recommendations": [
+  "2 layers for low-speed buses; 4 layers when USB or Ethernet differential pairs are present"
+ ],
+ "placement_rules": [
+  "Transceiver as close to its connector as the protection parts allow; protection between connector and transceiver",
+  "Termination resistors at the bus end; bias resistors at the transceiver",
+  "Isolated interfaces: isolator straddles the barrier, isolated supply next to it"
+ ],
+ "routing_rules": [
+  "Differential pairs (USB 90 ohm, Ethernet 100 ohm, CAN/RS-485 120 ohm) per the standard; matched lengths",
+  "Shield/chassis ground ring at the connector, joined to logic ground at one point or via a capacitor per the product grounding plan",
+  "Short stubs on multidrop buses; no vias in the differential pair where avoidable"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under transceivers; keep-out under the isolation barrier"
+ ],
+ "thermal_considerations": [
+  "Bus-powered boards: regulator dissipation at the maximum port voltage"
+ ],
+ "emi_emc_considerations": [
+  "Common-mode chokes on USB/Ethernet where the product is EMC tested; ferrite on shield ground"
+ ],
+ "protection_requirements": [
+  "TVS on every bus line rated for the bus voltage and the surge/ESD level required",
+  "Fuse or current limiter on supplied power (VBUS, PoE, bus power)"
+ ],
+ "verification_requirements": [
+  "Differential pair geometry recorded against the fabricator stackup",
+  "Termination and bias values from the transceiver datasheet",
+  "ESD placement and clearance verified",
+  "Interface compliance (eye diagram, bit-error) is a hardware test"
+ ],
+ "manufacturing_constraints": [
+  "Connector footprints from the manufacturer drawing; through-hole connectors for mechanical strain"
+ ],
+ "applicable_standards": [
+  "ISO-11898-2",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Termination on every node"
+ ],
+ "typical_overlays": [
+  "can_interface",
+  "emi_emc",
+  "industrial_interfaces"
+ ],
+ "classification": {
+  "keywords": {
+   "can bus": 10,
+   "can-fd": 10,
+   "canbus": 10,
+   "can transceiver": 10,
+   "canh": 6,
+   "mcp2515": 6,
+   "tja1050": 6,
+   "can": 4
+  },
+  "features": {
+   "protocols_any": [
+    "can"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

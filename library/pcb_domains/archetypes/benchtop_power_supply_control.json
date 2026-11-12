@@ -1,0 +1,147 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "benchtop_power_supply_control",
+ "name": "Bench power supply control board",
+ "domain": "test_debug",
+ "description": "Programmable bench supply: control DAC/ADC, pass element or switching pre-regulator, current limit and display/USB control.",
+ "intended_applications": [
+  "lab supplies",
+  "burn-in rigs",
+  "test automation"
+ ],
+ "typical_input_requirements": [
+  "Output range and current",
+  "Topology (linear/switching)",
+  "Control interface",
+  "Protection"
+ ],
+ "electrical_characteristics": [
+  "Pass element dissipation at max (Vin-Vout)*I",
+  "Precision current sense and reference",
+  "Output protection (OVP, reverse)"
+ ],
+ "operating_voltage_ranges": {
+  "input": "12-36 V",
+  "output": "0-30 V"
+ },
+ "current_power_characteristics": "0-5 A",
+ "typical_component_families": [
+  "mcu",
+  "dac",
+  "adc",
+  "voltage_reference",
+  "op_amp",
+  "mosfet",
+  "current_sense_resistor",
+  "heatsink",
+  "buck_regulator",
+  "terminal_block",
+  "usb_connector"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "dac",
+  "adc",
+  "voltage_reference",
+  "op_amp",
+  "current_sense_resistor",
+  "terminal_block"
+ ],
+ "optional_component_roles": [
+  "mosfet",
+  "heatsink",
+  "buck_regulator",
+  "usb_connector"
+ ],
+ "critical_electrical_constraints": [
+  "Pass element thermal design at the worst case; heatsink interface",
+  "Kelvin sense on the output and the shunt",
+  "Output current declared; traces sized"
+ ],
+ "stackup_recommendations": [
+  "2 layers; 4 layers for fast analysers"
+ ],
+ "placement_rules": [
+  "Target connector with level shifters and protection next to it",
+  "USB interface at the opposite edge"
+ ],
+ "routing_rules": [
+  "Target signals short with series resistors; ground pins adjacent to signals on the target connector",
+  "Pogo-pin fixture nets routed to the pin field with matched lengths for clocks"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under the target interface"
+ ],
+ "thermal_considerations": [
+  "Bench supplies: pass element heatsinking at full load"
+ ],
+ "emi_emc_considerations": [
+  "Shielded USB; ground return on every ribbon cable pair"
+ ],
+ "protection_requirements": [
+  "Series resistors and TVS on every target pin; current-limited target power"
+ ],
+ "verification_requirements": [
+  "Target voltage range declared; level shifter direction and limits recorded",
+  "Netlist read-back; DRC"
+ ],
+ "manufacturing_constraints": [
+  "Pogo pins and keyed connectors; gold finish on contact pads"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Pass element dissipation not computed"
+ ],
+ "typical_overlays": [
+  "precision_analog",
+  "thermal_management",
+  "high_current"
+ ],
+ "classification": {
+  "keywords": {
+   "bench power supply": 10,
+   "programmable power supply": 10,
+   "lab power supply": 10,
+   "psu": 5,
+   "constant current constant voltage": 6
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "PLACE-SENSE-018",
+   "ROUTE-PRIO-020",
+   "ROUTE-KELVIN-024",
+   "ROUTE-POLY-026",
+   "ROUTE-GUARD-030",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "PWR-ROUTE-170"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

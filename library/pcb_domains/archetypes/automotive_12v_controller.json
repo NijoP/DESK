@@ -1,0 +1,155 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "automotive_12v_controller",
+ "name": "Automotive 12 V controller",
+ "domain": "automotive",
+ "description": "Vehicle-powered MCU board with load-dump/reverse protection, cold-crank-capable regulator, CAN/LIN and extended-temperature parts.",
+ "intended_applications": [
+  "body control modules",
+  "aftermarket controllers",
+  "telematics bases"
+ ],
+ "typical_input_requirements": [
+  "Vehicle (12/24 V)",
+  "Loads driven",
+  "Communication (CAN/LIN)",
+  "Temperature grade"
+ ],
+ "electrical_characteristics": [
+  "Input 6-16 V nominal with 40 V+ load-dump transients and reverse polarity",
+  "Cold crank down to ~4.5 V",
+  "CAN/LIN with vehicle-grade transceivers"
+ ],
+ "operating_voltage_ranges": {
+  "battery": "6-16 V (24 V trucks: 12-32 V)",
+  "logic": "3.3/5 V"
+ },
+ "current_power_characteristics": "0.1-10 A",
+ "typical_component_families": [
+  "mcu",
+  "automotive_buck_regulator",
+  "tvs_diode",
+  "mosfet",
+  "can_transceiver",
+  "lin_transceiver",
+  "high_side_switch",
+  "ferrite_bead",
+  "automotive_connector",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "automotive_buck_regulator",
+  "tvs_diode",
+  "automotive_connector",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "mosfet",
+  "can_transceiver",
+  "lin_transceiver",
+  "high_side_switch",
+  "ferrite_bead"
+ ],
+ "critical_electrical_constraints": [
+  "Load-dump TVS and reverse-polarity protection at the connector",
+  "Regulator input range covers cold crank to load dump clamp",
+  "AEC-qualified parts where the product requires; -40..+105 degC derating"
+ ],
+ "stackup_recommendations": [
+  "2 or 4 layers; AEC-Q200 passives and AEC-Q100 ICs where the product requires"
+ ],
+ "placement_rules": [
+  "Input protection (reverse diode/MOSFET, TVS for load dump, filter) at the vehicle connector",
+  "CAN/LIN transceivers at the connector with their protection"
+ ],
+ "routing_rules": [
+  "Battery-input traces sized for the fused current",
+  "CAN pair 120 ohm; LIN single-ended with the pull-up at the master"
+ ],
+ "copper_ground_requirements": [
+  "Ground to chassis plan defined; no floating ground islands"
+ ],
+ "thermal_considerations": [
+  "Operating range -40 to +105/125 degC: derate every part accordingly"
+ ],
+ "emi_emc_considerations": [
+  "CISPR 25 conducted and radiated: input filter, shielded harness where required"
+ ],
+ "protection_requirements": [
+  "Load dump (ISO 7637-2 / 16750-2) TVS; reverse battery; cold-crank operation down to the declared minimum input voltage"
+ ],
+ "verification_requirements": [
+  "Input voltage range (cold crank to load dump) declared; regulator input range covers it",
+  "Clearance for the maximum transient voltage"
+ ],
+ "manufacturing_constraints": [
+  "Conformal coating; connector with seal rating per the mounting location"
+ ],
+ "applicable_standards": [
+  "ISO-7637-2",
+  "ISO-16750-2",
+  "ISO-11898-2",
+  "CISPR-25",
+  "AEC-Q100",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Regulator rated for 16 V max on a vehicle input",
+  "Non-automotive electrolytic capacitors at the input"
+ ],
+ "typical_overlays": [
+  "automotive_environment",
+  "can_interface",
+  "emi_emc",
+  "harsh_environment"
+ ],
+ "classification": {
+  "keywords": {
+   "automotive": 10,
+   "vehicle": 8,
+   "12v car": 8,
+   "load dump": 10,
+   "cold crank": 8,
+   "aec-q": 8,
+   "ecu": 6
+  },
+  "features": {
+   "input_voltage_v": [
+    4.5,
+    40.0
+   ],
+   "power_source": [
+    "vehicle"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

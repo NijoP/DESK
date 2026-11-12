@@ -1,0 +1,54 @@
+{
+ "schema_version": "1.0.0",
+ "required": {
+  "rule_id": "string",
+  "name": "string",
+  "version": "string",
+  "domain": "string",
+  "category": "string",
+  "scope": "dict",
+  "severity": "string",
+  "applicability": "dict",
+  "required_inputs": "list",
+  "evaluation_method": "string",
+  "parameters": "dict",
+  "source_references": "list",
+  "verification_method": "string",
+  "status": "string",
+  "enforcement": "dict",
+  "human_review_required": "bool",
+  "rationale": "string"
+ },
+ "enums": {
+  "severity": [
+   "BLOCKING",
+   "ERROR",
+   "WARNING",
+   "ADVISORY"
+  ],
+  "category": [
+   "electrical",
+   "placement",
+   "routing",
+   "copper",
+   "thermal",
+   "emi_emc",
+   "manufacturing"
+  ],
+  "status": [
+   "DRAFT",
+   "ADVISORY",
+   "IMPLEMENTED",
+   "OFFLINE_TESTED",
+   "VERIFIED_AGAINST_SOURCE",
+   "LIVE_VERIFIED",
+   "NEEDS_HARDWARE_VALIDATION",
+   "BLOCKED"
+  ],
+  "enforcement.mode": [
+   "ENFORCED",
+   "ADVISORY",
+   "UNSUPPORTED"
+  ]
+ }
+}

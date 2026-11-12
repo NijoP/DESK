@@ -1,0 +1,173 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "battery_iot_node",
+ "name": "Battery-powered IoT node",
+ "domain": "embedded_mcu",
+ "description": "Li-ion or primary-cell powered MCU with a long-range radio (LoRa/NB-IoT/BLE), charger or energy harvesting, and field sensors.",
+ "intended_applications": [
+  "agriculture sensors",
+  "smart metering",
+  "remote asset monitoring"
+ ],
+ "typical_input_requirements": [
+  "Radio technology and region",
+  "Battery or harvesting source",
+  "Reporting interval",
+  "Enclosure and antenna"
+ ],
+ "electrical_characteristics": [
+  "Radio TX bursts of 100-500 mA for LoRa/cellular from a battery with limited pulse capability",
+  "Charger/harvester with MPPT where solar is used",
+  "Deep sleep in the low-uA range"
+ ],
+ "operating_voltage_ranges": {
+  "battery": "3.0-4.2 V Li-ion or 3.6 V LiSOCl2",
+  "logic": "3.3 V",
+  "solar": "4.5-6 V panel"
+ },
+ "current_power_characteristics": "Sleep < 20 uA; TX bursts 120-500 mA",
+ "typical_component_families": [
+  "mcu",
+  "rf_transceiver",
+  "mcu_wireless_module",
+  "li_ion_charger",
+  "battery_protection_ic",
+  "buck_regulator",
+  "load_switch",
+  "supercapacitor",
+  "antenna",
+  "environmental_sensor",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "rf_transceiver",
+  "buck_regulator",
+  "antenna",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "li_ion_charger",
+  "battery_protection_ic",
+  "load_switch",
+  "supercapacitor",
+  "environmental_sensor",
+  "solar_charge_controller"
+ ],
+ "critical_electrical_constraints": [
+  "Battery pulse current capability vs radio TX burst: reservoir capacitor sized",
+  "Antenna matching per module/transceiver reference design",
+  "Regional band plan and duty-cycle limits recorded"
+ ],
+ "stackup_recommendations": [
+  "2 layers for simple boards; 4 layers (SIG-GND-PWR-SIG) once a radio module, >48 MHz buses or more than ~60 nets are present",
+  "Solid ground plane directly under the MCU and every clock or data bus"
+ ],
+ "placement_rules": [
+  "Decoupling capacitor at every MCU supply pin within 2 mm, smallest value closest to the pin",
+  "Crystal and load capacitors within 5 mm of the oscillator pins, no signals routed underneath",
+  "Programming/debug header on an accessible edge; reset and boot buttons reachable in the enclosure",
+  "Regulator input and output capacitors adjacent to the regulator pins"
+ ],
+ "routing_rules": [
+  "Route clocks, SPI/QSPI and USB first, then I2C/UART, then GPIO",
+  "Keep crystal traces short and surrounded by ground",
+  "USB D+/D- as a 90 ohm differential pair when present (see usb_interface overlay)",
+  "No analog or crystal nets across plane splits"
+ ],
+ "copper_ground_requirements": [
+  "Continuous ground plane; stitch top-side ground pours to the plane with vias every ~5 mm near fast signals",
+  "Thermal relief on hand-soldered parts only; solid connection on regulator and module ground pads where reflowed"
+ ],
+ "thermal_considerations": [
+  "Linear regulators: check dissipation (Vin-Vout)*I against package thermal resistance at max ambient",
+  "Radio modules and MCUs above 200 mW need copper area under the exposed pad"
+ ],
+ "emi_emc_considerations": [
+  "Decoupling and short return paths are the EMI strategy; add series termination on long clock lines",
+  "Keep switching regulators away from the antenna and the analog front end"
+ ],
+ "protection_requirements": [
+  "ESD protection on every connector signal that leaves the enclosure (IEC 61000-4-2 level per product spec)",
+  "Reverse-polarity or input over-voltage protection on external DC inputs"
+ ],
+ "verification_requirements": [
+  "ERC: every power pin decoupled, every strap pin defined at reset",
+  "Netlist read-back of every block (tools/verify.py)",
+  "Pin map from tools/pins.py, never from memory",
+  "DRC with the fabricator rule set; connectivity of every net"
+ ],
+ "manufacturing_constraints": [
+  "Standard FR-4, 1 oz copper; JLCPCB basic parts preferred for passives",
+  "Fiducials and a test-point for each rail when assembled by machine"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "ETSI-EN-300-220",
+  "FCC-Part-15",
+  "IEC-62133-2",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "LiSOCl2 cells pulsed without a hybrid-layer capacitor",
+  "Unmatched antenna"
+ ],
+ "typical_overlays": [
+  "rf_communication",
+  "battery_management",
+  "low_power",
+  "harsh_environment"
+ ],
+ "classification": {
+  "keywords": {
+   "iot node": 6,
+   "iot": 3,
+   "lora": 3,
+   "nb-iot": 3,
+   "battery powered": 5,
+   "battery-powered": 5,
+   "remote sensor": 4,
+   "solar": 2
+  },
+  "features": {
+   "power_source": [
+    "battery",
+    "solar"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ANT-014",
+   "ROUTE-PRIO-020",
+   "ROUTE-RF-022",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-ANT-045",
+   "EMI-ESD-062",
+   "EMI-RFHARM-064",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "MCU-RADIO-101",
+   "BAT-CHEM-130",
+   "BAT-PROT-131",
+   "BAT-NTC-132"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

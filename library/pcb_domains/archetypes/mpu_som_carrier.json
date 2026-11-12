@@ -1,0 +1,168 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "mpu_som_carrier",
+ "name": "MPU/Linux SoM carrier",
+ "domain": "high_speed_digital",
+ "description": "Carrier for an application-processor module (i.MX/AM/RK class): power input, USB, Ethernet, display, camera and storage interfaces.",
+ "intended_applications": [
+  "embedded Linux products",
+  "HMIs",
+  "edge gateways"
+ ],
+ "typical_input_requirements": [
+  "SoM and its design guide",
+  "Interfaces required",
+  "Power input",
+  "Mechanics"
+ ],
+ "electrical_characteristics": [
+  "High-speed signals from the connector: USB 2/3, Ethernet, MIPI, PCIe",
+  "Power budget 5-15 W",
+  "Boot and reset sequencing"
+ ],
+ "operating_voltage_ranges": {
+  "input": "5-24 V",
+  "som": "3.3/5 V",
+  "io": "1.8/3.3 V"
+ },
+ "current_power_characteristics": "1-3 A",
+ "typical_component_families": [
+  "board_to_board_connector",
+  "buck_regulator",
+  "ethernet_phy",
+  "rj45_connector",
+  "usb_connector",
+  "usb_hub_controller",
+  "mipi_connector",
+  "sd_card_socket",
+  "esd_protection",
+  "decoupling_capacitor",
+  "rtc"
+ ],
+ "required_component_roles": [
+  "board_to_board_connector",
+  "buck_regulator",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "ethernet_phy",
+  "rj45_connector",
+  "usb_connector",
+  "usb_hub_controller",
+  "mipi_connector",
+  "sd_card_socket",
+  "rtc"
+ ],
+ "critical_electrical_constraints": [
+  "Every high-speed pair per the SoM design guide (impedance, length, reference)",
+  "Power sequencing and PMIC enables per the SoM",
+  "ESD at every external connector"
+ ],
+ "stackup_recommendations": [
+  "4 to 8 layers with every high-speed layer adjacent to a reference plane; stackup from the fabricator's impedance table recorded in the profile",
+  "Differential 90/100 ohm and single-ended 50 ohm geometries computed per layer"
+ ],
+ "placement_rules": [
+  "Memory close to the controller along the bus direction; series terminations at the driver",
+  "Decoupling per the SoC/FPGA power-delivery guidance (count and value per rail)",
+  "Connectors for high-speed interfaces at the board edge with the shortest path to the PHY/SerDes",
+  "Clock generators central to their loads"
+ ],
+ "routing_rules": [
+  "Length match within the interface specification (DDR byte lanes, differential intra-pair, lane-to-lane)",
+  "No reference-plane crossings; stitching capacitors where a reference change is unavoidable",
+  "Via count minimised on multi-gigabit lanes; back-drill or short stubs when the fabricator offers it",
+  "Differential pairs with symmetric routing and spacing from other signals >= 3x the trace width"
+ ],
+ "copper_ground_requirements": [
+  "Unbroken reference planes; plane splits never under high-speed routes",
+  "Ground stitching vias at every layer transition of a high-speed signal"
+ ],
+ "thermal_considerations": [
+  "SoC/FPGA power dissipation at full load with heatsink or copper area per the datasheet"
+ ],
+ "emi_emc_considerations": [
+  "Edge-rate control, termination and reference continuity; clock spread spectrum where allowed",
+  "Shielded connectors with a chassis ground ring"
+ ],
+ "protection_requirements": [
+  "ESD on every external high-speed port with low-capacitance TVS placed at the connector"
+ ],
+ "verification_requirements": [
+  "Impedance per layer verified against the fabricator calculator",
+  "Length-matching report per interface",
+  "Reference-plane continuity check for every high-speed net",
+  "Power sequencing recorded from the SoC datasheet"
+ ],
+ "manufacturing_constraints": [
+  "Controlled impedance order; ENIG; via-in-pad with fill where BGA pitch requires",
+  "Fabricator capability check for the finest pitch and smallest via"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "USB-3.2",
+  "IEEE-802.3",
+  "MIPI-CSI-2",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "High-speed signals routed without the stackup the SoM guide assumes"
+ ],
+ "typical_overlays": [
+  "high_speed_digital",
+  "usb_interface",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "linux": 5,
+   "som carrier": 10,
+   "application processor": 8,
+   "i.mx": 6,
+   "imx": 6,
+   "raspberry pi cm": 6,
+   "compute module": 5,
+   "rockchip": 6,
+   "am62": 6
+  },
+  "features": {
+   "protocols_any": [
+    "usb",
+    "ethernet",
+    "mipi",
+    "hdmi"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-USB-102"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

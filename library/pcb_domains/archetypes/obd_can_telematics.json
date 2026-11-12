@@ -1,0 +1,160 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "obd_can_telematics",
+ "name": "OBD-II / CAN telematics device",
+ "domain": "automotive",
+ "description": "OBD-II connected device with CAN/K-line interfaces, GNSS, cellular, vehicle-power input protection and a supercap/battery backup.",
+ "intended_applications": [
+  "fleet tracking",
+  "insurance telematics",
+  "diagnostics dongles"
+ ],
+ "typical_input_requirements": [
+  "Protocols (CAN, K-line, J1939)",
+  "Radio modules",
+  "Backup power",
+  "Mounting"
+ ],
+ "electrical_characteristics": [
+  "OBD-II connector pinout; vehicle 12/24 V input",
+  "CAN at 500 kbit/s; K-line 12 V signalling",
+  "Cellular TX bursts from a protected vehicle supply"
+ ],
+ "operating_voltage_ranges": {
+  "vehicle": "6-32 V",
+  "logic": "3.3 V",
+  "modem": "3.8 V"
+ },
+ "current_power_characteristics": "0.1-2 A (modem bursts)",
+ "typical_component_families": [
+  "mcu",
+  "can_transceiver",
+  "kline_transceiver",
+  "cellular_module",
+  "gnss_module",
+  "automotive_buck_regulator",
+  "tvs_diode",
+  "supercapacitor",
+  "obd_connector",
+  "antenna"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "can_transceiver",
+  "automotive_buck_regulator",
+  "tvs_diode",
+  "obd_connector"
+ ],
+ "optional_component_roles": [
+  "kline_transceiver",
+  "cellular_module",
+  "gnss_module",
+  "supercapacitor",
+  "antenna"
+ ],
+ "critical_electrical_constraints": [
+  "Vehicle input protection (load dump, reverse)",
+  "Modem burst supply decoupling",
+  "Antenna placement in a dongle enclosure recorded"
+ ],
+ "stackup_recommendations": [
+  "2 or 4 layers; AEC-Q200 passives and AEC-Q100 ICs where the product requires"
+ ],
+ "placement_rules": [
+  "Input protection (reverse diode/MOSFET, TVS for load dump, filter) at the vehicle connector",
+  "CAN/LIN transceivers at the connector with their protection"
+ ],
+ "routing_rules": [
+  "Battery-input traces sized for the fused current",
+  "CAN pair 120 ohm; LIN single-ended with the pull-up at the master"
+ ],
+ "copper_ground_requirements": [
+  "Ground to chassis plan defined; no floating ground islands"
+ ],
+ "thermal_considerations": [
+  "Operating range -40 to +105/125 degC: derate every part accordingly"
+ ],
+ "emi_emc_considerations": [
+  "CISPR 25 conducted and radiated: input filter, shielded harness where required"
+ ],
+ "protection_requirements": [
+  "Load dump (ISO 7637-2 / 16750-2) TVS; reverse battery; cold-crank operation down to the declared minimum input voltage"
+ ],
+ "verification_requirements": [
+  "Input voltage range (cold crank to load dump) declared; regulator input range covers it",
+  "Clearance for the maximum transient voltage"
+ ],
+ "manufacturing_constraints": [
+  "Conformal coating; connector with seal rating per the mounting location"
+ ],
+ "applicable_standards": [
+  "ISO-7637-2",
+  "ISO-16750-2",
+  "ISO-11898-2",
+  "ISO-15765",
+  "CISPR-25",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Modem powered from an unprotected vehicle rail"
+ ],
+ "typical_overlays": [
+  "automotive_environment",
+  "can_interface",
+  "rf_communication",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "obd": 10,
+   "obd-ii": 10,
+   "obd2": 10,
+   "telematics": 10,
+   "fleet": 6,
+   "j1939": 8,
+   "vehicle tracker": 8
+  },
+  "features": {
+   "protocols_any": [
+    "can",
+    "lte",
+    "gnss"
+   ],
+   "power_source": [
+    "vehicle"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ANT-014",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-RF-022",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-ANT-045",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "EMI-RFHARM-064",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

@@ -1,0 +1,149 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "constant_current_led_driver",
+ "name": "Constant-current LED driver",
+ "domain": "led_display",
+ "description": "Buck/boost LED driver regulating string current with PWM/analog dimming and open/short protection.",
+ "intended_applications": [
+  "lighting modules",
+  "backlights",
+  "signal lamps"
+ ],
+ "typical_input_requirements": [
+  "String voltage and current",
+  "Input voltage",
+  "Dimming",
+  "Thermal"
+ ],
+ "electrical_characteristics": [
+  "Current regulated via a sense resistor",
+  "Topology chosen from Vin vs string voltage",
+  "Dimming by PWM of the driver"
+ ],
+ "operating_voltage_ranges": {
+  "input": "5-60 V",
+  "string": "3-200 V"
+ },
+ "current_power_characteristics": "0.1-3 A",
+ "typical_component_families": [
+  "led_driver_dc",
+  "inductor",
+  "current_sense_resistor",
+  "schottky_diode",
+  "mosfet",
+  "output_capacitor",
+  "input_capacitor",
+  "led_emitter",
+  "ntc_thermistor"
+ ],
+ "required_component_roles": [
+  "led_driver_dc",
+  "inductor",
+  "current_sense_resistor",
+  "led_emitter"
+ ],
+ "optional_component_roles": [
+  "schottky_diode",
+  "mosfet",
+  "output_capacitor",
+  "input_capacitor",
+  "ntc_thermistor"
+ ],
+ "critical_electrical_constraints": [
+  "String current declared; sense resistor value and power",
+  "Hot loop per topology",
+  "LED thermal path with vias; junction temperature"
+ ],
+ "stackup_recommendations": [
+  "2 layers; metal-core or 2 oz copper for high-power LED arrays"
+ ],
+ "placement_rules": [
+  "LED driver, inductor and sense resistor as a tight loop",
+  "LEDs spread for thermal uniformity; thermal vias under LED pads",
+  "Display connector near the controller with the shortest route for the data lines"
+ ],
+ "routing_rules": [
+  "LED string current paths sized for the drive current",
+  "Addressable LED data line with a series resistor at the source; level shifter when the MCU is 3.3 V and the LEDs need 5 V",
+  "Display buses (SPI/RGB/MIPI) length matched where the interface requires"
+ ],
+ "copper_ground_requirements": [
+  "Copper area under each high-power LED for heat spreading"
+ ],
+ "thermal_considerations": [
+  "LED junction temperature from forward power and thermal path; lumen derating at temperature recorded"
+ ],
+ "emi_emc_considerations": [
+  "PWM dimming edges filtered on long LED strips"
+ ],
+ "protection_requirements": [
+  "Open-LED and short-LED protection by the driver; ESD on display connectors"
+ ],
+ "verification_requirements": [
+  "LED current and forward voltage declared; driver headroom computed",
+  "Thermal path computed; strip current sized"
+ ],
+ "manufacturing_constraints": [
+  "White solder mask for lighting boards; aluminium PCB when the thermal path needs it"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "String voltage above the driver's output rating"
+ ],
+ "typical_overlays": [
+  "switching_power",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "led driver": 10,
+   "constant current": 10,
+   "constant-current": 10,
+   "led strip": 4,
+   "dimming": 5
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-THERM-017",
+   "PLACE-SENSE-018",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-KELVIN-024",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "DCDC-ISAT-120",
+   "DCDC-VIN-121"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

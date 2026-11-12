@@ -1,0 +1,184 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "half_bridge_converter",
+ "name": "Half-bridge converter",
+ "domain": "dcdc_power",
+ "description": "Isolated converter with two switches across the input and a capacitive divider; includes LLC resonant variants for high efficiency.",
+ "intended_applications": [
+  "100-1000 W isolated supplies",
+  "LLC stages in adapters",
+  "server power"
+ ],
+ "typical_input_requirements": [
+  "Input (often PFC output 380-400 V)",
+  "Output",
+  "Resonant or PWM",
+  "Isolation"
+ ],
+ "electrical_characteristics": [
+  "Switches see Vin",
+  "High-side gate drive (bootstrap or isolated driver)",
+  "Resonant tank in LLC variants"
+ ],
+ "operating_voltage_ranges": {
+  "input": "36-400 V DC",
+  "output": "12-54 V isolated"
+ },
+ "current_power_characteristics": "100-1000 W",
+ "typical_component_families": [
+  "pwm_controller",
+  "mosfet",
+  "gate_driver",
+  "power_transformer",
+  "resonant_inductor",
+  "resonant_capacitor",
+  "rectifier_diode",
+  "mosfet_sr",
+  "output_capacitor",
+  "input_capacitor",
+  "optocoupler"
+ ],
+ "required_component_roles": [
+  "pwm_controller",
+  "mosfet",
+  "gate_driver",
+  "power_transformer",
+  "output_capacitor",
+  "input_capacitor"
+ ],
+ "optional_component_roles": [
+  "resonant_inductor",
+  "resonant_capacitor",
+  "rectifier_diode",
+  "mosfet_sr",
+  "optocoupler"
+ ],
+ "critical_electrical_constraints": [
+  "High-side driver bootstrap/isolated supply designed",
+  "Creepage for 400 V bus and the isolation barrier",
+  "Dead time per driver datasheet; resonant tank values recorded"
+ ],
+ "stackup_recommendations": [
+  "2 layers with 2 oz copper for converters above ~3 A; 4 layers with inner ground for controllers with sensitive feedback",
+  "Heavy copper (2 oz) when trace width from IPC-2221 exceeds what the board width allows"
+ ],
+ "placement_rules": [
+  "Minimise the hot loop (input capacitor, high-side switch, low-side switch/diode) area: these three parts touch each other",
+  "Inductor adjacent to the switch node pin; switch node copper as small as the current allows",
+  "Output capacitor at the inductor output; feedback divider at the controller FB pin, away from the inductor and switch node",
+  "Gate driver next to the MOSFET gates; bootstrap capacitor next to the driver"
+ ],
+ "routing_rules": [
+  "Switch node: short, wide, single layer; never under the feedback network",
+  "Feedback trace short and shielded by ground, routed away from the inductor",
+  "Power path widths from IPC-2221 for the declared current and temperature rise; polygons for > 3 A",
+  "Kelvin connection to current-sense resistors"
+ ],
+ "copper_ground_requirements": [
+  "Power ground and signal ground joined at one point near the controller",
+  "Copper pour under the inductor only if the inductor datasheet allows (shielded types)",
+  "Thermal vias under MOSFET and diode exposed pads to the opposite-side copper"
+ ],
+ "thermal_considerations": [
+  "Calculate conduction and switching loss per device; junction temperature at max ambient must stay below the datasheet limit with margin",
+  "Copper area per watt from the device datasheet thermal curves; heatsink when the area is not available"
+ ],
+ "emi_emc_considerations": [
+  "Hot-loop area is the first EMI control; snubber footprint on the switch node",
+  "Input pi-filter footprint for conducted emissions when the product is tested to CISPR 32/25",
+  "Spread-spectrum or frequency choice to keep harmonics out of sensitive bands"
+ ],
+ "protection_requirements": [
+  "Input over-voltage and reverse polarity per the application",
+  "Over-current/short-circuit protection by the controller; output over-voltage clamp where the load is sensitive",
+  "Fuse rating against the input current at minimum input voltage"
+ ],
+ "verification_requirements": [
+  "Every rail current declared (unknown current blocks routing)",
+  "Trace width per net from desk.ipc with declared temperature rise",
+  "Voltage drop on the output path within the regulation budget",
+  "Hot-loop area recorded; DRC with clearance from the highest node voltage"
+ ],
+ "manufacturing_constraints": [
+  "2 oz copper option recorded in the manufacturer profile; minimum width/clearance from the fabricator table for the chosen copper weight",
+  "Large pads on magnetics: solder mask defined; thermal relief decision explicit"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IEC-60664-1",
+  "IEC-62368-1",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "400 V bus nets undeclared",
+  "Gate drive without dead-time control"
+ ],
+ "typical_overlays": [
+  "switching_power",
+  "galvanic_isolation",
+  "thermal_management",
+  "emi_emc",
+  "mains_safety_isolation"
+ ],
+ "classification": {
+  "keywords": {
+   "half-bridge": 10,
+   "half bridge": 10,
+   "llc": 8,
+   "resonant": 5
+  },
+  "features": {
+   "isolation": true,
+   "converter": [
+    "half_bridge",
+    "llc"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-ISO-016",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-HV-025",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "MFG-SLOT-074",
+   "DCDC-VIN-121",
+   "MAINS-DECL-160",
+   "MAINS-FUSE-161",
+   "MAINS-INS-163"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

@@ -1,0 +1,191 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "isolated_ac_dc",
+ "name": "Isolated AC-DC converter",
+ "domain": "ac_mains_hv",
+ "description": "Offline isolated supply: mains input section plus a flyback/LLC stage with a safety-rated transformer and optocoupler feedback.",
+ "intended_applications": [
+  "adapters",
+  "appliance supplies",
+  "industrial SELV supplies"
+ ],
+ "typical_input_requirements": [
+  "Output voltage/current",
+  "Efficiency and standby target",
+  "Safety class and insulation (basic/double/reinforced)",
+  "EMC class"
+ ],
+ "electrical_characteristics": [
+  "Reinforced insulation for SELV outputs touched by users",
+  "Primary ground is hazardous; secondary is SELV",
+  "Y capacitor across the barrier for EMI"
+ ],
+ "operating_voltage_ranges": {
+  "mains": "85-264 V AC",
+  "output": "5-48 V SELV"
+ },
+ "current_power_characteristics": "5-300 W",
+ "typical_component_families": [
+  "mains_connector",
+  "fuse",
+  "mov_varistor",
+  "bridge_rectifier",
+  "bulk_capacitor",
+  "flyback_controller",
+  "mosfet",
+  "flyback_transformer",
+  "optocoupler",
+  "shunt_reference",
+  "schottky_diode",
+  "output_capacitor",
+  "y_capacitor",
+  "common_mode_choke"
+ ],
+ "required_component_roles": [
+  "fuse",
+  "bridge_rectifier",
+  "bulk_capacitor",
+  "flyback_controller",
+  "flyback_transformer",
+  "optocoupler",
+  "output_capacitor"
+ ],
+ "optional_component_roles": [
+  "mov_varistor",
+  "mosfet",
+  "shunt_reference",
+  "schottky_diode",
+  "y_capacitor",
+  "common_mode_choke",
+  "ntc_inrush_limiter"
+ ],
+ "critical_electrical_constraints": [
+  "Barrier creepage per the insulation grade (reinforced = 2x basic) with the transformer and opto as the only bridges",
+  "Slot in the board where the distance cannot be met",
+  "Secondary ground never connected to primary except through the Y capacitor"
+ ],
+ "stackup_recommendations": [
+  "Single or double sided FR-4 with the isolation barrier as a physical slot or an unbroken creepage distance",
+  "Thicker board (1.6 mm) for mechanical and dielectric robustness"
+ ],
+ "placement_rules": [
+  "Primary and secondary sides physically separated by the isolation barrier; only isolating components (transformer, optocoupler, Y-capacitor) bridge it",
+  "Fuse first in the path after the mains input connector; MOV/TVS across the input after the fuse",
+  "No low-voltage logic within the creepage distance of mains nets",
+  "Mains connectors and relays at a board edge with the enclosure clearance in mind"
+ ],
+ "routing_rules": [
+  "Mains traces sized for the inrush and the fuse let-through, not only the RMS current",
+  "Creepage and clearance from IEC 60664-1 for the working voltage, pollution degree and material group (desk.ipc)",
+  "No vias in the isolation barrier; slot the board where creepage cannot be met",
+  "Keep gate-drive and control traces away from mains edges"
+ ],
+ "copper_ground_requirements": [
+  "No ground pour across the isolation barrier",
+  "Copper setback from board edge on mains nets per the enclosure's accessible-surface rules"
+ ],
+ "thermal_considerations": [
+  "Bleeder, snubber and dropper resistors dissipate continuously: compute and derate at 60-70 % of rating",
+  "Rectifier and switching devices need copper or heatsinking sized for the full load"
+ ],
+ "emi_emc_considerations": [
+  "X and Y capacitors and common-mode choke placement per the EMI filter topology",
+  "Y-capacitor return to the protective earth or secondary ground as the safety standard permits"
+ ],
+ "protection_requirements": [
+  "Fuse, MOV, inrush limiter, and where required a GDT; creepage and clearance verified for the overvoltage category",
+  "Double or reinforced insulation across the barrier per IEC 62368-1 / 60335-1 as applicable",
+  "Discharge resistor across X capacitors"
+ ],
+ "verification_requirements": [
+  "Every mains and HV net declared in voltage_rails (unknown voltage blocks clearance derivation)",
+  "Creepage/clearance table per net pair recorded in the design profile",
+  "Isolation barrier verified as a keep-out on all layers",
+  "Dielectric strength (hipot) test plan recorded; this is a hardware-validation item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Slot or routed gap for the isolation barrier in the outline",
+  "Solder-mask-defined spacing noted; conformal coating changes the clearance condition (B4) and must be declared"
+ ],
+ "applicable_standards": [
+  "IEC-62368-1",
+  "IEC-60664-1",
+  "IEC-61558-2-16",
+  "CISPR-32",
+  "IPC-2221B",
+  "MFR-DATASHEET"
+ ],
+ "unsupported_conditions": [
+  "Basic insulation where reinforced is required",
+  "Undeclared isolation grade"
+ ],
+ "typical_overlays": [
+  "mains_safety_isolation",
+  "switching_power",
+  "galvanic_isolation",
+  "emi_emc",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "ac-dc": 8,
+   "ac dc": 8,
+   "offline": 5,
+   "adapter": 4,
+   "power supply": 3,
+   "isolated": 3,
+   "selv": 4,
+   "mains": 3
+  },
+  "features": {
+   "mains": true,
+   "isolation": true
+  }
+ },
+ "maturity": {
+  "status": "OFFLINE_TESTED",
+  "evidence": "rule set evaluated against synthetic fixtures in tests/test_cross_domain_cases.py",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-ISO-016",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-HV-025",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "MFG-SLOT-074",
+   "DCDC-VIN-121",
+   "MAINS-DECL-160",
+   "MAINS-FUSE-161",
+   "MAINS-INS-163"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

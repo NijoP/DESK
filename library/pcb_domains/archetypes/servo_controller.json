@@ -1,0 +1,173 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "servo_controller",
+ "name": "Servo drive controller",
+ "domain": "motor_control",
+ "description": "Closed-loop position/velocity controller with encoder feedback, a power stage (brushed or BLDC) and a real-time control MCU.",
+ "intended_applications": [
+  "robot joints",
+  "actuators",
+  "industrial axes"
+ ],
+ "typical_input_requirements": [
+  "Motor type and ratings",
+  "Encoder type",
+  "Bus/communication (CAN/EtherCAT)",
+  "Control bandwidth"
+ ],
+ "electrical_characteristics": [
+  "Encoder interface (ABZ/SSI/BiSS) with differential receivers",
+  "Current loop at tens of kHz",
+  "Fault handling and brake output"
+ ],
+ "operating_voltage_ranges": {
+  "bus": "12-60 V",
+  "logic": "3.3/5 V"
+ },
+ "current_power_characteristics": "2-50 A",
+ "typical_component_families": [
+  "mcu",
+  "three_phase_gate_driver",
+  "h_bridge_driver",
+  "mosfet",
+  "current_sense_resistor",
+  "encoder_interface",
+  "rs422_receiver",
+  "can_transceiver",
+  "dc_link_capacitor",
+  "buck_regulator",
+  "motor_connector"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "mosfet",
+  "current_sense_resistor",
+  "encoder_interface",
+  "dc_link_capacitor",
+  "motor_connector"
+ ],
+ "optional_component_roles": [
+  "three_phase_gate_driver",
+  "h_bridge_driver",
+  "rs422_receiver",
+  "can_transceiver",
+  "buck_regulator"
+ ],
+ "critical_electrical_constraints": [
+  "Encoder signals as differential pairs with termination, away from phase copper",
+  "Power stage rules of the chosen motor type apply",
+  "Brake/safe-torque-off path independent of firmware where required"
+ ],
+ "stackup_recommendations": [
+  "2 layers 2 oz for drives up to a few amps; 4 layers with inner ground and power for higher current or sensitive current sensing"
+ ],
+ "placement_rules": [
+  "Half-bridge pairs: high-side and low-side MOSFETs and the DC-link capacitor as tight as possible",
+  "Gate driver adjacent to its MOSFETs; bootstrap capacitor at the driver",
+  "Current-sense resistor in the phase or DC-link path with a Kelvin pair to the amplifier",
+  "Motor connector at the edge nearest the bridge; logic and encoder inputs on the opposite side"
+ ],
+ "routing_rules": [
+  "Phase and DC-link copper as polygons sized for the peak current and the switching ripple",
+  "Gate traces short, with the return on the adjacent layer; gate resistor at the driver",
+  "Current-sense traces as a tightly coupled pair to the amplifier; no vias on the Kelvin pair",
+  "Encoder/hall signals away from phase copper; filtered at the entry"
+ ],
+ "copper_ground_requirements": [
+  "Power ground polygon separate from signal ground, joined at the sense resistor or at the controller",
+  "Thermal vias under MOSFET pads"
+ ],
+ "thermal_considerations": [
+  "Conduction loss I^2*Rds(on) at max junction temperature plus switching loss; junction temperature with margin at the motor stall current where stall is possible"
+ ],
+ "emi_emc_considerations": [
+  "Switching edges controlled by gate resistors; snubbers across the bridge when ringing is measured",
+  "Shielded motor cable and common-mode choke footprint for long cables"
+ ],
+ "protection_requirements": [
+  "Over-current trip from the sense amplifier to the driver's fault input",
+  "DC-link over-voltage clamp or brake chopper for regenerative loads",
+  "Reverse polarity and inrush limiting on the DC input"
+ ],
+ "verification_requirements": [
+  "Peak and continuous phase currents declared; bridge devices rated with margin",
+  "Trace widths and polygon widths from IPC-2221 for the peak current",
+  "Dead-time and gate-drive values recorded from the driver datasheet",
+  "Connectivity of every phase and sense net; DRC with clearance for the DC-link voltage"
+ ],
+ "manufacturing_constraints": [
+  "2 oz copper; large solder pads on power devices; thermal reliefs off on power pads"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B",
+  "TIA-485-A"
+ ],
+ "unsupported_conditions": [
+  "Encoder single-ended over a long cable"
+ ],
+ "typical_overlays": [
+  "motor_drive",
+  "high_current",
+  "thermal_management",
+  "emi_emc",
+  "industrial_interfaces"
+ ],
+ "classification": {
+  "keywords": {
+   "servo": 10,
+   "closed-loop": 6,
+   "closed loop": 6,
+   "encoder": 5,
+   "position control": 8,
+   "axis": 3
+  },
+  "features": {
+   "motor": [
+    "servo",
+    "bldc",
+    "brushed"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "PLACE-SENSE-018",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-KELVIN-024",
+   "ROUTE-POLY-026",
+   "ROUTE-GATE-028",
+   "ROUTE-ENC-029",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MOTOR-PEAK-140",
+   "MOTOR-OC-141",
+   "PWR-ROUTE-170"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

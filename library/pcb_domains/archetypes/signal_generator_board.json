@@ -1,0 +1,135 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "signal_generator_board",
+ "name": "Signal generator board",
+ "domain": "test_debug",
+ "description": "DDS or DAC-based waveform generator with output amplifier, attenuator, offset control and a clean clock.",
+ "intended_applications": [
+  "lab instruments",
+  "stimulus for test",
+  "education"
+ ],
+ "typical_input_requirements": [
+  "Frequency range",
+  "Amplitude and offset",
+  "Output impedance (50 ohm)",
+  "Interface"
+ ],
+ "electrical_characteristics": [
+  "DDS clock jitter and spurs set quality",
+  "Output amplifier bandwidth and drive into 50 ohm",
+  "Reconstruction filter"
+ ],
+ "operating_voltage_ranges": {
+  "analog": "±5-12 V",
+  "digital": "3.3 V"
+ },
+ "current_power_characteristics": "< 500 mA",
+ "typical_component_families": [
+  "dds_ic",
+  "high_speed_dac",
+  "op_amp",
+  "clock_generator",
+  "rf_attenuator",
+  "bnc_connector",
+  "voltage_reference",
+  "mcu",
+  "ldo_regulator"
+ ],
+ "required_component_roles": [
+  "dds_ic",
+  "op_amp",
+  "bnc_connector",
+  "mcu"
+ ],
+ "optional_component_roles": [
+  "high_speed_dac",
+  "clock_generator",
+  "rf_attenuator",
+  "voltage_reference",
+  "ldo_regulator"
+ ],
+ "critical_electrical_constraints": [
+  "Reconstruction filter per the sample rate",
+  "Output stage with 50 ohm back-termination",
+  "Clock routed as a controlled line"
+ ],
+ "stackup_recommendations": [
+  "2 layers; 4 layers for fast analysers"
+ ],
+ "placement_rules": [
+  "Target connector with level shifters and protection next to it",
+  "USB interface at the opposite edge"
+ ],
+ "routing_rules": [
+  "Target signals short with series resistors; ground pins adjacent to signals on the target connector",
+  "Pogo-pin fixture nets routed to the pin field with matched lengths for clocks"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under the target interface"
+ ],
+ "thermal_considerations": [
+  "Bench supplies: pass element heatsinking at full load"
+ ],
+ "emi_emc_considerations": [
+  "Shielded USB; ground return on every ribbon cable pair"
+ ],
+ "protection_requirements": [
+  "Series resistors and TVS on every target pin; current-limited target power"
+ ],
+ "verification_requirements": [
+  "Target voltage range declared; level shifter direction and limits recorded",
+  "Netlist read-back; DRC"
+ ],
+ "manufacturing_constraints": [
+  "Pogo pins and keyed connectors; gold finish on contact pads"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Output amplifier without short-circuit tolerance on a bench instrument"
+ ],
+ "typical_overlays": [
+  "precision_analog",
+  "high_speed_digital"
+ ],
+ "classification": {
+  "keywords": {
+   "signal generator": 10,
+   "function generator": 10,
+   "dds": 10,
+   "waveform generator": 10,
+   "ad9833": 6
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-RETURN-027",
+   "ROUTE-GUARD-030",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

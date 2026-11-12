@@ -1,0 +1,151 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "plc_io_module",
+ "name": "PLC I/O module",
+ "domain": "industrial_control",
+ "description": "Isolated digital and analog I/O for a PLC backplane or fieldbus with IEC 61131-2 input types and surge-rated terminals.",
+ "intended_applications": [
+  "automation",
+  "machine control",
+  "process control"
+ ],
+ "typical_input_requirements": [
+  "I/O types and counts",
+  "Backplane/bus",
+  "Isolation",
+  "Analog ranges"
+ ],
+ "electrical_characteristics": [
+  "Type 1/3 24 V inputs with defined thresholds",
+  "4-20 mA / 0-10 V analog I/O",
+  "Isolated per group"
+ ],
+ "operating_voltage_ranges": {
+  "field": "24 V",
+  "logic": "3.3/5 V"
+ },
+ "current_power_characteristics": "Per channel per rating",
+ "typical_component_families": [
+  "optocoupler",
+  "digital_isolator",
+  "adc",
+  "dac",
+  "op_amp",
+  "relay",
+  "high_side_switch",
+  "tvs_diode",
+  "terminal_block",
+  "mcu",
+  "isolated_dc_dc_module"
+ ],
+ "required_component_roles": [
+  "digital_isolator",
+  "tvs_diode",
+  "terminal_block",
+  "mcu"
+ ],
+ "optional_component_roles": [
+  "optocoupler",
+  "adc",
+  "dac",
+  "op_amp",
+  "relay",
+  "high_side_switch",
+  "isolated_dc_dc_module"
+ ],
+ "critical_electrical_constraints": [
+  "Input thresholds per IEC 61131-2 type",
+  "Surge/burst protection at every terminal",
+  "Group isolation creepage"
+ ],
+ "stackup_recommendations": [
+  "2 or 4 layers; isolation barriers between field side and logic side"
+ ],
+ "placement_rules": [
+  "Field-side components grouped at the terminal blocks; isolators on the barrier; logic side separate",
+  "Relays and their drivers near the output terminals, flyback diodes at the coils",
+  "24 V input protection at the connector"
+ ],
+ "routing_rules": [
+  "Creepage/clearance across the isolation barrier per the rated isolation voltage",
+  "24 V and relay contact traces sized for the rated load current",
+  "Fieldbus pairs (RS-485/CAN) as 120 ohm pairs with termination at the bus end"
+ ],
+ "copper_ground_requirements": [
+  "No pour across barriers; field ground and logic ground separate"
+ ],
+ "thermal_considerations": [
+  "Relay coil and input-resistor dissipation at the maximum input voltage; derating at 60 degC ambient"
+ ],
+ "emi_emc_considerations": [
+  "Surge (IEC 61000-4-5) and burst (61000-4-4) immunity: TVS and series impedance at every field terminal",
+  "Shield termination for fieldbus cables"
+ ],
+ "protection_requirements": [
+  "Isolated inputs (optocoupler/digital isolator); relay or isolated MOSFET outputs",
+  "Reverse polarity and over-voltage on the 24 V supply input"
+ ],
+ "verification_requirements": [
+  "Isolation voltage declared; creepage per IEC 60664-1 recorded",
+  "Field I/O current ratings declared",
+  "Immunity levels are hardware tests"
+ ],
+ "manufacturing_constraints": [
+  "Pluggable terminal blocks; conformal coating option changes the clearance condition"
+ ],
+ "applicable_standards": [
+  "IEC-61131-2",
+  "IEC-60664-1",
+  "IEC-61000-4-5",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Field grounds merged with logic"
+ ],
+ "typical_overlays": [
+  "industrial_interfaces",
+  "galvanic_isolation",
+  "harsh_environment"
+ ],
+ "classification": {
+  "keywords": {
+   "plc": 10,
+   "i/o module": 10,
+   "io module": 10,
+   "digital input": 5,
+   "analog input": 5,
+   "61131": 6
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ISO-016",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-HV-025",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

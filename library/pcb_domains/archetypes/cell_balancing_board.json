@@ -1,0 +1,148 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "cell_balancing_board",
+ "name": "Cell-balancing board",
+ "domain": "battery_bms",
+ "description": "Passive or active balancer connected to the cell taps of a pack, controlled by a BMS or standalone.",
+ "intended_applications": [
+  "pack maintenance",
+  "BMS add-ons",
+  "second-life packs"
+ ],
+ "typical_input_requirements": [
+  "Cell count",
+  "Balance current",
+  "Passive or active",
+  "Control"
+ ],
+ "electrical_characteristics": [
+  "Passive: bleed resistor and switch per cell",
+  "Active: switched capacitor or transformer transfer between cells",
+  "Cell-tap wiring carries balance current"
+ ],
+ "operating_voltage_ranges": {
+  "cell": "2.5-4.3 V each",
+  "pack": "up to 100 V"
+ },
+ "current_power_characteristics": "50 mA-2 A balance current",
+ "typical_component_families": [
+  "balancing_resistor",
+  "mosfet",
+  "battery_monitor_afe",
+  "mcu",
+  "cell_tap_connector",
+  "ntc_thermistor",
+  "flyback_transformer"
+ ],
+ "required_component_roles": [
+  "balancing_resistor",
+  "mosfet",
+  "cell_tap_connector"
+ ],
+ "optional_component_roles": [
+  "battery_monitor_afe",
+  "mcu",
+  "ntc_thermistor",
+  "flyback_transformer"
+ ],
+ "critical_electrical_constraints": [
+  "Balance resistor dissipation continuous at the top-of-charge voltage",
+  "Cell taps protected against mis-insertion and ESD",
+  "Traces to taps sized for the balance current"
+ ],
+ "stackup_recommendations": [
+  "2 layers for single-cell boards; 4 layers with a solid ground for multi-cell monitors with precision sensing",
+  "2 oz copper on the charge/discharge path above ~3 A"
+ ],
+ "placement_rules": [
+  "Charger IC thermal pad with via array; input capacitor at the input pin; battery-side capacitor at the BAT pin",
+  "Protection MOSFETs and the current-sense resistor on the cell negative path with a Kelvin sense pair",
+  "NTC thermistor placed to track cell temperature (connector or pack lead), not board heat",
+  "Cell-tap connectors ordered so that mis-insertion is mechanically impossible"
+ ],
+ "routing_rules": [
+  "Charge/discharge path width from IPC-2221 for the peak current",
+  "Kelvin routing of the sense resistor: sense traces from the pad inner edges",
+  "Cell-tap traces with series resistors at the entry for balancing current and ESD",
+  "Keep the thermistor and fuel-gauge sense traces away from switching nodes"
+ ],
+ "copper_ground_requirements": [
+  "Pack negative as a polygon; sense ground star-connected at the sense resistor",
+  "No pour under the fuel gauge's sense pins"
+ ],
+ "thermal_considerations": [
+  "Charger dissipation at maximum input voltage and charge current; linear chargers above 0.5 A need copper area per the datasheet",
+  "Balancing resistors dissipate continuously during balance: derate"
+ ],
+ "emi_emc_considerations": [
+  "Switching chargers follow the DC-DC hot-loop rules"
+ ],
+ "protection_requirements": [
+  "Over-charge, over-discharge, over-current and short-circuit protection by a dedicated protection IC; the charger alone is not protection",
+  "Reverse battery connection protection where the pack is user-connectable",
+  "Thermal protection with a cell-mounted NTC"
+ ],
+ "verification_requirements": [
+  "Charge current and cell chemistry declared; charge voltage matches chemistry (never assumed)",
+  "Trace widths and sense-resistor Kelvin verified",
+  "Protection thresholds recorded with the datasheet source",
+  "Pack safety (IEC 62133-2 / UL 2054) is a certification item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Connector choice with keying; label polarity on silkscreen",
+  "Sense resistor footprint sized for Kelvin pads"
+ ],
+ "applicable_standards": [
+  "IEC-62133-2",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Balance current above the tap wiring rating"
+ ],
+ "typical_overlays": [
+  "battery_management",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "balancer": 10,
+   "cell balancing": 10,
+   "balancing board": 10,
+   "active balancer": 10
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "THERM-DERATE-052",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "BAT-CHEM-130",
+   "BAT-PROT-131",
+   "BAT-NTC-132"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

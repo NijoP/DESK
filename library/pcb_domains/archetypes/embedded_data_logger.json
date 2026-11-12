@@ -1,0 +1,153 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "embedded_data_logger",
+ "name": "Embedded data logger",
+ "domain": "embedded_mcu",
+ "description": "MCU with mass storage (SD/eMMC/flash), RTC with backup, sensor or bus inputs and a host interface for retrieval.",
+ "intended_applications": [
+  "field data collection",
+  "test rigs",
+  "vehicle loggers"
+ ],
+ "typical_input_requirements": [
+  "Data rate and retention",
+  "Storage type",
+  "Timekeeping accuracy",
+  "Power source"
+ ],
+ "electrical_characteristics": [
+  "SD card SPI/SDIO with 3.3 V and card-detect",
+  "RTC with 32.768 kHz crystal and backup cell/supercap",
+  "Burst write currents (SD up to 100-200 mA)"
+ ],
+ "operating_voltage_ranges": {
+  "input": "5-12 V",
+  "logic": "3.3 V",
+  "rtc_backup": "3 V coin cell"
+ },
+ "current_power_characteristics": "30-100 mA average; SD write peaks 200 mA",
+ "typical_component_families": [
+  "mcu",
+  "sd_card_socket",
+  "rtc",
+  "crystal",
+  "ldo_regulator",
+  "buck_regulator",
+  "coin_cell_holder",
+  "usb_connector",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "sd_card_socket",
+  "rtc",
+  "crystal",
+  "ldo_regulator",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "buck_regulator",
+  "coin_cell_holder",
+  "usb_connector",
+  "esd_protection",
+  "environmental_sensor"
+ ],
+ "critical_electrical_constraints": [
+  "SD supply decoupled with >= 10 uF at the socket; SDIO lines length-aligned",
+  "RTC crystal isolated from digital traces",
+  "Backup diode-OR or RTC's own power switch"
+ ],
+ "stackup_recommendations": [
+  "2 layers for simple boards; 4 layers (SIG-GND-PWR-SIG) once a radio module, >48 MHz buses or more than ~60 nets are present",
+  "Solid ground plane directly under the MCU and every clock or data bus"
+ ],
+ "placement_rules": [
+  "Decoupling capacitor at every MCU supply pin within 2 mm, smallest value closest to the pin",
+  "Crystal and load capacitors within 5 mm of the oscillator pins, no signals routed underneath",
+  "Programming/debug header on an accessible edge; reset and boot buttons reachable in the enclosure",
+  "Regulator input and output capacitors adjacent to the regulator pins"
+ ],
+ "routing_rules": [
+  "Route clocks, SPI/QSPI and USB first, then I2C/UART, then GPIO",
+  "Keep crystal traces short and surrounded by ground",
+  "USB D+/D- as a 90 ohm differential pair when present (see usb_interface overlay)",
+  "No analog or crystal nets across plane splits"
+ ],
+ "copper_ground_requirements": [
+  "Continuous ground plane; stitch top-side ground pours to the plane with vias every ~5 mm near fast signals",
+  "Thermal relief on hand-soldered parts only; solid connection on regulator and module ground pads where reflowed"
+ ],
+ "thermal_considerations": [
+  "Linear regulators: check dissipation (Vin-Vout)*I against package thermal resistance at max ambient",
+  "Radio modules and MCUs above 200 mW need copper area under the exposed pad"
+ ],
+ "emi_emc_considerations": [
+  "Decoupling and short return paths are the EMI strategy; add series termination on long clock lines",
+  "Keep switching regulators away from the antenna and the analog front end"
+ ],
+ "protection_requirements": [
+  "ESD protection on every connector signal that leaves the enclosure (IEC 61000-4-2 level per product spec)",
+  "Reverse-polarity or input over-voltage protection on external DC inputs"
+ ],
+ "verification_requirements": [
+  "ERC: every power pin decoupled, every strap pin defined at reset",
+  "Netlist read-back of every block (tools/verify.py)",
+  "Pin map from tools/pins.py, never from memory",
+  "DRC with the fabricator rule set; connectivity of every net"
+ ],
+ "manufacturing_constraints": [
+  "Standard FR-4, 1 oz copper; JLCPCB basic parts preferred for passives",
+  "Fiducials and a test-point for each rail when assembled by machine"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "SD card on long unshielded traces at SDIO speeds",
+  "No write-protect/power-fail handling for the file system"
+ ],
+ "typical_overlays": [
+  "low_power",
+  "usb_interface"
+ ],
+ "classification": {
+  "keywords": {
+   "data logger": 8,
+   "datalogger": 8,
+   "logging": 3,
+   "sd card": 4,
+   "record": 1,
+   "storage": 2,
+   "rtc": 2
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-XTAL-015",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-USB-102"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

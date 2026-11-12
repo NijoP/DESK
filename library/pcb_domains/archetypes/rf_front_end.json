@@ -1,0 +1,155 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "rf_front_end",
+ "name": "RF front-end board",
+ "domain": "rf_wireless",
+ "description": "PA/LNA/switch/filter chain between a transceiver and the antenna to extend range or add band selectivity.",
+ "intended_applications": [
+  "range extenders",
+  "multi-band radios",
+  "base stations"
+ ],
+ "typical_input_requirements": [
+  "Band(s) and bandwidth",
+  "Gain and output power",
+  "Transceiver interface and control lines",
+  "Linearity needs"
+ ],
+ "electrical_characteristics": [
+  "Controlled 50 ohm at every interface",
+  "PA supply with high peak current",
+  "Switch control logic timing"
+ ],
+ "operating_voltage_ranges": {
+  "pa": "3.3-5 V",
+  "logic": "1.8/3.3 V"
+ },
+ "current_power_characteristics": "PA 0.2-2 A in TX",
+ "typical_component_families": [
+  "power_amplifier",
+  "lna",
+  "rf_switch",
+  "saw_filter",
+  "balun",
+  "rf_matching_component",
+  "rf_connector",
+  "ldo_regulator",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "power_amplifier",
+  "rf_switch",
+  "rf_matching_component",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "lna",
+  "saw_filter",
+  "balun",
+  "rf_connector",
+  "ldo_regulator"
+ ],
+ "critical_electrical_constraints": [
+  "Every RF interconnect 50 ohm with ground fence",
+  "PA thermal pad via array",
+  "PA supply decoupling at the pins; RF choke where the datasheet specifies",
+  "Isolation between TX and RX paths"
+ ],
+ "stackup_recommendations": [
+  "4 layers minimum for controlled impedance: RF on top over an unbroken ground on layer 2 with a known dielectric thickness",
+  "Document the dielectric thickness and Er used for the 50 ohm calculation; the fabricator's impedance service must confirm"
+ ],
+ "placement_rules": [
+  "Antenna at a board edge or corner with the keep-out the antenna datasheet prescribes; no copper, parts or tracks in the keep-out on any layer",
+  "Matching network components in a straight line between transceiver and antenna, pi-network footprints populated per the module/antenna datasheet",
+  "Crystal/TCXO within 5 mm of the transceiver, away from switching regulators",
+  "Switching regulators and digital buses as far from the RF section as the board allows"
+ ],
+ "routing_rules": [
+  "RF trace as a 50 ohm microstrip or grounded coplanar waveguide; width from the fabricator stackup, not a default",
+  "No vias on the RF trace; no stubs; gentle bends",
+  "Ground vias fence along coplanar RF lines at <= lambda/20 spacing",
+  "Reference ground under the RF trace must be unbroken from transceiver to antenna"
+ ],
+ "copper_ground_requirements": [
+  "Solid ground plane under the RF section on the layer directly below",
+  "Via stitching around the RF section perimeter",
+  "No copper pour inside the antenna keep-out on any layer"
+ ],
+ "thermal_considerations": [
+  "Power amplifiers: exposed pad to ground plane with a thermal via array per the PA datasheet"
+ ],
+ "emi_emc_considerations": [
+  "Keep harmonics of switching regulators out of the RF band: choose frequency or add LC filtering on the PA supply",
+  "Shield can footprint when the product requires it; digital signals away from the antenna"
+ ],
+ "protection_requirements": [
+  "ESD on the antenna port where an external antenna connector is exposed (RF-rated TVS or shunt inductor as the transceiver datasheet allows)"
+ ],
+ "verification_requirements": [
+  "RF trace width and gap verified against the fabricator impedance calculator (value recorded in the design profile)",
+  "Antenna keep-out checked as a DRC keep-out on every layer",
+  "Regulatory pre-check: module certification and band plan recorded",
+  "Netlist and connectivity verification as for any board"
+ ],
+ "manufacturing_constraints": [
+  "Controlled-impedance order with the stackup stated; 4-layer JLCPCB stackup JLC04161H-7628 or equivalent recorded in the profile",
+  "No HASL on RF connectors' fine-pitch pads; ENIG preferred"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "PA driven above its rated input",
+  "Unterminated unused ports"
+ ],
+ "typical_overlays": [
+  "rf_communication",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "front end": 6,
+   "front-end": 6,
+   "power amplifier": 5,
+   "lna": 5,
+   "pa": 2,
+   "rf switch": 4,
+   "fem": 5
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ANT-014",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-RF-022",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-ANT-045",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-ESD-062",
+   "EMI-RFHARM-064",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

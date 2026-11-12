@@ -1,0 +1,153 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "class_d_amplifier",
+ "name": "Class-D audio amplifier",
+ "domain": "audio_video",
+ "description": "Switching audio amplifier with output LC filter, bulk supply decoupling, gain setting and speaker protection.",
+ "intended_applications": [
+  "speakers",
+  "soundbars",
+  "automotive audio"
+ ],
+ "typical_input_requirements": [
+  "Output power and load impedance",
+  "Supply voltage",
+  "Input type",
+  "Protection"
+ ],
+ "electrical_characteristics": [
+  "Output switching at 300-800 kHz; LC filter at the pins",
+  "Supply ripple current at audio rates needs bulk capacitance",
+  "Gain and input impedance"
+ ],
+ "operating_voltage_ranges": {
+  "supply": "5-26 V",
+  "logic": "3.3 V"
+ },
+ "current_power_characteristics": "1-100 W per channel",
+ "typical_component_families": [
+  "class_d_amplifier_ic",
+  "output_inductor",
+  "film_capacitor",
+  "bulk_capacitor",
+  "speaker_connector",
+  "ferrite_bead",
+  "audio_jack",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "class_d_amplifier_ic",
+  "output_inductor",
+  "bulk_capacitor",
+  "speaker_connector",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "film_capacitor",
+  "ferrite_bead",
+  "audio_jack",
+  "esd_protection"
+ ],
+ "critical_electrical_constraints": [
+  "LC filter immediately at the output pins; speaker traces after the filter",
+  "Bulk capacitor at the supply pins; supply current declared",
+  "Input traces away from the outputs; ground star at the amplifier"
+ ],
+ "stackup_recommendations": [
+  "2 layers for small amplifiers; 4 layers with a solid ground for codecs, microphone arrays and HDMI"
+ ],
+ "placement_rules": [
+  "Audio input stage away from the output stage and the power supply",
+  "Class-D output LC filter at the amplifier pins; speaker connector adjacent",
+  "Codec crystal and PLL filter next to the codec; MCLK source close"
+ ],
+ "routing_rules": [
+  "Audio inputs as short shielded-by-ground traces; differential where the source allows",
+  "Class-D outputs as short wide pairs to the filter",
+  "Digital audio (I2S) as a group with matched lengths; MCLK away from analog",
+  "HDMI TMDS pairs 100 ohm, length matched"
+ ],
+ "copper_ground_requirements": [
+  "Single ground plane; partition by placement, star return for the power amplifier"
+ ],
+ "thermal_considerations": [
+  "Amplifier dissipation at rated power into the minimum load impedance; thermal pad vias"
+ ],
+ "emi_emc_considerations": [
+  "Class-D filter and ferrites on speaker lines; HDMI common-mode chokes where required"
+ ],
+ "protection_requirements": [
+  "ESD on audio jacks and HDMI; speaker output short-circuit protection by the amplifier"
+ ],
+ "verification_requirements": [
+  "Noise floor and gain structure recorded",
+  "Ground partition reviewed in placement",
+  "Netlist read-back and DRC"
+ ],
+ "manufacturing_constraints": [
+  "Audio jacks and HDMI connectors through-hole or with mechanical anchors"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B",
+  "CISPR-32"
+ ],
+ "unsupported_conditions": [
+  "Output power above the thermal capability of the layout"
+ ],
+ "typical_overlays": [
+  "switching_power",
+  "thermal_management",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "class-d": 10,
+   "class d": 10,
+   "audio amplifier": 10,
+   "speaker": 5,
+   "tpa3": 6,
+   "amplifier": 4,
+   "subwoofer": 5
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "DCDC-VIN-121"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

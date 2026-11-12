@@ -1,0 +1,146 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "mcu_carrier_board",
+ "name": "MCU/SoM carrier board",
+ "domain": "embedded_mcu",
+ "description": "Base board that hosts a compute module or MCU module on connectors and provides power, interfaces and connectors for a product.",
+ "intended_applications": [
+  "product-specific I/O around an off-the-shelf module",
+  "evaluation carriers"
+ ],
+ "typical_input_requirements": [
+  "Module pinout and power sequencing",
+  "Interfaces to break out",
+  "Connector mechanics"
+ ],
+ "electrical_characteristics": [
+  "Module rails per the module datasheet",
+  "Board-to-board or edge connectors carry high-speed and power pins"
+ ],
+ "operating_voltage_ranges": {
+  "input": "5-24 V",
+  "module": "per module",
+  "io": "1.8/3.3 V"
+ },
+ "current_power_characteristics": "Module 0.5-3 A depending on class",
+ "typical_component_families": [
+  "board_to_board_connector",
+  "buck_regulator",
+  "ldo_regulator",
+  "level_shifter",
+  "esd_protection",
+  "usb_connector",
+  "ethernet_phy",
+  "decoupling_capacitor",
+  "pin_header"
+ ],
+ "required_component_roles": [
+  "board_to_board_connector",
+  "buck_regulator",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "ldo_regulator",
+  "level_shifter",
+  "esd_protection",
+  "usb_connector",
+  "ethernet_phy",
+  "pin_header"
+ ],
+ "critical_electrical_constraints": [
+  "Power sequencing of the module respected by regulator enables",
+  "High-speed module pins routed per the module's design guide (impedance, length)",
+  "Connector mating height and retention specified"
+ ],
+ "stackup_recommendations": [
+  "2 layers for simple boards; 4 layers (SIG-GND-PWR-SIG) once a radio module, >48 MHz buses or more than ~60 nets are present",
+  "Solid ground plane directly under the MCU and every clock or data bus"
+ ],
+ "placement_rules": [
+  "Decoupling capacitor at every MCU supply pin within 2 mm, smallest value closest to the pin",
+  "Crystal and load capacitors within 5 mm of the oscillator pins, no signals routed underneath",
+  "Programming/debug header on an accessible edge; reset and boot buttons reachable in the enclosure",
+  "Regulator input and output capacitors adjacent to the regulator pins"
+ ],
+ "routing_rules": [
+  "Route clocks, SPI/QSPI and USB first, then I2C/UART, then GPIO",
+  "Keep crystal traces short and surrounded by ground",
+  "USB D+/D- as a 90 ohm differential pair when present (see usb_interface overlay)",
+  "No analog or crystal nets across plane splits"
+ ],
+ "copper_ground_requirements": [
+  "Continuous ground plane; stitch top-side ground pours to the plane with vias every ~5 mm near fast signals",
+  "Thermal relief on hand-soldered parts only; solid connection on regulator and module ground pads where reflowed"
+ ],
+ "thermal_considerations": [
+  "Linear regulators: check dissipation (Vin-Vout)*I against package thermal resistance at max ambient",
+  "Radio modules and MCUs above 200 mW need copper area under the exposed pad"
+ ],
+ "emi_emc_considerations": [
+  "Decoupling and short return paths are the EMI strategy; add series termination on long clock lines",
+  "Keep switching regulators away from the antenna and the analog front end"
+ ],
+ "protection_requirements": [
+  "ESD protection on every connector signal that leaves the enclosure (IEC 61000-4-2 level per product spec)",
+  "Reverse-polarity or input over-voltage protection on external DC inputs"
+ ],
+ "verification_requirements": [
+  "ERC: every power pin decoupled, every strap pin defined at reset",
+  "Netlist read-back of every block (tools/verify.py)",
+  "Pin map from tools/pins.py, never from memory",
+  "DRC with the fabricator rule set; connectivity of every net"
+ ],
+ "manufacturing_constraints": [
+  "Standard FR-4, 1 oz copper; JLCPCB basic parts preferred for passives",
+  "Fiducials and a test-point for each rail when assembled by machine"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Hot-plugging the module without the module vendor's support"
+ ],
+ "typical_overlays": [
+  "high_speed_digital",
+  "usb_interface"
+ ],
+ "classification": {
+  "keywords": {
+   "carrier board": 8,
+   "carrier": 4,
+   "som": 5,
+   "system on module": 5,
+   "compute module": 5,
+   "base board": 5,
+   "baseboard": 5
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-USB-102"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

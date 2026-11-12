@@ -1,0 +1,156 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "rp2040_dev_board",
+ "name": "RP2040 development board",
+ "domain": "embedded_mcu",
+ "description": "RP2040 with external QSPI flash, USB, 3.3 V regulation, 12 MHz crystal and PIO-driven peripherals.",
+ "intended_applications": [
+  "maker products",
+  "USB peripherals",
+  "PIO-based interface boards"
+ ],
+ "typical_input_requirements": [
+  "USB role (device/host)",
+  "Flash size",
+  "GPIO allocation",
+  "Supply source"
+ ],
+ "electrical_characteristics": [
+  "3.3 V I/O, 1.1 V core from internal regulator (VREG needs 1 uF)",
+  "QSPI flash at up to 133 MHz",
+  "USB 1.1 full speed native"
+ ],
+ "operating_voltage_ranges": {
+  "usb_in": "4.5-5.5 V",
+  "logic": "3.3 V",
+  "core": "1.1 V internal"
+ },
+ "current_power_characteristics": "20-50 mA typical; up to 100 mA with USB and PIO loads",
+ "typical_component_families": [
+  "mcu",
+  "qspi_flash",
+  "ldo_regulator",
+  "buck_regulator",
+  "crystal",
+  "usb_connector",
+  "esd_protection",
+  "decoupling_capacitor",
+  "tactile_switch"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "qspi_flash",
+  "ldo_regulator",
+  "crystal",
+  "usb_connector",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "buck_regulator",
+  "esd_protection",
+  "tactile_switch",
+  "led_indicator",
+  "pin_header"
+ ],
+ "critical_electrical_constraints": [
+  "QSPI flash traces short and matched (< 15 mm), CLK guarded",
+  "27 ohm series resistors on USB D+/D-",
+  "12 MHz crystal with load caps per datasheet",
+  "VREG output capacitor placed at the pin"
+ ],
+ "stackup_recommendations": [
+  "2 layers for simple boards; 4 layers (SIG-GND-PWR-SIG) once a radio module, >48 MHz buses or more than ~60 nets are present",
+  "Solid ground plane directly under the MCU and every clock or data bus"
+ ],
+ "placement_rules": [
+  "Decoupling capacitor at every MCU supply pin within 2 mm, smallest value closest to the pin",
+  "Crystal and load capacitors within 5 mm of the oscillator pins, no signals routed underneath",
+  "Programming/debug header on an accessible edge; reset and boot buttons reachable in the enclosure",
+  "Regulator input and output capacitors adjacent to the regulator pins"
+ ],
+ "routing_rules": [
+  "Route clocks, SPI/QSPI and USB first, then I2C/UART, then GPIO",
+  "Keep crystal traces short and surrounded by ground",
+  "USB D+/D- as a 90 ohm differential pair when present (see usb_interface overlay)",
+  "No analog or crystal nets across plane splits"
+ ],
+ "copper_ground_requirements": [
+  "Continuous ground plane; stitch top-side ground pours to the plane with vias every ~5 mm near fast signals",
+  "Thermal relief on hand-soldered parts only; solid connection on regulator and module ground pads where reflowed"
+ ],
+ "thermal_considerations": [
+  "Linear regulators: check dissipation (Vin-Vout)*I against package thermal resistance at max ambient",
+  "Radio modules and MCUs above 200 mW need copper area under the exposed pad"
+ ],
+ "emi_emc_considerations": [
+  "Decoupling and short return paths are the EMI strategy; add series termination on long clock lines",
+  "Keep switching regulators away from the antenna and the analog front end"
+ ],
+ "protection_requirements": [
+  "ESD protection on every connector signal that leaves the enclosure (IEC 61000-4-2 level per product spec)",
+  "Reverse-polarity or input over-voltage protection on external DC inputs"
+ ],
+ "verification_requirements": [
+  "ERC: every power pin decoupled, every strap pin defined at reset",
+  "Netlist read-back of every block (tools/verify.py)",
+  "Pin map from tools/pins.py, never from memory",
+  "DRC with the fabricator rule set; connectivity of every net"
+ ],
+ "manufacturing_constraints": [
+  "Standard FR-4, 1 oz copper; JLCPCB basic parts preferred for passives",
+  "Fiducials and a test-point for each rail when assembled by machine"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "USB-2.0",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "QSPI flash on long, unmatched traces",
+  "Boot select without access to BOOTSEL"
+ ],
+ "typical_overlays": [
+  "usb_interface"
+ ],
+ "classification": {
+  "keywords": {
+   "rp2040": 8,
+   "raspberry pi pico": 6,
+   "pico": 3,
+   "pio": 2,
+   "rp2350": 6
+  },
+  "features": {
+   "protocols_any": [
+    "usb"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-XTAL-015",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-STRAP-100",
+   "MCU-USB-102"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

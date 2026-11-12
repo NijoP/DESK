@@ -1,0 +1,141 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "din_rail_controller",
+ "name": "DIN-rail controller",
+ "domain": "industrial_control",
+ "description": "General industrial controller in a DIN-rail enclosure: 24 V input, MCU, fieldbus, isolated I/O and status indication.",
+ "intended_applications": [
+  "building automation",
+  "machine controllers",
+  "gateways"
+ ],
+ "typical_input_requirements": [
+  "Enclosure width",
+  "I/O",
+  "Fieldbus",
+  "24 V input"
+ ],
+ "electrical_characteristics": [
+  "DIN enclosure constrains connector positions and height",
+  "24 V with reverse/surge protection",
+  "Fieldbus and isolated I/O"
+ ],
+ "operating_voltage_ranges": {
+  "input": "24 V",
+  "logic": "3.3 V"
+ },
+ "current_power_characteristics": "0.2-1 A",
+ "typical_component_families": [
+  "mcu",
+  "buck_regulator",
+  "tvs_diode",
+  "rs485_transceiver",
+  "can_transceiver",
+  "ethernet_phy",
+  "digital_isolator",
+  "relay",
+  "terminal_block",
+  "led_indicator"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "buck_regulator",
+  "tvs_diode",
+  "terminal_block"
+ ],
+ "optional_component_roles": [
+  "rs485_transceiver",
+  "can_transceiver",
+  "ethernet_phy",
+  "digital_isolator",
+  "relay",
+  "led_indicator"
+ ],
+ "critical_electrical_constraints": [
+  "Outline and connector positions from the enclosure drawing (keep-outs)",
+  "24 V protection at the terminals",
+  "Isolation as required by the I/O"
+ ],
+ "stackup_recommendations": [
+  "2 or 4 layers; isolation barriers between field side and logic side"
+ ],
+ "placement_rules": [
+  "Field-side components grouped at the terminal blocks; isolators on the barrier; logic side separate",
+  "Relays and their drivers near the output terminals, flyback diodes at the coils",
+  "24 V input protection at the connector"
+ ],
+ "routing_rules": [
+  "Creepage/clearance across the isolation barrier per the rated isolation voltage",
+  "24 V and relay contact traces sized for the rated load current",
+  "Fieldbus pairs (RS-485/CAN) as 120 ohm pairs with termination at the bus end"
+ ],
+ "copper_ground_requirements": [
+  "No pour across barriers; field ground and logic ground separate"
+ ],
+ "thermal_considerations": [
+  "Relay coil and input-resistor dissipation at the maximum input voltage; derating at 60 degC ambient"
+ ],
+ "emi_emc_considerations": [
+  "Surge (IEC 61000-4-5) and burst (61000-4-4) immunity: TVS and series impedance at every field terminal",
+  "Shield termination for fieldbus cables"
+ ],
+ "protection_requirements": [
+  "Isolated inputs (optocoupler/digital isolator); relay or isolated MOSFET outputs",
+  "Reverse polarity and over-voltage on the 24 V supply input"
+ ],
+ "verification_requirements": [
+  "Isolation voltage declared; creepage per IEC 60664-1 recorded",
+  "Field I/O current ratings declared",
+  "Immunity levels are hardware tests"
+ ],
+ "manufacturing_constraints": [
+  "Pluggable terminal blocks; conformal coating option changes the clearance condition"
+ ],
+ "applicable_standards": [
+  "IEC-61131-2",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Outline not derived from the enclosure drawing"
+ ],
+ "typical_overlays": [
+  "industrial_interfaces",
+  "harsh_environment"
+ ],
+ "classification": {
+  "keywords": {
+   "din rail": 10,
+   "din-rail": 10,
+   "industrial controller": 8,
+   "enclosure": 2
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

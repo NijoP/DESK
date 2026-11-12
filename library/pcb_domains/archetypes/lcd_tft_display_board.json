@@ -1,0 +1,135 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "lcd_tft_display_board",
+ "name": "LCD/TFT display board",
+ "domain": "led_display",
+ "description": "TFT panel interface (SPI/RGB/LVDS/MIPI) with backlight driver, touch controller and the panel connector.",
+ "intended_applications": [
+  "instrument displays",
+  "consumer devices",
+  "industrial HMIs"
+ ],
+ "typical_input_requirements": [
+  "Panel interface and resolution",
+  "Backlight LED string",
+  "Touch",
+  "Connector type"
+ ],
+ "electrical_characteristics": [
+  "RGB parallel needs many matched lines; LVDS/MIPI pairs 100 ohm",
+  "Backlight boost driver with string current",
+  "Panel power sequencing"
+ ],
+ "operating_voltage_ranges": {
+  "logic": "3.3 V",
+  "backlight": "per string",
+  "panel": "per panel"
+ },
+ "current_power_characteristics": "0.2-1 A",
+ "typical_component_families": [
+  "display_connector",
+  "led_backlight_driver",
+  "touch_controller",
+  "mcu",
+  "level_shifter",
+  "inductor",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "display_connector",
+  "led_backlight_driver",
+  "mcu",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "touch_controller",
+  "level_shifter",
+  "inductor",
+  "esd_protection"
+ ],
+ "critical_electrical_constraints": [
+  "Display bus matched where required; connector pinout from the panel drawing",
+  "Backlight current declared",
+  "Sequencing per the panel datasheet"
+ ],
+ "stackup_recommendations": [
+  "2 layers; metal-core or 2 oz copper for high-power LED arrays"
+ ],
+ "placement_rules": [
+  "LED driver, inductor and sense resistor as a tight loop",
+  "LEDs spread for thermal uniformity; thermal vias under LED pads",
+  "Display connector near the controller with the shortest route for the data lines"
+ ],
+ "routing_rules": [
+  "LED string current paths sized for the drive current",
+  "Addressable LED data line with a series resistor at the source; level shifter when the MCU is 3.3 V and the LEDs need 5 V",
+  "Display buses (SPI/RGB/MIPI) length matched where the interface requires"
+ ],
+ "copper_ground_requirements": [
+  "Copper area under each high-power LED for heat spreading"
+ ],
+ "thermal_considerations": [
+  "LED junction temperature from forward power and thermal path; lumen derating at temperature recorded"
+ ],
+ "emi_emc_considerations": [
+  "PWM dimming edges filtered on long LED strips"
+ ],
+ "protection_requirements": [
+  "Open-LED and short-LED protection by the driver; ESD on display connectors"
+ ],
+ "verification_requirements": [
+  "LED current and forward voltage declared; driver headroom computed",
+  "Thermal path computed; strip current sized"
+ ],
+ "manufacturing_constraints": [
+  "White solder mask for lighting boards; aluminium PCB when the thermal path needs it"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Panel pinout assumed from a similar panel"
+ ],
+ "typical_overlays": [
+  "high_speed_digital"
+ ],
+ "classification": {
+  "keywords": {
+   "tft": 10,
+   "lcd": 10,
+   "display": 5,
+   "backlight": 6,
+   "ili9341": 6,
+   "st7789": 6,
+   "lvds panel": 8
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

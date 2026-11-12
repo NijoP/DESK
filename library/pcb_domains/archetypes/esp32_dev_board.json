@@ -1,0 +1,181 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "esp32_dev_board",
+ "name": "ESP32 development board",
+ "domain": "embedded_mcu",
+ "description": "ESP32/ESP32-S3/C3 module or bare chip with USB programming, 3.3 V regulation, boot/reset circuitry and broken-out GPIO.",
+ "intended_applications": [
+  "IoT prototypes",
+  "Wi-Fi/BLE product cores",
+  "sensor hubs"
+ ],
+ "typical_input_requirements": [
+  "Supply source (USB 5 V, Li-ion or DC input)",
+  "Peripheral list and GPIO count",
+  "Radio use (module with PCB antenna or external antenna)",
+  "Enclosure size"
+ ],
+ "electrical_characteristics": [
+  "3.3 V logic",
+  "Radio current peaks 300-500 mA on 3.3 V",
+  "USB 2.0 full speed for programming (native or via UART bridge)",
+  "Strapping pins define boot mode"
+ ],
+ "operating_voltage_ranges": {
+  "usb_in": "4.5-5.5 V",
+  "logic": "3.3 V",
+  "battery_option": "3.0-4.2 V"
+ },
+ "current_power_characteristics": "Peak 0.6 A on 3.3 V during radio TX; average 80-250 mA active, tens of uA deep sleep",
+ "typical_component_families": [
+  "mcu_wireless_module",
+  "ldo_regulator",
+  "usb_uart_bridge",
+  "usb_connector",
+  "esd_protection",
+  "crystal",
+  "decoupling_capacitor",
+  "tactile_switch",
+  "led_indicator"
+ ],
+ "required_component_roles": [
+  "mcu_wireless_module",
+  "ldo_regulator",
+  "usb_connector",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "usb_uart_bridge",
+  "li_ion_charger",
+  "tactile_switch",
+  "led_indicator",
+  "pin_header"
+ ],
+ "critical_electrical_constraints": [
+  "3.3 V regulator must supply the radio TX peak with headroom (>= 600 mA)",
+  "Strapping pins (GPIO0/2/12/15 or the S3/C3 equivalents) at the documented level during reset",
+  "Antenna keep-out of the module honoured on every layer",
+  "USB D+/D- 90 ohm pair with ESD at the connector"
+ ],
+ "stackup_recommendations": [
+  "2 layers for simple boards; 4 layers (SIG-GND-PWR-SIG) once a radio module, >48 MHz buses or more than ~60 nets are present",
+  "Solid ground plane directly under the MCU and every clock or data bus"
+ ],
+ "placement_rules": [
+  "Decoupling capacitor at every MCU supply pin within 2 mm, smallest value closest to the pin",
+  "Crystal and load capacitors within 5 mm of the oscillator pins, no signals routed underneath",
+  "Programming/debug header on an accessible edge; reset and boot buttons reachable in the enclosure",
+  "Regulator input and output capacitors adjacent to the regulator pins"
+ ],
+ "routing_rules": [
+  "Route clocks, SPI/QSPI and USB first, then I2C/UART, then GPIO",
+  "Keep crystal traces short and surrounded by ground",
+  "USB D+/D- as a 90 ohm differential pair when present (see usb_interface overlay)",
+  "No analog or crystal nets across plane splits"
+ ],
+ "copper_ground_requirements": [
+  "Continuous ground plane; stitch top-side ground pours to the plane with vias every ~5 mm near fast signals",
+  "Thermal relief on hand-soldered parts only; solid connection on regulator and module ground pads where reflowed"
+ ],
+ "thermal_considerations": [
+  "Linear regulators: check dissipation (Vin-Vout)*I against package thermal resistance at max ambient",
+  "Radio modules and MCUs above 200 mW need copper area under the exposed pad"
+ ],
+ "emi_emc_considerations": [
+  "Decoupling and short return paths are the EMI strategy; add series termination on long clock lines",
+  "Keep switching regulators away from the antenna and the analog front end"
+ ],
+ "protection_requirements": [
+  "ESD protection on every connector signal that leaves the enclosure (IEC 61000-4-2 level per product spec)",
+  "Reverse-polarity or input over-voltage protection on external DC inputs"
+ ],
+ "verification_requirements": [
+  "ERC: every power pin decoupled, every strap pin defined at reset",
+  "Netlist read-back of every block (tools/verify.py)",
+  "Pin map from tools/pins.py, never from memory",
+  "DRC with the fabricator rule set; connectivity of every net"
+ ],
+ "manufacturing_constraints": [
+  "Standard FR-4, 1 oz copper; JLCPCB basic parts preferred for passives",
+  "Fiducials and a test-point for each rail when assembled by machine"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "USB-2.0",
+  "IEC-61000-4-2",
+  "FCC-Part-15",
+  "ETSI-EN-300-328",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Powering the module from 5 V directly",
+  "Antenna keep-out violated by copper or parts",
+  "Boot strapping pins driven by peripherals at reset"
+ ],
+ "typical_overlays": [
+  "rf_communication",
+  "usb_interface",
+  "low_power"
+ ],
+ "classification": {
+  "keywords": {
+   "esp32": 6,
+   "esp32-s3": 6,
+   "esp32-c3": 6,
+   "esp32-c6": 6,
+   "espressif": 4,
+   "wifi": 2,
+   "bluetooth": 1,
+   "ble": 1,
+   "development board": 2,
+   "dev board": 2,
+   "iot": 1
+  },
+  "features": {
+   "protocols_any": [
+    "wifi",
+    "ble",
+    "usb"
+   ],
+   "input_voltage_v": [
+    3.0,
+    6.0
+   ]
+  }
+ },
+ "maturity": {
+  "status": "OFFLINE_TESTED",
+  "evidence": "rule set evaluated against synthetic fixtures in tests/test_cross_domain_cases.py",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ANT-014",
+   "PLACE-XTAL-015",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-RF-022",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-ANT-045",
+   "EMI-ESD-062",
+   "EMI-RFHARM-064",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-STRAP-100",
+   "MCU-RADIO-101",
+   "MCU-USB-102",
+   "USBC-CC-150"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

@@ -1,0 +1,146 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "encoder_feedback_interface",
+ "name": "Encoder and feedback interface",
+ "domain": "motor_control",
+ "description": "Conditioning for position sensors: differential line receivers for incremental encoders, SSI/BiSS, resolver-to-digital or magnetic encoders.",
+ "intended_applications": [
+  "motion controllers",
+  "robot joints",
+  "test stands"
+ ],
+ "typical_input_requirements": [
+  "Encoder type and signalling",
+  "Cable length",
+  "Supply to the encoder",
+  "Resolution/speed"
+ ],
+ "electrical_characteristics": [
+  "RS-422 differential receivers with termination",
+  "Resolver excitation and demodulation",
+  "Magnetic encoders over SPI/ABI"
+ ],
+ "operating_voltage_ranges": {
+  "encoder": "5 V",
+  "logic": "3.3 V"
+ },
+ "current_power_characteristics": "< 300 mA",
+ "typical_component_families": [
+  "rs422_receiver",
+  "encoder_interface",
+  "resolver_to_digital",
+  "magnetic_encoder_ic",
+  "ldo_regulator",
+  "esd_protection",
+  "terminal_block",
+  "mcu"
+ ],
+ "required_component_roles": [
+  "rs422_receiver",
+  "esd_protection",
+  "terminal_block"
+ ],
+ "optional_component_roles": [
+  "encoder_interface",
+  "resolver_to_digital",
+  "magnetic_encoder_ic",
+  "ldo_regulator",
+  "mcu"
+ ],
+ "critical_electrical_constraints": [
+  "Differential pairs with 120 ohm termination at the receiver",
+  "Encoder supply current-limited and protected",
+  "Magnetic encoder IC placement relative to the magnet per datasheet"
+ ],
+ "stackup_recommendations": [
+  "2 layers 2 oz for drives up to a few amps; 4 layers with inner ground and power for higher current or sensitive current sensing"
+ ],
+ "placement_rules": [
+  "Half-bridge pairs: high-side and low-side MOSFETs and the DC-link capacitor as tight as possible",
+  "Gate driver adjacent to its MOSFETs; bootstrap capacitor at the driver",
+  "Current-sense resistor in the phase or DC-link path with a Kelvin pair to the amplifier",
+  "Motor connector at the edge nearest the bridge; logic and encoder inputs on the opposite side"
+ ],
+ "routing_rules": [
+  "Phase and DC-link copper as polygons sized for the peak current and the switching ripple",
+  "Gate traces short, with the return on the adjacent layer; gate resistor at the driver",
+  "Current-sense traces as a tightly coupled pair to the amplifier; no vias on the Kelvin pair",
+  "Encoder/hall signals away from phase copper; filtered at the entry"
+ ],
+ "copper_ground_requirements": [
+  "Power ground polygon separate from signal ground, joined at the sense resistor or at the controller",
+  "Thermal vias under MOSFET pads"
+ ],
+ "thermal_considerations": [
+  "Conduction loss I^2*Rds(on) at max junction temperature plus switching loss; junction temperature with margin at the motor stall current where stall is possible"
+ ],
+ "emi_emc_considerations": [
+  "Switching edges controlled by gate resistors; snubbers across the bridge when ringing is measured",
+  "Shielded motor cable and common-mode choke footprint for long cables"
+ ],
+ "protection_requirements": [
+  "Over-current trip from the sense amplifier to the driver's fault input",
+  "DC-link over-voltage clamp or brake chopper for regenerative loads",
+  "Reverse polarity and inrush limiting on the DC input"
+ ],
+ "verification_requirements": [
+  "Peak and continuous phase currents declared; bridge devices rated with margin",
+  "Trace widths and polygon widths from IPC-2221 for the peak current",
+  "Dead-time and gate-drive values recorded from the driver datasheet",
+  "Connectivity of every phase and sense net; DRC with clearance for the DC-link voltage"
+ ],
+ "manufacturing_constraints": [
+  "2 oz copper; large solder pads on power devices; thermal reliefs off on power pads"
+ ],
+ "applicable_standards": [
+  "TIA-485-A",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Single-ended encoder signals on long cables"
+ ],
+ "typical_overlays": [
+  "industrial_interfaces",
+  "precision_analog"
+ ],
+ "classification": {
+  "keywords": {
+   "encoder interface": 10,
+   "encoder": 6,
+   "resolver": 8,
+   "ssi": 5,
+   "biss": 5,
+   "line receiver": 6,
+   "rs-422": 5
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-GUARD-030",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

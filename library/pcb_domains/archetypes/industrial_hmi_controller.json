@@ -1,0 +1,142 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "industrial_hmi_controller",
+ "name": "Industrial HMI controller",
+ "domain": "industrial_control",
+ "description": "Display controller with touch, 24 V supply, fieldbus and real-time clock in an industrial enclosure.",
+ "intended_applications": [
+  "machine panels",
+  "building control",
+  "kiosks"
+ ],
+ "typical_input_requirements": [
+  "Display and touch",
+  "Fieldbus",
+  "24 V input",
+  "Enclosure"
+ ],
+ "electrical_characteristics": [
+  "Display interface (RGB/LVDS/MIPI) and backlight driver",
+  "24 V surge-protected input to a buck",
+  "Capacitive touch controller with EMC considerations"
+ ],
+ "operating_voltage_ranges": {
+  "input": "24 V",
+  "logic": "3.3 V",
+  "backlight": "per panel"
+ },
+ "current_power_characteristics": "0.5-2 A",
+ "typical_component_families": [
+  "mcu",
+  "buck_regulator",
+  "display_connector",
+  "led_backlight_driver",
+  "touch_controller",
+  "rs485_transceiver",
+  "can_transceiver",
+  "rtc",
+  "tvs_diode",
+  "esd_protection"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "buck_regulator",
+  "display_connector",
+  "tvs_diode"
+ ],
+ "optional_component_roles": [
+  "led_backlight_driver",
+  "touch_controller",
+  "rs485_transceiver",
+  "can_transceiver",
+  "rtc",
+  "esd_protection"
+ ],
+ "critical_electrical_constraints": [
+  "Display bus length matching per interface",
+  "Backlight driver current declared",
+  "Fieldbus protection and isolation as required"
+ ],
+ "stackup_recommendations": [
+  "2 or 4 layers; isolation barriers between field side and logic side"
+ ],
+ "placement_rules": [
+  "Field-side components grouped at the terminal blocks; isolators on the barrier; logic side separate",
+  "Relays and their drivers near the output terminals, flyback diodes at the coils",
+  "24 V input protection at the connector"
+ ],
+ "routing_rules": [
+  "Creepage/clearance across the isolation barrier per the rated isolation voltage",
+  "24 V and relay contact traces sized for the rated load current",
+  "Fieldbus pairs (RS-485/CAN) as 120 ohm pairs with termination at the bus end"
+ ],
+ "copper_ground_requirements": [
+  "No pour across barriers; field ground and logic ground separate"
+ ],
+ "thermal_considerations": [
+  "Relay coil and input-resistor dissipation at the maximum input voltage; derating at 60 degC ambient"
+ ],
+ "emi_emc_considerations": [
+  "Surge (IEC 61000-4-5) and burst (61000-4-4) immunity: TVS and series impedance at every field terminal",
+  "Shield termination for fieldbus cables"
+ ],
+ "protection_requirements": [
+  "Isolated inputs (optocoupler/digital isolator); relay or isolated MOSFET outputs",
+  "Reverse polarity and over-voltage on the 24 V supply input"
+ ],
+ "verification_requirements": [
+  "Isolation voltage declared; creepage per IEC 60664-1 recorded",
+  "Field I/O current ratings declared",
+  "Immunity levels are hardware tests"
+ ],
+ "manufacturing_constraints": [
+  "Pluggable terminal blocks; conformal coating option changes the clearance condition"
+ ],
+ "applicable_standards": [
+  "IEC-61131-2",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Touch controller without EMC filtering near a 24 V switching supply"
+ ],
+ "typical_overlays": [
+  "industrial_interfaces",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "hmi": 10,
+   "operator panel": 8,
+   "touch panel": 8,
+   "industrial display": 8
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

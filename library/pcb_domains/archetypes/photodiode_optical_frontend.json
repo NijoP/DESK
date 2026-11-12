@@ -1,0 +1,140 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "photodiode_optical_frontend",
+ "name": "Photodiode / optical front end",
+ "domain": "analog_sensors",
+ "description": "Transimpedance amplifier for photodiodes with low-leakage layout, guarding and bandwidth/stability compensation.",
+ "intended_applications": [
+  "pulse oximetry",
+  "light meters",
+  "optical communication",
+  "LIDAR receivers"
+ ],
+ "typical_input_requirements": [
+  "Photodiode capacitance and current",
+  "Bandwidth",
+  "Gain",
+  "Ambient light rejection"
+ ],
+ "electrical_characteristics": [
+  "TIA gain resistor and compensation capacitor set bandwidth",
+  "Input leakage and bias current in pA-nA",
+  "Photodiode bias and shielding"
+ ],
+ "operating_voltage_ranges": {
+  "analog": "3.3/5 V",
+  "bias": "0-12 V"
+ },
+ "current_power_characteristics": "< 50 mA",
+ "typical_component_families": [
+  "photodiode",
+  "op_amp",
+  "precision_resistor",
+  "film_capacitor",
+  "voltage_reference",
+  "adc",
+  "ldo_regulator",
+  "led_emitter"
+ ],
+ "required_component_roles": [
+  "photodiode",
+  "op_amp",
+  "precision_resistor"
+ ],
+ "optional_component_roles": [
+  "film_capacitor",
+  "voltage_reference",
+  "adc",
+  "ldo_regulator",
+  "led_emitter"
+ ],
+ "critical_electrical_constraints": [
+  "Guard ring around the TIA input driven at the input potential",
+  "Shortest possible photodiode-to-amplifier trace; no pour under it",
+  "Compensation capacitor per the stability calculation"
+ ],
+ "stackup_recommendations": [
+  "4 layers with a solid analog ground under the signal chain; 2 layers only for low-resolution sensing"
+ ],
+ "placement_rules": [
+  "Signal chain in a straight line: sensor -> amplifier -> filter -> ADC -> reference, each stage adjacent to the next",
+  "Reference and ADC decoupling at the pins; reference away from heat sources",
+  "Digital parts, radios and regulators on the far side of the board from the front end"
+ ],
+ "routing_rules": [
+  "Guard rings around high-impedance nodes driven by the buffered input potential",
+  "Differential sensor inputs routed as a matched pair",
+  "Single ground plane with partitioned placement rather than a split plane; no digital returns through the analog area",
+  "Short traces at ADC inputs; RC filter at the pin"
+ ],
+ "copper_ground_requirements": [
+  "Unbroken ground under the signal chain",
+  "No pour touching high-impedance input nodes (leakage); solder-mask relief considered for pA-level inputs"
+ ],
+ "thermal_considerations": [
+  "Thermocouple cold-junction sensor at the connector; avoid thermal gradients across precision resistors"
+ ],
+ "emi_emc_considerations": [
+  "RC/ferrite filtering at every input entering the board",
+  "Shield the front end from switching regulators; clock sources away from the ADC"
+ ],
+ "protection_requirements": [
+  "Input over-voltage clamps and series resistance sized for the amplifier's input current limits",
+  "ESD on exposed sensor connectors"
+ ],
+ "verification_requirements": [
+  "Noise budget and resolution target recorded; reference and ADC specs from datasheets",
+  "Guard and ground partition checked in placement review",
+  "Netlist read-back; ERC for floating inputs"
+ ],
+ "manufacturing_constraints": [
+  "Precision resistors as 0.1 % thin-film where the budget needs it; no HASL on fine-pitch ADC packages"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "TIA input routed across the board or near switching nodes"
+ ],
+ "typical_overlays": [
+  "precision_analog"
+ ],
+ "classification": {
+  "keywords": {
+   "photodiode": 10,
+   "transimpedance": 10,
+   "tia": 6,
+   "optical": 5,
+   "light sensor": 4,
+   "ppg": 4,
+   "lidar": 5
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-GUARD-030",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

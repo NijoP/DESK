@@ -1,0 +1,19 @@
+{
+ "schema_version": "1.0.0",
+ "required": {
+  "schema_version": "string",
+  "overlay_id": "string",
+  "name": "string",
+  "description": "string",
+  "applies_when": "dict",
+  "adds_component_families": "list",
+  "placement_rules": "list",
+  "routing_rules": "list",
+  "copper_rules": "list",
+  "emi_emc_rules": "list",
+  "verification_requirements": "list",
+  "precedence": "number",
+  "rule_ids": "list"
+ },
+ "enums": {}
+}

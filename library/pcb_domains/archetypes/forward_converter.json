@@ -1,0 +1,178 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "forward_converter",
+ "name": "Forward converter",
+ "domain": "dcdc_power",
+ "description": "Isolated converter transferring energy through a transformer during the on-time with an output inductor; reset winding or active clamp.",
+ "intended_applications": [
+  "50-500 W isolated supplies",
+  "telecom bricks",
+  "industrial 24 V supplies"
+ ],
+ "typical_input_requirements": [
+  "Input range",
+  "Output voltage/current",
+  "Isolation voltage",
+  "Reset method"
+ ],
+ "electrical_characteristics": [
+  "Transformer must be reset each cycle",
+  "Output LC filter like a buck",
+  "Duty cycle limited (< 50 % with reset winding)"
+ ],
+ "operating_voltage_ranges": {
+  "input": "18-75 V DC",
+  "output": "3.3-28 V isolated"
+ },
+ "current_power_characteristics": "50-500 W",
+ "typical_component_families": [
+  "pwm_controller",
+  "mosfet",
+  "power_transformer",
+  "output_inductor",
+  "schottky_diode",
+  "optocoupler",
+  "shunt_reference",
+  "output_capacitor",
+  "input_capacitor",
+  "gate_driver",
+  "current_sense_resistor"
+ ],
+ "required_component_roles": [
+  "pwm_controller",
+  "mosfet",
+  "power_transformer",
+  "output_inductor",
+  "schottky_diode",
+  "output_capacitor",
+  "input_capacitor"
+ ],
+ "optional_component_roles": [
+  "optocoupler",
+  "shunt_reference",
+  "gate_driver",
+  "current_sense_resistor",
+  "y_capacitor"
+ ],
+ "critical_electrical_constraints": [
+  "Reset mechanism designed and its voltage stress recorded",
+  "Secondary rectifier loop tight",
+  "Isolation creepage/clearance per the barrier voltage"
+ ],
+ "stackup_recommendations": [
+  "2 layers with 2 oz copper for converters above ~3 A; 4 layers with inner ground for controllers with sensitive feedback",
+  "Heavy copper (2 oz) when trace width from IPC-2221 exceeds what the board width allows"
+ ],
+ "placement_rules": [
+  "Minimise the hot loop (input capacitor, high-side switch, low-side switch/diode) area: these three parts touch each other",
+  "Inductor adjacent to the switch node pin; switch node copper as small as the current allows",
+  "Output capacitor at the inductor output; feedback divider at the controller FB pin, away from the inductor and switch node",
+  "Gate driver next to the MOSFET gates; bootstrap capacitor next to the driver"
+ ],
+ "routing_rules": [
+  "Switch node: short, wide, single layer; never under the feedback network",
+  "Feedback trace short and shielded by ground, routed away from the inductor",
+  "Power path widths from IPC-2221 for the declared current and temperature rise; polygons for > 3 A",
+  "Kelvin connection to current-sense resistors"
+ ],
+ "copper_ground_requirements": [
+  "Power ground and signal ground joined at one point near the controller",
+  "Copper pour under the inductor only if the inductor datasheet allows (shielded types)",
+  "Thermal vias under MOSFET and diode exposed pads to the opposite-side copper"
+ ],
+ "thermal_considerations": [
+  "Calculate conduction and switching loss per device; junction temperature at max ambient must stay below the datasheet limit with margin",
+  "Copper area per watt from the device datasheet thermal curves; heatsink when the area is not available"
+ ],
+ "emi_emc_considerations": [
+  "Hot-loop area is the first EMI control; snubber footprint on the switch node",
+  "Input pi-filter footprint for conducted emissions when the product is tested to CISPR 32/25",
+  "Spread-spectrum or frequency choice to keep harmonics out of sensitive bands"
+ ],
+ "protection_requirements": [
+  "Input over-voltage and reverse polarity per the application",
+  "Over-current/short-circuit protection by the controller; output over-voltage clamp where the load is sensitive",
+  "Fuse rating against the input current at minimum input voltage"
+ ],
+ "verification_requirements": [
+  "Every rail current declared (unknown current blocks routing)",
+  "Trace width per net from desk.ipc with declared temperature rise",
+  "Voltage drop on the output path within the regulation budget",
+  "Hot-loop area recorded; DRC with clearance from the highest node voltage"
+ ],
+ "manufacturing_constraints": [
+  "2 oz copper option recorded in the manufacturer profile; minimum width/clearance from the fabricator table for the chosen copper weight",
+  "Large pads on magnetics: solder mask defined; thermal relief decision explicit"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IEC-60664-1",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Duty cycle beyond the reset capability"
+ ],
+ "typical_overlays": [
+  "switching_power",
+  "galvanic_isolation",
+  "thermal_management",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "forward converter": 10,
+   "forward": 4,
+   "active clamp": 5,
+   "isolated 24v": 3
+  },
+  "features": {
+   "isolation": true,
+   "converter": [
+    "forward"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-ISO-016",
+   "PLACE-THERM-017",
+   "PLACE-SENSE-018",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-KELVIN-024",
+   "ROUTE-HV-025",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "DCDC-VIN-121"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

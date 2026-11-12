@@ -1,0 +1,163 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "gnss_receiver",
+ "name": "GNSS receiver board",
+ "domain": "rf_wireless",
+ "description": "GPS/GNSS receiver module with LNA/SAW front end, active or passive antenna, backup supply and host interface.",
+ "intended_applications": [
+  "trackers",
+  "timing references",
+  "navigation"
+ ],
+ "typical_input_requirements": [
+  "Antenna type (active/passive, external)",
+  "Accuracy and fix time targets",
+  "Backup power for warm start",
+  "Host interface"
+ ],
+ "electrical_characteristics": [
+  "L1 1575.42 MHz (and L5 1176 MHz for dual-band)",
+  "Antenna bias (3.3 V via inductor) for active antennas",
+  "1PPS output for timing"
+ ],
+ "operating_voltage_ranges": {
+  "module": "3.0-3.6 V",
+  "backup": "1.4-3.6 V",
+  "antenna_bias": "3.3 V"
+ },
+ "current_power_characteristics": "20-50 mA acquisition; backup uA",
+ "typical_component_families": [
+  "gnss_module",
+  "lna",
+  "saw_filter",
+  "antenna",
+  "rf_connector",
+  "ldo_regulator",
+  "coin_cell_holder",
+  "supercapacitor",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "gnss_module",
+  "antenna",
+  "ldo_regulator",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "lna",
+  "saw_filter",
+  "rf_connector",
+  "coin_cell_holder",
+  "supercapacitor",
+  "esd_protection"
+ ],
+ "critical_electrical_constraints": [
+  "RF path 50 ohm from antenna to module with the LNA/SAW as the module datasheet requires",
+  "No switching regulator harmonics in the L-band; linear regulator for the RF rail",
+  "Antenna ground plane size and keep-out per datasheet",
+  "Backup supply so the almanac survives power loss"
+ ],
+ "stackup_recommendations": [
+  "4 layers minimum for controlled impedance: RF on top over an unbroken ground on layer 2 with a known dielectric thickness",
+  "Document the dielectric thickness and Er used for the 50 ohm calculation; the fabricator's impedance service must confirm"
+ ],
+ "placement_rules": [
+  "Antenna at a board edge or corner with the keep-out the antenna datasheet prescribes; no copper, parts or tracks in the keep-out on any layer",
+  "Matching network components in a straight line between transceiver and antenna, pi-network footprints populated per the module/antenna datasheet",
+  "Crystal/TCXO within 5 mm of the transceiver, away from switching regulators",
+  "Switching regulators and digital buses as far from the RF section as the board allows"
+ ],
+ "routing_rules": [
+  "RF trace as a 50 ohm microstrip or grounded coplanar waveguide; width from the fabricator stackup, not a default",
+  "No vias on the RF trace; no stubs; gentle bends",
+  "Ground vias fence along coplanar RF lines at <= lambda/20 spacing",
+  "Reference ground under the RF trace must be unbroken from transceiver to antenna"
+ ],
+ "copper_ground_requirements": [
+  "Solid ground plane under the RF section on the layer directly below",
+  "Via stitching around the RF section perimeter",
+  "No copper pour inside the antenna keep-out on any layer"
+ ],
+ "thermal_considerations": [
+  "Power amplifiers: exposed pad to ground plane with a thermal via array per the PA datasheet"
+ ],
+ "emi_emc_considerations": [
+  "Keep harmonics of switching regulators out of the RF band: choose frequency or add LC filtering on the PA supply",
+  "Shield can footprint when the product requires it; digital signals away from the antenna"
+ ],
+ "protection_requirements": [
+  "ESD on the antenna port where an external antenna connector is exposed (RF-rated TVS or shunt inductor as the transceiver datasheet allows)"
+ ],
+ "verification_requirements": [
+  "RF trace width and gap verified against the fabricator impedance calculator (value recorded in the design profile)",
+  "Antenna keep-out checked as a DRC keep-out on every layer",
+  "Regulatory pre-check: module certification and band plan recorded",
+  "Netlist and connectivity verification as for any board"
+ ],
+ "manufacturing_constraints": [
+  "Controlled-impedance order with the stackup stated; 4-layer JLCPCB stackup JLC04161H-7628 or equivalent recorded in the profile",
+  "No HASL on RF connectors' fine-pitch pads; ENIG preferred"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Passive patch antenna without the specified ground plane",
+  "Switching regulator noise on the LNA rail"
+ ],
+ "typical_overlays": [
+  "rf_communication",
+  "low_power"
+ ],
+ "classification": {
+  "keywords": {
+   "gnss": 10,
+   "gps": 10,
+   "glonass": 6,
+   "galileo": 6,
+   "position": 2,
+   "tracker": 3,
+   "navigation": 3,
+   "1pps": 3
+  },
+  "features": {
+   "rf_frequency_hz": [
+    1100000000.0,
+    1700000000.0
+   ],
+   "protocols_any": [
+    "gnss"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ANT-014",
+   "ROUTE-PRIO-020",
+   "ROUTE-RF-022",
+   "ROUTE-RETURN-027",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-ANT-045",
+   "EMI-ESD-062",
+   "EMI-RFHARM-064",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

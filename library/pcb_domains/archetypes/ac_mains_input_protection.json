@@ -1,0 +1,178 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "ac_mains_input_protection",
+ "name": "AC mains input and protection",
+ "domain": "ac_mains_hv",
+ "description": "Mains entry section: connector, fuse, inrush limiter, MOV, EMI filter, and the rectifier feeding downstream stages.",
+ "intended_applications": [
+  "every mains-powered product",
+  "power entry modules"
+ ],
+ "typical_input_requirements": [
+  "Mains voltage range (100-240 V or single)",
+  "Rated current",
+  "Overvoltage category and pollution degree",
+  "Earthing class (I/II)"
+ ],
+ "electrical_characteristics": [
+  "Peak 374 V on 240 V mains; rectified bus ~340 V DC",
+  "Inrush limited by NTC or active circuit",
+  "X capacitor discharge within the safety time"
+ ],
+ "operating_voltage_ranges": {
+  "mains": "85-264 V AC",
+  "bus": "120-370 V DC"
+ },
+ "current_power_characteristics": "0.1-16 A per fuse rating",
+ "typical_component_families": [
+  "mains_connector",
+  "fuse",
+  "mov_varistor",
+  "ntc_inrush_limiter",
+  "x_capacitor",
+  "y_capacitor",
+  "common_mode_choke",
+  "bridge_rectifier",
+  "bulk_capacitor",
+  "discharge_resistor",
+  "gdt"
+ ],
+ "required_component_roles": [
+  "mains_connector",
+  "fuse",
+  "mov_varistor",
+  "x_capacitor",
+  "bridge_rectifier",
+  "bulk_capacitor"
+ ],
+ "optional_component_roles": [
+  "ntc_inrush_limiter",
+  "y_capacitor",
+  "common_mode_choke",
+  "discharge_resistor",
+  "gdt",
+  "tvs_diode"
+ ],
+ "critical_electrical_constraints": [
+  "Creepage/clearance per IEC 60664-1 for the mains working voltage, PD2, material group",
+  "Fuse first after the connector; MOV after the fuse",
+  "Bulk capacitor voltage rating >= 400 V for universal input",
+  "Every mains net declared in voltage_rails (fail-closed)"
+ ],
+ "stackup_recommendations": [
+  "Single or double sided FR-4 with the isolation barrier as a physical slot or an unbroken creepage distance",
+  "Thicker board (1.6 mm) for mechanical and dielectric robustness"
+ ],
+ "placement_rules": [
+  "Primary and secondary sides physically separated by the isolation barrier; only isolating components (transformer, optocoupler, Y-capacitor) bridge it",
+  "Fuse first in the path after the mains input connector; MOV/TVS across the input after the fuse",
+  "No low-voltage logic within the creepage distance of mains nets",
+  "Mains connectors and relays at a board edge with the enclosure clearance in mind"
+ ],
+ "routing_rules": [
+  "Mains traces sized for the inrush and the fuse let-through, not only the RMS current",
+  "Creepage and clearance from IEC 60664-1 for the working voltage, pollution degree and material group (desk.ipc)",
+  "No vias in the isolation barrier; slot the board where creepage cannot be met",
+  "Keep gate-drive and control traces away from mains edges"
+ ],
+ "copper_ground_requirements": [
+  "No ground pour across the isolation barrier",
+  "Copper setback from board edge on mains nets per the enclosure's accessible-surface rules"
+ ],
+ "thermal_considerations": [
+  "Bleeder, snubber and dropper resistors dissipate continuously: compute and derate at 60-70 % of rating",
+  "Rectifier and switching devices need copper or heatsinking sized for the full load"
+ ],
+ "emi_emc_considerations": [
+  "X and Y capacitors and common-mode choke placement per the EMI filter topology",
+  "Y-capacitor return to the protective earth or secondary ground as the safety standard permits"
+ ],
+ "protection_requirements": [
+  "Fuse, MOV, inrush limiter, and where required a GDT; creepage and clearance verified for the overvoltage category",
+  "Double or reinforced insulation across the barrier per IEC 62368-1 / 60335-1 as applicable",
+  "Discharge resistor across X capacitors"
+ ],
+ "verification_requirements": [
+  "Every mains and HV net declared in voltage_rails (unknown voltage blocks clearance derivation)",
+  "Creepage/clearance table per net pair recorded in the design profile",
+  "Isolation barrier verified as a keep-out on all layers",
+  "Dielectric strength (hipot) test plan recorded; this is a hardware-validation item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Slot or routed gap for the isolation barrier in the outline",
+  "Solder-mask-defined spacing noted; conformal coating changes the clearance condition (B4) and must be declared"
+ ],
+ "applicable_standards": [
+  "IEC-60664-1",
+  "IEC-62368-1",
+  "IEC-60335-1",
+  "CISPR-32",
+  "IEC-61000-4-5",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Any mains net without a declared voltage",
+  "Logic ground within creepage distance of mains copper",
+  "Mains traces at signal widths"
+ ],
+ "typical_overlays": [
+  "mains_safety_isolation",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "mains": 8,
+   "230v": 8,
+   "230 v": 8,
+   "120v": 6,
+   "110v": 5,
+   "ac input": 6,
+   "ac-dc": 3,
+   "fuse": 2,
+   "mov": 3,
+   "power entry": 6
+  },
+  "features": {
+   "mains": true,
+   "input_voltage_v": [
+    85.0,
+    264.0
+   ]
+  }
+ },
+ "maturity": {
+  "status": "OFFLINE_TESTED",
+  "evidence": "rule set evaluated against synthetic fixtures in tests/test_cross_domain_cases.py",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ISO-016",
+   "ROUTE-PRIO-020",
+   "ROUTE-HV-025",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "THERM-DERATE-052",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "MFG-SLOT-074",
+   "MAINS-DECL-160",
+   "MAINS-FUSE-161",
+   "MAINS-XDIS-162",
+   "MAINS-INS-163"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

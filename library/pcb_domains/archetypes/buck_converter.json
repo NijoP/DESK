@@ -1,0 +1,177 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "buck_converter",
+ "name": "Buck (step-down) converter",
+ "domain": "dcdc_power",
+ "description": "Non-isolated step-down converter: controller or integrated-switch IC, inductor, input/output capacitors and feedback network.",
+ "intended_applications": [
+  "3.3/5 V rails from 12-24 V",
+  "point-of-load regulation",
+  "battery to logic rails"
+ ],
+ "typical_input_requirements": [
+  "Input voltage range",
+  "Output voltage and current",
+  "Ripple and transient targets",
+  "Switching frequency constraints"
+ ],
+ "electrical_characteristics": [
+  "Vin > Vout; continuous input current = Iout*D",
+  "Switch node swings Vin at the switching frequency",
+  "Feedback divider sets Vout"
+ ],
+ "operating_voltage_ranges": {
+  "input": "4.5-60 V by part",
+  "output": "0.8-24 V"
+ },
+ "current_power_characteristics": "0.5-20 A; efficiency 85-95 %",
+ "typical_component_families": [
+  "buck_regulator",
+  "buck_controller",
+  "mosfet",
+  "inductor",
+  "input_capacitor",
+  "output_capacitor",
+  "feedback_resistor",
+  "bootstrap_capacitor",
+  "schottky_diode",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "buck_regulator",
+  "inductor",
+  "input_capacitor",
+  "output_capacitor",
+  "feedback_resistor"
+ ],
+ "optional_component_roles": [
+  "buck_controller",
+  "mosfet",
+  "bootstrap_capacitor",
+  "schottky_diode",
+  "ferrite_bead"
+ ],
+ "critical_electrical_constraints": [
+  "Hot loop (Cin, high-side switch, low-side switch/diode) minimal area",
+  "Inductor saturation current > peak inductor current with margin",
+  "Input capacitor RMS current rating met",
+  "Output and input current declared so widths derive from IPC-2221",
+  "Feedback trace away from the switch node and inductor"
+ ],
+ "stackup_recommendations": [
+  "2 layers with 2 oz copper for converters above ~3 A; 4 layers with inner ground for controllers with sensitive feedback",
+  "Heavy copper (2 oz) when trace width from IPC-2221 exceeds what the board width allows"
+ ],
+ "placement_rules": [
+  "Minimise the hot loop (input capacitor, high-side switch, low-side switch/diode) area: these three parts touch each other",
+  "Inductor adjacent to the switch node pin; switch node copper as small as the current allows",
+  "Output capacitor at the inductor output; feedback divider at the controller FB pin, away from the inductor and switch node",
+  "Gate driver next to the MOSFET gates; bootstrap capacitor next to the driver"
+ ],
+ "routing_rules": [
+  "Switch node: short, wide, single layer; never under the feedback network",
+  "Feedback trace short and shielded by ground, routed away from the inductor",
+  "Power path widths from IPC-2221 for the declared current and temperature rise; polygons for > 3 A",
+  "Kelvin connection to current-sense resistors"
+ ],
+ "copper_ground_requirements": [
+  "Power ground and signal ground joined at one point near the controller",
+  "Copper pour under the inductor only if the inductor datasheet allows (shielded types)",
+  "Thermal vias under MOSFET and diode exposed pads to the opposite-side copper"
+ ],
+ "thermal_considerations": [
+  "Calculate conduction and switching loss per device; junction temperature at max ambient must stay below the datasheet limit with margin",
+  "Copper area per watt from the device datasheet thermal curves; heatsink when the area is not available"
+ ],
+ "emi_emc_considerations": [
+  "Hot-loop area is the first EMI control; snubber footprint on the switch node",
+  "Input pi-filter footprint for conducted emissions when the product is tested to CISPR 32/25",
+  "Spread-spectrum or frequency choice to keep harmonics out of sensitive bands"
+ ],
+ "protection_requirements": [
+  "Input over-voltage and reverse polarity per the application",
+  "Over-current/short-circuit protection by the controller; output over-voltage clamp where the load is sensitive",
+  "Fuse rating against the input current at minimum input voltage"
+ ],
+ "verification_requirements": [
+  "Every rail current declared (unknown current blocks routing)",
+  "Trace width per net from desk.ipc with declared temperature rise",
+  "Voltage drop on the output path within the regulation budget",
+  "Hot-loop area recorded; DRC with clearance from the highest node voltage"
+ ],
+ "manufacturing_constraints": [
+  "2 oz copper option recorded in the manufacturer profile; minimum width/clearance from the fabricator table for the chosen copper weight",
+  "Large pads on magnetics: solder mask defined; thermal relief decision explicit"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B",
+  "IPC-2152",
+  "CISPR-32"
+ ],
+ "unsupported_conditions": [
+  "Vin below the part's minimum at the load",
+  "Ceramic output capacitor only where the control loop needs ESR (part-specific)",
+  "Inductor rated below the peak current"
+ ],
+ "typical_overlays": [
+  "switching_power",
+  "thermal_management",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "buck": 10,
+   "step-down": 8,
+   "step down": 8,
+   "dc-dc": 3,
+   "dcdc": 3,
+   "switching regulator": 3,
+   "smps": 2,
+   "point of load": 4
+  },
+  "features": {
+   "converter": [
+    "buck"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "OFFLINE_TESTED",
+  "evidence": "rule set evaluated against synthetic fixtures in tests/test_cross_domain_cases.py",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "DCDC-ISAT-120",
+   "DCDC-VIN-121"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

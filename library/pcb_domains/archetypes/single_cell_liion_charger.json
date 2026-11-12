@@ -1,0 +1,171 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "single_cell_liion_charger",
+ "name": "Single-cell Li-ion charger",
+ "domain": "battery_bms",
+ "description": "Linear or switching CC/CV charger for one Li-ion/Li-Po cell from USB or a DC input with NTC monitoring and status outputs.",
+ "intended_applications": [
+  "portable devices",
+  "wearables",
+  "small battery products"
+ ],
+ "typical_input_requirements": [
+  "Cell capacity and max charge rate",
+  "Input source (USB 5 V, 9-12 V)",
+  "Thermal budget",
+  "Status indication"
+ ],
+ "electrical_characteristics": [
+  "CC/CV with 4.2 V (or 4.35/4.4 V per chemistry) termination",
+  "Linear charger dissipation (Vin-Vbat)*Ichg",
+  "NTC JEITA profiles"
+ ],
+ "operating_voltage_ranges": {
+  "input": "4.5-6 V (USB) or up to 12 V",
+  "cell": "3.0-4.2 V"
+ },
+ "current_power_characteristics": "0.1-2 A charge",
+ "typical_component_families": [
+  "li_ion_charger",
+  "battery_connector",
+  "ntc_thermistor",
+  "input_capacitor",
+  "output_capacitor",
+  "led_indicator",
+  "usb_connector",
+  "tvs_diode",
+  "battery_protection_ic"
+ ],
+ "required_component_roles": [
+  "li_ion_charger",
+  "battery_connector",
+  "input_capacitor",
+  "output_capacitor"
+ ],
+ "optional_component_roles": [
+  "ntc_thermistor",
+  "led_indicator",
+  "usb_connector",
+  "tvs_diode",
+  "battery_protection_ic",
+  "fuel_gauge"
+ ],
+ "critical_electrical_constraints": [
+  "Charge voltage matches the cell chemistry (never assumed)",
+  "Charger thermal: copper area per datasheet for the dissipation at max Vin and Ichg",
+  "NTC at the cell; cell protection present (charger alone is not protection)"
+ ],
+ "stackup_recommendations": [
+  "2 layers for single-cell boards; 4 layers with a solid ground for multi-cell monitors with precision sensing",
+  "2 oz copper on the charge/discharge path above ~3 A"
+ ],
+ "placement_rules": [
+  "Charger IC thermal pad with via array; input capacitor at the input pin; battery-side capacitor at the BAT pin",
+  "Protection MOSFETs and the current-sense resistor on the cell negative path with a Kelvin sense pair",
+  "NTC thermistor placed to track cell temperature (connector or pack lead), not board heat",
+  "Cell-tap connectors ordered so that mis-insertion is mechanically impossible"
+ ],
+ "routing_rules": [
+  "Charge/discharge path width from IPC-2221 for the peak current",
+  "Kelvin routing of the sense resistor: sense traces from the pad inner edges",
+  "Cell-tap traces with series resistors at the entry for balancing current and ESD",
+  "Keep the thermistor and fuel-gauge sense traces away from switching nodes"
+ ],
+ "copper_ground_requirements": [
+  "Pack negative as a polygon; sense ground star-connected at the sense resistor",
+  "No pour under the fuel gauge's sense pins"
+ ],
+ "thermal_considerations": [
+  "Charger dissipation at maximum input voltage and charge current; linear chargers above 0.5 A need copper area per the datasheet",
+  "Balancing resistors dissipate continuously during balance: derate"
+ ],
+ "emi_emc_considerations": [
+  "Switching chargers follow the DC-DC hot-loop rules"
+ ],
+ "protection_requirements": [
+  "Over-charge, over-discharge, over-current and short-circuit protection by a dedicated protection IC; the charger alone is not protection",
+  "Reverse battery connection protection where the pack is user-connectable",
+  "Thermal protection with a cell-mounted NTC"
+ ],
+ "verification_requirements": [
+  "Charge current and cell chemistry declared; charge voltage matches chemistry (never assumed)",
+  "Trace widths and sense-resistor Kelvin verified",
+  "Protection thresholds recorded with the datasheet source",
+  "Pack safety (IEC 62133-2 / UL 2054) is a certification item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Connector choice with keying; label polarity on silkscreen",
+  "Sense resistor footprint sized for Kelvin pads"
+ ],
+ "applicable_standards": [
+  "IEC-62133-2",
+  "UL-2054",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "4.2 V charger on a LiFePO4 or 4.35 V cell",
+  "Charging without cell protection or thermal monitoring"
+ ],
+ "typical_overlays": [
+  "battery_management",
+  "usb_interface",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "li-ion charger": 10,
+   "lipo charger": 10,
+   "li-po": 5,
+   "single cell": 6,
+   "1s": 4,
+   "charger": 4,
+   "cc/cv": 4,
+   "tp4056": 6,
+   "bq24": 5
+  },
+  "features": {
+   "power_source": [
+    "battery",
+    "usb"
+   ],
+   "cells": [
+    1,
+    1
+   ]
+  }
+ },
+ "maturity": {
+  "status": "OFFLINE_TESTED",
+  "evidence": "rule set evaluated against synthetic fixtures in tests/test_cross_domain_cases.py",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-USB-102",
+   "BAT-CHEM-130",
+   "BAT-PROT-131",
+   "BAT-NTC-132"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

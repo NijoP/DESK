@@ -1,0 +1,174 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "industrial_remote_io",
+ "name": "Industrial remote I/O controller",
+ "domain": "embedded_mcu",
+ "description": "MCU with isolated digital inputs/outputs and a fieldbus (RS-485/CAN/Ethernet) on a 24 V industrial supply.",
+ "intended_applications": [
+  "machine I/O expansion",
+  "building automation",
+  "distributed control"
+ ],
+ "typical_input_requirements": [
+  "Input/output counts and types",
+  "Fieldbus protocol",
+  "Isolation voltage",
+  "24 V supply tolerance"
+ ],
+ "electrical_characteristics": [
+  "24 V nominal, 18-30 V range, reverse and surge protected",
+  "Isolated inputs (IEC 61131-2 Type 1/3)",
+  "Outputs: relays or high-side switches with diagnostics"
+ ],
+ "operating_voltage_ranges": {
+  "field": "24 V (18-30 V)",
+  "logic": "3.3 V/5 V"
+ },
+ "current_power_characteristics": "Logic 100-300 mA; outputs per channel rating (0.5-2 A typical)",
+ "typical_component_families": [
+  "mcu",
+  "buck_regulator",
+  "digital_isolator",
+  "optocoupler",
+  "rs485_transceiver",
+  "can_transceiver",
+  "high_side_switch",
+  "relay",
+  "tvs_diode",
+  "terminal_block",
+  "ldo_regulator"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "buck_regulator",
+  "digital_isolator",
+  "tvs_diode",
+  "terminal_block"
+ ],
+ "optional_component_roles": [
+  "rs485_transceiver",
+  "can_transceiver",
+  "high_side_switch",
+  "relay",
+  "optocoupler",
+  "ethernet_phy"
+ ],
+ "critical_electrical_constraints": [
+  "Creepage/clearance across the isolation barrier for the declared isolation voltage",
+  "Surge/burst immunity components at every field terminal",
+  "24 V input reverse-polarity and TVS"
+ ],
+ "stackup_recommendations": [
+  "2 layers for simple boards; 4 layers (SIG-GND-PWR-SIG) once a radio module, >48 MHz buses or more than ~60 nets are present",
+  "Solid ground plane directly under the MCU and every clock or data bus"
+ ],
+ "placement_rules": [
+  "Decoupling capacitor at every MCU supply pin within 2 mm, smallest value closest to the pin",
+  "Crystal and load capacitors within 5 mm of the oscillator pins, no signals routed underneath",
+  "Programming/debug header on an accessible edge; reset and boot buttons reachable in the enclosure",
+  "Regulator input and output capacitors adjacent to the regulator pins"
+ ],
+ "routing_rules": [
+  "Route clocks, SPI/QSPI and USB first, then I2C/UART, then GPIO",
+  "Keep crystal traces short and surrounded by ground",
+  "USB D+/D- as a 90 ohm differential pair when present (see usb_interface overlay)",
+  "No analog or crystal nets across plane splits"
+ ],
+ "copper_ground_requirements": [
+  "Continuous ground plane; stitch top-side ground pours to the plane with vias every ~5 mm near fast signals",
+  "Thermal relief on hand-soldered parts only; solid connection on regulator and module ground pads where reflowed"
+ ],
+ "thermal_considerations": [
+  "Linear regulators: check dissipation (Vin-Vout)*I against package thermal resistance at max ambient",
+  "Radio modules and MCUs above 200 mW need copper area under the exposed pad"
+ ],
+ "emi_emc_considerations": [
+  "Decoupling and short return paths are the EMI strategy; add series termination on long clock lines",
+  "Keep switching regulators away from the antenna and the analog front end"
+ ],
+ "protection_requirements": [
+  "ESD protection on every connector signal that leaves the enclosure (IEC 61000-4-2 level per product spec)",
+  "Reverse-polarity or input over-voltage protection on external DC inputs"
+ ],
+ "verification_requirements": [
+  "ERC: every power pin decoupled, every strap pin defined at reset",
+  "Netlist read-back of every block (tools/verify.py)",
+  "Pin map from tools/pins.py, never from memory",
+  "DRC with the fabricator rule set; connectivity of every net"
+ ],
+ "manufacturing_constraints": [
+  "Standard FR-4, 1 oz copper; JLCPCB basic parts preferred for passives",
+  "Fiducials and a test-point for each rail when assembled by machine"
+ ],
+ "applicable_standards": [
+  "IEC-61131-2",
+  "IEC-60664-1",
+  "IEC-61000-4-5",
+  "IEC-61000-4-4",
+  "TIA-485-A",
+  "ISO-11898-2",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Logic ground and field ground merged",
+  "Unprotected field inputs"
+ ],
+ "typical_overlays": [
+  "industrial_interfaces",
+  "galvanic_isolation",
+  "harsh_environment"
+ ],
+ "classification": {
+  "keywords": {
+   "remote i/o": 6,
+   "remote io": 6,
+   "industrial": 3,
+   "plc": 2,
+   "24v": 3,
+   "isolated input": 4,
+   "digital output": 2,
+   "modbus": 2
+  },
+  "features": {
+   "input_voltage_v": [
+    18.0,
+    36.0
+   ],
+   "protocols_any": [
+    "rs485",
+    "can",
+    "ethernet"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ISO-016",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-HV-025",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

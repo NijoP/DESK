@@ -1,0 +1,158 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "usb_pd_sink_board",
+ "name": "USB-PD sink/source power board",
+ "domain": "interfaces_comms",
+ "description": "USB Power Delivery negotiation (sink or source) with a PD controller, VBUS switches rated for 20 V and the downstream power stage.",
+ "intended_applications": [
+  "PD-powered devices",
+  "chargers",
+  "power banks"
+ ],
+ "typical_input_requirements": [
+  "Role and power profile",
+  "Downstream rails",
+  "Protection",
+  "Firmware/hard-coded PDOs"
+ ],
+ "electrical_characteristics": [
+  "PD controller on CC lines",
+  "VBUS switch rated 20 V/5 A with OVP",
+  "Source: boost/buck-boost to deliver PDOs"
+ ],
+ "operating_voltage_ranges": {
+  "vbus": "5-20 V",
+  "logic": "3.3 V"
+ },
+ "current_power_characteristics": "up to 5 A (100 W) or 240 W EPR",
+ "typical_component_families": [
+  "usb_c_connector",
+  "usb_pd_controller",
+  "load_switch",
+  "tvs_diode",
+  "buck_boost_regulator",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "usb_c_connector",
+  "usb_pd_controller",
+  "load_switch",
+  "tvs_diode"
+ ],
+ "optional_component_roles": [
+  "buck_boost_regulator",
+  "esd_protection",
+  "decoupling_capacitor"
+ ],
+ "critical_electrical_constraints": [
+  "Every VBUS component rated for the maximum negotiated voltage",
+  "VBUS trace width for the maximum current",
+  "OVP on the sink input"
+ ],
+ "stackup_recommendations": [
+  "2 layers for low-speed buses; 4 layers when USB or Ethernet differential pairs are present"
+ ],
+ "placement_rules": [
+  "Transceiver as close to its connector as the protection parts allow; protection between connector and transceiver",
+  "Termination resistors at the bus end; bias resistors at the transceiver",
+  "Isolated interfaces: isolator straddles the barrier, isolated supply next to it"
+ ],
+ "routing_rules": [
+  "Differential pairs (USB 90 ohm, Ethernet 100 ohm, CAN/RS-485 120 ohm) per the standard; matched lengths",
+  "Shield/chassis ground ring at the connector, joined to logic ground at one point or via a capacitor per the product grounding plan",
+  "Short stubs on multidrop buses; no vias in the differential pair where avoidable"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under transceivers; keep-out under the isolation barrier"
+ ],
+ "thermal_considerations": [
+  "Bus-powered boards: regulator dissipation at the maximum port voltage"
+ ],
+ "emi_emc_considerations": [
+  "Common-mode chokes on USB/Ethernet where the product is EMC tested; ferrite on shield ground"
+ ],
+ "protection_requirements": [
+  "TVS on every bus line rated for the bus voltage and the surge/ESD level required",
+  "Fuse or current limiter on supplied power (VBUS, PoE, bus power)"
+ ],
+ "verification_requirements": [
+  "Differential pair geometry recorded against the fabricator stackup",
+  "Termination and bias values from the transceiver datasheet",
+  "ESD placement and clearance verified",
+  "Interface compliance (eye diagram, bit-error) is a hardware test"
+ ],
+ "manufacturing_constraints": [
+  "Connector footprints from the manufacturer drawing; through-hole connectors for mechanical strain"
+ ],
+ "applicable_standards": [
+  "USB-PD-3.1",
+  "USB-Type-C-2.2",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "VBUS parts rated below 20 V"
+ ],
+ "typical_overlays": [
+  "usb_interface",
+  "switching_power",
+  "high_current"
+ ],
+ "classification": {
+  "keywords": {
+   "usb pd": 10,
+   "usb-pd": 10,
+   "power delivery": 10,
+   "pd sink": 10,
+   "pd source": 10,
+   "pdo": 6,
+   "20v": 3
+  },
+  "features": {
+   "protocols_any": [
+    "usb"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-SW-023",
+   "ROUTE-POLY-026",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "EMI-LOOP-060",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-USB-102",
+   "DCDC-VIN-121",
+   "USBC-CC-150",
+   "USBC-VBUS-151",
+   "PWR-ROUTE-170"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

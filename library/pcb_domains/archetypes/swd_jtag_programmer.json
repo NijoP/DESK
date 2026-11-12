@@ -1,0 +1,137 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "swd_jtag_programmer",
+ "name": "SWD/JTAG programmer-debugger",
+ "domain": "test_debug",
+ "description": "USB-connected debug probe with level-shifted SWD/JTAG, target power with current limit and target-voltage sensing.",
+ "intended_applications": [
+  "firmware development",
+  "production programming"
+ ],
+ "typical_input_requirements": [
+  "Target voltage range",
+  "Interfaces (SWD/JTAG/UART)",
+  "Target power",
+  "Speed"
+ ],
+ "electrical_characteristics": [
+  "Level shifters referenced to the target VREF",
+  "Series resistors and ESD on target pins",
+  "USB full/high speed to the host"
+ ],
+ "operating_voltage_ranges": {
+  "usb": "5 V",
+  "target": "1.2-5.5 V"
+ },
+ "current_power_characteristics": "< 500 mA including target power",
+ "typical_component_families": [
+  "mcu",
+  "level_shifter",
+  "usb_connector",
+  "esd_protection",
+  "ldo_regulator",
+  "load_switch",
+  "debug_header",
+  "precision_resistor"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "level_shifter",
+  "usb_connector",
+  "debug_header",
+  "esd_protection"
+ ],
+ "optional_component_roles": [
+  "ldo_regulator",
+  "load_switch",
+  "precision_resistor"
+ ],
+ "critical_electrical_constraints": [
+  "Target VREF sense before driving any pin",
+  "Current-limited target power",
+  "Short, series-terminated target signals"
+ ],
+ "stackup_recommendations": [
+  "2 layers; 4 layers for fast analysers"
+ ],
+ "placement_rules": [
+  "Target connector with level shifters and protection next to it",
+  "USB interface at the opposite edge"
+ ],
+ "routing_rules": [
+  "Target signals short with series resistors; ground pins adjacent to signals on the target connector",
+  "Pogo-pin fixture nets routed to the pin field with matched lengths for clocks"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under the target interface"
+ ],
+ "thermal_considerations": [
+  "Bench supplies: pass element heatsinking at full load"
+ ],
+ "emi_emc_considerations": [
+  "Shielded USB; ground return on every ribbon cable pair"
+ ],
+ "protection_requirements": [
+  "Series resistors and TVS on every target pin; current-limited target power"
+ ],
+ "verification_requirements": [
+  "Target voltage range declared; level shifter direction and limits recorded",
+  "Netlist read-back; DRC"
+ ],
+ "manufacturing_constraints": [
+  "Pogo pins and keyed connectors; gold finish on contact pads"
+ ],
+ "applicable_standards": [
+  "USB-2.0",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Driving target pins at 3.3 V without sensing the target voltage"
+ ],
+ "typical_overlays": [
+  "usb_interface"
+ ],
+ "classification": {
+  "keywords": {
+   "debugger": 10,
+   "programmer": 8,
+   "swd": 10,
+   "jtag": 10,
+   "debug probe": 10,
+   "st-link": 6,
+   "j-link": 6,
+   "cmsis-dap": 8
+  },
+  "features": {
+   "protocols_any": [
+    "usb"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-USB-102"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

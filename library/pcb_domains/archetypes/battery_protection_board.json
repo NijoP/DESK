@@ -1,0 +1,146 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "battery_protection_board",
+ "name": "Battery protection board",
+ "domain": "battery_bms",
+ "description": "Dedicated protection (PCM) for 1-4 cells: over-charge, over-discharge, over-current and short-circuit with MOSFET switches.",
+ "intended_applications": [
+  "cell packs",
+  "power banks",
+  "portable products"
+ ],
+ "typical_input_requirements": [
+  "Cell count and chemistry",
+  "Cut-off thresholds",
+  "Discharge current",
+  "Form factor"
+ ],
+ "electrical_characteristics": [
+  "Protection IC thresholds per chemistry",
+  "Back-to-back MOSFETs in the negative path",
+  "Sense resistor or Rds(on) sensing"
+ ],
+ "operating_voltage_ranges": {
+  "cell": "2.5-4.3 V each"
+ },
+ "current_power_characteristics": "1-30 A",
+ "typical_component_families": [
+  "battery_protection_ic",
+  "mosfet",
+  "current_sense_resistor",
+  "battery_connector",
+  "ntc_thermistor"
+ ],
+ "required_component_roles": [
+  "battery_protection_ic",
+  "mosfet",
+  "battery_connector"
+ ],
+ "optional_component_roles": [
+  "current_sense_resistor",
+  "ntc_thermistor"
+ ],
+ "critical_electrical_constraints": [
+  "Thresholds match the cell datasheet",
+  "Discharge path copper and FET rating for the peak current",
+  "Delay capacitors per the protection IC datasheet"
+ ],
+ "stackup_recommendations": [
+  "2 layers for single-cell boards; 4 layers with a solid ground for multi-cell monitors with precision sensing",
+  "2 oz copper on the charge/discharge path above ~3 A"
+ ],
+ "placement_rules": [
+  "Charger IC thermal pad with via array; input capacitor at the input pin; battery-side capacitor at the BAT pin",
+  "Protection MOSFETs and the current-sense resistor on the cell negative path with a Kelvin sense pair",
+  "NTC thermistor placed to track cell temperature (connector or pack lead), not board heat",
+  "Cell-tap connectors ordered so that mis-insertion is mechanically impossible"
+ ],
+ "routing_rules": [
+  "Charge/discharge path width from IPC-2221 for the peak current",
+  "Kelvin routing of the sense resistor: sense traces from the pad inner edges",
+  "Cell-tap traces with series resistors at the entry for balancing current and ESD",
+  "Keep the thermistor and fuel-gauge sense traces away from switching nodes"
+ ],
+ "copper_ground_requirements": [
+  "Pack negative as a polygon; sense ground star-connected at the sense resistor",
+  "No pour under the fuel gauge's sense pins"
+ ],
+ "thermal_considerations": [
+  "Charger dissipation at maximum input voltage and charge current; linear chargers above 0.5 A need copper area per the datasheet",
+  "Balancing resistors dissipate continuously during balance: derate"
+ ],
+ "emi_emc_considerations": [
+  "Switching chargers follow the DC-DC hot-loop rules"
+ ],
+ "protection_requirements": [
+  "Over-charge, over-discharge, over-current and short-circuit protection by a dedicated protection IC; the charger alone is not protection",
+  "Reverse battery connection protection where the pack is user-connectable",
+  "Thermal protection with a cell-mounted NTC"
+ ],
+ "verification_requirements": [
+  "Charge current and cell chemistry declared; charge voltage matches chemistry (never assumed)",
+  "Trace widths and sense-resistor Kelvin verified",
+  "Protection thresholds recorded with the datasheet source",
+  "Pack safety (IEC 62133-2 / UL 2054) is a certification item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Connector choice with keying; label polarity on silkscreen",
+  "Sense resistor footprint sized for Kelvin pads"
+ ],
+ "applicable_standards": [
+  "IEC-62133-2",
+  "UL-2054",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Protection thresholds assumed rather than taken from the cell datasheet"
+ ],
+ "typical_overlays": [
+  "battery_management",
+  "high_current"
+ ],
+ "classification": {
+  "keywords": {
+   "protection board": 8,
+   "pcm": 6,
+   "battery protection": 10,
+   "over-discharge": 6,
+   "overcharge": 6,
+   "dw01": 6
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-SENSE-018",
+   "ROUTE-PRIO-020",
+   "ROUTE-KELVIN-024",
+   "ROUTE-POLY-026",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "BAT-CHEM-130",
+   "BAT-PROT-131",
+   "BAT-NTC-132",
+   "PWR-ROUTE-170"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

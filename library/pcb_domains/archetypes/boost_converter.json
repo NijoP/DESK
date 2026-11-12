@@ -1,0 +1,170 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "boost_converter",
+ "name": "Boost (step-up) converter",
+ "domain": "dcdc_power",
+ "description": "Non-isolated step-up converter: inductor at the input, switch to ground, rectifier to the output, feedback network.",
+ "intended_applications": [
+  "5-12 V from a single Li-ion",
+  "LED/backlight supplies",
+  "USB-PD source rails"
+ ],
+ "typical_input_requirements": [
+  "Input range (minimum at end of battery)",
+  "Output voltage and current",
+  "Start-up load",
+  "Switching frequency"
+ ],
+ "electrical_characteristics": [
+  "Vout > Vin; input current = Iout/(1-D)/eta is higher than the output current",
+  "Output not isolated from the input at shutdown (diode path) unless a disconnect switch is used",
+  "Right-half-plane zero limits loop bandwidth"
+ ],
+ "operating_voltage_ranges": {
+  "input": "2.5-24 V",
+  "output": "5-60 V"
+ },
+ "current_power_characteristics": "Input current up to several A; 0.1-5 A output",
+ "typical_component_families": [
+  "boost_regulator",
+  "inductor",
+  "mosfet",
+  "schottky_diode",
+  "input_capacitor",
+  "output_capacitor",
+  "feedback_resistor",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "boost_regulator",
+  "inductor",
+  "output_capacitor",
+  "input_capacitor",
+  "feedback_resistor"
+ ],
+ "optional_component_roles": [
+  "mosfet",
+  "schottky_diode",
+  "load_switch"
+ ],
+ "critical_electrical_constraints": [
+  "Hot loop is switch, diode and Cout: tight",
+  "Input current (not output current) sizes the inductor path and input copper",
+  "Output over-voltage protection when the load can disconnect",
+  "Input disconnect when the application must not leak Vin to the output at shutdown"
+ ],
+ "stackup_recommendations": [
+  "2 layers with 2 oz copper for converters above ~3 A; 4 layers with inner ground for controllers with sensitive feedback",
+  "Heavy copper (2 oz) when trace width from IPC-2221 exceeds what the board width allows"
+ ],
+ "placement_rules": [
+  "Minimise the hot loop (input capacitor, high-side switch, low-side switch/diode) area: these three parts touch each other",
+  "Inductor adjacent to the switch node pin; switch node copper as small as the current allows",
+  "Output capacitor at the inductor output; feedback divider at the controller FB pin, away from the inductor and switch node",
+  "Gate driver next to the MOSFET gates; bootstrap capacitor next to the driver"
+ ],
+ "routing_rules": [
+  "Switch node: short, wide, single layer; never under the feedback network",
+  "Feedback trace short and shielded by ground, routed away from the inductor",
+  "Power path widths from IPC-2221 for the declared current and temperature rise; polygons for > 3 A",
+  "Kelvin connection to current-sense resistors"
+ ],
+ "copper_ground_requirements": [
+  "Power ground and signal ground joined at one point near the controller",
+  "Copper pour under the inductor only if the inductor datasheet allows (shielded types)",
+  "Thermal vias under MOSFET and diode exposed pads to the opposite-side copper"
+ ],
+ "thermal_considerations": [
+  "Calculate conduction and switching loss per device; junction temperature at max ambient must stay below the datasheet limit with margin",
+  "Copper area per watt from the device datasheet thermal curves; heatsink when the area is not available"
+ ],
+ "emi_emc_considerations": [
+  "Hot-loop area is the first EMI control; snubber footprint on the switch node",
+  "Input pi-filter footprint for conducted emissions when the product is tested to CISPR 32/25",
+  "Spread-spectrum or frequency choice to keep harmonics out of sensitive bands"
+ ],
+ "protection_requirements": [
+  "Input over-voltage and reverse polarity per the application",
+  "Over-current/short-circuit protection by the controller; output over-voltage clamp where the load is sensitive",
+  "Fuse rating against the input current at minimum input voltage"
+ ],
+ "verification_requirements": [
+  "Every rail current declared (unknown current blocks routing)",
+  "Trace width per net from desk.ipc with declared temperature rise",
+  "Voltage drop on the output path within the regulation budget",
+  "Hot-loop area recorded; DRC with clearance from the highest node voltage"
+ ],
+ "manufacturing_constraints": [
+  "2 oz copper option recorded in the manufacturer profile; minimum width/clearance from the fabricator table for the chosen copper weight",
+  "Large pads on magnetics: solder mask defined; thermal relief decision explicit"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B",
+  "IPC-2152",
+  "CISPR-32"
+ ],
+ "unsupported_conditions": [
+  "Output short-circuit without a disconnect switch (boost cannot limit it)",
+  "Inductor rated for output current instead of input current"
+ ],
+ "typical_overlays": [
+  "switching_power",
+  "thermal_management",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "boost": 10,
+   "step-up": 8,
+   "step up": 8,
+   "dc-dc": 3,
+   "dcdc": 3,
+   "voltage booster": 5
+  },
+  "features": {
+   "converter": [
+    "boost"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "OFFLINE_TESTED",
+  "evidence": "rule set evaluated against synthetic fixtures in tests/test_cross_domain_cases.py",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "DCDC-ISAT-120",
+   "DCDC-VIN-121",
+   "BOOST-SC-122"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

@@ -1,0 +1,171 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "non_isolated_ac_dc",
+ "name": "Non-isolated AC-DC (capacitive dropper / buck)",
+ "domain": "ac_mains_hv",
+ "description": "Low-power mains supply without isolation: capacitive dropper or non-isolated buck for a few mA to ~100 mA where the circuit is fully enclosed.",
+ "intended_applications": [
+  "LED night lights",
+  "mains-powered relays and timers",
+  "appliance control with no user-accessible parts"
+ ],
+ "typical_input_requirements": [
+  "Load current",
+  "Enclosure (no accessible conductive parts)",
+  "Mains range",
+  "Standby power"
+ ],
+ "electrical_characteristics": [
+  "Entire circuit is at mains potential",
+  "Dropper: X2 capacitor sets the current; series resistor limits inrush; zener/regulator clamps",
+  "Non-isolated buck IC with a high-voltage switch"
+ ],
+ "operating_voltage_ranges": {
+  "mains": "85-264 V AC",
+  "output": "3.3-24 V referenced to mains"
+ },
+ "current_power_characteristics": "5-150 mA",
+ "typical_component_families": [
+  "fuse",
+  "x_capacitor",
+  "discharge_resistor",
+  "power_resistor",
+  "zener_diode",
+  "bridge_rectifier",
+  "bulk_capacitor",
+  "mov_varistor",
+  "hv_buck_regulator",
+  "inductor",
+  "ldo_regulator"
+ ],
+ "required_component_roles": [
+  "fuse",
+  "bridge_rectifier",
+  "bulk_capacitor",
+  "zener_diode"
+ ],
+ "optional_component_roles": [
+  "x_capacitor",
+  "discharge_resistor",
+  "power_resistor",
+  "mov_varistor",
+  "hv_buck_regulator",
+  "inductor",
+  "ldo_regulator"
+ ],
+ "critical_electrical_constraints": [
+  "Every net is a mains net for creepage/clearance purposes",
+  "Series resistor dissipation computed and derated",
+  "Discharge resistor across the X capacitor",
+  "No external connections (signals or ports) without isolation"
+ ],
+ "stackup_recommendations": [
+  "Single or double sided FR-4 with the isolation barrier as a physical slot or an unbroken creepage distance",
+  "Thicker board (1.6 mm) for mechanical and dielectric robustness"
+ ],
+ "placement_rules": [
+  "Primary and secondary sides physically separated by the isolation barrier; only isolating components (transformer, optocoupler, Y-capacitor) bridge it",
+  "Fuse first in the path after the mains input connector; MOV/TVS across the input after the fuse",
+  "No low-voltage logic within the creepage distance of mains nets",
+  "Mains connectors and relays at a board edge with the enclosure clearance in mind"
+ ],
+ "routing_rules": [
+  "Mains traces sized for the inrush and the fuse let-through, not only the RMS current",
+  "Creepage and clearance from IEC 60664-1 for the working voltage, pollution degree and material group (desk.ipc)",
+  "No vias in the isolation barrier; slot the board where creepage cannot be met",
+  "Keep gate-drive and control traces away from mains edges"
+ ],
+ "copper_ground_requirements": [
+  "No ground pour across the isolation barrier",
+  "Copper setback from board edge on mains nets per the enclosure's accessible-surface rules"
+ ],
+ "thermal_considerations": [
+  "Bleeder, snubber and dropper resistors dissipate continuously: compute and derate at 60-70 % of rating",
+  "Rectifier and switching devices need copper or heatsinking sized for the full load"
+ ],
+ "emi_emc_considerations": [
+  "X and Y capacitors and common-mode choke placement per the EMI filter topology",
+  "Y-capacitor return to the protective earth or secondary ground as the safety standard permits"
+ ],
+ "protection_requirements": [
+  "Fuse, MOV, inrush limiter, and where required a GDT; creepage and clearance verified for the overvoltage category",
+  "Double or reinforced insulation across the barrier per IEC 62368-1 / 60335-1 as applicable",
+  "Discharge resistor across X capacitors"
+ ],
+ "verification_requirements": [
+  "Every mains and HV net declared in voltage_rails (unknown voltage blocks clearance derivation)",
+  "Creepage/clearance table per net pair recorded in the design profile",
+  "Isolation barrier verified as a keep-out on all layers",
+  "Dielectric strength (hipot) test plan recorded; this is a hardware-validation item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Slot or routed gap for the isolation barrier in the outline",
+  "Solder-mask-defined spacing noted; conformal coating changes the clearance condition (B4) and must be declared"
+ ],
+ "applicable_standards": [
+  "IEC-60664-1",
+  "IEC-62368-1",
+  "IEC-60335-1",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Any user-accessible connector or metal part",
+  "Dropper supplying more than ~100 mA (dissipation)"
+ ],
+ "typical_overlays": [
+  "mains_safety_isolation",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "capacitive dropper": 10,
+   "dropper": 8,
+   "non-isolated": 8,
+   "transformerless": 8,
+   "mains led": 5,
+   "x2 capacitor": 5
+  },
+  "features": {
+   "mains": true,
+   "isolation": false
+  }
+ },
+ "maturity": {
+  "status": "OFFLINE_TESTED",
+  "evidence": "rule set evaluated against synthetic fixtures in tests/test_cross_domain_cases.py",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ISO-016",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-HV-025",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "THERM-DERATE-052",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "MFG-SLOT-074",
+   "MAINS-DECL-160",
+   "MAINS-FUSE-161",
+   "MAINS-XDIS-162",
+   "MAINS-INS-163"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

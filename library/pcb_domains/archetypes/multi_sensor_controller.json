@@ -1,0 +1,151 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "multi_sensor_controller",
+ "name": "Multi-sensor controller",
+ "domain": "embedded_mcu",
+ "description": "MCU aggregating many I2C/SPI/analog sensors with bus multiplexing, per-sensor supplies and a host or radio uplink.",
+ "intended_applications": [
+  "environmental stations",
+  "lab instruments",
+  "condition monitoring"
+ ],
+ "typical_input_requirements": [
+  "Sensor list with interfaces and rails",
+  "Sample rates",
+  "Host interface",
+  "Cable lengths to remote sensors"
+ ],
+ "electrical_characteristics": [
+  "Multiple I2C addresses or a multiplexer",
+  "Analog sensors need a clean reference and filtered rails",
+  "Remote sensors over cable need buffered/ESD-protected lines"
+ ],
+ "operating_voltage_ranges": {
+  "input": "5-12 V",
+  "logic": "3.3 V",
+  "analog": "3.3 V/5 V filtered"
+ },
+ "current_power_characteristics": "50-200 mA",
+ "typical_component_families": [
+  "mcu",
+  "i2c_multiplexer",
+  "ldo_regulator",
+  "buck_regulator",
+  "environmental_sensor",
+  "imu",
+  "adc",
+  "voltage_reference",
+  "esd_protection",
+  "terminal_block",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "mcu",
+  "ldo_regulator",
+  "environmental_sensor",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "i2c_multiplexer",
+  "buck_regulator",
+  "imu",
+  "adc",
+  "voltage_reference",
+  "esd_protection",
+  "terminal_block"
+ ],
+ "critical_electrical_constraints": [
+  "I2C pull-up value computed for the total bus capacitance",
+  "Analog sensor rail separated from the digital rail",
+  "Address conflicts resolved before layout"
+ ],
+ "stackup_recommendations": [
+  "2 layers for simple boards; 4 layers (SIG-GND-PWR-SIG) once a radio module, >48 MHz buses or more than ~60 nets are present",
+  "Solid ground plane directly under the MCU and every clock or data bus"
+ ],
+ "placement_rules": [
+  "Decoupling capacitor at every MCU supply pin within 2 mm, smallest value closest to the pin",
+  "Crystal and load capacitors within 5 mm of the oscillator pins, no signals routed underneath",
+  "Programming/debug header on an accessible edge; reset and boot buttons reachable in the enclosure",
+  "Regulator input and output capacitors adjacent to the regulator pins"
+ ],
+ "routing_rules": [
+  "Route clocks, SPI/QSPI and USB first, then I2C/UART, then GPIO",
+  "Keep crystal traces short and surrounded by ground",
+  "USB D+/D- as a 90 ohm differential pair when present (see usb_interface overlay)",
+  "No analog or crystal nets across plane splits"
+ ],
+ "copper_ground_requirements": [
+  "Continuous ground plane; stitch top-side ground pours to the plane with vias every ~5 mm near fast signals",
+  "Thermal relief on hand-soldered parts only; solid connection on regulator and module ground pads where reflowed"
+ ],
+ "thermal_considerations": [
+  "Linear regulators: check dissipation (Vin-Vout)*I against package thermal resistance at max ambient",
+  "Radio modules and MCUs above 200 mW need copper area under the exposed pad"
+ ],
+ "emi_emc_considerations": [
+  "Decoupling and short return paths are the EMI strategy; add series termination on long clock lines",
+  "Keep switching regulators away from the antenna and the analog front end"
+ ],
+ "protection_requirements": [
+  "ESD protection on every connector signal that leaves the enclosure (IEC 61000-4-2 level per product spec)",
+  "Reverse-polarity or input over-voltage protection on external DC inputs"
+ ],
+ "verification_requirements": [
+  "ERC: every power pin decoupled, every strap pin defined at reset",
+  "Netlist read-back of every block (tools/verify.py)",
+  "Pin map from tools/pins.py, never from memory",
+  "DRC with the fabricator rule set; connectivity of every net"
+ ],
+ "manufacturing_constraints": [
+  "Standard FR-4, 1 oz copper; JLCPCB basic parts preferred for passives",
+  "Fiducials and a test-point for each rail when assembled by machine"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "I2C over long unbuffered cables",
+  "Shared noisy rail for analog sensors"
+ ],
+ "typical_overlays": [
+  "precision_analog"
+ ],
+ "classification": {
+  "keywords": {
+   "multi-sensor": 6,
+   "multiple sensors": 6,
+   "sensor hub": 5,
+   "sensors": 2,
+   "i2c": 2,
+   "environmental station": 4
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-THERM-017",
+   "ROUTE-PRIO-020",
+   "ROUTE-GUARD-030",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

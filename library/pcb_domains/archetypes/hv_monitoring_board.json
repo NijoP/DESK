@@ -1,0 +1,166 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "hv_monitoring_board",
+ "name": "High-voltage monitoring board",
+ "domain": "ac_mains_hv",
+ "description": "Isolated measurement of mains or HV bus voltage and current (divider + isolated amplifier/ADC, current transformer or shunt) for metering and protection.",
+ "intended_applications": [
+  "energy meters",
+  "HV bus monitors",
+  "insulation monitors"
+ ],
+ "typical_input_requirements": [
+  "Measured voltage range",
+  "Current range and method",
+  "Isolation and accuracy",
+  "Output interface"
+ ],
+ "electrical_characteristics": [
+  "High-value divider strings rated for the full voltage",
+  "Isolated amplifier or isolated ADC across the barrier",
+  "CT burden resistor and protection"
+ ],
+ "operating_voltage_ranges": {
+  "measured": "up to 1000 V",
+  "logic": "3.3/5 V isolated"
+ },
+ "current_power_characteristics": "< 1 W",
+ "typical_component_families": [
+  "voltage_sense_divider",
+  "isolated_amplifier",
+  "isolated_adc",
+  "current_transformer",
+  "current_sense_resistor",
+  "digital_isolator",
+  "isolated_dc_dc_module",
+  "voltage_reference",
+  "mcu",
+  "tvs_diode"
+ ],
+ "required_component_roles": [
+  "voltage_sense_divider",
+  "isolated_amplifier",
+  "digital_isolator",
+  "mcu"
+ ],
+ "optional_component_roles": [
+  "isolated_adc",
+  "current_transformer",
+  "current_sense_resistor",
+  "isolated_dc_dc_module",
+  "voltage_reference",
+  "tvs_diode"
+ ],
+ "critical_electrical_constraints": [
+  "Divider resistors in series so each stays within its voltage rating; creepage along the string",
+  "Barrier creepage for the measured voltage with the isolator's rating",
+  "CT secondary never open-circuited (burden always connected)"
+ ],
+ "stackup_recommendations": [
+  "Single or double sided FR-4 with the isolation barrier as a physical slot or an unbroken creepage distance",
+  "Thicker board (1.6 mm) for mechanical and dielectric robustness"
+ ],
+ "placement_rules": [
+  "Primary and secondary sides physically separated by the isolation barrier; only isolating components (transformer, optocoupler, Y-capacitor) bridge it",
+  "Fuse first in the path after the mains input connector; MOV/TVS across the input after the fuse",
+  "No low-voltage logic within the creepage distance of mains nets",
+  "Mains connectors and relays at a board edge with the enclosure clearance in mind"
+ ],
+ "routing_rules": [
+  "Mains traces sized for the inrush and the fuse let-through, not only the RMS current",
+  "Creepage and clearance from IEC 60664-1 for the working voltage, pollution degree and material group (desk.ipc)",
+  "No vias in the isolation barrier; slot the board where creepage cannot be met",
+  "Keep gate-drive and control traces away from mains edges"
+ ],
+ "copper_ground_requirements": [
+  "No ground pour across the isolation barrier",
+  "Copper setback from board edge on mains nets per the enclosure's accessible-surface rules"
+ ],
+ "thermal_considerations": [
+  "Bleeder, snubber and dropper resistors dissipate continuously: compute and derate at 60-70 % of rating",
+  "Rectifier and switching devices need copper or heatsinking sized for the full load"
+ ],
+ "emi_emc_considerations": [
+  "X and Y capacitors and common-mode choke placement per the EMI filter topology",
+  "Y-capacitor return to the protective earth or secondary ground as the safety standard permits"
+ ],
+ "protection_requirements": [
+  "Fuse, MOV, inrush limiter, and where required a GDT; creepage and clearance verified for the overvoltage category",
+  "Double or reinforced insulation across the barrier per IEC 62368-1 / 60335-1 as applicable",
+  "Discharge resistor across X capacitors"
+ ],
+ "verification_requirements": [
+  "Every mains and HV net declared in voltage_rails (unknown voltage blocks clearance derivation)",
+  "Creepage/clearance table per net pair recorded in the design profile",
+  "Isolation barrier verified as a keep-out on all layers",
+  "Dielectric strength (hipot) test plan recorded; this is a hardware-validation item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Slot or routed gap for the isolation barrier in the outline",
+  "Solder-mask-defined spacing noted; conformal coating changes the clearance condition (B4) and must be declared"
+ ],
+ "applicable_standards": [
+  "IEC-60664-1",
+  "IEC-61010-1",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Divider across the full voltage with one resistor",
+  "Measurement ground tied to logic ground without isolation"
+ ],
+ "typical_overlays": [
+  "mains_safety_isolation",
+  "galvanic_isolation",
+  "precision_analog"
+ ],
+ "classification": {
+  "keywords": {
+   "energy meter": 8,
+   "metering": 6,
+   "high voltage monitoring": 10,
+   "hv monitor": 8,
+   "isolated measurement": 8,
+   "voltage monitor": 4
+  },
+  "features": {
+   "isolation": true
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ISO-016",
+   "PLACE-THERM-017",
+   "PLACE-SENSE-018",
+   "ROUTE-PRIO-020",
+   "ROUTE-KELVIN-024",
+   "ROUTE-HV-025",
+   "ROUTE-GUARD-030",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "MFG-SLOT-074",
+   "MAINS-DECL-160",
+   "MAINS-FUSE-161",
+   "MAINS-INS-163"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

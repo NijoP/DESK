@@ -1,0 +1,176 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "solar_battery_controller",
+ "name": "Solar battery charge controller",
+ "domain": "battery_bms",
+ "description": "MPPT or PWM charger from a PV panel into a battery with load output, input protection and telemetry.",
+ "intended_applications": [
+  "off-grid sensors",
+  "solar lighting",
+  "small PV systems"
+ ],
+ "typical_input_requirements": [
+  "Panel Voc/Isc/Vmp",
+  "Battery chemistry and capacity",
+  "Load",
+  "MPPT or PWM"
+ ],
+ "electrical_characteristics": [
+  "Panel open-circuit voltage at cold temperature sets the input rating",
+  "MPPT with a buck/boost stage and current sensing",
+  "Reverse current blocking at night"
+ ],
+ "operating_voltage_ranges": {
+  "pv_in": "6-100 V",
+  "battery": "3-60 V"
+ },
+ "current_power_characteristics": "0.5-30 A",
+ "typical_component_families": [
+  "mppt_charge_controller",
+  "mosfet",
+  "inductor",
+  "current_sense_resistor",
+  "schottky_diode",
+  "tvs_diode",
+  "battery_connector",
+  "terminal_block",
+  "mcu",
+  "input_capacitor",
+  "output_capacitor"
+ ],
+ "required_component_roles": [
+  "mppt_charge_controller",
+  "inductor",
+  "current_sense_resistor",
+  "battery_connector",
+  "input_capacitor",
+  "output_capacitor"
+ ],
+ "optional_component_roles": [
+  "mosfet",
+  "schottky_diode",
+  "tvs_diode",
+  "terminal_block",
+  "mcu",
+  "solar_charge_controller"
+ ],
+ "critical_electrical_constraints": [
+  "Input rated for cold-temperature Voc with margin",
+  "Night-time reverse current blocked",
+  "Battery chemistry declared; charge profile derived from it"
+ ],
+ "stackup_recommendations": [
+  "2 layers for single-cell boards; 4 layers with a solid ground for multi-cell monitors with precision sensing",
+  "2 oz copper on the charge/discharge path above ~3 A"
+ ],
+ "placement_rules": [
+  "Charger IC thermal pad with via array; input capacitor at the input pin; battery-side capacitor at the BAT pin",
+  "Protection MOSFETs and the current-sense resistor on the cell negative path with a Kelvin sense pair",
+  "NTC thermistor placed to track cell temperature (connector or pack lead), not board heat",
+  "Cell-tap connectors ordered so that mis-insertion is mechanically impossible"
+ ],
+ "routing_rules": [
+  "Charge/discharge path width from IPC-2221 for the peak current",
+  "Kelvin routing of the sense resistor: sense traces from the pad inner edges",
+  "Cell-tap traces with series resistors at the entry for balancing current and ESD",
+  "Keep the thermistor and fuel-gauge sense traces away from switching nodes"
+ ],
+ "copper_ground_requirements": [
+  "Pack negative as a polygon; sense ground star-connected at the sense resistor",
+  "No pour under the fuel gauge's sense pins"
+ ],
+ "thermal_considerations": [
+  "Charger dissipation at maximum input voltage and charge current; linear chargers above 0.5 A need copper area per the datasheet",
+  "Balancing resistors dissipate continuously during balance: derate"
+ ],
+ "emi_emc_considerations": [
+  "Switching chargers follow the DC-DC hot-loop rules"
+ ],
+ "protection_requirements": [
+  "Over-charge, over-discharge, over-current and short-circuit protection by a dedicated protection IC; the charger alone is not protection",
+  "Reverse battery connection protection where the pack is user-connectable",
+  "Thermal protection with a cell-mounted NTC"
+ ],
+ "verification_requirements": [
+  "Charge current and cell chemistry declared; charge voltage matches chemistry (never assumed)",
+  "Trace widths and sense-resistor Kelvin verified",
+  "Protection thresholds recorded with the datasheet source",
+  "Pack safety (IEC 62133-2 / UL 2054) is a certification item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Connector choice with keying; label polarity on silkscreen",
+  "Sense resistor footprint sized for Kelvin pads"
+ ],
+ "applicable_standards": [
+  "MFR-DATASHEET",
+  "IEC-62133-2",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Panel Voc undeclared",
+  "PWM controller on a panel with Vmp far above the battery voltage (wasted power is not an error, but must be recorded)"
+ ],
+ "typical_overlays": [
+  "battery_management",
+  "switching_power",
+  "harsh_environment",
+  "thermal_management"
+ ],
+ "classification": {
+  "keywords": {
+   "solar": 10,
+   "mppt": 10,
+   "pv": 6,
+   "photovoltaic": 8,
+   "charge controller": 8,
+   "off-grid": 4
+  },
+  "features": {
+   "power_source": [
+    "solar"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-THERM-017",
+   "PLACE-SENSE-018",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-KELVIN-024",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "THERM-COPPER-051",
+   "EMI-LOOP-060",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "DCDC-VIN-121",
+   "BAT-CHEM-130",
+   "BAT-PROT-131",
+   "BAT-NTC-132"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

@@ -1,0 +1,19 @@
+{
+ "schema_version": "1.0.0",
+ "required": {
+  "schema_version": "string",
+  "family_id": "string",
+  "group": "string",
+  "name": "string",
+  "description": "string",
+  "electrical_characteristics": "list",
+  "required_parameters": "list",
+  "compatibility_requirements": "list",
+  "datasheet_verification": "list",
+  "placement_constraints": "list",
+  "routing_considerations": "list",
+  "relevant_archetypes": "list",
+  "aliases": "list"
+ },
+ "enums": {}
+}

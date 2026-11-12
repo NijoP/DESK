@@ -1,0 +1,153 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "power_path_management",
+ "name": "Power-path management board",
+ "domain": "battery_bms",
+ "description": "Selects and sequences between USB/DC input, battery and system load; includes ideal diodes, load switches, charger integration and USB enumeration limits.",
+ "intended_applications": [
+  "devices that run while charging",
+  "USB and battery dual-powered products"
+ ],
+ "typical_input_requirements": [
+  "Input sources and priorities",
+  "System load",
+  "Battery",
+  "USB current limit negotiation"
+ ],
+ "electrical_characteristics": [
+  "Ideal-diode OR-ing or PMIC power path",
+  "Input current limiting per USB rules",
+  "System rail stays up during source switching"
+ ],
+ "operating_voltage_ranges": {
+  "usb": "4.5-5.5 V",
+  "dc": "6-20 V",
+  "battery": "3.0-4.2 V",
+  "system": "3.3-5 V"
+ },
+ "current_power_characteristics": "0.5-5 A",
+ "typical_component_families": [
+  "pmic_power_path",
+  "ideal_diode_controller",
+  "load_switch",
+  "li_ion_charger",
+  "buck_regulator",
+  "usb_connector",
+  "tvs_diode",
+  "input_capacitor",
+  "output_capacitor"
+ ],
+ "required_component_roles": [
+  "pmic_power_path",
+  "load_switch",
+  "input_capacitor",
+  "output_capacitor"
+ ],
+ "optional_component_roles": [
+  "ideal_diode_controller",
+  "li_ion_charger",
+  "buck_regulator",
+  "usb_connector",
+  "tvs_diode"
+ ],
+ "critical_electrical_constraints": [
+  "Every path current declared; widths from IPC-2221",
+  "Inrush/soft-start on load switches for bulk capacitance",
+  "USB current limit set per enumeration state"
+ ],
+ "stackup_recommendations": [
+  "2 layers for single-cell boards; 4 layers with a solid ground for multi-cell monitors with precision sensing",
+  "2 oz copper on the charge/discharge path above ~3 A"
+ ],
+ "placement_rules": [
+  "Charger IC thermal pad with via array; input capacitor at the input pin; battery-side capacitor at the BAT pin",
+  "Protection MOSFETs and the current-sense resistor on the cell negative path with a Kelvin sense pair",
+  "NTC thermistor placed to track cell temperature (connector or pack lead), not board heat",
+  "Cell-tap connectors ordered so that mis-insertion is mechanically impossible"
+ ],
+ "routing_rules": [
+  "Charge/discharge path width from IPC-2221 for the peak current",
+  "Kelvin routing of the sense resistor: sense traces from the pad inner edges",
+  "Cell-tap traces with series resistors at the entry for balancing current and ESD",
+  "Keep the thermistor and fuel-gauge sense traces away from switching nodes"
+ ],
+ "copper_ground_requirements": [
+  "Pack negative as a polygon; sense ground star-connected at the sense resistor",
+  "No pour under the fuel gauge's sense pins"
+ ],
+ "thermal_considerations": [
+  "Charger dissipation at maximum input voltage and charge current; linear chargers above 0.5 A need copper area per the datasheet",
+  "Balancing resistors dissipate continuously during balance: derate"
+ ],
+ "emi_emc_considerations": [
+  "Switching chargers follow the DC-DC hot-loop rules"
+ ],
+ "protection_requirements": [
+  "Over-charge, over-discharge, over-current and short-circuit protection by a dedicated protection IC; the charger alone is not protection",
+  "Reverse battery connection protection where the pack is user-connectable",
+  "Thermal protection with a cell-mounted NTC"
+ ],
+ "verification_requirements": [
+  "Charge current and cell chemistry declared; charge voltage matches chemistry (never assumed)",
+  "Trace widths and sense-resistor Kelvin verified",
+  "Protection thresholds recorded with the datasheet source",
+  "Pack safety (IEC 62133-2 / UL 2054) is a certification item, not an offline check"
+ ],
+ "manufacturing_constraints": [
+  "Connector choice with keying; label polarity on silkscreen",
+  "Sense resistor footprint sized for Kelvin pads"
+ ],
+ "applicable_standards": [
+  "USB-2.0",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Back-feeding a source through an unprotected path"
+ ],
+ "typical_overlays": [
+  "battery_management",
+  "usb_interface"
+ ],
+ "classification": {
+  "keywords": {
+   "power path": 10,
+   "power-path": 10,
+   "ideal diode": 8,
+   "or-ing": 6,
+   "oring": 6,
+   "load switch": 4,
+   "source selection": 6
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MCU-USB-102",
+   "BAT-CHEM-130",
+   "BAT-PROT-131",
+   "BAT-NTC-132"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

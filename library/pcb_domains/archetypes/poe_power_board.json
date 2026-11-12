@@ -1,0 +1,180 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "poe_power_board",
+ "name": "PoE powered-device power board",
+ "domain": "dcdc_power",
+ "description": "IEEE 802.3af/at/bt powered device: Ethernet magnetics, PD controller with classification, isolated flyback to the load rails.",
+ "intended_applications": [
+  "IP cameras",
+  "access points",
+  "PoE sensors"
+ ],
+ "typical_input_requirements": [
+  "Power class (af/at/bt)",
+  "Load rails",
+  "Isolation",
+  "Data rate"
+ ],
+ "electrical_characteristics": [
+  "37-57 V input from the PSE through the magnetics or spare pairs",
+  "Isolation 1500 V between PoE and output per 802.3",
+  "Inrush and classification signatures"
+ ],
+ "operating_voltage_ranges": {
+  "poe_in": "37-57 V",
+  "output": "3.3/5/12 V isolated"
+ },
+ "current_power_characteristics": "13 W (af), 25.5 W (at), 71 W (bt)",
+ "typical_component_families": [
+  "poe_pd_controller",
+  "ethernet_magnetics",
+  "rj45_connector",
+  "bridge_rectifier",
+  "flyback_transformer",
+  "mosfet",
+  "optocoupler",
+  "output_capacitor",
+  "tvs_diode",
+  "y_capacitor"
+ ],
+ "required_component_roles": [
+  "poe_pd_controller",
+  "ethernet_magnetics",
+  "rj45_connector",
+  "bridge_rectifier",
+  "flyback_transformer",
+  "output_capacitor"
+ ],
+ "optional_component_roles": [
+  "mosfet",
+  "optocoupler",
+  "tvs_diode",
+  "y_capacitor",
+  "ethernet_phy"
+ ],
+ "critical_electrical_constraints": [
+  "1500 V isolation barrier between the PoE side and the load side",
+  "Classification resistors per the class",
+  "Data pairs untouched by the power extraction layout rules of the magnetics"
+ ],
+ "stackup_recommendations": [
+  "2 layers with 2 oz copper for converters above ~3 A; 4 layers with inner ground for controllers with sensitive feedback",
+  "Heavy copper (2 oz) when trace width from IPC-2221 exceeds what the board width allows"
+ ],
+ "placement_rules": [
+  "Minimise the hot loop (input capacitor, high-side switch, low-side switch/diode) area: these three parts touch each other",
+  "Inductor adjacent to the switch node pin; switch node copper as small as the current allows",
+  "Output capacitor at the inductor output; feedback divider at the controller FB pin, away from the inductor and switch node",
+  "Gate driver next to the MOSFET gates; bootstrap capacitor next to the driver"
+ ],
+ "routing_rules": [
+  "Switch node: short, wide, single layer; never under the feedback network",
+  "Feedback trace short and shielded by ground, routed away from the inductor",
+  "Power path widths from IPC-2221 for the declared current and temperature rise; polygons for > 3 A",
+  "Kelvin connection to current-sense resistors"
+ ],
+ "copper_ground_requirements": [
+  "Power ground and signal ground joined at one point near the controller",
+  "Copper pour under the inductor only if the inductor datasheet allows (shielded types)",
+  "Thermal vias under MOSFET and diode exposed pads to the opposite-side copper"
+ ],
+ "thermal_considerations": [
+  "Calculate conduction and switching loss per device; junction temperature at max ambient must stay below the datasheet limit with margin",
+  "Copper area per watt from the device datasheet thermal curves; heatsink when the area is not available"
+ ],
+ "emi_emc_considerations": [
+  "Hot-loop area is the first EMI control; snubber footprint on the switch node",
+  "Input pi-filter footprint for conducted emissions when the product is tested to CISPR 32/25",
+  "Spread-spectrum or frequency choice to keep harmonics out of sensitive bands"
+ ],
+ "protection_requirements": [
+  "Input over-voltage and reverse polarity per the application",
+  "Over-current/short-circuit protection by the controller; output over-voltage clamp where the load is sensitive",
+  "Fuse rating against the input current at minimum input voltage"
+ ],
+ "verification_requirements": [
+  "Every rail current declared (unknown current blocks routing)",
+  "Trace width per net from desk.ipc with declared temperature rise",
+  "Voltage drop on the output path within the regulation budget",
+  "Hot-loop area recorded; DRC with clearance from the highest node voltage"
+ ],
+ "manufacturing_constraints": [
+  "2 oz copper option recorded in the manufacturer profile; minimum width/clearance from the fabricator table for the chosen copper weight",
+  "Large pads on magnetics: solder mask defined; thermal relief decision explicit"
+ ],
+ "applicable_standards": [
+  "IEEE-802.3bt",
+  "IEEE-802.3",
+  "IEC-60664-1",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Isolation barrier bridged by ground pour",
+  "Drawing more than the negotiated class"
+ ],
+ "typical_overlays": [
+  "switching_power",
+  "galvanic_isolation",
+  "emi_emc"
+ ],
+ "classification": {
+  "keywords": {
+   "poe": 10,
+   "power over ethernet": 10,
+   "802.3af": 8,
+   "802.3at": 8,
+   "802.3bt": 8,
+   "powered device": 5
+  },
+  "features": {
+   "isolation": true,
+   "protocols_any": [
+    "ethernet",
+    "poe"
+   ],
+   "power_source": [
+    "poe"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-VIA-005",
+   "ELEC-DROP-006",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-HOTLOOP-012",
+   "PLACE-FB-013",
+   "PLACE-ISO-016",
+   "ROUTE-PRIO-020",
+   "ROUTE-SW-023",
+   "ROUTE-HV-025",
+   "ROUTE-RETURN-027",
+   "ROUTE-GATE-028",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "COPPER-THERMVIA-046",
+   "THERM-TJ-050",
+   "EMI-LOOP-060",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "DCDC-VIN-121"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

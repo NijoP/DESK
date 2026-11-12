@@ -1,0 +1,151 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "relay_output_module",
+ "name": "Relay output module",
+ "domain": "industrial_control",
+ "description": "Multiple electromechanical or solid-state relays with drivers, contact protection, status LEDs and isolated control.",
+ "intended_applications": [
+  "switching loads",
+  "automation outputs",
+  "alarm outputs"
+ ],
+ "typical_input_requirements": [
+  "Relay count and contact rating",
+  "Load type (AC/DC, inductive)",
+  "Isolation",
+  "Control interface"
+ ],
+ "electrical_characteristics": [
+  "Contact ratings vs load (AC/DC differ)",
+  "Coil drive with flyback diode; coil current budget",
+  "Contact-side creepage for mains loads"
+ ],
+ "operating_voltage_ranges": {
+  "coil": "5/12/24 V",
+  "contact": "up to 250 V AC / 30 V DC",
+  "logic": "3.3/5 V"
+ },
+ "current_power_characteristics": "Coil 30-100 mA each; contacts per rating",
+ "typical_component_families": [
+  "relay",
+  "ssr",
+  "relay_driver",
+  "flyback_diode",
+  "terminal_block",
+  "snubber_rc",
+  "led_indicator",
+  "optocoupler",
+  "mcu"
+ ],
+ "required_component_roles": [
+  "relay",
+  "relay_driver",
+  "flyback_diode",
+  "terminal_block"
+ ],
+ "optional_component_roles": [
+  "ssr",
+  "snubber_rc",
+  "led_indicator",
+  "optocoupler",
+  "mcu"
+ ],
+ "critical_electrical_constraints": [
+  "Contact-side copper and creepage for the rated load voltage (mains = mains rules)",
+  "Snubber/MOV for inductive AC loads",
+  "Coil current declared; driver rated"
+ ],
+ "stackup_recommendations": [
+  "2 or 4 layers; isolation barriers between field side and logic side"
+ ],
+ "placement_rules": [
+  "Field-side components grouped at the terminal blocks; isolators on the barrier; logic side separate",
+  "Relays and their drivers near the output terminals, flyback diodes at the coils",
+  "24 V input protection at the connector"
+ ],
+ "routing_rules": [
+  "Creepage/clearance across the isolation barrier per the rated isolation voltage",
+  "24 V and relay contact traces sized for the rated load current",
+  "Fieldbus pairs (RS-485/CAN) as 120 ohm pairs with termination at the bus end"
+ ],
+ "copper_ground_requirements": [
+  "No pour across barriers; field ground and logic ground separate"
+ ],
+ "thermal_considerations": [
+  "Relay coil and input-resistor dissipation at the maximum input voltage; derating at 60 degC ambient"
+ ],
+ "emi_emc_considerations": [
+  "Surge (IEC 61000-4-5) and burst (61000-4-4) immunity: TVS and series impedance at every field terminal",
+  "Shield termination for fieldbus cables"
+ ],
+ "protection_requirements": [
+  "Isolated inputs (optocoupler/digital isolator); relay or isolated MOSFET outputs",
+  "Reverse polarity and over-voltage on the 24 V supply input"
+ ],
+ "verification_requirements": [
+  "Isolation voltage declared; creepage per IEC 60664-1 recorded",
+  "Field I/O current ratings declared",
+  "Immunity levels are hardware tests"
+ ],
+ "manufacturing_constraints": [
+  "Pluggable terminal blocks; conformal coating option changes the clearance condition"
+ ],
+ "applicable_standards": [
+  "IEC-60664-1",
+  "IEC-61810-1",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Mains on the contacts without declaring mains voltage"
+ ],
+ "typical_overlays": [
+  "mains_safety_isolation",
+  "industrial_interfaces"
+ ],
+ "classification": {
+  "keywords": {
+   "relay module": 10,
+   "relay board": 10,
+   "relay output": 10,
+   "relays": 6,
+   "solid state relay": 8,
+   "ssr": 6
+  },
+  "features": {}
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-ISO-016",
+   "ROUTE-PRIO-020",
+   "ROUTE-DIFF-021",
+   "ROUTE-HV-025",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "EMI-ESD-062",
+   "EMI-SURGE-063",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072",
+   "MFG-COAT-073",
+   "MFG-SLOT-074",
+   "MAINS-DECL-160",
+   "MAINS-FUSE-161",
+   "MAINS-INS-163"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}

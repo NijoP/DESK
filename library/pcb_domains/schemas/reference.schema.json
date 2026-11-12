@@ -1,0 +1,15 @@
+{
+ "schema_version": "1.0.0",
+ "required": {
+  "id": "string",
+  "title": "string",
+  "organisation": "string",
+  "kind": "string",
+  "clause_notes": "string",
+  "url": "string",
+  "derived_values_used": "list",
+  "verification_status": "string",
+  "copyrighted_text_stored": "bool"
+ },
+ "enums": {}
+}

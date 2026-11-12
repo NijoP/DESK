@@ -1,0 +1,1292 @@
+{
+ "schema_version": "1.0.0",
+ "generated": "2026-11-12",
+ "domains": [
+  {
+   "domain_id": "embedded_mcu",
+   "name": "Embedded systems and MCU boards",
+   "description": "Microcontroller-centred boards: a low-voltage digital core with regulated rails, peripherals, sensors and communication interfaces.",
+   "archetype_ids": [
+    "esp32_dev_board",
+    "stm32_controller",
+    "rp2040_dev_board",
+    "low_power_sensor_node",
+    "industrial_remote_io",
+    "embedded_data_logger",
+    "wearable_electronics",
+    "mcu_carrier_board",
+    "battery_iot_node",
+    "multi_sensor_controller"
+   ]
+  },
+  {
+   "domain_id": "rf_wireless",
+   "name": "RF and wireless communication",
+   "description": "Boards carrying radio-frequency signals: transceivers, front ends, antennas and matching networks where trace geometry is part of the circuit.",
+   "archetype_ids": [
+    "wifi_ble_module_board",
+    "lora_transceiver",
+    "subghz_transmitter",
+    "gnss_receiver",
+    "cellular_lte_nbiot",
+    "rf_front_end",
+    "antenna_matching_network",
+    "sdr_hardware",
+    "uwb_communication",
+    "rf_measurement_hardware"
+   ]
+  },
+  {
+   "domain_id": "dcdc_power",
+   "name": "DC-DC power electronics",
+   "description": "Switched-mode converters: a switching node, magnetics, rectification and control loop where loop area, copper and thermal design decide the result.",
+   "archetype_ids": [
+    "buck_converter",
+    "boost_converter",
+    "buck_boost_converter",
+    "flyback_converter",
+    "forward_converter",
+    "push_pull_converter",
+    "half_bridge_converter",
+    "full_bridge_converter",
+    "dual_active_bridge",
+    "poe_power_board"
+   ]
+  },
+  {
+   "domain_id": "ac_mains_hv",
+   "name": "AC mains and high-voltage electronics",
+   "description": "Boards connected to mains or carrying hazardous voltages: creepage, clearance, isolation barriers and protective components are the design.",
+   "archetype_ids": [
+    "ac_mains_input_protection",
+    "isolated_ac_dc",
+    "non_isolated_ac_dc",
+    "triac_controller",
+    "ac_motor_controller",
+    "mains_lighting_driver",
+    "pfc_board",
+    "hv_monitoring_board"
+   ]
+  },
+  {
+   "domain_id": "battery_bms",
+   "name": "Batteries, charging and BMS",
+   "description": "Boards that charge, protect, balance or monitor battery cells and manage the power path between source, battery and load.",
+   "archetype_ids": [
+    "single_cell_liion_charger",
+    "multi_cell_charger",
+    "battery_management_system",
+    "cell_balancing_board",
+    "battery_protection_board",
+    "power_path_management",
+    "solar_battery_controller",
+    "battery_fuel_gauge"
+   ]
+  },
+  {
+   "domain_id": "motor_control",
+   "name": "Motor control and motion electronics",
+   "description": "Drive stages and control electronics for motors and actuators: power switches, gate drives, current sensing, protection and feedback interfaces.",
+   "archetype_ids": [
+    "three_phase_bldc_controller",
+    "brushed_dc_h_bridge",
+    "stepper_driver",
+    "servo_controller",
+    "solenoid_relay_driver",
+    "fan_pump_controller",
+    "encoder_feedback_interface",
+    "industrial_vfd_gate_drive"
+   ]
+  },
+  {
+   "domain_id": "analog_sensors",
+   "name": "Analog, sensors and instrumentation",
+   "description": "Low-noise measurement chains: sensor, conditioning, ADC and reference, where grounding, guarding and noise coupling decide accuracy.",
+   "archetype_ids": [
+    "precision_adc_frontend",
+    "thermocouple_rtd_measurement",
+    "strain_gauge_loadcell_amplifier",
+    "current_voltage_measurement",
+    "environmental_sensor_board",
+    "imu_motion_sensor_board",
+    "photodiode_optical_frontend",
+    "ph_electrochemical_frontend"
+   ]
+  },
+  {
+   "domain_id": "high_speed_digital",
+   "name": "High-speed digital and computing",
+   "description": "Boards with controlled-impedance buses, memory and multi-gigabit interfaces where stackup, length matching and reference planes are mandatory.",
+   "archetype_ids": [
+    "fpga_dev_board",
+    "mpu_som_carrier",
+    "ddr_memory_subsystem",
+    "pcie_add_in_card",
+    "gigabit_ethernet_board",
+    "mipi_camera_board",
+    "high_speed_adc_dac_board",
+    "nvme_storage_board"
+   ]
+  },
+  {
+   "domain_id": "interfaces_comms",
+   "name": "Interfaces and communication electronics",
+   "description": "Boards whose purpose is a wired interface: transceivers, protection and connectors that must meet an interface standard's electrical rules.",
+   "archetype_ids": [
+    "usb_c_interface",
+    "usb_hub_board",
+    "can_bus_interface",
+    "rs485_modbus_interface",
+    "fast_ethernet_interface",
+    "isolated_serial_interface",
+    "i2c_spi_expander_board",
+    "usb_pd_sink_board"
+   ]
+  },
+  {
+   "domain_id": "audio_video",
+   "name": "Audio and video electronics",
+   "description": "Audio amplification, conversion and capture, and digital video interfaces: noise, grounding and output filtering set the quality.",
+   "archetype_ids": [
+    "class_d_amplifier",
+    "audio_codec_dac_board",
+    "microphone_array_board",
+    "hdmi_interface_board",
+    "headphone_line_amplifier"
+   ]
+  },
+  {
+   "domain_id": "industrial_control",
+   "name": "Industrial automation and control",
+   "description": "Controllers and I/O for industrial environments: isolated inputs and outputs, 24 V supplies, relays, fieldbuses and surge immunity.",
+   "archetype_ids": [
+    "plc_io_module",
+    "industrial_hmi_controller",
+    "relay_output_module",
+    "current_loop_4_20ma_interface",
+    "din_rail_controller"
+   ]
+  },
+  {
+   "domain_id": "led_display",
+   "name": "LED lighting and display electronics",
+   "description": "LED drivers, addressable LED controllers and display interfaces: constant-current regulation, thermal spreading and signal integrity to the panel.",
+   "archetype_ids": [
+    "constant_current_led_driver",
+    "addressable_led_controller",
+    "lcd_tft_display_board",
+    "oled_epaper_display_board",
+    "led_backlight_driver"
+   ]
+  },
+  {
+   "domain_id": "test_debug",
+   "name": "Testing, programming and debugging hardware",
+   "description": "Tools that connect to a target: programmers, analysers, fixtures and bench instruments, where protection of the target and signal fidelity matter.",
+   "archetype_ids": [
+    "swd_jtag_programmer",
+    "logic_analyzer_board",
+    "bed_of_nails_test_fixture",
+    "benchtop_power_supply_control",
+    "signal_generator_board"
+   ]
+  },
+  {
+   "domain_id": "automotive",
+   "name": "Automotive and transportation electronics",
+   "description": "12/24 V vehicle electronics: load dump, reverse battery, cold crank, CAN/LIN, and extended temperature with AEC-qualified parts.",
+   "archetype_ids": [
+    "automotive_12v_controller",
+    "obd_can_telematics"
+   ]
+  }
+ ],
+ "archetype_index": {
+  "esp32_dev_board": {
+   "name": "ESP32 development board",
+   "domain": "embedded_mcu",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "rf_communication",
+    "usb_interface",
+    "low_power"
+   ],
+   "file": "archetypes/esp32_dev_board.json"
+  },
+  "stm32_controller": {
+   "name": "STM32 controller board",
+   "domain": "embedded_mcu",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "low_power",
+    "industrial_interfaces"
+   ],
+   "file": "archetypes/stm32_controller.json"
+  },
+  "rp2040_dev_board": {
+   "name": "RP2040 development board",
+   "domain": "embedded_mcu",
+   "maturity": "DRAFT",
+   "overlays": [
+    "usb_interface"
+   ],
+   "file": "archetypes/rp2040_dev_board.json"
+  },
+  "low_power_sensor_node": {
+   "name": "Low-power sensor node",
+   "domain": "embedded_mcu",
+   "maturity": "DRAFT",
+   "overlays": [
+    "low_power",
+    "rf_communication",
+    "battery_management"
+   ],
+   "file": "archetypes/low_power_sensor_node.json"
+  },
+  "industrial_remote_io": {
+   "name": "Industrial remote I/O controller",
+   "domain": "embedded_mcu",
+   "maturity": "DRAFT",
+   "overlays": [
+    "industrial_interfaces",
+    "galvanic_isolation",
+    "harsh_environment"
+   ],
+   "file": "archetypes/industrial_remote_io.json"
+  },
+  "embedded_data_logger": {
+   "name": "Embedded data logger",
+   "domain": "embedded_mcu",
+   "maturity": "DRAFT",
+   "overlays": [
+    "low_power",
+    "usb_interface"
+   ],
+   "file": "archetypes/embedded_data_logger.json"
+  },
+  "wearable_electronics": {
+   "name": "Wearable electronics",
+   "domain": "embedded_mcu",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "rf_communication",
+    "battery_management",
+    "low_power",
+    "precision_analog"
+   ],
+   "file": "archetypes/wearable_electronics.json"
+  },
+  "mcu_carrier_board": {
+   "name": "MCU/SoM carrier board",
+   "domain": "embedded_mcu",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "usb_interface"
+   ],
+   "file": "archetypes/mcu_carrier_board.json"
+  },
+  "battery_iot_node": {
+   "name": "Battery-powered IoT node",
+   "domain": "embedded_mcu",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication",
+    "battery_management",
+    "low_power",
+    "harsh_environment"
+   ],
+   "file": "archetypes/battery_iot_node.json"
+  },
+  "multi_sensor_controller": {
+   "name": "Multi-sensor controller",
+   "domain": "embedded_mcu",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog"
+   ],
+   "file": "archetypes/multi_sensor_controller.json"
+  },
+  "wifi_ble_module_board": {
+   "name": "Wi-Fi and Bluetooth board",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication"
+   ],
+   "file": "archetypes/wifi_ble_module_board.json"
+  },
+  "lora_transceiver": {
+   "name": "LoRa transceiver board",
+   "domain": "rf_wireless",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "rf_communication",
+    "low_power"
+   ],
+   "file": "archetypes/lora_transceiver.json"
+  },
+  "subghz_transmitter": {
+   "name": "Sub-GHz RF transmitter/transceiver",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication",
+    "low_power"
+   ],
+   "file": "archetypes/subghz_transmitter.json"
+  },
+  "gnss_receiver": {
+   "name": "GNSS receiver board",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication",
+    "low_power"
+   ],
+   "file": "archetypes/gnss_receiver.json"
+  },
+  "cellular_lte_nbiot": {
+   "name": "Cellular LTE/NB-IoT board",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication",
+    "high_current",
+    "battery_management"
+   ],
+   "file": "archetypes/cellular_lte_nbiot.json"
+  },
+  "rf_front_end": {
+   "name": "RF front-end board",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication",
+    "thermal_management"
+   ],
+   "file": "archetypes/rf_front_end.json"
+  },
+  "antenna_matching_network": {
+   "name": "Antenna matching network board",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication"
+   ],
+   "file": "archetypes/antenna_matching_network.json"
+  },
+  "sdr_hardware": {
+   "name": "Software-defined radio hardware",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication",
+    "high_speed_digital",
+    "precision_analog",
+    "thermal_management"
+   ],
+   "file": "archetypes/sdr_hardware.json"
+  },
+  "uwb_communication": {
+   "name": "UWB ranging/communication board",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication",
+    "low_power"
+   ],
+   "file": "archetypes/uwb_communication.json"
+  },
+  "rf_measurement_hardware": {
+   "name": "RF measurement hardware",
+   "domain": "rf_wireless",
+   "maturity": "DRAFT",
+   "overlays": [
+    "rf_communication",
+    "precision_analog"
+   ],
+   "file": "archetypes/rf_measurement_hardware.json"
+  },
+  "buck_converter": {
+   "name": "Buck (step-down) converter",
+   "domain": "dcdc_power",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "switching_power",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/buck_converter.json"
+  },
+  "boost_converter": {
+   "name": "Boost (step-up) converter",
+   "domain": "dcdc_power",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "switching_power",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/boost_converter.json"
+  },
+  "buck_boost_converter": {
+   "name": "Buck-boost converter",
+   "domain": "dcdc_power",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/buck_boost_converter.json"
+  },
+  "flyback_converter": {
+   "name": "Flyback converter",
+   "domain": "dcdc_power",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "galvanic_isolation",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/flyback_converter.json"
+  },
+  "forward_converter": {
+   "name": "Forward converter",
+   "domain": "dcdc_power",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "galvanic_isolation",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/forward_converter.json"
+  },
+  "push_pull_converter": {
+   "name": "Push-pull converter",
+   "domain": "dcdc_power",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "galvanic_isolation",
+    "high_current",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/push_pull_converter.json"
+  },
+  "half_bridge_converter": {
+   "name": "Half-bridge converter",
+   "domain": "dcdc_power",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "galvanic_isolation",
+    "thermal_management",
+    "emi_emc",
+    "mains_safety_isolation"
+   ],
+   "file": "archetypes/half_bridge_converter.json"
+  },
+  "full_bridge_converter": {
+   "name": "Full-bridge converter",
+   "domain": "dcdc_power",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "galvanic_isolation",
+    "high_current",
+    "thermal_management",
+    "emi_emc",
+    "mains_safety_isolation"
+   ],
+   "file": "archetypes/full_bridge_converter.json"
+  },
+  "dual_active_bridge": {
+   "name": "Dual-active-bridge converter",
+   "domain": "dcdc_power",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "galvanic_isolation",
+    "high_current",
+    "thermal_management",
+    "emi_emc",
+    "mains_safety_isolation"
+   ],
+   "file": "archetypes/dual_active_bridge.json"
+  },
+  "poe_power_board": {
+   "name": "PoE powered-device power board",
+   "domain": "dcdc_power",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "galvanic_isolation",
+    "emi_emc"
+   ],
+   "file": "archetypes/poe_power_board.json"
+  },
+  "ac_mains_input_protection": {
+   "name": "AC mains input and protection",
+   "domain": "ac_mains_hv",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "mains_safety_isolation",
+    "emi_emc"
+   ],
+   "file": "archetypes/ac_mains_input_protection.json"
+  },
+  "isolated_ac_dc": {
+   "name": "Isolated AC-DC converter",
+   "domain": "ac_mains_hv",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "mains_safety_isolation",
+    "switching_power",
+    "galvanic_isolation",
+    "emi_emc",
+    "thermal_management"
+   ],
+   "file": "archetypes/isolated_ac_dc.json"
+  },
+  "non_isolated_ac_dc": {
+   "name": "Non-isolated AC-DC (capacitive dropper / buck)",
+   "domain": "ac_mains_hv",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "mains_safety_isolation",
+    "thermal_management"
+   ],
+   "file": "archetypes/non_isolated_ac_dc.json"
+  },
+  "triac_controller": {
+   "name": "Triac/SCR mains controller",
+   "domain": "ac_mains_hv",
+   "maturity": "DRAFT",
+   "overlays": [
+    "mains_safety_isolation",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/triac_controller.json"
+  },
+  "ac_motor_controller": {
+   "name": "AC motor controller / inverter",
+   "domain": "ac_mains_hv",
+   "maturity": "DRAFT",
+   "overlays": [
+    "mains_safety_isolation",
+    "motor_drive",
+    "high_current",
+    "thermal_management",
+    "emi_emc",
+    "galvanic_isolation"
+   ],
+   "file": "archetypes/ac_motor_controller.json"
+  },
+  "mains_lighting_driver": {
+   "name": "Mains LED lighting driver",
+   "domain": "ac_mains_hv",
+   "maturity": "DRAFT",
+   "overlays": [
+    "mains_safety_isolation",
+    "switching_power",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/mains_lighting_driver.json"
+  },
+  "pfc_board": {
+   "name": "Power-factor-correction stage",
+   "domain": "ac_mains_hv",
+   "maturity": "DRAFT",
+   "overlays": [
+    "mains_safety_isolation",
+    "switching_power",
+    "high_current",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/pfc_board.json"
+  },
+  "hv_monitoring_board": {
+   "name": "High-voltage monitoring board",
+   "domain": "ac_mains_hv",
+   "maturity": "DRAFT",
+   "overlays": [
+    "mains_safety_isolation",
+    "galvanic_isolation",
+    "precision_analog"
+   ],
+   "file": "archetypes/hv_monitoring_board.json"
+  },
+  "single_cell_liion_charger": {
+   "name": "Single-cell Li-ion charger",
+   "domain": "battery_bms",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "battery_management",
+    "usb_interface",
+    "thermal_management"
+   ],
+   "file": "archetypes/single_cell_liion_charger.json"
+  },
+  "multi_cell_charger": {
+   "name": "Multi-cell battery charger",
+   "domain": "battery_bms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "battery_management",
+    "switching_power",
+    "high_current",
+    "thermal_management"
+   ],
+   "file": "archetypes/multi_cell_charger.json"
+  },
+  "battery_management_system": {
+   "name": "Battery management system",
+   "domain": "battery_bms",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "battery_management",
+    "high_current",
+    "thermal_management",
+    "can_interface"
+   ],
+   "file": "archetypes/battery_management_system.json"
+  },
+  "cell_balancing_board": {
+   "name": "Cell-balancing board",
+   "domain": "battery_bms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "battery_management",
+    "thermal_management"
+   ],
+   "file": "archetypes/cell_balancing_board.json"
+  },
+  "battery_protection_board": {
+   "name": "Battery protection board",
+   "domain": "battery_bms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "battery_management",
+    "high_current"
+   ],
+   "file": "archetypes/battery_protection_board.json"
+  },
+  "power_path_management": {
+   "name": "Power-path management board",
+   "domain": "battery_bms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "battery_management",
+    "usb_interface"
+   ],
+   "file": "archetypes/power_path_management.json"
+  },
+  "solar_battery_controller": {
+   "name": "Solar battery charge controller",
+   "domain": "battery_bms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "battery_management",
+    "switching_power",
+    "harsh_environment",
+    "thermal_management"
+   ],
+   "file": "archetypes/solar_battery_controller.json"
+  },
+  "battery_fuel_gauge": {
+   "name": "Battery fuel-gauge board",
+   "domain": "battery_bms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "battery_management",
+    "precision_analog",
+    "low_power"
+   ],
+   "file": "archetypes/battery_fuel_gauge.json"
+  },
+  "three_phase_bldc_controller": {
+   "name": "Three-phase BLDC/PMSM controller",
+   "domain": "motor_control",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "motor_drive",
+    "high_current",
+    "thermal_management",
+    "emi_emc",
+    "can_interface"
+   ],
+   "file": "archetypes/three_phase_bldc_controller.json"
+  },
+  "brushed_dc_h_bridge": {
+   "name": "Brushed DC H-bridge driver",
+   "domain": "motor_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "motor_drive",
+    "high_current",
+    "thermal_management"
+   ],
+   "file": "archetypes/brushed_dc_h_bridge.json"
+  },
+  "stepper_driver": {
+   "name": "Stepper motor driver",
+   "domain": "motor_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "motor_drive",
+    "thermal_management"
+   ],
+   "file": "archetypes/stepper_driver.json"
+  },
+  "servo_controller": {
+   "name": "Servo drive controller",
+   "domain": "motor_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "motor_drive",
+    "high_current",
+    "thermal_management",
+    "emi_emc",
+    "industrial_interfaces"
+   ],
+   "file": "archetypes/servo_controller.json"
+  },
+  "solenoid_relay_driver": {
+   "name": "Solenoid and relay driver board",
+   "domain": "motor_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "motor_drive",
+    "industrial_interfaces",
+    "thermal_management"
+   ],
+   "file": "archetypes/solenoid_relay_driver.json"
+  },
+  "fan_pump_controller": {
+   "name": "Fan and pump controller",
+   "domain": "motor_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "motor_drive"
+   ],
+   "file": "archetypes/fan_pump_controller.json"
+  },
+  "encoder_feedback_interface": {
+   "name": "Encoder and feedback interface",
+   "domain": "motor_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "industrial_interfaces",
+    "precision_analog"
+   ],
+   "file": "archetypes/encoder_feedback_interface.json"
+  },
+  "industrial_vfd_gate_drive": {
+   "name": "Industrial gate-drive board (IGBT/SiC)",
+   "domain": "motor_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "galvanic_isolation",
+    "mains_safety_isolation",
+    "motor_drive",
+    "emi_emc"
+   ],
+   "file": "archetypes/industrial_vfd_gate_drive.json"
+  },
+  "precision_adc_frontend": {
+   "name": "Precision ADC front end",
+   "domain": "analog_sensors",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog"
+   ],
+   "file": "archetypes/precision_adc_frontend.json"
+  },
+  "thermocouple_rtd_measurement": {
+   "name": "Thermocouple / RTD measurement",
+   "domain": "analog_sensors",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog",
+    "galvanic_isolation"
+   ],
+   "file": "archetypes/thermocouple_rtd_measurement.json"
+  },
+  "strain_gauge_loadcell_amplifier": {
+   "name": "Strain gauge / load cell amplifier",
+   "domain": "analog_sensors",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog"
+   ],
+   "file": "archetypes/strain_gauge_loadcell_amplifier.json"
+  },
+  "current_voltage_measurement": {
+   "name": "Current and voltage measurement board",
+   "domain": "analog_sensors",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog",
+    "high_current"
+   ],
+   "file": "archetypes/current_voltage_measurement.json"
+  },
+  "environmental_sensor_board": {
+   "name": "Environmental sensor board",
+   "domain": "analog_sensors",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog",
+    "low_power"
+   ],
+   "file": "archetypes/environmental_sensor_board.json"
+  },
+  "imu_motion_sensor_board": {
+   "name": "IMU / motion sensor board",
+   "domain": "analog_sensors",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog"
+   ],
+   "file": "archetypes/imu_motion_sensor_board.json"
+  },
+  "photodiode_optical_frontend": {
+   "name": "Photodiode / optical front end",
+   "domain": "analog_sensors",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog"
+   ],
+   "file": "archetypes/photodiode_optical_frontend.json"
+  },
+  "ph_electrochemical_frontend": {
+   "name": "pH / electrochemical sensor front end",
+   "domain": "analog_sensors",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog",
+    "galvanic_isolation"
+   ],
+   "file": "archetypes/ph_electrochemical_frontend.json"
+  },
+  "fpga_dev_board": {
+   "name": "FPGA development board",
+   "domain": "high_speed_digital",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "thermal_management"
+   ],
+   "file": "archetypes/fpga_dev_board.json"
+  },
+  "mpu_som_carrier": {
+   "name": "MPU/Linux SoM carrier",
+   "domain": "high_speed_digital",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "usb_interface",
+    "thermal_management"
+   ],
+   "file": "archetypes/mpu_som_carrier.json"
+  },
+  "ddr_memory_subsystem": {
+   "name": "DDR memory subsystem",
+   "domain": "high_speed_digital",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital"
+   ],
+   "file": "archetypes/ddr_memory_subsystem.json"
+  },
+  "pcie_add_in_card": {
+   "name": "PCIe add-in card",
+   "domain": "high_speed_digital",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "thermal_management"
+   ],
+   "file": "archetypes/pcie_add_in_card.json"
+  },
+  "gigabit_ethernet_board": {
+   "name": "Gigabit Ethernet interface",
+   "domain": "high_speed_digital",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "emi_emc",
+    "galvanic_isolation"
+   ],
+   "file": "archetypes/gigabit_ethernet_board.json"
+  },
+  "mipi_camera_board": {
+   "name": "MIPI camera board",
+   "domain": "high_speed_digital",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "precision_analog"
+   ],
+   "file": "archetypes/mipi_camera_board.json"
+  },
+  "high_speed_adc_dac_board": {
+   "name": "High-speed ADC/DAC board",
+   "domain": "high_speed_digital",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "precision_analog"
+   ],
+   "file": "archetypes/high_speed_adc_dac_board.json"
+  },
+  "nvme_storage_board": {
+   "name": "NVMe / storage board",
+   "domain": "high_speed_digital",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "thermal_management"
+   ],
+   "file": "archetypes/nvme_storage_board.json"
+  },
+  "usb_c_interface": {
+   "name": "USB-C interface board",
+   "domain": "interfaces_comms",
+   "maturity": "OFFLINE_TESTED",
+   "overlays": [
+    "usb_interface",
+    "emi_emc"
+   ],
+   "file": "archetypes/usb_c_interface.json"
+  },
+  "usb_hub_board": {
+   "name": "USB hub board",
+   "domain": "interfaces_comms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "usb_interface"
+   ],
+   "file": "archetypes/usb_hub_board.json"
+  },
+  "can_bus_interface": {
+   "name": "CAN bus interface",
+   "domain": "interfaces_comms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "can_interface",
+    "emi_emc",
+    "industrial_interfaces"
+   ],
+   "file": "archetypes/can_bus_interface.json"
+  },
+  "rs485_modbus_interface": {
+   "name": "RS-485 / Modbus interface",
+   "domain": "interfaces_comms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "industrial_interfaces",
+    "galvanic_isolation",
+    "emi_emc"
+   ],
+   "file": "archetypes/rs485_modbus_interface.json"
+  },
+  "fast_ethernet_interface": {
+   "name": "10/100 Ethernet interface",
+   "domain": "interfaces_comms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "emi_emc",
+    "galvanic_isolation"
+   ],
+   "file": "archetypes/fast_ethernet_interface.json"
+  },
+  "isolated_serial_interface": {
+   "name": "Isolated serial interface (UART/SPI/I2C)",
+   "domain": "interfaces_comms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "galvanic_isolation"
+   ],
+   "file": "archetypes/isolated_serial_interface.json"
+  },
+  "i2c_spi_expander_board": {
+   "name": "I2C/SPI expander and level-shift board",
+   "domain": "interfaces_comms",
+   "maturity": "DRAFT",
+   "overlays": [],
+   "file": "archetypes/i2c_spi_expander_board.json"
+  },
+  "usb_pd_sink_board": {
+   "name": "USB-PD sink/source power board",
+   "domain": "interfaces_comms",
+   "maturity": "DRAFT",
+   "overlays": [
+    "usb_interface",
+    "switching_power",
+    "high_current"
+   ],
+   "file": "archetypes/usb_pd_sink_board.json"
+  },
+  "class_d_amplifier": {
+   "name": "Class-D audio amplifier",
+   "domain": "audio_video",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "thermal_management",
+    "emi_emc"
+   ],
+   "file": "archetypes/class_d_amplifier.json"
+  },
+  "audio_codec_dac_board": {
+   "name": "Audio codec / DAC board",
+   "domain": "audio_video",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog"
+   ],
+   "file": "archetypes/audio_codec_dac_board.json"
+  },
+  "microphone_array_board": {
+   "name": "Microphone array board",
+   "domain": "audio_video",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog"
+   ],
+   "file": "archetypes/microphone_array_board.json"
+  },
+  "hdmi_interface_board": {
+   "name": "HDMI interface board",
+   "domain": "audio_video",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital",
+    "emi_emc"
+   ],
+   "file": "archetypes/hdmi_interface_board.json"
+  },
+  "headphone_line_amplifier": {
+   "name": "Headphone / line amplifier",
+   "domain": "audio_video",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog"
+   ],
+   "file": "archetypes/headphone_line_amplifier.json"
+  },
+  "plc_io_module": {
+   "name": "PLC I/O module",
+   "domain": "industrial_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "industrial_interfaces",
+    "galvanic_isolation",
+    "harsh_environment"
+   ],
+   "file": "archetypes/plc_io_module.json"
+  },
+  "industrial_hmi_controller": {
+   "name": "Industrial HMI controller",
+   "domain": "industrial_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "industrial_interfaces",
+    "emi_emc"
+   ],
+   "file": "archetypes/industrial_hmi_controller.json"
+  },
+  "relay_output_module": {
+   "name": "Relay output module",
+   "domain": "industrial_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "mains_safety_isolation",
+    "industrial_interfaces"
+   ],
+   "file": "archetypes/relay_output_module.json"
+  },
+  "current_loop_4_20ma_interface": {
+   "name": "4-20 mA loop interface",
+   "domain": "industrial_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "industrial_interfaces",
+    "precision_analog",
+    "galvanic_isolation"
+   ],
+   "file": "archetypes/current_loop_4_20ma_interface.json"
+  },
+  "din_rail_controller": {
+   "name": "DIN-rail controller",
+   "domain": "industrial_control",
+   "maturity": "DRAFT",
+   "overlays": [
+    "industrial_interfaces",
+    "harsh_environment"
+   ],
+   "file": "archetypes/din_rail_controller.json"
+  },
+  "constant_current_led_driver": {
+   "name": "Constant-current LED driver",
+   "domain": "led_display",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "thermal_management"
+   ],
+   "file": "archetypes/constant_current_led_driver.json"
+  },
+  "addressable_led_controller": {
+   "name": "Addressable LED controller",
+   "domain": "led_display",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_current"
+   ],
+   "file": "archetypes/addressable_led_controller.json"
+  },
+  "lcd_tft_display_board": {
+   "name": "LCD/TFT display board",
+   "domain": "led_display",
+   "maturity": "DRAFT",
+   "overlays": [
+    "high_speed_digital"
+   ],
+   "file": "archetypes/lcd_tft_display_board.json"
+  },
+  "oled_epaper_display_board": {
+   "name": "OLED / e-paper display board",
+   "domain": "led_display",
+   "maturity": "DRAFT",
+   "overlays": [
+    "low_power"
+   ],
+   "file": "archetypes/oled_epaper_display_board.json"
+  },
+  "led_backlight_driver": {
+   "name": "LED backlight driver",
+   "domain": "led_display",
+   "maturity": "DRAFT",
+   "overlays": [
+    "switching_power",
+    "thermal_management"
+   ],
+   "file": "archetypes/led_backlight_driver.json"
+  },
+  "swd_jtag_programmer": {
+   "name": "SWD/JTAG programmer-debugger",
+   "domain": "test_debug",
+   "maturity": "DRAFT",
+   "overlays": [
+    "usb_interface"
+   ],
+   "file": "archetypes/swd_jtag_programmer.json"
+  },
+  "logic_analyzer_board": {
+   "name": "Logic analyser board",
+   "domain": "test_debug",
+   "maturity": "DRAFT",
+   "overlays": [
+    "usb_interface",
+    "high_speed_digital"
+   ],
+   "file": "archetypes/logic_analyzer_board.json"
+  },
+  "bed_of_nails_test_fixture": {
+   "name": "Bed-of-nails test fixture board",
+   "domain": "test_debug",
+   "maturity": "DRAFT",
+   "overlays": [],
+   "file": "archetypes/bed_of_nails_test_fixture.json"
+  },
+  "benchtop_power_supply_control": {
+   "name": "Bench power supply control board",
+   "domain": "test_debug",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog",
+    "thermal_management",
+    "high_current"
+   ],
+   "file": "archetypes/benchtop_power_supply_control.json"
+  },
+  "signal_generator_board": {
+   "name": "Signal generator board",
+   "domain": "test_debug",
+   "maturity": "DRAFT",
+   "overlays": [
+    "precision_analog",
+    "high_speed_digital"
+   ],
+   "file": "archetypes/signal_generator_board.json"
+  },
+  "automotive_12v_controller": {
+   "name": "Automotive 12 V controller",
+   "domain": "automotive",
+   "maturity": "DRAFT",
+   "overlays": [
+    "automotive_environment",
+    "can_interface",
+    "emi_emc",
+    "harsh_environment"
+   ],
+   "file": "archetypes/automotive_12v_controller.json"
+  },
+  "obd_can_telematics": {
+   "name": "OBD-II / CAN telematics device",
+   "domain": "automotive",
+   "maturity": "DRAFT",
+   "overlays": [
+    "automotive_environment",
+    "can_interface",
+    "rf_communication",
+    "emi_emc"
+   ],
+   "file": "archetypes/obd_can_telematics.json"
+  }
+ },
+ "overlay_ids": [
+  "rf_communication",
+  "high_current",
+  "thermal_management",
+  "emi_emc",
+  "battery_management",
+  "low_power",
+  "usb_interface",
+  "mains_safety_isolation",
+  "galvanic_isolation",
+  "industrial_interfaces",
+  "high_speed_digital",
+  "precision_analog",
+  "motor_drive",
+  "can_interface",
+  "harsh_environment",
+  "automotive_environment",
+  "switching_power"
+ ],
+ "rule_set_ids": [
+  "ac_mains_hv",
+  "analog_sensors",
+  "battery_bms",
+  "core",
+  "dcdc_power",
+  "embedded_mcu",
+  "industrial_control",
+  "interfaces_comms",
+  "motor_control",
+  "rf_wireless"
+ ],
+ "family_count": 206,
+ "rule_count": 66,
+ "reference_count": 46
+}

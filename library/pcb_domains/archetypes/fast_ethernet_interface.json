@@ -1,0 +1,142 @@
+{
+ "schema_version": "1.0.0",
+ "archetype_id": "fast_ethernet_interface",
+ "name": "10/100 Ethernet interface",
+ "domain": "interfaces_comms",
+ "description": "10/100BASE-TX PHY (MII/RMII) with magnetics, RJ45, and optional PoE pass-through.",
+ "intended_applications": [
+  "IoT gateways",
+  "industrial devices",
+  "printers"
+ ],
+ "typical_input_requirements": [
+  "Host interface (RMII)",
+  "PoE",
+  "Isolation",
+  "Auto-MDIX"
+ ],
+ "electrical_characteristics": [
+  "Two 100 ohm pairs through magnetics",
+  "RMII 50 MHz reference clock",
+  "1500 V isolation through magnetics"
+ ],
+ "operating_voltage_ranges": {
+  "phy": "3.3 V (1.2 V core internal)"
+ },
+ "current_power_characteristics": "< 200 mA",
+ "typical_component_families": [
+  "ethernet_phy",
+  "ethernet_magnetics",
+  "rj45_connector",
+  "crystal",
+  "tvs_diode",
+  "decoupling_capacitor"
+ ],
+ "required_component_roles": [
+  "ethernet_phy",
+  "ethernet_magnetics",
+  "rj45_connector",
+  "crystal",
+  "decoupling_capacitor"
+ ],
+ "optional_component_roles": [
+  "tvs_diode",
+  "poe_pd_controller"
+ ],
+ "critical_electrical_constraints": [
+  "TX/RX pairs 100 ohm matched; termination per PHY",
+  "Isolation gap under the magnetics",
+  "RMII clock routed as a controlled trace"
+ ],
+ "stackup_recommendations": [
+  "2 layers for low-speed buses; 4 layers when USB or Ethernet differential pairs are present"
+ ],
+ "placement_rules": [
+  "Transceiver as close to its connector as the protection parts allow; protection between connector and transceiver",
+  "Termination resistors at the bus end; bias resistors at the transceiver",
+  "Isolated interfaces: isolator straddles the barrier, isolated supply next to it"
+ ],
+ "routing_rules": [
+  "Differential pairs (USB 90 ohm, Ethernet 100 ohm, CAN/RS-485 120 ohm) per the standard; matched lengths",
+  "Shield/chassis ground ring at the connector, joined to logic ground at one point or via a capacitor per the product grounding plan",
+  "Short stubs on multidrop buses; no vias in the differential pair where avoidable"
+ ],
+ "copper_ground_requirements": [
+  "Ground plane under transceivers; keep-out under the isolation barrier"
+ ],
+ "thermal_considerations": [
+  "Bus-powered boards: regulator dissipation at the maximum port voltage"
+ ],
+ "emi_emc_considerations": [
+  "Common-mode chokes on USB/Ethernet where the product is EMC tested; ferrite on shield ground"
+ ],
+ "protection_requirements": [
+  "TVS on every bus line rated for the bus voltage and the surge/ESD level required",
+  "Fuse or current limiter on supplied power (VBUS, PoE, bus power)"
+ ],
+ "verification_requirements": [
+  "Differential pair geometry recorded against the fabricator stackup",
+  "Termination and bias values from the transceiver datasheet",
+  "ESD placement and clearance verified",
+  "Interface compliance (eye diagram, bit-error) is a hardware test"
+ ],
+ "manufacturing_constraints": [
+  "Connector footprints from the manufacturer drawing; through-hole connectors for mechanical strain"
+ ],
+ "applicable_standards": [
+  "IEEE-802.3",
+  "MFR-DATASHEET",
+  "IPC-2221B"
+ ],
+ "unsupported_conditions": [
+  "Pour across the magnetics isolation gap"
+ ],
+ "typical_overlays": [
+  "emi_emc",
+  "galvanic_isolation"
+ ],
+ "classification": {
+  "keywords": {
+   "10/100": 10,
+   "fast ethernet": 10,
+   "rmii": 8,
+   "lan8720": 6,
+   "ethernet": 5,
+   "100base": 8
+  },
+  "features": {
+   "protocols_any": [
+    "ethernet"
+   ]
+  }
+ },
+ "maturity": {
+  "status": "DRAFT",
+  "evidence": "knowledge entry; rules not yet exercised by a fixture for this archetype",
+  "rule_ids": [
+   "ELEC-WIDTH-001",
+   "ELEC-UNKNOWN-002",
+   "ELEC-CLEAR-003",
+   "ELEC-CREEP-004",
+   "ELEC-RATING-007",
+   "PLACE-DECAP-010",
+   "PLACE-KEEPOUT-011",
+   "PLACE-XTAL-015",
+   "PLACE-ISO-016",
+   "ROUTE-PRIO-020",
+   "ROUTE-HV-025",
+   "COPPER-GND-040",
+   "COPPER-ZONE-041",
+   "COPPER-RELIEF-042",
+   "COPPER-ISLAND-043",
+   "COPPER-BARRIER-044",
+   "EMI-FILTER-061",
+   "EMI-ESD-062",
+   "MFG-MIN-070",
+   "MFG-DRILL-071",
+   "MFG-EDGE-072"
+  ],
+  "last_reviewed": "2026-11-12",
+  "reviewed_by": "DESK engineering (automated generation, pending human review)"
+ }
+}
