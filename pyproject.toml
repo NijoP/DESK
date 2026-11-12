@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "desk-pcb"
+dynamic = ["version"]
+description = "AI-assisted PCB engineering workbench for EasyEDA Pro: deterministic physics, fail-closed gates, human-approved mutation."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Tusk Innovations Global Pvt Ltd" }]
+keywords = ["pcb", "easyeda", "freerouting", "ipc-2221", "hardware", "electronics"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+# DESK is standard-library only on purpose. Keep this list empty.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/NijoP/DESK"
+Repository = "https://github.com/NijoP/DESK"
+
+[project.scripts]
+desk = "desk.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "desk._version.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["desk*"]
+exclude = ["tests*", "tools*", "projects*", "docs*"]

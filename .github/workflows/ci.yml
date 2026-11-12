@@ -1,0 +1,37 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  unit:
+    name: ${{ matrix.os }} / py${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ["3.9", "3.11", "3.12"]
+    env:
+      DESK_TELEMETRY: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Editable install (console script `desk`)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          desk --version
+      - name: Unit and fixture tests (no network, no ECAD, no Java needed)
+        run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Import cost of the lazy facades (informational)
+        continue-on-error: true
+        run: python -X importtime -c "import desk.routing, desk.rework" 2>&1 | tail -n 3
+      - name: Library consistency (domain intelligence)
+        run: python tools/desk.py domains check

@@ -25,7 +25,7 @@ Three principles decide how the tool behaves:
 
 1. **Knowledge before geometry.** No part is chosen and no track is drawn until the board's domain, rails, currents and environment are declared.
 2. **Physics before appearance.** Widths, clearances and creepage come from IPC-2221, IPC-2221B and IEC 60664-1 formulas and tables in [`desk/ipc.py`](desk/ipc.py), never from a model's guess. An undeclared current or voltage is a hard failure, not a default.
-3. **Verification before mutation.** Every live change to a board is planned, checked, applied under a single-writer lock and read back from the ECAD engine. The engineer approves each mutation.
+3. **Verification before mutation.** Every live change to a board is planned, checked, applied under a single-writer lock and read back from the ECAD engine. The engineer approves each mutation, and the approval is journalled next to the operation it covers (`DESK_MUTATION_POLICY=require` refuses unapproved ones).
 
 Roles are fixed: **AI reasons, DESK calculates, validators verify, the engineer approves.**
 
@@ -121,8 +121,10 @@ Requirements: Python 3.9 or newer (3.11 or 3.12 recommended), Windows 11 is the 
 git clone https://github.com/NijoP/DESK.git
 cd DESK
 
-python -m unittest discover -s tests -p "test_*.py"   # 549 tests, no network, no ECAD needed
-python desk.py doctor                                 # Python, Java, Freerouting, EasyEDA bridge, project binding
+python -m unittest discover -s tests -p "test_*.py"   # no network, no ECAD needed
+python -m pip install -e . && desk --version          # optional: the `desk` console command (still zero dependencies)
+python desk.py doctor                                 # Python, Java, Freerouting, EasyEDA bridge, config, project binding
+python desk.py config show                            # effective configuration: env > ~/.desk/config.json > desk.config.json
 python desk.py tools                                  # one line per tool
 
 python tools/new_project.py MY_BOARD                  # projects/MY_BOARD from the template

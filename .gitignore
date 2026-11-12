@@ -18,3 +18,8 @@ library/api_signatures.json
 *.db-shm
 library/tools/jdk*/
 library/tools/*.zip
+/state/
+desk.config.local.json
+*.egg-info/
+build/
+dist/

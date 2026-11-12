@@ -23,13 +23,25 @@ cd DESK
 
 # Verify core engineering test suite (zero external dependencies required)
 python -m unittest discover -s tests -p "test_*.py"
+
+# Optional: editable install gives you the `desk` command (still no third-party packages)
+python -m pip install -e .
+desk --version
+
+# Prerequisites with fixes, and the effective configuration (secrets masked)
+python desk.py doctor
+python desk.py config show
 ```
 
 Expected output:
 ```text
-Ran 4xx tests in 20-30s
+Ran 5xx tests in 20-35s
 OK (skipped=3)
 ```
+
+Configuration is read in this order: environment variable, then `~/.desk/config.json`, then
+`desk.config.json` in the repository, then the built-in default. `python desk.py config schema`
+lists every key; [`docs/CONFIGURATION.md`](CONFIGURATION.md) is the same table in a page.
 The exact count grows with every release; what matters is `OK` with zero failures and zero errors. The
 three skips are live-only checks (bridge port discovery, optional CLIs).
 

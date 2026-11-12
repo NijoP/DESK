@@ -47,6 +47,7 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
 - **EasyEDA API:** `python tools/ctx.py api <method|module>` (signature + live existence + verified status). Never read the whole API reference.
 - **Tool Catalog:** `python tools/desk.py tools`.
 - **Interrupted Writes:** `python tools/desk.py recover projects/<P>`.
+- **Configuration:** `python tools/desk.py config show` (env > `~/.desk/config.json` > `desk.config.json` > default; secrets masked); never read `os.environ` directly in `desk/` or `tools/`, use `desk.config` (`tests/test_config.py` enforces it).
 - **Decision Logging:** Record every fact/decision with source:
   `python tools/ledger.py projects/<P> add decision "<what + why>" --block <ID> --source "<datasheet p.X / calc>"`
 
@@ -85,6 +86,8 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
 - **No Component Replacement:** Do not silently replace PCB components or substitute footprints.
 - **Verified API Surface:** Do not claim unverified EasyEDA API support.
 - **Single-Writer Lock:** Never work on two blocks at once; never run two writers on a live project.
+- **Approval Record:** every live mutation goes through `ops.write_op(..., approval=<id>)`; the id comes from `ops.cli_approval` (operator ran the tool), `ops.record_approval` (agent with `--allow-mutation`) or a rework `RW-APR-` token. `DESK_MUTATION_POLICY=require` refuses unapproved non-idempotent mutations (`tests/test_mutation_policy.py`).
+- **Typed Errors:** raise `desk.errors` classes (`ProjectError`, `BridgeUnreachable`, `WriteLockHeld`, `ApprovalRequired`, `UsageError`...) instead of bare `SystemExit`; they still exit a CLI cleanly and are catchable by name.
 
 ---
 
