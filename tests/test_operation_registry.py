@@ -25,11 +25,23 @@ class TestOperationRegistry(unittest.TestCase):
             self.assertTrue(op.deterministic)
 
     def test_calc_trace_width_execution(self):
+        from desk import ipc
         result = self.registry.execute("calc_trace_width", {"current_a": 3.0, "temp_rise_c": 10.0})
         self.assertEqual(result["status"], "SUCCESS")
         self.assertEqual(result["pipeline_stage"], "M3")
         self.assertEqual(result["replay_policy"], "SAFE_READ")
-        self.assertGreater(result["result"]["trace_width_mm"], 0.0)
+        r = result["result"]
+        # One authoritative implementation: the registry must agree with desk.ipc exactly.
+        self.assertAlmostEqual(r["trace_width_mil"], ipc.trace_width_mil(3.0, is_inner=False, copper_oz=1.0, temp_rise_c=10.0), places=2)
+        self.assertAlmostEqual(r["trace_width_mm"], r["trace_width_mil"] * 0.0254, places=3)
+        self.assertIn("IPC-2221", r["reference"])
+        self.assertFalse(r["verified_against_standard"])
+        self.assertNotIn("2152", self.registry.get("calc_trace_width").description)
+
+    def test_calc_trace_width_refuses_unknown_current(self):
+        result = self.registry.execute("calc_trace_width", {"current_a": 0.0, "temp_rise_c": 10.0})
+        self.assertTrue(result["result"]["refused"])
+        self.assertNotIn("trace_width_mm", result["result"])
 
     def test_verify_clearance_execution(self):
         # Clearance between (0, 0) and (0, 0.5) is 0.5mm

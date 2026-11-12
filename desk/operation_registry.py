@@ -58,6 +58,28 @@ class OperationDescriptor:
         return errors
 
 
+def calc_trace_width(current_a: float, temp_rise_c: float = 10.0, copper_oz: float = 1.0,
+                     is_inner: bool = False) -> Dict[str, Any]:
+    """Authoritative trace width via desk.ipc (IPC-2221 power law). Unknown or non-positive currents are
+    refused instead of being sized (fail-closed, roadmap H-02). Returns mils and millimetres."""
+    from desk import ipc
+    if current_a is None or float(current_a) <= 0.0:
+        return {"refused": True, "error": "current_a must be > 0 A; an unknown current is never sized by assumption",
+                "current_a": current_a}
+    width_mil = ipc.trace_width_mil(float(current_a), is_inner=bool(is_inner), copper_oz=float(copper_oz),
+                                    temp_rise_c=float(temp_rise_c))
+    return {
+        "trace_width_mil": round(width_mil, 2),
+        "trace_width_mm": round(width_mil * 0.0254, 4),
+        "current_a": current_a,
+        "temp_rise_c": temp_rise_c,
+        "copper_oz": copper_oz,
+        "is_inner": bool(is_inner),
+        "reference": "IPC-2221 power law, k=0.048 external / 0.024 internal, b=0.44, c=0.725 (desk.ipc)",
+        "verified_against_standard": bool(getattr(ipc, "verified_against_standard", False)),
+    }
+
+
 class OperationRegistry:
     """Registry maintaining all available operations across DESK pipelines."""
 
@@ -106,11 +128,11 @@ class OperationRegistry:
 
     def _register_default_operations(self) -> None:
         """Registers the core standard operations across M1–M6 and Runtime."""
-        # 1. Trace Width Calculation (M3)
+        # 1. Trace Width Calculation (M3) — delegates to desk.ipc, the single authoritative formula module.
         self.register(OperationDescriptor(
             operation_id="calc_trace_width",
             name="Calculate Trace Width",
-            description="Calculates IPC-2152 trace width based on current, copper weight, and temp rise.",
+            description="IPC-2221 power-law trace width (desk.ipc.trace_width_mil) from current, temperature rise, copper weight and layer; refuses unknown (<= 0 A) currents.",
             schema_version="1.0.0",
             deterministic=True,
             resource_class=ResourceClass.LIGHT,
@@ -118,11 +140,7 @@ class OperationRegistry:
             replay_policy=ReplayPolicy.SAFE_READ,
             pipeline_stage="M3",
             input_schema={"current_a": (int, float), "temp_rise_c": (int, float)},
-            handler=lambda current_a, temp_rise_c=10.0: {
-                "trace_width_mm": round(0.048 * (current_a / (temp_rise_c ** 0.44)) ** 0.725, 4),
-                "current_a": current_a,
-                "temp_rise_c": temp_rise_c,
-            }
+            handler=calc_trace_width,
         ))
 
         # 2. DRC Clearance Check (M5)
