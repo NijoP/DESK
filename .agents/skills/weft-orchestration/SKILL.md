@@ -26,7 +26,9 @@ Weft orchestrates, DESK engineers. Workflows are Weft programs under `integratio
 3. To change a workflow: edit `integrations/weft/workflows/<name>/src/main.weft` or a stage group in `integrations/weft/nodes/desk_stages/`. Gate every stage on the `passed` of the one before it.
 4. After every edit to a `.weft` file or a contract: `python tools/desk.py weft validate`. Fix every error and every warning before going on.
 5. Build one stage at a time against real output, not a longer plan: run the node, read what came back, then add the next stage.
-6. Run `python -m unittest discover -s tests -p "test_weft_*.py"`, then the full suite.
+6. After a workflow or run-input change: `python tools/desk.py weft check-run <workflow>` (upstream's admission check) and, if a node with an `HttpRequest` was added or moved, `python tools/desk.py weft addresses <workflow>` (each listed site needs the node-service connection picked).
+7. Run `python -m unittest discover -s tests -p "test_weft_*.py"`, then the full suite.
+8. Live Weft runs happen only on the separate Linux machine, through `docs/weft/05_LINUX_VALIDATION.md`. Do not install or configure WSL, Docker or Weft on the Windows development machine.
 
 ## Hard Rules
 - A handler is a thin adapter. Engineering logic belongs in a DESK engine, never in a node, a `.weft` file or a prompt.
@@ -36,7 +38,8 @@ Weft orchestrates, DESK engineers. Workflows are Weft programs under `integratio
 - No node mutates a live design until its authorization path (write lock, approval record, Captain sign-off) is designed and approved.
 - If Weft is unavailable, say so. Never run the stages by another route and call it a Weft run.
 - Never install Tangle at the DESK repository root: its installer replaces `AGENTS.md`, `CLAUDE.md` and the skill folders.
-- Never report a Weft behaviour as verified unless it was executed; `docs/weft/04_STATUS.md` lists what is still unproven.
+- Never report a Weft behaviour as verified unless it was executed; `docs/weft/04_STATUS.md` lists what is still unproven, with the labels PASSED / VERIFIED FROM SOURCE / MOCK TEST PASSED — LIVE VALIDATION PENDING / NOT RUN — ENVIRONMENT DEFERRED / BLOCKED — EXTERNAL RUNTIME REQUIRED.
+- An approval is a person's decision: `desk.py weft answer` takes it as an explicit argument and is never run automatically outside the scratch validation fixture.
 
 ## References
-`docs/weft/01_ARCHITECTURE.md`, `docs/weft/02_INSTALL.md`, `docs/weft/03_LICENCE.md`, `docs/weft/04_STATUS.md`, `integrations/weft/WEFT_PIN.json`.
+`docs/weft/01_ARCHITECTURE.md`, `docs/weft/02_INSTALL.md`, `docs/weft/03_LICENCE.md`, `docs/weft/04_STATUS.md`, `docs/weft/05_LINUX_VALIDATION.md`, `integrations/weft/WEFT_PIN.json`, `integrations/weft/linux/`.
