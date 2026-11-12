@@ -322,6 +322,21 @@ class Engine:
         uu = "sheet_uuid " + ("set" if "REPLACE" not in self.pj.get("sheet_uuid", "REPLACE") and "PASTE" not in self.pj.get("sheet_uuid", "PASTE") else "NOT SET")
         P.add(0, "project", f"gate R: {gateR}\ngate B: {chosen} key parts chosen in BOM_SELECTION.md\n{uu}\n"
                             f"blocks: {len(self.blocks)}, ledger entries: {len(self.ledger)}")
+        dp_path = os.path.join(self.project, "design_profile.json")
+        dom = {}
+        if os.path.exists(dp_path):
+            try:
+                with open(dp_path, encoding="utf-8") as f:
+                    dom = (json.load(f).get("domain_profile") or {})
+            except (OSError, ValueError):
+                dom = {}
+        if dom.get("primary_archetype"):
+            P.add(0, "domain (DDIS)", f"archetype {dom['primary_archetype']} + {dom.get('secondary_archetypes', [])}; overlays {dom.get('overlays', [])}\n"
+                                      f"rules: {len(dom.get('enforced_rule_ids', []))} enforced, {len(dom.get('advisory_rule_ids', []))} advisory, "
+                                      f"{len(dom.get('unsupported_rule_ids', []))} unsupported; status {dom.get('status', '?')}\n"
+                                      f"context: python tools/desk.py domains rules {dom['primary_archetype']}")
+        else:
+            P.add(1, "domain (DDIS)", "not classified yet -> python tools/desk.py domains validate " + os.path.relpath(self.project).replace(chr(92), "/") + "/REQUIREMENTS.md --project " + os.path.relpath(self.project).replace(chr(92), "/"))
         order = self.pj.get("block_order") or sorted(self.blocks)
         rows, nxt = [], None
         for bid in [x for x in order if x in self.blocks] + sorted(set(self.blocks) - set(order)):

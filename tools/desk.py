@@ -8,6 +8,8 @@
   python tools/desk.py settings                      ecosystem provider health and readiness dashboard
   python tools/desk.py doctor [--project <P>] [--json] check prerequisites (bridge, Java, Freerouting, CLIs, project binding) with fixes
   python tools/desk.py agent projects/<P> "<task>" [--model <id>] [--allow-mutation] [--max-turns N] [--json]
+  python tools/desk.py domains list|search "<text>"|show <archetype>|classify <requirements.json|"text">|rules <archetype> [--overlays a,b]|validate <requirements.json|"text">|check
+                                                     Domain Intelligence: 100 PCB archetypes, component families and the deterministic rule engine (--json for machine output)
                                                      tool-calling agent on NVIDIA NIM (Nemotron 3 Ultra by default): reads the sheet, plans wires, mutates only with --allow-mutation
   python tools/desk.py recover projects/<P>          list unfinished/dirty live operations and how to resolve each
   python tools/desk.py recover projects/<P> --clear  resolve dirty builds by running tools/clear_block.py for them (live)
@@ -419,6 +421,96 @@ if a[0] == "settings":
 if a[0] == "doctor":
     from desk.doctor import main as doctor_main
     sys.exit(doctor_main(a[1:]))
+
+if a[0] == "domains":
+    from desk.domain_intelligence import api as dapi
+    sub = a[1] if len(a) > 1 else "list"
+    rest = [x for x in a[2:] if not x.startswith("--")]
+    as_json = "--json" in a
+
+    def _source(arg):
+        if arg and os.path.exists(arg):
+            with open(arg, encoding="utf-8") as fh:
+                return json.load(fh) if arg.endswith(".json") else fh.read()
+        return arg or ""
+
+    if sub == "list":
+        out = dapi.list_domains()
+        if as_json:
+            print(json.dumps(out, indent=1))
+        else:
+            for d in out:
+                print(f"{d['domain_id']:20s} {d['name']} ({len(d['archetypes'])})")
+                for x in d["archetypes"]:
+                    print(f"    {x['id']:34s} {x['name']}  [{x['maturity']}]")
+        sys.exit(0)
+    if sub == "search":
+        hits = dapi.search(" ".join(rest))
+        print(json.dumps(hits, indent=1) if as_json else "\n".join(f"{h['score']:>4}  {h['archetype_id']:34s} {h['name']} ({h['domain']})" for h in hits))
+        sys.exit(0)
+    if sub == "show":
+        d = dapi.show(rest[0])
+        if as_json:
+            print(json.dumps(d, indent=1))
+        else:
+            print(f"{d['archetype_id']}: {d['name']}  [{d['domain']}, {d['maturity']['status']}]\n{d['description']}")
+            for key in ("required_component_roles", "critical_electrical_constraints", "unsupported_conditions", "applicable_standards"):
+                print(f"\n{key}:")
+                for x in d[key]:
+                    print("  -", x)
+            print("\nrules:")
+            for r in d["rules"]:
+                print(f"  {r['rule_id']:18s} {r['severity']:8s} {r['mode']:11s} {r['status']:15s} {r['name']}")
+        sys.exit(0)
+    if sub == "classify":
+        r = dapi.classify(_source(" ".join(rest)))
+        if as_json:
+            print(dapi.to_json(r))
+        else:
+            print(f"primary: {r.primary_archetype}  status: {r.classification_status}  confidence: {r.confidence}")
+            print(f"secondary: {r.secondary_archetypes}\noverlays: {r.required_overlays}\nfamilies: {r.required_component_families}")
+            print("candidates:", [(c.archetype_id, c.score) for c in r.candidates[:5]])
+            for e in r.evidence:
+                print("  evidence:", e)
+            for c in r.conflicts:
+                print("  CONFLICT:", c)
+            for m in r.missing_information:
+                print("  missing:", m)
+        sys.exit(0 if r.classification_status == "CLASSIFIED" else 1)
+    if sub == "rules":
+        ov = a[a.index("--overlays") + 1].split(",") if "--overlays" in a else None
+        d = dapi.rules_for(rest[0], overlays=ov)
+        if as_json:
+            print(json.dumps(d, indent=1))
+        else:
+            print(f"{d['archetype_id']} overlays={d['overlays']} rules={len(d['rules'])}")
+            for r in d["rules"]:
+                print(f"  {r['rule_id']:18s} {r['severity']:8s} {r['mode']:11s} {r['status']:15s} {r['name']}  <- {','.join(r['scope_reason'])}")
+            for c in d["conflicts"]:
+                print("  CONFLICT:", c)
+        sys.exit(0)
+    if sub == "validate":
+        proj = a[a.index("--project") + 1] if "--project" in a else "UNBOUND"
+        out = dapi.validate_requirements(_source(" ".join(rest)), project_id=proj)
+        if as_json:
+            print(json.dumps(out, indent=1))
+        else:
+            c, cp = out["classification"], out["compiled"]
+            print(f"primary: {c['primary_archetype']} ({c['classification_status']}, {c['confidence']})  profile status: {cp['status']}")
+            print(f"overlays: {cp['overlays']}\nenforced: {len(cp['enforced_rule_ids'])}  advisory: {len(cp['advisory_rule_ids'])}  unsupported: {cp['unsupported_rule_ids']}")
+            for b in cp["blocking_issues"]:
+                print("  BLOCKING:", b)
+            for e in cp["evaluations"]:
+                if e["outcome"] in ("FAIL", "PASS"):
+                    print(f"  {e['outcome']:5s} {e['rule_id']:18s} {e['message'][:110]}")
+            for m in cp["missing_information"]:
+                print("  missing:", m)
+        sys.exit(0 if out["compiled"]["status"] == "READY" else 1)
+    if sub == "check":
+        rep = dapi.validate_library_report()
+        print(json.dumps(rep, indent=1) if as_json else (f"library {rep['version']}: {rep['archetypes']} archetypes, {rep['overlays']} overlays, {rep['families']} families, {rep['rules']} rules, {rep['references']} references -> " + ("OK" if rep["ok"] else "\n".join(rep["problems"]))))
+        sys.exit(0 if rep["ok"] else 1)
+    raise SystemExit("usage: desk.py domains list|search|show|classify|rules|validate|check")
 
 if a[0] == "agent":
     from desk.orchestrator.agent_loop import run_agent

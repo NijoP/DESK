@@ -47,6 +47,14 @@ TOOLS: List[Dict[str, Any]] = [
         "description": "READ-ONLY. Environment checks: bridge, Java, Freerouting, model CLIs, project binding; each failure has a fix.",
         "parameters": {"type": "object", "properties": {"project": {"type": "string"}}, "required": []}}},
     {"type": "function", "function": {
+        "name": "classify_requirements",
+        "description": "READ-ONLY, deterministic. Classify client requirements (text or a JSON object of declared values) into a primary PCB archetype, secondary archetypes, engineering overlays, required component families, missing information and conflicts. Call this before proposing any design.",
+        "parameters": {"type": "object", "properties": {"requirements": {"type": "string", "description": "requirement text, or a JSON object as a string"}}, "required": ["requirements"]}}},
+    {"type": "function", "function": {
+        "name": "domain_rules",
+        "description": "READ-ONLY. The engineering rules DESK applies for an archetype (with overlays): which are ENFORCED by a DESK subsystem, which are ADVISORY and which are UNSUPPORTED, with their standards references. Also returns a compact context block.",
+        "parameters": {"type": "object", "properties": {"archetype_id": {"type": "string"}, "overlays": {"type": "array", "items": {"type": "string"}}}, "required": ["archetype_id"]}}},
+    {"type": "function", "function": {
         "name": "run_desk_tool",
         "description": "Run one of DESK's own CLI tools (verify, lint, erc, pcb_check, route --dry) for the project and return its output. Mutating tools (build, clear_block, route, pcb_place) are refused unless the session allows mutation.",
         "parameters": {"type": "object", "properties": {"project": {"type": "string"}, "tool": {"type": "string", "enum": ["verify", "lint", "erc", "pcb_check", "route_dry", "bom", "ping"]},
@@ -157,7 +165,29 @@ def _h_run_tool(args, ctx):
         return {"error": f"{tool} timed out after 600 s"}
 
 
+def _h_classify(args, ctx):
+    from desk.domain_intelligence import api as dapi
+    src = args.get("requirements", "")
+    try:
+        parsed = json.loads(src) if isinstance(src, str) and src.strip().startswith("{") else src
+    except Exception:
+        parsed = src
+    r = dapi.classify(parsed)
+    d = r.to_dict()
+    d["candidates"] = d["candidates"][:5]
+    return d
+
+
+def _h_domain_rules(args, ctx):
+    from desk.domain_intelligence import api as dapi
+    d = dapi.rules_for(args["archetype_id"], overlays=args.get("overlays"))
+    d["context"] = dapi.agent_context(args["archetype_id"], overlays=args.get("overlays"))
+    return d
+
+
 HANDLERS: Dict[str, ToolHandler] = {
+    "classify_requirements": _h_classify,
+    "domain_rules": _h_domain_rules,
     "read_schematic": _h_read_schematic,
     "list_schematic_nets": _h_list_nets,
     "plan_wires": _h_plan_wires,

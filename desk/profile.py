@@ -151,6 +151,9 @@ class DesignProfile:
     material_group: str = "III"            # CTI group I, II, III (IIIa/IIIb)
     # Fail-closed policy for power nets without a declared current: "fail" raises, "default_1A" sizes at 1 A.
     unknown_current_policy: str = "fail"
+    # Domain Intelligence (desk/domain_intelligence): archetype/overlay ids, resolved rule ids and compile status.
+    # Optional and informational; engines never read numbers from it. Empty for profiles made before DDIS.
+    domain_profile: Dict[str, Any] = field(default_factory=dict)
     created_at: str = ""
     profile_hash: str = ""
 
@@ -370,6 +373,7 @@ class DesignProfile:
             "pollution_degree": self.pollution_degree,
             "material_group": self.material_group,
             "unknown_current_policy": self.unknown_current_policy,
+            "domain_profile": self.domain_profile,
             "created_at": self.created_at,
             "profile_hash": self.profile_hash,
         }
