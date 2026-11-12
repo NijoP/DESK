@@ -438,7 +438,11 @@ def main(argv):
     if a[0] == "domains":
         from desk.domain_intelligence import api as dapi
         sub = a[1] if len(a) > 1 else "list"
-        rest = [x for x in a[2:] if not x.startswith("--")]
+        # Drop flags AND the values of flags that take one (--project <P>, --overlays <a,b>); otherwise
+        # `validate req.json --project projects/P` joins to "req.json projects/P", the file is not found
+        # and the JSON path is classified as prose (UPS_1000 run, F-003).
+        _valued = {"--project", "--overlays"}
+        rest = [x for i, x in enumerate(a[2:]) if not x.startswith("--") and not (i > 0 and a[2:][i - 1] in _valued)]
         as_json = "--json" in a
 
         def _source(arg):
