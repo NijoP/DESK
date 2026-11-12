@@ -1,0 +1,221 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "rf_wireless",
+ "rules": [
+  {
+   "rule_id": "PLACE-ANT-014",
+   "name": "Antenna at the board edge with the datasheet keep-out",
+   "version": "1.0.0",
+   "domain": "rf_wireless",
+   "category": "placement",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "rf_communication"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "placement_plan.keepouts",
+    "antenna_datasheet_keepout"
+   ],
+   "evaluation_method": "desk.placement.keepout",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Keep-out must be declared in placement.json; then enforced as PLACE-KEEPOUT-011",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": "The keep-out value itself comes from the antenna datasheet (human input)."
+  },
+  {
+   "rule_id": "ROUTE-RF-022",
+   "name": "RF feed as a 50 ohm line with ground fence and no vias",
+   "version": "1.0.0",
+   "domain": "rf_wireless",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "rf_communication"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "rf_lines",
+    "stackup"
+   ],
+   "evaluation_method": "desk.routing.rf_line",
+   "parameters": {
+    "impedance_ohm": 50
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "RFProfile width/ground clearance applied as net-class width and clearance; via prohibition not enforced by Freerouting",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "COPPER-ANT-045",
+   "name": "No copper in the antenna keep-out on any layer",
+   "version": "1.0.0",
+   "domain": "rf_wireless",
+   "category": "copper",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "rf_communication"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "placement_plan.keepouts",
+    "zones"
+   ],
+   "evaluation_method": "desk.copper.zone_boundary",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "check_polygon_boundary against keep-outs",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "EMI-RFHARM-064",
+   "name": "Switching harmonics out of the radio band",
+   "version": "1.0.0",
+   "domain": "rf_wireless",
+   "category": "emi_emc",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "rf_communication"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": [
+     {
+      "field": "switching_frequency_hz",
+      "op": "exists",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "switching_frequency_hz",
+    "rf_frequency_hz"
+   ],
+   "evaluation_method": "desk.rules.harmonic_check",
+   "parameters": {
+    "max_harmonic": 50
+   },
+   "source_references": [],
+   "verification_method": "Deterministic: n*fsw within the RF band +/- 5 % flagged; tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "LORA-BAND-110",
+   "name": "Matching network and band plan per region",
+   "version": "1.0.0",
+   "domain": "rf_wireless",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "lora_transceiver",
+     "subghz_transmitter"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": [
+     {
+      "field": "rf_region",
+      "op": "exists",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "rf_region",
+    "rf_frequency_hz"
+   ],
+   "evaluation_method": "desk.rules.band_plan",
+   "parameters": {
+    "regions": {
+     "EU868": [
+      863000000.0,
+      870000000.0
+     ],
+     "US915": [
+      902000000.0,
+      928000000.0
+     ],
+     "IN865": [
+      865000000.0,
+      867000000.0
+     ],
+     "AS923": [
+      915000000.0,
+      928000000.0
+     ],
+     "AU915": [
+      915000000.0,
+      928000000.0
+     ]
+    }
+   },
+   "source_references": [
+    "ETSI-EN-300-220",
+    "LoRaWAN-RP002",
+    "FCC-Part-15"
+   ],
+   "verification_method": "Deterministic: declared frequency inside the region's band; tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  }
+ ]
+}

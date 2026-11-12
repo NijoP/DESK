@@ -1,0 +1,533 @@
+{
+ "schema_version": "1.0.0",
+ "references": [
+  {
+   "id": "IPC-2221B",
+   "title": "Generic Standard on Printed Board Design",
+   "organisation": "IPC",
+   "kind": "standard",
+   "clause_notes": "Section 6.2 (clearance Table 6-1 bands B1-B4, A5-A7); Section 6.3 conductor sizing (power-law approximation used by desk.ipc)",
+   "url": "https://www.ipc.org",
+   "derived_values_used": [
+    "trace width power law k=0.048/0.024, b=0.44, c=0.725",
+    "clearance bands by voltage"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IPC-2152",
+   "title": "Standard for Determining Current Carrying Capacity in Printed Board Design",
+   "organisation": "IPC",
+   "kind": "standard",
+   "clause_notes": "Chart-based ampacity; not implemented in DESK (roadmap H-10)",
+   "url": "https://www.ipc.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IPC-7351B",
+   "title": "Generic Requirements for Surface Mount Design and Land Pattern Standard",
+   "organisation": "IPC",
+   "kind": "standard",
+   "clause_notes": "Land pattern density levels",
+   "url": "https://www.ipc.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IPC-6012",
+   "title": "Qualification and Performance Specification for Rigid Printed Boards",
+   "organisation": "IPC",
+   "kind": "standard",
+   "clause_notes": "Fabrication classes",
+   "url": "https://www.ipc.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-60664-1",
+   "title": "Insulation coordination for equipment within low-voltage supply systems",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Table F.4 creepage vs working voltage, pollution degree and material group (values used by desk.ipc.creepage_mm); Table F.2 clearance",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [
+    "creepage per PD1/PD2 and material group I-III",
+    "clearance by overvoltage category"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-62368-1",
+   "title": "Audio/video, information and communication technology equipment - Safety requirements",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Insulation classes (basic/double/reinforced), accessible parts, capacitor discharge",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-60335-1",
+   "title": "Household and similar electrical appliances - Safety",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Appliance creepage/clearance and construction",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61010-1",
+   "title": "Safety requirements for electrical equipment for measurement, control and laboratory use",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Measurement category clearances",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61558-2-16",
+   "title": "Safety of transformers - switch mode power supply units",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Transformer insulation",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61347-1",
+   "title": "Lamp controlgear - General and safety requirements",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "LED driver safety",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61800-5-1",
+   "title": "Adjustable speed electrical power drive systems - safety",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Drive insulation and protection",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61810-1",
+   "title": "Electromechanical elementary relays",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Relay contact/coil insulation",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61131-2",
+   "title": "Programmable controllers - Equipment requirements and tests",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Digital input types 1/2/3 thresholds; immunity",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-62133-2",
+   "title": "Safety requirements for portable sealed secondary lithium cells",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Pack safety tests",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "UL-2054",
+   "title": "Household and Commercial Batteries",
+   "organisation": "UL",
+   "kind": "standard",
+   "clause_notes": "Battery pack safety",
+   "url": "https://www.ul.com",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61000-4-2",
+   "title": "EMC - Electrostatic discharge immunity test",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "ESD levels (contact/air)",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61000-4-4",
+   "title": "EMC - Electrical fast transient/burst immunity test",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Burst levels",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61000-4-5",
+   "title": "EMC - Surge immunity test",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "Surge levels",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEC-61000-3-2",
+   "title": "EMC - Limits for harmonic current emissions",
+   "organisation": "IEC",
+   "kind": "standard",
+   "clause_notes": "PFC requirement by class/power",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "CISPR-32",
+   "title": "EMC of multimedia equipment - Emission requirements",
+   "organisation": "IEC/CISPR",
+   "kind": "standard",
+   "clause_notes": "Class A/B emissions",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "CISPR-15",
+   "title": "Limits for radio disturbance of electrical lighting equipment",
+   "organisation": "IEC/CISPR",
+   "kind": "standard",
+   "clause_notes": "Lighting emissions",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "CISPR-25",
+   "title": "Vehicles, boats and internal combustion engines - Radio disturbance characteristics",
+   "organisation": "IEC/CISPR",
+   "kind": "standard",
+   "clause_notes": "Automotive emissions",
+   "url": "https://webstore.iec.ch",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "ISO-7637-2",
+   "title": "Road vehicles - Electrical disturbances from conduction and coupling",
+   "organisation": "ISO",
+   "kind": "standard",
+   "clause_notes": "Load dump and transient pulses",
+   "url": "https://www.iso.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "ISO-16750-2",
+   "title": "Road vehicles - Environmental conditions - Electrical loads",
+   "organisation": "ISO",
+   "kind": "standard",
+   "clause_notes": "Supply voltage ranges, cold crank",
+   "url": "https://www.iso.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "ISO-11898-2",
+   "title": "Road vehicles - CAN - High-speed physical layer",
+   "organisation": "ISO",
+   "kind": "standard",
+   "clause_notes": "120 ohm termination, bus levels",
+   "url": "https://www.iso.org",
+   "derived_values_used": [
+    "120 ohm differential termination"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "ISO-15765",
+   "title": "Road vehicles - Diagnostic communication over CAN",
+   "organisation": "ISO",
+   "kind": "standard",
+   "clause_notes": "OBD over CAN",
+   "url": "https://www.iso.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "TIA-485-A",
+   "title": "Electrical Characteristics of Generators and Receivers for Balanced Digital Multipoint Systems",
+   "organisation": "TIA",
+   "kind": "standard",
+   "clause_notes": "RS-485 termination, common-mode range",
+   "url": "https://www.tiaonline.org",
+   "derived_values_used": [
+    "120 ohm termination"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEEE-802.3",
+   "title": "Ethernet",
+   "organisation": "IEEE",
+   "kind": "standard",
+   "clause_notes": "MDI 100 ohm pairs, 1500 V isolation (Clause 14/25/40)",
+   "url": "https://standards.ieee.org",
+   "derived_values_used": [
+    "100 ohm differential",
+    "1500 V isolation"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "IEEE-802.3bt",
+   "title": "Ethernet - Power over Ethernet (Type 3/4)",
+   "organisation": "IEEE",
+   "kind": "standard",
+   "clause_notes": "PoE classes and power",
+   "url": "https://standards.ieee.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "USB-2.0",
+   "title": "Universal Serial Bus Specification Revision 2.0",
+   "organisation": "USB-IF",
+   "kind": "specification",
+   "clause_notes": "90 ohm differential, VBUS limits",
+   "url": "https://www.usb.org",
+   "derived_values_used": [
+    "90 ohm differential"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "USB-3.2",
+   "title": "Universal Serial Bus 3.2 Specification",
+   "organisation": "USB-IF",
+   "kind": "specification",
+   "clause_notes": "SuperSpeed pairs, AC coupling",
+   "url": "https://www.usb.org",
+   "derived_values_used": [
+    "90 ohm differential"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "USB-PD-3.1",
+   "title": "USB Power Delivery Specification",
+   "organisation": "USB-IF",
+   "kind": "specification",
+   "clause_notes": "PDOs, 5-48 V VBUS",
+   "url": "https://www.usb.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "USB-Type-C-2.2",
+   "title": "USB Type-C Cable and Connector Specification",
+   "organisation": "USB-IF",
+   "kind": "specification",
+   "clause_notes": "CC pull-down/up values (Rd 5.1 k)",
+   "url": "https://www.usb.org",
+   "derived_values_used": [
+    "Rd 5.1 kOhm",
+    "Rp per current"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "MIPI-CSI-2",
+   "title": "MIPI Camera Serial Interface 2",
+   "organisation": "MIPI Alliance",
+   "kind": "specification",
+   "clause_notes": "D-PHY 100 ohm pairs",
+   "url": "https://www.mipi.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "PCIe-CEM",
+   "title": "PCI Express Card Electromechanical Specification",
+   "organisation": "PCI-SIG",
+   "kind": "specification",
+   "clause_notes": "Card-edge geometry, 85 ohm lanes (Gen3+)",
+   "url": "https://pcisig.com",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "HDMI-2.1",
+   "title": "HDMI Specification 2.1",
+   "organisation": "HDMI Forum",
+   "kind": "specification",
+   "clause_notes": "TMDS/FRL 100 ohm",
+   "url": "https://www.hdmi.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "JEDEC-DDR4",
+   "title": "DDR4 SDRAM Standard (JESD79-4)",
+   "organisation": "JEDEC",
+   "kind": "standard",
+   "clause_notes": "Timing, VREF, termination",
+   "url": "https://www.jedec.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "JESD51",
+   "title": "Methodology for the Thermal Measurement of Component Packages",
+   "organisation": "JEDEC",
+   "kind": "standard",
+   "clause_notes": "Theta-JA/JB definitions",
+   "url": "https://www.jedec.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "ETSI-EN-300-220",
+   "title": "Short Range Devices operating in 25 MHz to 1 000 MHz",
+   "organisation": "ETSI",
+   "kind": "standard",
+   "clause_notes": "Sub-GHz power/duty limits",
+   "url": "https://www.etsi.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "ETSI-EN-300-328",
+   "title": "Wideband transmission systems in the 2,4 GHz band",
+   "organisation": "ETSI",
+   "kind": "standard",
+   "clause_notes": "2.4 GHz limits",
+   "url": "https://www.etsi.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "FCC-Part-15",
+   "title": "Radio Frequency Devices",
+   "organisation": "FCC",
+   "kind": "regulation",
+   "clause_notes": "Unlicensed radio limits",
+   "url": "https://www.ecfr.gov",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "Bluetooth-Core",
+   "title": "Bluetooth Core Specification",
+   "organisation": "Bluetooth SIG",
+   "kind": "specification",
+   "clause_notes": "Radio requirements",
+   "url": "https://www.bluetooth.com",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "LoRaWAN-RP002",
+   "title": "LoRaWAN Regional Parameters",
+   "organisation": "LoRa Alliance",
+   "kind": "specification",
+   "clause_notes": "Regional channel plans",
+   "url": "https://lora-alliance.org",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "AEC-Q100",
+   "title": "Failure Mechanism Based Stress Test Qualification for Integrated Circuits",
+   "organisation": "AEC",
+   "kind": "qualification",
+   "clause_notes": "Automotive IC grades",
+   "url": "http://www.aecouncil.com",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "JLCPCB-CAPABILITIES",
+   "title": "JLCPCB PCB manufacturing capabilities",
+   "organisation": "JLCPCB",
+   "kind": "fabricator",
+   "clause_notes": "Min trace/space per copper weight, drills, annular rings (values in ManufacturerProfile presets)",
+   "url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+   "derived_values_used": [
+    "min trace 5 mil / clearance 4.02 mil (1 oz, 2-layer)"
+   ],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  },
+  {
+   "id": "MFR-DATASHEET",
+   "title": "Component manufacturer datasheet (per part)",
+   "organisation": "manufacturer",
+   "kind": "datasheet",
+   "clause_notes": "The datasheet of the selected part governs its values; resolved through tools/resolve.py and library/pins",
+   "url": "",
+   "derived_values_used": [],
+   "verification_status": "REFERENCE_ONLY",
+   "copyrighted_text_stored": false
+  }
+ ]
+}

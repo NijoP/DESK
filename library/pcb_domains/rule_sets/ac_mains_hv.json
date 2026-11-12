@@ -1,0 +1,207 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "ac_mains_hv",
+ "rules": [
+  {
+   "rule_id": "MFG-SLOT-074",
+   "name": "Slot the board where creepage cannot be met in the barrier",
+   "version": "1.0.0",
+   "domain": "ac_mains_hv",
+   "category": "manufacturing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "mains_safety_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "outline",
+    "barrier_definition"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [
+    "IEC-60664-1"
+   ],
+   "verification_method": "Review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MAINS-DECL-160",
+   "name": "Every mains/HV net declared in voltage_rails before any spacing is derived",
+   "version": "1.0.0",
+   "domain": "ac_mains_hv",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "mains_safety_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "voltage_rails"
+   ],
+   "evaluation_method": "desk.profile.validate_electrical_inputs",
+   "parameters": {
+    "hv_pattern": "HV|MAINS|AC_|_L$|_N$|LINE|NEUTRAL|BUS|400V|VDC_BUS"
+   },
+   "source_references": [
+    "IEC-60664-1"
+   ],
+   "verification_method": "DesignProfile.get_net_voltage_status flags HV-looking nets without a declared voltage; derive_clearance_mil raises",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MAINS-FUSE-161",
+   "name": "Fuse first after the mains connector; MOV after the fuse",
+   "version": "1.0.0",
+   "domain": "ac_mains_hv",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "mains_safety_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": [
+     {
+      "field": "mains",
+      "op": "==",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "component_families_present"
+   ],
+   "evaluation_method": "desk.rules.family_present",
+   "parameters": {
+    "any_of": [
+     "fuse"
+    ]
+   },
+   "source_references": [
+    "IEC-62368-1",
+    "IEC-60335-1"
+   ],
+   "verification_method": "Deterministic family presence; order is a schematic review item",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MAINS-XDIS-162",
+   "name": "Discharge resistor across X capacitors",
+   "version": "1.0.0",
+   "domain": "ac_mains_hv",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [],
+    "component_families": [
+     "x_capacitor"
+    ]
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "component_families_present"
+   ],
+   "evaluation_method": "desk.rules.family_present",
+   "parameters": {
+    "any_of": [
+     "discharge_resistor"
+    ]
+   },
+   "source_references": [
+    "IEC-62368-1"
+   ],
+   "verification_method": "Deterministic family presence",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MAINS-INS-163",
+   "name": "Insulation grade (basic/double/reinforced) declared for the barrier",
+   "version": "1.0.0",
+   "domain": "ac_mains_hv",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "mains_safety_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": [
+     {
+      "field": "isolation",
+      "op": "==",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "insulation_grade",
+    "isolation_voltage_v"
+   ],
+   "evaluation_method": "desk.rules.field_present",
+   "parameters": {
+    "fields": [
+     "insulation_grade",
+     "isolation_voltage_v"
+    ]
+   },
+   "source_references": [
+    "IEC-62368-1",
+    "IEC-60664-1"
+   ],
+   "verification_method": "Deterministic presence check; the creepage doubles for reinforced (applied by desk.profile.creepage parameters)",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  }
+ ]
+}

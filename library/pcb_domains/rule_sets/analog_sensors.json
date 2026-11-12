@@ -1,0 +1,38 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "analog_sensors",
+ "rules": [
+  {
+   "rule_id": "ROUTE-GUARD-030",
+   "name": "Guard rings on high-impedance analog nodes",
+   "version": "1.0.0",
+   "domain": "analog_sensors",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "precision_analog"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_roles"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [],
+   "verification_method": "Routing review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  }
+ ]
+}

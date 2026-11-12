@@ -1,0 +1,150 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "motor_control",
+ "rules": [
+  {
+   "rule_id": "ROUTE-GATE-028",
+   "name": "Gate drive loops short with return on the adjacent layer",
+   "version": "1.0.0",
+   "domain": "motor_control",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "motor_drive",
+     "switching_power"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_roles"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "max_gate_loop_length_mm": 15.0
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Routing review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "ROUTE-ENC-029",
+   "name": "Encoder/hall signals routed away from phase copper and filtered",
+   "version": "1.0.0",
+   "domain": "motor_control",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_roles"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "min_distance_mm": 5.0
+   },
+   "source_references": [],
+   "verification_method": "Routing review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MOTOR-PEAK-140",
+   "name": "Peak phase current declared; devices and copper rated with margin",
+   "version": "1.0.0",
+   "domain": "motor_control",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "peak_current_a",
+    "continuous_current_a",
+    "fet_id_rating_a"
+   ],
+   "evaluation_method": "desk.rules.peak_margin",
+   "parameters": {
+    "margin_pct": 30
+   },
+   "source_references": [
+    "MFR-DATASHEET",
+    "IPC-2221B"
+   ],
+   "verification_method": "Deterministic: FET rating >= peak * 1.3; copper via ELEC-WIDTH-001 on the peak; tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MOTOR-OC-141",
+   "name": "Over-current trip wired from the sense amplifier to the driver fault input",
+   "version": "1.0.0",
+   "domain": "motor_control",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "block_specs"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Schematic review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  }
+ ]
+}

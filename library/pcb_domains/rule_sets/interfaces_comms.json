@@ -1,0 +1,102 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "interfaces_comms",
+ "rules": [
+  {
+   "rule_id": "USBC-CC-150",
+   "name": "CC pull-down/up configuration matches the port role",
+   "version": "1.0.0",
+   "domain": "interfaces_comms",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "usb_c_interface",
+     "usb_pd_sink_board",
+     "esp32_dev_board",
+     "wearable_electronics"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": [
+     {
+      "field": "usb_role",
+      "op": "exists",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "usb_role",
+    "cc_resistors"
+   ],
+   "evaluation_method": "desk.rules.usbc_cc",
+   "parameters": {
+    "sink_rd_ohm": 5100,
+    "source_rp_ohm": {
+     "default_usb": 56000,
+     "1.5A": 22000,
+     "3A": 10000
+    }
+   },
+   "source_references": [
+    "USB-Type-C-2.2"
+   ],
+   "verification_method": "Deterministic: sink needs Rd 5.1 k on both CC; source needs Rp; tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "USBC-VBUS-151",
+   "name": "VBUS components rated for the maximum negotiated voltage",
+   "version": "1.0.0",
+   "domain": "interfaces_comms",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "usb_c_interface",
+     "usb_pd_sink_board"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": [
+     {
+      "field": "usb_pd",
+      "op": "==",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "vbus_max_v",
+    "vbus_component_rating_v"
+   ],
+   "evaluation_method": "desk.rules.range_within",
+   "parameters": {
+    "field": "vbus_max_v",
+    "max_key": "vbus_component_rating_v"
+   },
+   "source_references": [
+    "USB-PD-3.1"
+   ],
+   "verification_method": "Deterministic range check",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  }
+ ]
+}

@@ -1,0 +1,158 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "embedded_mcu",
+ "rules": [
+  {
+   "rule_id": "PLACE-XTAL-015",
+   "name": "Crystal and load capacitors within 5 mm of the oscillator pins",
+   "version": "1.0.0",
+   "domain": "embedded_mcu",
+   "category": "placement",
+   "scope": {
+    "archetypes": [],
+    "overlays": [],
+    "component_families": [
+     "crystal"
+    ]
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump"
+   ],
+   "evaluation_method": "desk.placement.group_proximity",
+   "parameters": {
+    "max_distance_mm": 5.0
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Placement refiner proximity",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MCU-STRAP-100",
+   "name": "Strapping/boot pins at the documented level at reset",
+   "version": "1.0.0",
+   "domain": "embedded_mcu",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "esp32_dev_board",
+     "stm32_controller",
+     "rp2040_dev_board",
+     "wearable_electronics"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pin_map",
+    "block_specs"
+   ],
+   "evaluation_method": "desk.spec.strap_pins",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "tools/lint.py checks that every pin is mapped or nc; strap levels are a spec qa[] entry",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": "Lint enforces mapping; the level itself is a datasheet-sourced qa entry."
+  },
+  {
+   "rule_id": "MCU-RADIO-101",
+   "name": "3.3 V rail delivers the radio TX peak with headroom",
+   "version": "1.0.0",
+   "domain": "embedded_mcu",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "esp32_dev_board",
+     "wearable_electronics",
+     "battery_iot_node",
+     "wifi_ble_module_board"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_currents_a",
+    "regulator_rating_a"
+   ],
+   "evaluation_method": "desk.rules.rail_headroom",
+   "parameters": {
+    "min_headroom_pct": 20,
+    "tx_peak_a_default": 0.5
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Deterministic: declared 3V3 current >= TX peak * 1.2; tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MCU-USB-102",
+   "name": "USB D+/D- as a 90 ohm pair with ESD at the connector",
+   "version": "1.0.0",
+   "domain": "embedded_mcu",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "usb_interface"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "diff_pairs"
+   ],
+   "evaluation_method": "desk.routing.diff_pair",
+   "parameters": {
+    "impedance_ohm": 90
+   },
+   "source_references": [
+    "USB-2.0",
+    "IEC-61000-4-2"
+   ],
+   "verification_method": "DiffPairProfile for USB nets",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  }
+ ]
+}

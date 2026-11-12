@@ -1,0 +1,269 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "dcdc_power",
+ "rules": [
+  {
+   "rule_id": "PLACE-HOTLOOP-012",
+   "name": "Converter hot loop minimal: Cin, switches and rectifier adjacent",
+   "version": "1.0.0",
+   "domain": "dcdc_power",
+   "category": "placement",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "switching_power"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump",
+    "net_roles"
+   ],
+   "evaluation_method": "desk.placement.group_proximity",
+   "parameters": {
+    "max_loop_span_mm": 8.0
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Placement refiner hard rules (group proximity); loop area itself is not measured yet",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": "Grouping enforced; loop area reported only."
+  },
+  {
+   "rule_id": "PLACE-FB-013",
+   "name": "Feedback network at the FB pin, away from the switch node and inductor",
+   "version": "1.0.0",
+   "domain": "dcdc_power",
+   "category": "placement",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "switching_power"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump",
+    "net_roles"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "min_distance_from_sw_mm": 5.0
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Placement review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "ROUTE-SW-023",
+   "name": "Switch node short, wide, single layer; never under feedback",
+   "version": "1.0.0",
+   "domain": "dcdc_power",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "switching_power"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_roles"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "max_switch_node_length_mm": 10.0
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Routing review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "EMI-LOOP-060",
+   "name": "Hot-loop area minimised and recorded",
+   "version": "1.0.0",
+   "domain": "dcdc_power",
+   "category": "emi_emc",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "switching_power"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump",
+    "net_roles"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [
+    "CISPR-32"
+   ],
+   "verification_method": "Review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "DCDC-ISAT-120",
+   "name": "Inductor saturation current above the peak inductor current",
+   "version": "1.0.0",
+   "domain": "dcdc_power",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "buck_converter",
+     "boost_converter",
+     "buck_boost_converter",
+     "constant_current_led_driver"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "output_current_a",
+    "ripple_ratio",
+    "inductor_isat_a"
+   ],
+   "evaluation_method": "desk.rules.inductor_margin",
+   "parameters": {
+    "ripple_ratio_default": 0.3,
+    "margin_pct": 20
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Deterministic: Isat >= Iout*(1+ripple/2)*1.2 (buck) or Iin-based (boost); tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "DCDC-VIN-121",
+   "name": "Input voltage range inside the converter IC rating",
+   "version": "1.0.0",
+   "domain": "dcdc_power",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "switching_power"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "input_voltage_v",
+    "ic_vin_min",
+    "ic_vin_max"
+   ],
+   "evaluation_method": "desk.rules.range_within",
+   "parameters": {
+    "field": "input_voltage_v",
+    "min_key": "ic_vin_min",
+    "max_key": "ic_vin_max"
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Deterministic range check; tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "BOOST-SC-122",
+   "name": "Boost output short-circuit path acknowledged (disconnect switch or accepted)",
+   "version": "1.0.0",
+   "domain": "dcdc_power",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "boost_converter",
+     "oled_epaper_display_board",
+     "led_backlight_driver"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "output_disconnect"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Design record",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  }
+ ]
+}

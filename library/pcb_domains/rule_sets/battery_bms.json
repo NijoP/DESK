@@ -1,0 +1,139 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "battery_bms",
+ "rules": [
+  {
+   "rule_id": "BAT-CHEM-130",
+   "name": "Charge voltage derived from the declared chemistry",
+   "version": "1.0.0",
+   "domain": "battery_bms",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "battery_management"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": [
+     {
+      "field": "cells",
+      "op": ">=",
+      "value": 1
+     }
+    ]
+   },
+   "required_inputs": [
+    "chemistry",
+    "cells",
+    "charge_voltage_v"
+   ],
+   "evaluation_method": "desk.rules.charge_voltage",
+   "parameters": {
+    "per_cell_v": {
+     "li_ion": 4.2,
+     "li_po": 4.2,
+     "li_hv": 4.35,
+     "lifepo4": 3.65,
+     "nimh": 1.45,
+     "lead_acid": 2.4,
+     "lto": 2.8
+    },
+    "tolerance_v": 0.05
+   },
+   "source_references": [
+    "IEC-62133-2",
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Deterministic: charge_voltage == cells * per_cell (+/- tolerance); tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "BAT-PROT-131",
+   "name": "Cell protection present and independent of the charger",
+   "version": "1.0.0",
+   "domain": "battery_bms",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "battery_management"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "component_families_present"
+   ],
+   "evaluation_method": "desk.rules.family_present",
+   "parameters": {
+    "any_of": [
+     "battery_protection_ic",
+     "battery_monitor_afe",
+     "pmic_power_path"
+    ]
+   },
+   "source_references": [
+    "IEC-62133-2",
+    "UL-2054"
+   ],
+   "verification_method": "Deterministic: one of the protection families in the component list; tests/test_rule_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "BAT-NTC-132",
+   "name": "Thermistor at the cell feeding the charger/BMS",
+   "version": "1.0.0",
+   "domain": "battery_bms",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "battery_management"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "component_families_present"
+   ],
+   "evaluation_method": "desk.rules.family_present",
+   "parameters": {
+    "any_of": [
+     "ntc_thermistor"
+    ]
+   },
+   "source_references": [
+    "IEC-62133-2"
+   ],
+   "verification_method": "Deterministic family check",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  }
+ ]
+}

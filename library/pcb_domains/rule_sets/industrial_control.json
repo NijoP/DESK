@@ -1,0 +1,44 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "industrial_control",
+ "rules": [
+  {
+   "rule_id": "EMI-SURGE-063",
+   "name": "Surge/burst protection at every field terminal",
+   "version": "1.0.0",
+   "domain": "industrial_control",
+   "category": "emi_emc",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "industrial_interfaces",
+     "automotive_environment"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "connectors",
+    "bom"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [
+    "IEC-61000-4-5",
+    "IEC-61000-4-4",
+    "ISO-7637-2"
+   ],
+   "verification_method": "BOM review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  }
+ ]
+}

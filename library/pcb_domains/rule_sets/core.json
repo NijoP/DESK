@@ -1,0 +1,1345 @@
+{
+ "schema_version": "1.0.0",
+ "rule_set_id": "core",
+ "rules": [
+  {
+   "rule_id": "ELEC-WIDTH-001",
+   "name": "Trace width from declared current (IPC-2221)",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_currents_a",
+    "copper_oz",
+    "temperature_rise_c",
+    "layer"
+   ],
+   "evaluation_method": "desk.ipc.trace_width",
+   "parameters": {
+    "temperature_rise_c_default": 10.0,
+    "min_signal_width_mil": 5.0
+   },
+   "source_references": [
+    "IPC-2221B",
+    "JLCPCB-CAPABILITIES"
+   ],
+   "verification_method": "tools/route.py sizes every net from DesignProfile.derive_trace_width_mil; tests/test_ipc_models.py, tests/test_hardware_reference_values.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "routing.width",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": "A power net sized without its current is a guess; DESK refuses (unknown_current_policy=fail)."
+  },
+  {
+   "rule_id": "ELEC-UNKNOWN-002",
+   "name": "Unknown electrical inputs fail closed",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_currents_a",
+    "voltage_rails"
+   ],
+   "evaluation_method": "desk.profile.validate_electrical_inputs",
+   "parameters": {},
+   "source_references": [
+    "IPC-2221B"
+   ],
+   "verification_method": "DesignProfile.validate_electrical_inputs lists undeclared rails; RoutingPlan.blocking_issues stops tools/route.py; tests/test_profile_hardening.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "quality.gate",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": "No assumed value may replace a missing engineering input."
+  },
+  {
+   "rule_id": "ELEC-CLEAR-003",
+   "name": "Electrical clearance from working voltage (IPC-2221B Table 6-1)",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "voltage_rails",
+    "clearance_condition",
+    "manufacturing.min_clearance_mil"
+   ],
+   "evaluation_method": "desk.profile.clearance",
+   "parameters": {
+    "condition_default": "B2"
+   },
+   "source_references": [
+    "IPC-2221B",
+    "JLCPCB-CAPABILITIES"
+   ],
+   "verification_method": "DesignProfile.derive_clearance_mil -> desk.ipc.required_spacing_mil; written to DSN net classes; tests/test_hardware_reference_values.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "routing.clearance",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": "Table values are transcribed, not yet verified against the standard text (ipc.verified_against_standard=False)."
+  },
+  {
+   "rule_id": "ELEC-CREEP-004",
+   "name": "Creepage from working voltage, pollution degree and material group (IEC 60664-1 Table F.4)",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "mains_safety_isolation",
+     "galvanic_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "any": [
+     {
+      "field": "input_voltage_v",
+      "op": ">=",
+      "value": 60
+     },
+     {
+      "field": "mains",
+      "op": "==",
+      "value": true
+     },
+     {
+      "field": "isolation",
+      "op": "==",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "voltage_rails",
+    "pollution_degree",
+    "material_group",
+    "isolation_voltage_v"
+   ],
+   "evaluation_method": "desk.profile.creepage",
+   "parameters": {
+    "pollution_degree_default": 2,
+    "material_group_default": "III"
+   },
+   "source_references": [
+    "IEC-60664-1"
+   ],
+   "verification_method": "desk.ipc.creepage_mm; max(clearance, creepage, fabricator minimum) becomes the net-pair spacing; tests/test_ipc_models.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "routing.clearance",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": "Human review required because the table transcription is unverified against the IEC text."
+  },
+  {
+   "rule_id": "ELEC-VIA-005",
+   "name": "Via ampacity and parallel via count",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "high_current",
+     "switching_power",
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "any": [
+     {
+      "field": "current_a",
+      "op": ">=",
+      "value": 1.0
+     }
+    ]
+   },
+   "required_inputs": [
+    "net_currents_a",
+    "via_drill_mil",
+    "plating_um"
+   ],
+   "evaluation_method": "desk.ipc.via_current",
+   "parameters": {
+    "plating_um_default": 25.0,
+    "temperature_rise_c_default": 10.0
+   },
+   "source_references": [
+    "IPC-2221B"
+   ],
+   "verification_method": "desk.ipc.via_current_a / vias_required; reported by tools/route.py; not yet enforced in DSN (router places vias freely)",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "routing.vias",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": "The engine computes the count; the autorouter does not yet honour it, so the rule is advisory."
+  },
+  {
+   "rule_id": "ELEC-DROP-006",
+   "name": "Voltage drop on power paths within budget",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "high_current",
+     "switching_power",
+     "battery_management",
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "any": [
+     {
+      "field": "current_a",
+      "op": ">=",
+      "value": 0.5
+     }
+    ]
+   },
+   "required_inputs": [
+    "net_currents_a",
+    "path_length_mm",
+    "copper_oz",
+    "drop_budget_mv"
+   ],
+   "evaluation_method": "desk.power_distribution.voltage_drop",
+   "parameters": {
+    "drop_budget_mv_default": 50.0
+   },
+   "source_references": [
+    "IPC-2221B"
+   ],
+   "verification_method": "desk.power_distribution.PowerDistributionPlanner drop estimate; tests/test_power_distribution.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "power.distribution",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "ELEC-RATING-007",
+   "name": "Component voltage/current ratings exceed applied stress with margin",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "electrical",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "bom",
+    "voltage_rails",
+    "net_currents_a"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "voltage_margin_pct": 20,
+    "current_margin_pct": 25
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Not evaluated by DESK: ratings are not in the BOM model yet (component intelligence roadmap)",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "UNSUPPORTED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "PLACE-DECAP-010",
+   "name": "Decoupling capacitor within 2 mm of the supply pin",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "placement",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump",
+    "placement_plan"
+   ],
+   "evaluation_method": "desk.placement.decoupling_proximity",
+   "parameters": {
+    "max_distance_mm": 2.0
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "desk.placement_refine PlacementRefiner decoupling proximity objective; tests/test_dense_intelligence.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "PLACE-KEEPOUT-011",
+   "name": "Keep-outs (antenna, barrier, mechanical) are empty on every layer",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "placement",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "placement_plan.keepouts"
+   ],
+   "evaluation_method": "desk.placement.keepout",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "desk.placement.check and routing preflight pads_inside_keepouts; tests/test_route_preflight.py, tests/test_placement.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "PLACE-ISO-016",
+   "name": "Only isolating components bridge the isolation barrier",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "placement",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "mains_safety_isolation",
+     "galvanic_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "any": [
+     {
+      "field": "isolation",
+      "op": "==",
+      "value": true
+     },
+     {
+      "field": "mains",
+      "op": "==",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "placement_plan.keepouts",
+    "barrier_definition"
+   ],
+   "evaluation_method": "desk.placement.keepout",
+   "parameters": {},
+   "source_references": [
+    "IEC-60664-1",
+    "IEC-62368-1"
+   ],
+   "verification_method": "Barrier declared as a keep-out polygon on all layers; pads inside it fail preflight",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "PLACE-THERM-017",
+   "name": "Heat-sensitive parts away from dissipating parts",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "placement",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "thermal_management",
+     "precision_analog"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump",
+    "power_dissipation_w"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "min_distance_mm": 10.0
+   },
+   "source_references": [
+    "JESD51"
+   ],
+   "verification_method": "Placement review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "PLACE-SENSE-018",
+   "name": "Current-sense resistor with Kelvin pads adjacent to its amplifier",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "placement",
+   "scope": {
+    "archetypes": [],
+    "overlays": [],
+    "component_families": [
+     "current_sense_resistor"
+    ]
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump"
+   ],
+   "evaluation_method": "desk.placement.group_proximity",
+   "parameters": {
+    "max_distance_mm": 6.0
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Placement refiner proximity",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "placement",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "ROUTE-PRIO-020",
+   "name": "Route in priority order: diff pairs/RF, high-current, critical, power, signal",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "routing",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_classes",
+    "critical_nets"
+   ],
+   "evaluation_method": "desk.routing.priority",
+   "parameters": {},
+   "source_references": [
+    "IPC-2221B"
+   ],
+   "verification_method": "RoutingPriorityScheduler stages + density priority order -> Freerouting net classes; tests/test_routing_priority.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "ROUTE-DIFF-021",
+   "name": "Differential pairs at the interface impedance with matched length",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "usb_interface",
+     "high_speed_digital",
+     "can_interface",
+     "industrial_interfaces"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "any": [
+     {
+      "field": "protocols",
+      "op": "intersects",
+      "value": [
+       "usb",
+       "pcie",
+       "ddr",
+       "hdmi",
+       "mipi",
+       "ethernet",
+       "gigabit",
+       "can",
+       "rs485"
+      ]
+     }
+    ]
+   },
+   "required_inputs": [
+    "diff_pairs",
+    "stackup"
+   ],
+   "evaluation_method": "desk.routing.diff_pair",
+   "parameters": {
+    "usb_ohm": 90,
+    "ethernet_ohm": 100,
+    "pcie_gen3_ohm": 85,
+    "can_rs485_ohm": 120
+   },
+   "source_references": [
+    "USB-2.0",
+    "IEEE-802.3",
+    "PCIe-CEM",
+    "ISO-11898-2",
+    "TIA-485-A"
+   ],
+   "verification_method": "DiffPairProfile carried into DSN net classes (width/spacing); length matching and impedance are not verified by DESK (router.DiffPairVerification not wired)",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": "Geometry is applied; the result is not verified, so advisory until DiffPairVerification is wired into quality gates."
+  },
+  {
+   "rule_id": "ROUTE-KELVIN-024",
+   "name": "Sense traces from the inner pad edges; no current in sense traces",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [],
+    "component_families": [
+     "current_sense_resistor"
+    ]
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Routing review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "ROUTE-HV-025",
+   "name": "No vias or signals inside the isolation barrier",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "mains_safety_isolation",
+     "galvanic_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "placement_plan.keepouts"
+   ],
+   "evaluation_method": "desk.routing.keepout",
+   "parameters": {},
+   "source_references": [
+    "IEC-60664-1"
+   ],
+   "verification_method": "Route keep-outs passed to Freerouting as keepout areas; verified by preflight",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "ROUTE-POLY-026",
+   "name": "Nets above 3 A as polygons sized by IPC-2221",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "high_current",
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "any": [
+     {
+      "field": "current_a",
+      "op": ">=",
+      "value": 3.0
+     }
+    ]
+   },
+   "required_inputs": [
+    "net_currents_a"
+   ],
+   "evaluation_method": "desk.power_distribution.strategy",
+   "parameters": {
+    "polygon_threshold_a": 3.0
+   },
+   "source_references": [
+    "IPC-2221B"
+   ],
+   "verification_method": "PowerDistributionPlanner rail strategy PLANE/POLYGON/WIDE_TRACE; tests/test_power_distribution.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "power.distribution",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "ROUTE-RETURN-027",
+   "name": "Return path continuity: no high-speed or switching nets across plane splits",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "high_speed_digital",
+     "switching_power",
+     "rf_communication"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "planes",
+    "tracks"
+   ],
+   "evaluation_method": "desk.copper.return_path",
+   "parameters": {},
+   "source_references": [
+    "IPC-2221B"
+   ],
+   "verification_method": "CopperPlaneEngine.evaluate_return_path_continuity; tests/test_copper_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "COPPER-GND-040",
+   "name": "Continuous ground plane; stitching vias near fast signals",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "copper",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "planes",
+    "stackup"
+   ],
+   "evaluation_method": "desk.copper.ground_plane",
+   "parameters": {
+    "stitch_pitch_mm": 5.0
+   },
+   "source_references": [
+    "IPC-2221B"
+   ],
+   "verification_method": "CopperPlaneEngine.generate_ground_planes / synthesize_stitching_vias; tests/test_copper_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "COPPER-ZONE-041",
+   "name": "Zone clearance to other nets from the profile, never a literal",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "copper",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "voltage_rails"
+   ],
+   "evaluation_method": "desk.copper.zone_clearance",
+   "parameters": {},
+   "source_references": [
+    "IPC-2221B",
+    "IEC-60664-1"
+   ],
+   "verification_method": "CopperZoneSpec.clearance_mil = profile.derive_clearance_mil (F-03 fix 2026-11-12); tests/test_copper_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "COPPER-RELIEF-042",
+   "name": "Thermal relief only where hand-soldered; solid on power pads",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "copper",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "net_currents_a",
+    "assembly_method"
+   ],
+   "evaluation_method": "desk.copper.connection_rule",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "ConnectionRuleResolver.resolve_connection; tests/test_copper_engine.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "COPPER-ISLAND-043",
+   "name": "No unconnected copper islands",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "copper",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "zones"
+   ],
+   "evaluation_method": "desk.copper.islands",
+   "parameters": {},
+   "source_references": [],
+   "verification_method": "CopperPlaneEngine.detect_copper_islands; tests/test_copper_geometry.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "COPPER-BARRIER-044",
+   "name": "No copper across the isolation barrier",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "copper",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "mains_safety_isolation",
+     "galvanic_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "placement_plan.keepouts",
+    "zones"
+   ],
+   "evaluation_method": "desk.copper.zone_boundary",
+   "parameters": {},
+   "source_references": [
+    "IEC-60664-1"
+   ],
+   "verification_method": "check_polygon_boundary against keep-outs; tests/test_copper_geometry.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "COPPER-THERMVIA-046",
+   "name": "Thermal via array under exposed pads",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "copper",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "thermal_management",
+     "switching_power",
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "pcb_dump",
+    "power_dissipation_w"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "via_pitch_mm": 1.0
+   },
+   "source_references": [
+    "JESD51",
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "THERM-TJ-050",
+   "name": "Junction temperature below the datasheet limit at max ambient",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "thermal",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "thermal_management",
+     "switching_power",
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "power_dissipation_w",
+    "theta_ja",
+    "max_ambient_c",
+    "tj_max_c"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "margin_c": 20
+   },
+   "source_references": [
+    "JESD51",
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Not computed by DESK (no per-device dissipation model); recorded in REQUIREMENTS.md section 6",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "UNSUPPORTED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "THERM-COPPER-051",
+   "name": "Copper area per watt from the device datasheet",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "thermal",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "thermal_management"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "power_dissipation_w"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "Review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "THERM-DERATE-052",
+   "name": "Continuous dissipators derated to 60-70 % of rating",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "thermal",
+   "scope": {
+    "archetypes": [],
+    "overlays": [],
+    "component_families": [
+     "power_resistor",
+     "balancing_resistor",
+     "discharge_resistor"
+    ]
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "bom"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "derating_pct": 65
+   },
+   "source_references": [
+    "MFR-DATASHEET"
+   ],
+   "verification_method": "BOM review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "EMI-FILTER-061",
+   "name": "Input filter footprints when the product is EMC tested",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "emi_emc",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "emi_emc"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "emc_class"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {},
+   "source_references": [
+    "CISPR-32",
+    "CISPR-25"
+   ],
+   "verification_method": "Review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "EMI-ESD-062",
+   "name": "ESD protection on every externally accessible signal",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "emi_emc",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "connectors",
+    "bom"
+   ],
+   "evaluation_method": "advisory",
+   "parameters": {
+    "level": "IEC 61000-4-2 per product"
+   },
+   "source_references": [
+    "IEC-61000-4-2"
+   ],
+   "verification_method": "ERC/BOM review",
+   "status": "ADVISORY",
+   "enforcement": {
+    "subsystem": "none",
+    "mode": "ADVISORY"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MFG-MIN-070",
+   "name": "Trace width and clearance at or above the fabricator minimum",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "manufacturing",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "manufacturing"
+   ],
+   "evaluation_method": "desk.profile.manufacturing_floor",
+   "parameters": {},
+   "source_references": [
+    "JLCPCB-CAPABILITIES"
+   ],
+   "verification_method": "ManufacturerProfile floors applied in width/clearance derivation; DRC with the fabricator rule set",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MFG-DRILL-071",
+   "name": "Via drill and annular ring within the fabricator capability",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "manufacturing",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "manufacturing",
+    "via_definitions"
+   ],
+   "evaluation_method": "desk.profile.manufacturing_floor",
+   "parameters": {},
+   "source_references": [
+    "JLCPCB-CAPABILITIES"
+   ],
+   "verification_method": "Via definitions vs ManufacturerProfile",
+   "status": "IMPLEMENTED",
+   "enforcement": {
+    "subsystem": "routing",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MFG-EDGE-072",
+   "name": "Copper setback from the board edge",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "manufacturing",
+   "scope": {
+    "archetypes": [
+     "*"
+    ],
+    "overlays": [],
+    "component_families": []
+   },
+   "severity": "ERROR",
+   "applicability": {
+    "all": []
+   },
+   "required_inputs": [
+    "manufacturing.copper_to_edge_mil",
+    "outline"
+   ],
+   "evaluation_method": "desk.copper.edge_setback",
+   "parameters": {},
+   "source_references": [
+    "JLCPCB-CAPABILITIES"
+   ],
+   "verification_method": "CopperPlaneEngine setback from profile.manufacturing.copper_to_edge_mil",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "copper",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  },
+  {
+   "rule_id": "MFG-COAT-073",
+   "name": "Conformal coating changes the clearance condition (B4)",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "manufacturing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "harsh_environment",
+     "mains_safety_isolation"
+    ],
+    "component_families": []
+   },
+   "severity": "WARNING",
+   "applicability": {
+    "all": [
+     {
+      "field": "conformal_coating",
+      "op": "==",
+      "value": true
+     }
+    ]
+   },
+   "required_inputs": [
+    "conformal_coating"
+   ],
+   "evaluation_method": "desk.profile.clearance",
+   "parameters": {
+    "condition": "B4"
+   },
+   "source_references": [
+    "IPC-2221B"
+   ],
+   "verification_method": "clearance_condition must be B4 when coated; checked by the profile compiler",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "routing.clearance",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": true,
+   "rationale": ""
+  },
+  {
+   "rule_id": "PWR-ROUTE-170",
+   "name": "High-current routing constraint: polygons, parallel vias, Kelvin sense",
+   "version": "1.0.0",
+   "domain": "core",
+   "category": "routing",
+   "scope": {
+    "archetypes": [],
+    "overlays": [
+     "high_current",
+     "motor_drive"
+    ],
+    "component_families": []
+   },
+   "severity": "BLOCKING",
+   "applicability": {
+    "any": [
+     {
+      "field": "current_a",
+      "op": ">=",
+      "value": 10.0
+     }
+    ]
+   },
+   "required_inputs": [
+    "net_currents_a"
+   ],
+   "evaluation_method": "desk.power_distribution.strategy",
+   "parameters": {
+    "polygon_threshold_a": 3.0,
+    "plane_threshold_a": 10.0
+   },
+   "source_references": [
+    "IPC-2221B",
+    "IPC-2152"
+   ],
+   "verification_method": "PowerDistributionPlanner strategies; tests/test_power_distribution.py",
+   "status": "OFFLINE_TESTED",
+   "enforcement": {
+    "subsystem": "power.distribution",
+    "mode": "ENFORCED"
+   },
+   "human_review_required": false,
+   "rationale": ""
+  }
+ ]
+}
