@@ -49,7 +49,8 @@ class MouserSupplierProvider(SupplierProvider):
         )
         super().__init__(supplier_id="mouser", name="Mouser Electronics", capabilities=caps)
         self.broker = get_credential_broker()
-        self.use_mock = use_mock or (os.environ.get("DESK_MOCK_SUPPLIERS", "0") == "1")
+        from desk import config as deskcfg
+        self.use_mock = use_mock or deskcfg.get_bool("DESK_MOCK_SUPPLIERS", False)
 
     def _make_offer(self, item: Dict[str, Any]) -> SupplierOffer:
         breaks = [PriceBreak(quantity=q, unit_price=p) for q, p in item.get("prices", [])]

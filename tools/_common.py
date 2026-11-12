@@ -5,7 +5,8 @@ from desk import spec as S  # noqa: E402,F401
 
 # ---- DESK execution telemetry (local only, .desk_learn/runs.jsonl; disable with DESK_TELEMETRY=0)
 # Records tool, subcommand, exit code, duration and output size -> evidence for the learning engine.
-if os.environ.get("DESK_TELEMETRY", "1") != "0":
+from desk import config as _deskcfg  # noqa: E402
+if _deskcfg.get_bool("DESK_TELEMETRY", True):
     _t0, _out, _err, _rc = time.time(), [0], [""], [None]
 
     class _Count:

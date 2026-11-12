@@ -23,7 +23,8 @@ def main(argv):
         raise SystemExit(__doc__)
     proj = pos[0]
     P = load_project(proj)
-    window_id = os.environ.get("EDA_WINDOW_ID") or P.get("window_id")
+    from desk import config as deskcfg
+    window_id = deskcfg.get("EDA_WINDOW_ID") or P.get("window_id")
     if not window_id:
         raise SystemExit(f"{os.path.join(proj, 'project.json')} has no window_id and EDA_WINDOW_ID is unset; "
                          "bind the EasyEDA window first (python tools/ping.py " + proj + ")")
@@ -46,7 +47,8 @@ def main(argv):
         if S.load_pins(m) and "--force" not in argv:
             continue
         d = lib[m]
-        with ops.write_op(proj, "pins_probe", m, classification=ops.OP_IDEMPOTENT_MUTATION) as rec:
+        with ops.write_op(proj, "pins_probe", m, classification=ops.OP_IDEMPOTENT_MUTATION,
+                          approval=ops.cli_approval(proj, "pins_probe", m, argv=["tools/pins.py"] + list(argv))) as rec:
             rec["dirty"] = True
             r = ex(PROBE_JS % (d["libraryUuid"], d["uuid"]), window_id=window_id, project_path=proj, is_mutation=True)
             rec["dirty"] = False

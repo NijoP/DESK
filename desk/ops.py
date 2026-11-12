@@ -12,6 +12,7 @@ Features:
 lock    projects/<P>/state/write.lock   one writer at a time; stale after LOCK_TTL seconds or dead PID
 journal projects/<P>/state/ops.jsonl    {"op","target","phase":"begin"|"end"|"fail","ts","id","classification",...}
 """
+from desk.errors import WriteLockHeld, PendingOperationError, ApprovalRequired  # noqa: E402
 import contextlib
 import json
 import os
@@ -131,6 +132,69 @@ def resolve_pending(project: str, op_id: str, how: str):
     _log(project, {"id": op_id, "phase": "resolved", "ts": time.time(), "how": how})
 
 
+# ---- human approval and mutation policy (T-17) ---------------------------------------------------------
+def record_approval(project: str, op: str, target: str, granted_by: str, how: str,
+                    token: Optional[str] = None, reason: str = "") -> str:
+    """Durable approval record in state/ops.jsonl (phase "approval"); returns its id.
+
+    Pass the id to `write_op(..., approval=<id>)` so the mutation's begin record points at who approved
+    what, when and how. `granted_by` is a role or name ("operator", "CAPTAIN"), `how` the channel
+    ("cli tools/build.py", "desk.py agent --allow-mutation", "rework approve RW-APR-..")."""
+    rec = {"id": uuid.uuid4().hex[:8], "phase": "approval", "op": op, "target": target, "granted_by": granted_by,
+           "how": how, "token": token, "reason": reason, "ts": time.time(), "pid": os.getpid()}
+    _log(project, rec)
+    return rec["id"]
+
+
+def cli_approval(project: str, op: str, target: str, argv: Optional[List[str]] = None) -> str:
+    """The operator ran a mutating tool by hand: that invocation is the approval. Records it and returns the id."""
+    import sys as _sys
+    args = list(argv if argv is not None else _sys.argv)
+    how = "cli " + " ".join(os.path.basename(a) if i == 0 else a for i, a in enumerate(args))[:200]
+    return record_approval(project, op, target, granted_by="operator", how=how)
+
+
+def approvals(project: str) -> List[Dict[str, Any]]:
+    return [r for r in journal(project) if r.get("phase") == "approval"]
+
+
+class MutationPolicy:
+    """Decides whether a live mutation may start and what the journal records about its approval.
+
+    DESK_MUTATION_POLICY (desk/config.py):
+      record  (default) every mutation records whether an approval accompanied it; nothing is refused
+      require a NON_IDEMPOTENT mutation without an approval raises ApprovalRequired before the lock is taken
+    The operation registry's `side_effect` flag is recorded for known operation ids so the journal shows when a
+    tool journals an operation the registry does not consider side-effecting (or the reverse)."""
+    RECORD, REQUIRE = "record", "require"
+
+    @staticmethod
+    def mode() -> str:
+        from desk import config as deskcfg
+        m = (deskcfg.get("DESK_MUTATION_POLICY") or MutationPolicy.RECORD).lower()
+        return m if m in (MutationPolicy.RECORD, MutationPolicy.REQUIRE) else MutationPolicy.RECORD
+
+    @staticmethod
+    def registry_side_effect(op: str) -> Optional[bool]:
+        try:
+            from desk.operation_registry import get_operation_registry
+            d = get_operation_registry().get(op)
+            return None if d is None else bool(d.side_effect)
+        except Exception:
+            return None
+
+    @classmethod
+    def check(cls, project: str, op: str, target: str, classification: str, approval: Optional[str]) -> Dict[str, Any]:
+        mode = cls.mode()
+        info = {"policy": mode, "approval": approval or None, "registry_side_effect": cls.registry_side_effect(op)}
+        if mode == cls.REQUIRE and classification == OP_NON_IDEMPOTENT_MUTATION and not approval:
+            raise ApprovalRequired(
+                f"STOP: {op} on {target} is a non-idempotent live mutation and DESK_MUTATION_POLICY=require, "
+                f"but no approval was recorded. Record one (ops.record_approval / cli_approval) or run the tool by hand.",
+                op=op, target=target)
+        return info
+
+
 def release_atomic_lock(lock_path: str, lock_id: str, pid: int) -> bool:
     """Releases the lock file ONLY if the current process is the verified owner."""
     try:
@@ -207,11 +271,11 @@ def acquire_atomic_lock(lock_path: str, rec: Dict[str, Any], force_unlock: bool 
                     pass
                 continue
             else:
-                raise SystemExit(
+                raise WriteLockHeld(
                     f"STOP: another writer holds the lock ({info.get('op')} {info.get('target')}, pid {holder_pid}). "
-                    f"Wait, or --force-unlock if that process is dead."
+                    f"Wait, or --force-unlock if that process is dead.", holder_pid=holder_pid, lock_path=lock_path,
                 )
-    raise SystemExit(f"STOP: Could not acquire lock {lock_path} after reclaiming stale lock.")
+    raise WriteLockHeld(f"STOP: Could not acquire lock {lock_path} after reclaiming stale lock.", lock_path=lock_path)
 
 
 @contextlib.contextmanager
@@ -221,15 +285,20 @@ def write_op(
     target: str,
     force_unlock: bool = False,
     classification: str = OP_NON_IDEMPOTENT_MUTATION,
+    approval: Optional[str] = None,
 ):
-    """with write_op(P, "build", "02_PWR_3V3") as rec: ... -> atomic lock + begin/end journal."""
+    """with write_op(P, "build", "02_PWR_3V3", approval=aid) as rec: ... -> policy check + atomic lock + begin/end journal.
+
+    `approval` is the id returned by record_approval()/cli_approval() (or a rework RW-APR token). It is written
+    into the begin record together with the policy in force and the registry's side_effect flag for `op`."""
     lock = os.path.join(_state(project), "write.lock")
+    policy = MutationPolicy.check(project, op, target, classification, approval)
 
     stuck = [p for p in pending(project) if p["target"] == target]
     if stuck:
-        raise SystemExit(
+        raise PendingOperationError(
             f"STOP: unfinished {stuck[-1]['op']} on {target} (op {stuck[-1]['id']}). "
-            f"Run: python tools/desk.py recover {project}"
+            f"Run: python tools/desk.py recover {project}", op_id=stuck[-1]["id"], target=target,
         )
 
     my_pid = os.getpid()
@@ -242,6 +311,7 @@ def write_op(
         "ts": time.time(),
         "pid": my_pid,
         "pid_start_time": get_process_start_time(my_pid),
+        **policy,
     }
 
     acquire_atomic_lock(lock, rec, force_unlock=force_unlock)

@@ -18,7 +18,8 @@ class JLCPCBClient:
         self.broker = get_credential_broker()
         self.quoting_engine = JLCPCBQuotingEngine()
         self.order_guard = get_order_guard()
-        self.use_mock = use_mock or (os.environ.get("DESK_MOCK_MANUFACTURING", "0") == "1")
+        from desk import config as deskcfg
+        self.use_mock = use_mock or deskcfg.get_bool("DESK_MOCK_MANUFACTURING", False)
 
     @property
     def is_configured(self) -> bool:

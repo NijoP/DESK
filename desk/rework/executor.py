@@ -116,11 +116,15 @@ class RepairExecutor:
         error_msg = None
 
         # 4. Atomic Single-Writer Mutation
+        from desk.ops import record_approval
+        approval_id = record_approval(norm_path, "rework_repair", repair.repair_id, granted_by=approval_token.granted_by,
+                                      how=f"rework approve {approval_token.token}", token=approval_token.token)
         with write_op(
             project=norm_path,
             op="rework_repair",
             target=repair.repair_id,
             classification=OP_NON_IDEMPOTENT_MUTATION,
+            approval=approval_id,
         ):
             try:
                 # Apply surgical modification based on action_type

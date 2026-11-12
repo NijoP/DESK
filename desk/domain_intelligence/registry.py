@@ -16,7 +16,8 @@ _DEFAULT_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.
 
 class DomainLibrary:
     def __init__(self, root: Optional[str] = None):
-        self.root = os.path.abspath(root or os.environ.get("DESK_DOMAIN_LIBRARY") or _DEFAULT_ROOT)
+        from desk import config as deskcfg
+        self.root = os.path.abspath(root or deskcfg.get("DESK_DOMAIN_LIBRARY") or _DEFAULT_ROOT)
         self._lock = threading.RLock()
         self._cache: Dict[str, Tuple[float, Any]] = {}     # path -> (mtime, parsed)
         self._rules_cache: Optional[Tuple[Tuple[Tuple[str, float], ...], Dict[str, Rule]]] = None

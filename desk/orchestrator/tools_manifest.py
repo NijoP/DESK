@@ -109,7 +109,10 @@ def _h_wire_net(args, ctx):
     if not ctx.get("allow_mutation"):
         return {"error": "mutation not allowed in this session; call plan_wires and ask the operator to approve, or rerun with --allow-mutation"}
     from desk.schematic_io import wire_net
-    return wire_net(args["project"], args["net"], list(args.get("pins") or []), ctx.get("window_id"), apply=True)
+    from desk import ops
+    approval = ops.record_approval(args["project"], "wire_net", args["net"], granted_by="operator",
+                                   how="desk.py agent --allow-mutation (model requested wire_net)", reason=str(args.get("reason") or "")[:200])
+    return wire_net(args["project"], args["net"], list(args.get("pins") or []), ctx.get("window_id"), apply=True, approval=approval)
 
 
 def _h_read_pcb(args, ctx):

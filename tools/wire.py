@@ -17,7 +17,9 @@ def main(argv):
     proj, net, pins = args[0], args[1], args[2:]
     win = argv[argv.index("--window") + 1] if "--window" in argv else None
     from desk.schematic_io import wire_net
-    plan = wire_net(proj, net, pins, win, apply="--apply" in argv)
+    from desk import ops
+    approval = ops.cli_approval(proj, "wire_net", net, argv=["tools/wire.py"] + list(argv)) if "--apply" in argv else None
+    plan = wire_net(proj, net, pins, win, apply="--apply" in argv, approval=approval)
     if "--json" in argv:
         print(json.dumps(plan, indent=1))
     else:

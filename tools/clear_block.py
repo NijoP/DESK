@@ -29,7 +29,7 @@ try{const rs=await eda.sch_PrimitiveRectangle.get(await eda.sch_PrimitiveRectang
 return out;''' % (json.dumps(refs), json.dumps(box))
 for p in [p for p in ops.pending(proj) if p["target"] == bid]:
     ops.resolve_pending(proj, p["id"], "clear_block started")
-with ops.write_op(proj, "clear", bid, force_unlock="--force-unlock" in sys.argv) as rec:
+with ops.write_op(proj, "clear", bid, force_unlock="--force-unlock" in sys.argv, approval=ops.cli_approval(proj, "clear", bid)) as rec:
     rec["dirty"] = True
     print(check(ex(js, window_id=P.get("window_id"))))
     st["blocks"].pop(bid, None)

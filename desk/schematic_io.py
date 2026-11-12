@@ -126,7 +126,7 @@ def read_schematic(project_path: str, window_id: Optional[str] = None, save: boo
 
 
 def wire_net(project_path: str, net: str, pin_refs: List[str], window_id: Optional[str] = None,
-             apply: bool = False, dump: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+             apply: bool = False, dump: Optional[Dict[str, Any]] = None, approval=None) -> Dict[str, Any]:
     """Plan (and with apply=True, execute under the single-writer lock) DESK-style wiring of `pin_refs` to `net`."""
     dump = dump or read_schematic(project_path, window_id, save=True)
     plan = plan_net_wires(dump, net, pin_refs)
@@ -136,7 +136,7 @@ def wire_net(project_path: str, net: str, pin_refs: List[str], window_id: Option
     from desk import ops
     from desk.bridge import ex, guard, load_project
     P = load_project(project_path)
-    with ops.write_op(project_path, "wire_net", net) as rec:
+    with ops.write_op(project_path, "wire_net", net, approval=approval) as rec:
         rec["dirty"] = True
         res = ex(guard(P["sheet_uuid"], open_doc=False) + wiring_js(plan), timeout=120, retries=0,
                  window_id=window_id or P.get("window_id"), project_path=project_path, is_mutation=True)

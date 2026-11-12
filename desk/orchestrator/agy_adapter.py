@@ -18,7 +18,8 @@ def _resolve_executable(explicit: Optional[str]) -> str:
     """Resolution order: explicit argument, DESK_AGY_PATH env var, PATH lookup."""
     if explicit:
         return explicit
-    env = os.environ.get("DESK_AGY_PATH", "").strip()
+    from desk import config as deskcfg
+    env = (deskcfg.get("DESK_AGY_PATH") or "").strip()
     if env:
         return env
     return shutil.which("agy") or "agy"

@@ -5,6 +5,7 @@ Zero external dependencies.
 """
 import json
 import os
+from desk import config as deskcfg
 import sys
 import time
 import urllib.request
@@ -18,13 +19,11 @@ from dataclasses import dataclass, asdict
 if hasattr(sys.stdout, "buffer"):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
-class BridgeMutationTimeout(SystemExit):
-    """A mutating bridge call timed out: the board may be partially modified.
-
-    Subclasses SystemExit so CLI tools still exit with a clean message, while
-    `ops.write_op` can recognise it and journal the operation as dirty.
-    """
-    possibly_mutated = True
+# Typed errors live in desk/errors.py; every one subclasses SystemExit, so a CLI tool that does not
+# catch them still exits with the message, while library callers can catch the precise type.
+from desk.errors import (  # noqa: E402
+    BridgeError, BridgeUnreachable, BridgeDocumentMismatch, BridgeScriptError, BridgeMutationTimeout, ProjectError,
+)
 
 
 @dataclass
@@ -126,8 +125,8 @@ class SessionRegistry:
         5. Concurrent non-blocking probe across 49620..49629 (< 35ms worst-case)
         """
         # 1. Environment variable override
-        if os.environ.get("EDA_PORT"):
-            return int(os.environ["EDA_PORT"])
+        if deskcfg.get("EDA_PORT"):
+            return int(deskcfg.get("EDA_PORT"))
 
         now = time.time()
         # 2. In-memory cache
@@ -241,7 +240,7 @@ def get_or_create_session(project_path: Optional[str] = None, window_id: Optiona
     endpoint = f"http://127.0.0.1:{port}"
 
     p_info = {}
-    p_path = project_path or os.environ.get("DESK_PROJECT")
+    p_path = project_path or deskcfg.get("DESK_PROJECT")
     if p_path and os.path.exists(os.path.join(p_path, "project.json")):
         try:
             with open(os.path.join(p_path, "project.json"), encoding="utf-8") as f:
@@ -259,7 +258,7 @@ def get_or_create_session(project_path: Optional[str] = None, window_id: Optiona
             return session
 
     # Resolve target window strictly for this project
-    target_win = window_id or p_info.get("window_id") or os.environ.get("EDA_WINDOW_ID")
+    target_win = window_id or p_info.get("window_id") or deskcfg.get("EDA_WINDOW_ID")
     if not target_win and (pcb_uuid or sheet_uuid):
         uuids = tuple(u for u in (pcb_uuid, sheet_uuid) if u)
         target_win = _find_window_for_project(port, uuids)
@@ -320,8 +319,8 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
                 err_msg = str(resp.get("error"))
                 # Classified error handling
                 if "WRONG SHEET" in err_msg:
-                    raise SystemExit(f"Bridge document mismatch: {err_msg}")
-                raise SystemExit("EDA error: " + err_msg)
+                    raise BridgeDocumentMismatch(f"Bridge document mismatch: {err_msg}", active=resp.get("result"))
+                raise BridgeScriptError("EDA error: " + err_msg)
 
             return resp.get("result")
 
@@ -330,11 +329,11 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
                 raw_body = e.read().decode("utf-8")
                 err_data = json.loads(raw_body)
                 err_detail = err_data.get("error") or raw_body
-                raise SystemExit(f"EasyEDA JavaScript Runtime Error: {err_detail}")
+                raise BridgeScriptError(f"EasyEDA JavaScript Runtime Error: {err_detail}", http_status=e.code)
             except SystemExit:
                 raise
             except Exception:
-                raise SystemExit(f"Bridge HTTP Error {e.code}: {e}")
+                raise BridgeScriptError(f"Bridge HTTP Error {e.code}: {e}", http_status=e.code)
 
         except (OSError, TimeoutError) as e:
             # Never blindly repeat a mutating operation on network/bridge timeout
@@ -354,14 +353,15 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
 
             if attempt == retries:
                 SessionRegistry.invalidate_session(project_path)
-                raise SystemExit(f"Bridge not reachable on port {port}: {e}\n"
-                                 "-> Is EasyEDA Pro open with the API Gateway connected? (see docs/06_EASYEDA_API.md)")
+                raise BridgeUnreachable(f"Bridge not reachable on port {port}: {e}\n"
+                                        "-> Is EasyEDA Pro open with the API Gateway connected? (see docs/06_EASYEDA_API.md)",
+                                        port=port)
             time.sleep(1)
 
 def check(res: Any) -> Any:
-    """Raises SystemExit if EasyEDA JS returned an error dictionary."""
+    """Raises BridgeScriptError (a SystemExit) if EasyEDA JS returned an error dictionary."""
     if isinstance(res, dict) and res.get("error"):
-        raise SystemExit(f"STOP: {res}")
+        raise BridgeScriptError(f"STOP: {res}", result=res)
     return res
 
 def guard(doc_uuid: str, open_doc: bool = True) -> str:
@@ -379,12 +379,12 @@ def guard(doc_uuid: str, open_doc: bool = True) -> str:
 def load_project(path: str) -> Dict[str, Any]:
     p = os.path.join(path, "project.json")
     if not os.path.exists(p):
-        raise SystemExit(f"missing {p} (run tools/new_project.py first)")
+        raise ProjectError(f"missing {p} (run tools/new_project.py first)", path=p)
     with open(p, encoding="utf-8") as f:
         proj = json.load(f)
     for k in ("name", "sheet_uuid", "pcb_uuid"):
         if not proj.get(k):
-            raise SystemExit(f"{p}: missing '{k}'")
+            raise ProjectError(f"{p}: missing '{k}'", path=p, key=k)
     return proj
 
 _B64 = ('if(!f) return {error:"NO FILE returned by EasyEDA"}; const ab=await f.arrayBuffer(); const u=new Uint8Array(ab);'
@@ -396,7 +396,7 @@ def fetch_file(js_get: str, dest_dir: str, prefix: str = "", timeout: int = 280,
     code = f'{js_get}\n{_B64}'
     res = ex(code, timeout=timeout, retries=1, window_id=window_id, project_path=project_path)
     if not isinstance(res, dict) or "b64" not in res:
-        raise SystemExit("fetch_file: EasyEDA did not return file: " + str(res)[:200])
+        raise BridgeScriptError("fetch_file: EasyEDA did not return file: " + str(res)[:200])
     import base64
     raw = base64.b64decode(res["b64"])
     os.makedirs(dest_dir, exist_ok=True)

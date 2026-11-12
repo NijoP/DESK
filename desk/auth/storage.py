@@ -392,7 +392,8 @@ def get_credential_store(force_store: Optional[str] = None) -> BaseCredentialSto
     if _GLOBAL_STORE is not None and force_store is None:
         return _GLOBAL_STORE
 
-    store_type = force_store or os.environ.get("DESK_CREDENTIAL_STORE", "").lower()
+    from desk import config as deskcfg
+    store_type = force_store or (deskcfg.get("DESK_CREDENTIAL_STORE") or "").lower()
     if store_type == "memory":
         store = InMemoryCredentialStore()
     elif store_type == "file":

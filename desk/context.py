@@ -500,7 +500,8 @@ API_REF_DEFAULT = os.path.join(os.path.expanduser("~"), ".agents", "skills", "ea
 def api_index():
     """{ 'sch_PrimitiveComponent.create': signature } built from the local EasyEDA API quick reference (cached)."""
     cache = os.path.join(ROOT, "library", "api_signatures.json")
-    ref = os.environ.get("EASYEDA_API_REF", API_REF_DEFAULT)
+    from desk import config as deskcfg
+    ref = deskcfg.get("EASYEDA_API_REF") or API_REF_DEFAULT
     if os.path.exists(cache) and (not os.path.exists(ref) or os.path.getmtime(cache) >= os.path.getmtime(ref)):
         return _json(cache, {})
     idx, cls = {}, None

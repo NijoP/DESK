@@ -67,7 +67,8 @@ def run_agent(task: str, project: Optional[str] = None, model: Optional[str] = N
               extra_system: str = "") -> AgentRun:
     from desk.orchestrator.http_adapter import OpenAICompatAdapter
     adapter = adapter or OpenAICompatAdapter("nvidia")
-    model = model or os.environ.get("DESK_AGENT_MODEL") or DEFAULT_MODEL
+    from desk import config as deskcfg
+    model = model or deskcfg.get("DESK_AGENT_MODEL") or DEFAULT_MODEL
     ctx = {"project": project, "allow_mutation": allow_mutation, "window_id": window_id}
     system = SYSTEM_PROMPT + (f"\nProject directory: {project}" if project else "") + (f"\n{extra_system}" if extra_system else "")
     messages: List[Dict[str, Any]] = [{"role": "system", "content": system}, {"role": "user", "content": task}]

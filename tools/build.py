@@ -40,7 +40,7 @@ if "--at" in args:
     i = args.index("--at"); x, y = int(args[i + 1]), int(args[i + 2])
 else:
     x, y = st["cursor"]
-with ops.write_op(proj, "build", bid, force_unlock="--force-unlock" in args) as rec:
+with ops.write_op(proj, "build", bid, force_unlock="--force-unlock" in args, approval=ops.cli_approval(proj, "build", bid)) as rec:
     rec["dirty"] = True                      # from here on the sheet may change
     res = check(ex(G + block_js(b, lib, x, y, pin_counts), timeout=600, window_id=P.get("window_id")))
     W, H = res["W"], res["H"]

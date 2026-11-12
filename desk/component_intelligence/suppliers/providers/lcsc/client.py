@@ -126,8 +126,9 @@ class LcscApiClient:
         max_retries: int = 3,
         use_offline_fixtures: Optional[bool] = None,
     ) -> None:
-        self.client_id = client_id or os.environ.get("LCSC_CLIENT_ID")
-        self.client_secret = client_secret or os.environ.get("LCSC_CLIENT_SECRET")
+        from desk import config as deskcfg
+        self.client_id = client_id or deskcfg.get("LCSC_CLIENT_ID")
+        self.client_secret = client_secret or deskcfg.get("LCSC_CLIENT_SECRET")
         self.base_url = base_url.rstrip("/")
         self.conn_timeout = connection_timeout_s
         self.read_timeout = read_timeout_s

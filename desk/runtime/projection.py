@@ -272,7 +272,8 @@ class ExecutionProjection:
 
     def __init__(self, project_id: Optional[str] = None, event_bus: Optional[EventBus] = None) -> None:
         # No built-in project: the id comes from the caller, `set_project`, or DESK_PROJECT. Empty = unbound.
-        self.project_id = project_id or os.environ.get("DESK_PROJECT", "")
+        from desk import config as deskcfg
+        self.project_id = project_id or deskcfg.get("DESK_PROJECT") or ""
         self.event_bus = event_bus or get_event_bus()
         self._lock = threading.RLock()
 

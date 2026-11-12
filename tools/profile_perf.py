@@ -192,7 +192,7 @@ def run_profiling(project_dir: str):
     return summary
 
 if __name__ == "__main__":
-    proj = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else os.environ.get("DESK_PROJECT", "")
+    proj = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else (__import__("desk.config", fromlist=["get"]).get("DESK_PROJECT") or "")
     if not proj:
         raise SystemExit("usage: python tools/profile_perf.py projects/<P> [--json]  (or set DESK_PROJECT)")
     res = run_profiling(proj)
