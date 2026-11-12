@@ -53,6 +53,14 @@ def pad_geometry(pad: Dict[str, Any]):
         xs, ys = flat[0::2], flat[1::2]
         w = (max(xs) - min(xs)) / MIL if xs else 0.5
         h = (max(ys) - min(ys)) / MIL if ys else 0.5
+        # EasyEDA reads POLYGON pads back in ABSOLUTE board coordinates that are already rotated (Plotus run 2b:
+        # USB-C J1 GND/VBUS pads). Rotating their bounding box again by the pad rotation turned a 1.3 x 0.6 mm pad
+        # into 0.6 x 1.3 mm and produced false near-shorts. If the polygon is centred on the pad, use it as is.
+        if xs and ys and len(xs) == len(ys) >= 3:
+            bx, by = (max(xs) + min(xs)) / 2 / MIL, (max(ys) + min(ys)) / 2 / MIL
+            if abs(bx - pad["x"] / MIL) < 0.05 and abs(by - pad["y"] / MIL) < 0.05:
+                poly = Polygon([(x / MIL, y / MIL) for x, y in zip(xs, ys)])
+                return poly if poly.is_valid and poly.area > 0 else poly.buffer(0)
     cx, cy = pad["x"] / MIL, pad["y"] / MIL
     if kind in ("ELLIPSE", "CIRCLE") and abs(w - h) < 1e-6:
         g = Point(0, 0).buffer(w / 2, quad_segs=12)
