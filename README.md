@@ -1,514 +1,214 @@
 # DESK
 
-### An AI-Assisted Electronics Design Engineering Workbench
-**THE SENTINEL — A Homeostatic Engineering Organism**
-
-*Protect the design. Repair the damage. Preserve the integrity.*
+**An AI-assisted PCB engineering workbench for EasyEDA Pro.**
+Requirements in, verified and manufacturable boards out, with the physics done by code and every board change approved by the engineer.
 
 <p align="center">
-  <img src="assets/branding/desk-sentinel.svg" alt="THE SENTINEL — Homeostatic Engineering Organism" width="850"/>
+  <img src="assets/branding/desk-workflow.png" alt="DESK workflow: requirements, domain intelligence, block schematic, placement, routing, copper and power, DRC and gates, release" width="100%"/>
 </p>
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
-[![Dependencies](https://img.shields.io/badge/dependencies-zero%20external-success.svg)](desk/)
+[![Dependencies](https://img.shields.io/badge/dependencies-stdlib%20only-success.svg)](desk/)
+[![Tests](https://img.shields.io/badge/tests-549%20passing-success.svg)](tests/)
 [![ECAD](https://img.shields.io/badge/ecad-EasyEDA%20Pro-orange.svg)](https://pro.easyeda.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
----
-
-## 1. What DESK Is
-
-**DESK** is an open-source, AI-assisted engineering workbench built for hardware and electronics engineers working with **EasyEDA Pro**. It is developed by **Tusk Innovations Global Pvt Ltd**.
-
-DESK is not a replacement for the ECAD tool or for engineering judgment. It works alongside your EDA environment as a physics-guided co-pilot that enforces a hardware-first principle:
-
-> **Knowledge before geometry. Physical electrical laws before layout appearance. Deterministic verification before automated board mutation.**
-
-DESK helps you design, route, audit, and prepare boards for fabrication — from requirements to manufacturing readiness — with deterministic confidence and human approval at every stage.
-
-**Important:** DESK is actively developed. Many capabilities have been implemented and tested offline. Live EasyEDA Pro board mutation has not yet been production-verified. See [§9 Verification Status](#9-verification-status) and [§10 Limitations](#10-current-limitations-and-pending-development) for details.
+Developed by Tusk Innovations Global Pvt Ltd. Pure Python standard library, no pip packages.
 
 ---
 
-## 2. Architecture Overview
+## What DESK does, in engineering terms
 
-DESK is built as a set of Python modules with **zero external pip dependencies** (100% Python standard library).
+You hand DESK a requirements document. It works out what kind of board it is, which electrical rules apply, which component families are needed and what information is still missing. It then drives the schematic, placement, routing, copper and release stages through EasyEDA Pro and Freerouting, while deterministic code calculates trace widths, clearances and creepage, and validators prove the result before anything is released.
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        HARDWARE ENGINEER                               │
-│           (Reviews constraints, inspects results, approves work)       │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                         DESK WORKBENCH                                 │
-│                                                                        │
-│  Context Engine ─── AI Orchestrator ─── Mission Control Telemetry      │
-│       │                   │                      │                     │
-│  ┌────┴────┐    ┌────────┴────────┐     ┌───────┴──────┐              │
-│  │ Profile  │    │ Routing Intel V2│     │ Local Server │              │
-│  │ & Specs  │    │ Dense PCB Intel │     │ :49630       │              │
-│  └─────────┘    │ Congestion      │     └──────────────┘              │
-│                  │ Escape Analysis │                                    │
-│  ┌─────────┐    │ Priority Router │     ┌──────────────┐              │
-│  │Component│    │ Power-Aware     │     │ Quality Gates│              │
-│  │ Intel   │    │ Width Engine    │     │ (8 domains)  │              │
-│  │ & BOM   │    └─────────────────┘     └──────────────┘              │
-│  └─────────┘                                                           │
-│  ┌─────────┐    ┌─────────────────┐     ┌──────────────┐              │
-│  │Placement│    │ Copper & Ground │     │ Rework Mode  │              │
-│  │ Intel   │    │ Plane Engine    │     │ Surgical     │              │
-│  └─────────┘    └─────────────────┘     │ Repair       │              │
-│                                          └──────────────┘              │
-│  ┌─────────┐    ┌─────────────────┐     ┌──────────────┐              │
-│  │ IPC-2221│    │ DRC / ERC       │     │ Learning &   │              │
-│  │ Calc    │    │ Engines         │     │ Decision Log │              │
-│  └─────────┘    └─────────────────┘     └──────────────┘              │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│               EASYEDA PRO (Desktop or Web ECAD Canvas)                 │
-│          FreeRouting (External Routing Engine via DSN/SES)              │
-└────────────────────────────────────────────────────────────────────────┘
-```
+Three principles decide how the tool behaves:
 
-### Core Modules
+1. **Knowledge before geometry.** No part is chosen and no track is drawn until the board's domain, rails, currents and environment are declared.
+2. **Physics before appearance.** Widths, clearances and creepage come from IPC-2221, IPC-2221B and IEC 60664-1 formulas and tables in [`desk/ipc.py`](desk/ipc.py), never from a model's guess. An undeclared current or voltage is a hard failure, not a default.
+3. **Verification before mutation.** Every live change to a board is planned, checked, applied under a single-writer lock and read back from the ECAD engine. The engineer approves each mutation.
 
-| Module | Location | Purpose |
+Roles are fixed: **AI reasons, DESK calculates, validators verify, the engineer approves.**
+
+DESK is not a replacement for an ECAD tool or for engineering judgment. It is a co-pilot that refuses to guess.
+
+---
+
+## The workflow
+
+| Stage | What happens | Tool |
 |---|---|---|
-| Profile & Design Specs | [`desk/profile.py`](desk/profile.py), [`desk/spec.py`](desk/spec.py), [`desk/ipc.py`](desk/ipc.py) | Design profiles, IPC-2221 trace width, electrical constraints, clearance/creepage tables |
-| Component Intelligence | [`desk/component_intelligence/`](desk/component_intelligence/) | LCSC/JLCPCB parametric search, lifecycle audit, BOM, procurement |
-| Placement Intelligence | [`desk/placement_intel.py`](desk/placement_intel.py), [`desk/placement.py`](desk/placement.py) | Mechanical-first placement, functional clustering, decoupling proximity |
-| Placement Refinement | [`desk/placement_refine.py`](desk/placement_refine.py) | Density-aware passive movement proposals (single-pass, not iterative) |
-| Routing Intelligence V2 | [`desk/routing/`](desk/routing/) | S-expr DSN parser, pad escape, congestion, priority, strategy, orchestrator |
-| Dense PCB Intelligence | [`desk/routing/density.py`](desk/routing/density.py) | Grid-based supply/demand, hotspot detection, corridor discovery |
-| Routing Recovery | [`desk/routing/recovery.py`](desk/routing/recovery.py) | Stagnation detection, selective rip-up diagnostics |
-| Power Distribution | [`desk/power_distribution.py`](desk/power_distribution.py) | Rail analysis, copper sizing, via arrays, voltage-drop estimation |
-| Copper & Ground Planes | [`desk/copper.py`](desk/copper.py) | Reference planes, return-path verification, island detection, zone management |
-| Physical Connectivity | [`desk/routing/connectivity.py`](desk/routing/connectivity.py) | True pad-to-pad copper path verification |
-| DRC / ERC Engines | [`desk/drc_engine.py`](desk/drc_engine.py), [`desk/erc.py`](desk/erc.py) | Design rules, electrical rules, block-level checks |
-| Quality Gates | [`desk/quality.py`](desk/quality.py) | 8 fail-closed acceptance gates for manufacturing readiness |
-| Rework Mode | [`desk/rework/`](desk/rework/) | 8-domain audit, baseline capture, surgical repair planning |
-| Context Engine | [`desk/context.py`](desk/context.py) | Structural indexing, token-budgeted task packs |
-| AI Orchestrator | [`desk/orchestrator/`](desk/orchestrator/) | 5-tier multi-model routing (L0 deterministic → L4 frontier) |
-| EasyEDA Bridge | [`desk/bridge.py`](desk/bridge.py), [`desk/adapters/`](desk/adapters/) | EasyEDA Pro window discovery, PCB readback, mutation adapter |
-| Mission Control | [`desk/runtime/server.py`](desk/runtime/server.py) | Local telemetry dashboard on port 49630 |
-| Learning Engine | [`desk/learn/`](desk/learn/), [`learning/`](learning/) | Incident capture, lessons, engineering experience |
-| Decision Ledger | [`desk/ledger.py`](desk/ledger.py) | Append-only engineering decision records |
-| JLCPCB Manufacturing | [`desk/manufacturing/jlcpcb/`](desk/manufacturing/jlcpcb/) | Capabilities, quoting, PCBA catalog, order guard |
+| 1. Requirements | `REQUIREMENTS.md` with power budget, voltage tree, interfaces, mechanical envelope and GPIO budget (Gate R) | [`docs/00_REQUIREMENTS.md`](docs/00_REQUIREMENTS.md) |
+| 2. Domain intelligence | Classify the request into one of 100 PCB archetypes, apply overlays (mains, isolation, RF, motor, battery...), retrieve the rules, list what is missing | `python desk.py domains classify "<text>"` |
+| 3. Part selection | Comparison matrix and datasheet-derived passives (Gate B); every MPN resolved against the real EasyEDA library | [`tools/resolve.py`](tools/resolve.py), [`tools/pins.py`](tools/pins.py) |
+| 4. Block schematic | Each functional block is a JSON spec; linted offline, drawn on the sheet, then the live netlist is read back and compared with the spec | [`tools/lint.py`](tools/lint.py), [`tools/build.py`](tools/build.py), [`tools/verify.py`](tools/verify.py) |
+| 5. Placement | Mechanical constraints first, then decoupling proximity, functional clustering and routability | [`tools/pcb_place.py`](tools/pcb_place.py), [`tools/pcb_check.py`](tools/pcb_check.py) |
+| 6. Routing | Nets routed by priority (ground, differential, power, analog, digital, I/O) through Freerouting DSN/SES with pass supervision, stagnation detection and rip-up planning | [`tools/route.py`](tools/route.py) |
+| 7. Copper and power | Reference planes, return-path continuity, island detection, IPC-2221 widths per rail, via arrays, voltage-drop estimates | [`desk/copper.py`](desk/copper.py), [`desk/power_distribution.py`](desk/power_distribution.py) |
+| 8. DRC and quality gates | Clearance, annular ring, mask dam, fabricator minimums, pad-to-pad copper connectivity, 8 fail-closed acceptance gates | [`tools/drc.py`](tools/drc.py), [`desk/quality.py`](desk/quality.py) |
+| 9. Release | Gerber, BOM with LCSC codes, CPL centroids, manifest with hashes; gates run first, exports second, cross-checks third | [`tools/release.py`](tools/release.py) |
+
+The block workflow loop is documented in [`docs/03_BLOCK_WORKFLOW.md`](docs/03_BLOCK_WORKFLOW.md). A failed `verify.py` means the block is cleared and rebuilt from a corrected spec, with a ceiling of two attempts before a human is asked.
 
 ---
 
-## 3. Current Implemented Capabilities
+## Where the numbers come from
 
-### 3.1 Hardware Engineering Intelligence
-
-- **IPC-2221 Trace Width Calculation:** Trace widths computed from the IPC-2221 power-law formula based on copper weight, maximum current, and temperature rise. (Note: uses the IPC-2221 formula, not IPC-2152 chart data; conservative.)
-- **Design Profiles:** Per-project electrical constraints — voltage rails, current limits with confidence levels (VERIFIED / ESTIMATED / UNKNOWN), layer stackup, differential pairs, net classes, fabricator minimums.
-- **Clearance and Creepage Tables:** IPC-2221B Table 6-1 conductor spacing by voltage; IEC 60664-1 creepage distances.
-- **Functional Block Decomposition:** Circuits decomposed into subsystem blocks (e.g., WATCH has 13 blocks: Power, Charge, Regulator, Boost, MCU, Audio, IMU, Display, Buttons, LEDs, USB Sense).
-- **Offline ERC:** Block-level electrical rules checking from specifications — floating inputs, missing decoupling, pin-type conflicts.
-- **Mental Model Pipeline:** Requirements → schematic → placement → routing mental model compilation.
-
-### 3.2 Component Intelligence & BOM
-
-- **LCSC Integration:** Parametric search via LCSC API (offline fixture catalog for testing; live API via `urllib.request`).
-- **MPN and C-number Resolution:** Component identity resolution with canonical model.
-- **Lifecycle Auditing:** End-of-Life and NRND detection.
-- **Pricing and Stock:** Tiered pricing data from LCSC (offline-tested; live requires network).
-- **Component Alternatives:** Alternative part discovery.
-- **PCBA BOM Generation:** Fabrication-ready BOMs with LCSC C-codes and CPL centroid coordinates.
-- **Multi-supplier Architecture:** Extensible supplier provider contracts (LCSC and Mouser providers implemented).
-
-### 3.3 Manufacturing Ecosystem (JLCPCB)
-
-- **Capabilities Declaration:** Static fabrication constraints (min trace 3.5 mil, min drill 0.2mm, max 32 layers, surface finishes).
-- **PCBA Catalog:** Basic/extended part classification.
-- **Quoting and Order Guard:** Safety checks before order submission.
-- **BOM/CPL Export:** JLCPCB-compatible BOM and centroid formats.
-- **Note:** Live JLCPCB API integration and fabricator DFM checking are not implemented.
-
-### 3.4 EasyEDA Pro Integration
-
-- **Bridge Discovery:** Automatic detection of running EasyEDA Pro instances via localhost port scanning.
-- **PCB Adapter:** Batch readback script for components, pads, tracks, vias, zones, stackup, DRC rules.
-- **Customer Project Protection:** WATCH and BEEBOX projects are mutation-protected in code.
-- **Live Read-Only Verification:** One successful read-only session documented (13 getter calls, 484ms, WATCH project).
-- **Live Mutation Status:** Adapter code exists for copper zone creation, repour, and placement; **not yet live-verified**.
-
-### 3.5 Mechanical-First Component Placement
-
-- **Placement Hierarchy:** Mechanical integrity → Footprint → Electrical → Functional → Routability → Area.
-- **Mechanical Envelopes:** Connector mating clearances, mounting hole standoffs, screw terminal access.
-- **Functional Clustering:** Power, MCU, sensor, RF/comms grouping with topological passive snapping.
-- **Decoupling Proximity:** Capacitors placed adjacent to IC power pins.
-- **Placement Refinement:** Single-pass density-aware passive movement proposals (0.5-2mm translations, 90° rotations). This is not iterative co-optimisation — it refines once, proposes moves, and preserves locked components.
-
-### 3.6 Dense PCB Routing Intelligence
-
-- **Grid-based Density Analysis:** Supply/demand modelling per routing layer with adaptive cell sizing (25-50 mil).
-- **Hotspot Detection:** 8-connected congested region clustering with measured causes and recommended strategies.
-- **Escape Analysis:** Per-pad escape feasibility classification (EASY / MODERATE / RESTRICTED / CRITICAL / NO_LEGAL_ESCAPE).
-- **Corridor Discovery:** Identification of quiet routing channels adjacent to hotspots.
-- **Incremental Updates:** `update_components()` recomputes only affected cells (placement-routing feedback).
-
-### 3.7 Routing Intelligence V2
-
-- **S-Expression DSN Parser:** Full tokenizer, parser, transformer with round-trip fidelity.
-- **7 Routing Strategies:** Two-terminal (A), Multi-terminal MST (B), Escape-first (C), Differential pair (D), Power trunk (E), Plane stitch (F), RF isolated (G).
-- **6-Stage Priority Scheduling:** Ground → High-speed differential → Power → Analog → Low-speed digital → Non-critical I/O.
-- **Process Supervisor:** Engine discovery, JDK probing, version detection, headless execution, pass tracking, stagnation detection, timeout control.
-- **Plateau Detection:** Monitors routing completion; triggers recovery when progress stalls.
-- **Per-Pass Progress Reporting:** Wall-clock instrumentation across 20 canonical routing phases.
-- **Selective Recovery:** Structured failure diagnostics, conflicting track identification, minimal rip-up plans.
-- **Pre-flight Gate:** Three fail-closed structural checks before engine run: plane-net presence, outline closure, pad-in-keepout detection.
-- **Physical Connectivity Verification:** True pad-to-pad copper path verification via geometric intersection and connected-component analysis.
-
-### 3.8 Power Distribution & Trace-Width Intelligence
-
-- **Rail Current Analysis:** Per-rail copper sizing proposals based on declared currents (fail-closed for undeclared rails).
-- **Profile-Driven Widths:** `trace_width = max(profile_class, IPC_2221_width, fabricator_minimum)`.
-- **Via Array Proposals:** Power distribution via arrays.
-- **Voltage-Drop Estimation:** Analytical estimates based on trace geometry and copper properties.
-- **Note:** Does not include switching-loop area minimisation or RF-specific ground-plane rules.
-
-### 3.9 Ground Planes & Copper Engineering
-
-- **Reference Plane Allocation:** Based on physical stackup declarations.
-- **Return-Path Continuity:** 2D polygon containment (ray-casting) for unbroken reference planes under signals.
-- **Island Detection:** Unconnected copper island identification and edge setback enforcement.
-- **Zone Priority Hierarchy:** Power polygon zones with thermal relief control.
-- **Ground Stitching:** Via array synthesis for ground connectivity.
-
-### 3.10 Quality, DRC & Manufacturing Readiness
-
-- **DRC Engine:** Clearance, annular ring, solder mask dam, fabricator minimum checks.
-- **ERC Engine:** Netlist continuity, pin-type verification, floating input detection (offline block-level).
-- **8 Fail-Closed Quality Gates:** Manufacturing readiness blocked by missing evidence; gates never pass on assumptions.
-- **Rework Mode:** 8-domain surgical audit (requirements, netlist, footprints, placement, routing, power, copper, fabrication), baseline capture, dependency-aware repair planning.
-
-### 3.11 AI Model Orchestration
-
-- **5-Tier Execution Hierarchy:** L0 (deterministic, zero LLM) → L1 (fast reasoning) → L2 (capable + validated) → L3 (dual independent review) → L4 (frontier escalation).
-- **Three Providers:** AGY (Gemini CLI), Pi (multi-provider CLI), NVIDIA NIM (HTTP direct).
-- **Configured Models:** `nvidia/nemotron-3.5-lightning-30b-a3b` (L1), `nvidia/nemotron-3.5-super-vl-120b-a12b` (L2), `nvidia/nemotron-3-ultra-550b-a55b` (L3/L4) — verified on 2026-11-11 against live NIM endpoint.
-- **Context Engine:** Structural indexing with token-budgeted task packs; deterministic retrieval for engineering data, BM25 for free-text.
-- **Capability Registry:** Per-model capability declarations (vision, tool calling, structured output, thinking control).
-
-### 3.12 Engineering Safety & Human Approval
-
-- **Baseline Capture:** Multi-domain SHA-256 hashing before any operation.
-- **Single-Writer Canvas Mutex:** Reentrant locks prevent concurrent process collisions.
-- **Atomic Rollback Checkpoints:** Pre-mutation checkpoints for instant rollback.
-- **Independent Readback:** Post-mutation canvas geometry re-read for physical truth.
-- **Cryptographic Approval Tokens:** Rework mutations require explicit human approval tokens (`RW-APR-XXXX`).
-- **Customer Project Quarantine:** Active client projects protected against automated mutation.
-
-### 3.13 Local Mission Control
-
-- **Telemetry Server:** Zero-dependency HTTP server on port 49630 with SSE streaming.
-- **Dashboard CLI:** `python desk.py dashboard` launches the monitoring cockpit.
-
-### 3.14 Engineering Learning & Decision Memory
-
-- **Append-Only Decision Ledger:** Structured records with types (decision, fact, assumption, correction, verified), source attribution, and spec-hash staleness detection.
-- **Learning Repository:** Incidents, lessons, playbooks, session logs with searchable indices.
-- **Skill System:** Firstmate-style conditional skill loader for engineering agents.
-- **Ship Command Architecture:** Captain-FirstMate bridge hierarchy with Scout/Ship task classification.
-
----
-
-## 4. FreeRouting Integration Status
-
-| Item | Status | Evidence |
+| Quantity | Source in code | Method |
 |---|---|---|
-| FreeRouting 2.1.0 on Java 23 | Engine runs; ignores job timeout and max_passes settings | WATCH log: 49 passes, 996s, no SES (killed) |
-| FreeRouting 2.5.0 on Java 25 | Smoke test passed (SES in 4.4s); WATCH-DSN stopped at 6 passes, 100KB SES, 11 unrouted | `docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md` |
-| JDK 25 local installation | Installed by the Founder | Reported; not validated by automated check |
-| Stopped-job SES proof | **NOT CONFIRMED** | SES obtained from 2.5.0 stop, but with 11 unrouted nets — not a clean proof |
-| `python desk.py doctor` | Implemented | `desk/doctor.py` — checks Python, Java, EasyEDA, project prerequisites |
+| Trace width | [`desk/ipc.py`](desk/ipc.py) `calc_trace_width` | IPC-2221 power law `I = k · ΔT^0.44 · A^0.725`, k = 0.048 external / 0.024 internal, from declared current, copper weight and temperature rise. Conservative compared with IPC-2152 chart data. |
+| Final width per net | [`desk/profile.py`](desk/profile.py) | `max(net-class width, IPC-2221 width, fabricator minimum)` |
+| Clearance | [`desk/ipc.py`](desk/ipc.py), [`desk/profile.py`](desk/profile.py) | IPC-2221B Table 6-1 by working voltage and board location |
+| Creepage | [`desk/ipc.py`](desk/ipc.py) | IEC 60664-1 by working voltage, pollution degree and material group; reinforced insulation doubles the distance |
+| Fabricator floors | [`desk/manufacturing/jlcpcb/capabilities.py`](desk/manufacturing/jlcpcb/capabilities.py) | Minimum trace, spacing and drill applied as hard lower bounds |
+
+Two things an engineer should know before trusting these:
+
+- The IPC and IEC table values are transcriptions. The flag `verified_against_standard` in `desk/ipc.py` is **False** until a human checks them against the standard text. Every result that depends on them says so.
+- The design profile refuses to size copper for a rail whose current is unknown. Routing stops with a `PROFILE:` blocking issue instead of assuming 1 A.
 
 ---
 
-## 5. Projects
+## Domain intelligence
 
-| Project | Description | Status |
-|---|---|---|
-| [**WATCH**](projects/WATCH/) | ESP32-S3-based smartwatch — 13 functional blocks, 87 components, 60 nets, 4 copper layers, 30×45mm | Active development; routing attempts made; power-profile currents incomplete |
-| [**LIGHT**](projects/LIGHT/) | 230V mains LED dropper — single-block high-voltage design | Block specification and placement plan complete |
+New boards are classified before anything is drawn. The library under [`library/pcb_domains/`](library/pcb_domains/) holds:
 
----
-
-## 6. Manufacturing Ecosystem
-
-### LCSC
-
-| Capability | Status |
-|---|---|
-| Component search (parametric) | Offline tested (fixture catalog); live API implemented |
-| MPN / C-number resolution | Offline tested |
-| Pricing and stock levels | Offline tested |
-| Component alternatives | Offline tested |
-| BOM generation | Offline tested |
-| Live LCSC API calls | Implemented but not verified in automated tests |
-
-### JLCPCB
-
-| Capability | Status |
-|---|---|
-| Fabrication constraints (trace, drill, layers) | Implemented (static declaration) |
-| SMT assembly / basic-extended classification | Implemented |
-| BOM / CPL export compatibility | Offline tested |
-| Quoting / order guard | Implemented |
-| Live API integration | Not implemented |
-| Gerber validation | Not integrated (one-off script only) |
-
-### EasyEDA Pro
-
-| Capability | Status |
-|---|---|
-| API gateway bridge discovery | Offline tested |
-| Window and session detection | Offline tested |
-| PCB batch readback (components, tracks, vias, zones) | Offline tested |
-| Live read-only inspection | Verified (1 session, WATCH project, 13 calls, 484ms) |
-| Live board mutation (placement, copper, routing) | **Implemented — NOT LIVE VERIFIED** |
-| Customer project quarantine | Offline tested |
-
----
-
-## 7. Performance Targets
-
-The approved engineering time target for an average ESP32 IoT C2/C3 design:
-
-| Engineering Stage | Target Time |
-|---|---:|
-| Schematic creation and validation | 45 minutes |
-| Component placement | 45 minutes |
-| PCB routing and connectivity | 90 minutes |
-| Copper pouring | 30 minutes |
-| Manufacturing checks | 15 minutes |
-| **Total** | **225 minutes** |
-
-> **⚠️ TARGET — NOT A VERIFIED PERFORMANCE CLAIM**
->
-> No timed end-to-end ESP32 C2/C3 run has been performed. No representative ESP32-C2 or C3 project exists in the repository. The benchmark definition exists in [`docs/product_assessment/ESP32_BENCHMARK_BASELINE.md`](docs/product_assessment/ESP32_BENCHMARK_BASELINE.md) with per-stage estimates, but most stages are unmeasured or estimated. The routing phase has been partially measured (FreeRouting pass time: 6-42s median; full run: 996s with no SES). Schematic and placement stages are dominated by human transcription time.
->
-> This target is aspirational. Do not cite 225 minutes as an achieved result.
-
----
-
-## 8. AI and Agent Architecture
-
-DESK uses a multi-model orchestration system with three provider adapters:
-
-| Provider | Adapter | Models | Status |
-|---|---|---|---|
-| **AGY** (Gemini CLI) | [`desk/orchestrator/agy_adapter.py`](desk/orchestrator/agy_adapter.py) | Configurable via `DESK_L*_MODEL_AGY` | Offline tested |
-| **Pi** (multi-provider CLI) | [`desk/orchestrator/pi_adapter.py`](desk/orchestrator/pi_adapter.py) | Configurable via `DESK_L*_MODEL_PI` | Offline tested |
-| **NVIDIA NIM** (HTTP direct) | [`desk/orchestrator/http_adapter.py`](desk/orchestrator/http_adapter.py) | nemotron-3.5-lightning, super-vl, ultra | Verified on 2026-11-11 |
-
-The 5-tier hierarchy (L0-L4) routes tasks by complexity. L0 is fully deterministic (zero LLM calls). Tool calling, vision support, and structured output capabilities are declared per model in the [capability registry](desk/orchestrator/capabilities.py) but tool calling and vision have not been integration-tested.
-
-**Multi-agent organisation:** A Product Manager-led team structure with 6 teams is documented in [`docs/organisation/PRODUCT_CHARTER_AND_TEAMS.md`](docs/organisation/PRODUCT_CHARTER_AND_TEAMS.md). This is an operational protocol and documentation structure, not a runtime multi-agent system. The decision ledger, skill loader, and ship command architecture exist as code; isolated Git worktrees and runtime agent lifecycle management do not.
-
----
-
-## 9. Verification Status
-
-Test suite: **428 tests passing** across 74 test files (last verified 2026-11-12).
-
-| Capability | Status | Evidence |
-|---|---|---|
-| IPC-2221 Trace Width Sizing | `OFFLINE TESTED` | `test_profile_hardening.py`, `test_ipc_models.py`, `test_hardware_reference_values.py` |
-| Routing Intelligence V2 & DSN | `OFFLINE TESTED` | `test_routing_dsn.py`, `test_routing_orchestrator.py`, `test_routing_connectivity.py` and 12 more routing test files |
-| Dense PCB Intelligence | `OFFLINE TESTED` | `test_dense_intelligence.py` |
-| Pad Escape & Congestion | `OFFLINE TESTED` | `test_routing_escape.py`, `test_dense_intelligence.py` |
-| Priority Net Routing | `OFFLINE TESTED` | `test_routing_priority.py` |
-| Routing Recovery & Plateau Detection | `OFFLINE TESTED` | `test_routing_recovery.py`, `test_routing_pass_tracker.py` |
-| Power Distribution | `OFFLINE TESTED` | `test_power_distribution.py` |
-| Copper Planes & Return Paths | `OFFLINE TESTED` | `test_copper_geometry.py`, `test_copper_engine.py` |
-| Physical Connectivity Verification | `OFFLINE TESTED` | `test_routing_connectivity.py`, `test_connectivity_zones.py` |
-| 8 Fail-Closed Quality Gates | `OFFLINE TESTED` | `test_quality_fail_closed.py` |
-| Component Intelligence & BOM | `OFFLINE TESTED` | `test_ci_*.py` (8 files) |
-| Placement Intelligence | `OFFLINE TESTED` | `test_placement.py`, `test_phase6_placement_policy.py` |
-| Rework Mode & 8-Domain Audit | `OFFLINE TESTED` | `test_rework_*.py` (8 files) |
-| JLCPCB Manufacturing | `OFFLINE TESTED` | `test_jlcpcb_integration.py` |
-| Mission Control Server | `OFFLINE TESTED` | `test_server.py` |
-| Context Engine | `OFFLINE TESTED` | `test_context.py` |
-| AI Orchestrator (mock providers) | `OFFLINE TESTED` | `test_orchestrator.py` |
-| Decision Ledger & Learning | `OFFLINE TESTED` | `test_decision_memory.py`, `test_learn.py` |
-| EasyEDA Bridge Discovery | `OFFLINE TESTED` | `test_bridge_port_discovery.py`, `test_easyeda_pro_integration.py` |
-| EasyEDA Live Read-Only | `1 SESSION VERIFIED` | [`LIVE_EASYEDA_OBSERVATION_01.md`](docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md) |
-| **EasyEDA Live Mutation** | `IMPLEMENTED — NOT LIVE VERIFIED` | Zero live mutation tests executed |
-| **FreeRouting + Java 25** | `INTEGRATION STARTED` | 2.5.0 smoke passed; WATCH stopped-job produced SES with 11 unrouted |
-| **ESP32 225-min Benchmark** | `TARGET ONLY — NOT MEASURED` | No end-to-end timed run exists |
-
----
-
-## 10. Current Limitations and Pending Development
-
-### Critical Limitations
-
-1. **No live EasyEDA mutation verification.** Board mutation through the EasyEDA Pro bridge has not completed a controlled live test. The adapter code exists and is offline-tested but is explicitly marked `NOT_LIVE_VERIFIED` in source. A 9-stage live test checklist is defined but has never been executed.
-
-2. **FreeRouting stopped-job SES is not cleanly proven.** FreeRouting 2.5.0 under Java 25 produced a SES file after a controlled stop, but with 11 unrouted nets remaining. FreeRouting 2.1.0 ignores external stop settings entirely.
-
-3. **WATCH power-profile currents are incomplete.** The WATCH design profile does not declare explicit rail current limits for several power nets. Power distribution proposals use `CurrentConfidence.UNKNOWN` for these rails and should not be trusted for fabrication without verified current values.
-
-4. **No ESP32 C2/C3 benchmark board exists.** The 225-minute performance target is defined but no representative ESP32-C2 or C3 project exists. No timed end-to-end workflow has been measured.
-
-5. **No live fabricator DFM check.** JLCPCB constraints are hardcoded; no live API integration exists for quoting or DFM validation.
-
-### Important Limitations
-
-- **Cross-platform:** Developed and tested on Windows 11. Linux and macOS should work (pure Python stdlib) but have no test evidence.
-- **IPC-2221 formula (not IPC-2152):** Trace width uses the 2221 power-law approximation, not the more detailed 2152 chart data. Conservative for external layers.
-- **Placement-routing co-optimisation is single-pass.** The placement refiner proposes moves but does not iterate with the router.
-- **No switching-loop area minimisation** or RF-specific ground-plane rules.
-- **No client engineering drawing import** (no OCR/PDF parsing).
-- **Multi-agent organisation is documentation, not runtime.** Team structure is documented; no runtime multi-agent system with worktree isolation exists.
-- **NVIDIA tool calling is verified (2026-11-12) for Nemotron 3 Ultra and 3.5 Lightning via `desk.py agent`; vision remains declared-only.**
-- **No Firstmate/Backpass/Herdr/Wefth integration.** Only Pi and AGY adapters are implemented.
-- **No 72-class PCB compatibility.** Only WATCH (ESP32-S3 smartwatch) and sensor patch boards have been tested.
-- **No senior hardware engineer acceptance recorded.** Acceptance criteria are defined but unfulfilled.
-
----
-
-## 11. Development Roadmap
-
-A complete requirements traceability audit covering 97 requirements across 12 groups is available:
-
-📋 **[Conversation Requirements Audit](docs/product_assessment/CONVERSATION_REQUIREMENTS_AUDIT.md)**
-
-Summary: 42 verified, 19 implemented but unverified, 22 partially implemented, 8 missing, 4 blocked, 2 not tested.
-
-The five highest-priority items for continued development:
-
-1. Execute the live EasyEDA mutation test checklist on a disposable project.
-2. Confirm FreeRouting 2.5.0 stopped-job SES with full connectivity.
-3. Complete WATCH power-profile current declarations.
-4. Create an ESP32-C2 reference project and run the first timed benchmark.
-5. Set up Linux CI to verify cross-platform compatibility.
-
----
-
-## 12. Installation & Verification
-
-### System Requirements
-
-- **Operating System:** Windows 10/11 (primary). Linux and macOS expected to work (untested).
-- **Python:** 3.9 or higher.
-- **Dependencies:** Zero external pip packages.
-- **Optional:** Java 17+ for FreeRouting external routing engine. Java 25 recommended for FreeRouting 2.5.0.
-- **Optional:** EasyEDA Pro (Desktop or Web) for live ECAD integration.
-
-### Installation
+- **14 domains and 100 archetypes**, from `buck_converter` and `three_phase_bldc_controller` to `isolated_ac_dc`, `lora_transceiver`, `usb_c_interface` and `precision_adc_frontend`. Each archetype lists its typical functional blocks, rails, currents, isolation needs, EMI concerns, thermal considerations, placement and routing priorities, failure modes and the standards that apply.
+- **17 overlays** for cross-cutting concerns (mains safety and isolation, galvanic isolation, high current, RF, motor drive, battery management, USB, high-speed digital, precision analog, automotive, harsh environment and more). Overlays stack; a stricter safety rule is never silently discarded when overlays combine.
+- **206 component families** with roles, electrical characteristics, required parameters, compatibility and datasheet checks. No part numbers live here: real parts are resolved against the EasyEDA library.
+- **66 deterministic rules** with scope, applicability conditions, evaluator, parameters, references, evidence state and enforcement mode. A rule is reported as ENFORCED only when a DESK subsystem actually applies it; otherwise it is ADVISORY or UNSUPPORTED and says so.
 
 ```powershell
-# Clone repository
+python desk.py domains classify "LoRaWAN EU868 sensor node, battery powered, 3.3 V, outdoor"
+python desk.py domains rules three_phase_bldc_controller --overlays high_current,motor_drive
+python desk.py domains validate requirements.json --project projects/MY_BOARD
+python desk.py domains check
+```
+
+Classification is deterministic (keyword and feature scoring). Ambiguity between mains and low voltage, or around motors and batteries, always returns `REVIEW_REQUIRED` with the questions to ask, never a confident wrong answer. See [`docs/domain_intelligence/NEW_USER_GUIDE.md`](docs/domain_intelligence/NEW_USER_GUIDE.md).
+
+---
+
+## EasyEDA Pro, Freerouting and fabrication
+
+**EasyEDA Pro.** DESK talks to the running desktop or web client through its local JavaScript gateway. It reads back components, pads, tracks, vias, zones, stackup and DRC rules, and writes schematics and PCB changes through two audited paths only: [`tools/build.py`](tools/build.py) for blocks and [`tools/wire.py`](tools/wire.py) for named pins. There is no browser automation and no custom drawing script. Every write goes through a single-writer lock, a baseline hash, a rollback checkpoint and an independent read-back.
+
+**Freerouting.** Boards go out as DSN and come back as SES. DESK runs the engine headless, tracks passes, detects stagnation, plans selective rip-ups and re-verifies connectivity from the returned geometry. A pre-flight gate checks plane nets, outline closure and pads in keep-outs before the engine starts.
+
+**LCSC and JLCPCB.** Parametric search, MPN and C-number resolution, lifecycle (EOL/NRND) and stock, alternatives, PCBA BOM and CPL export, basic/extended part classification and an order guard. Live calls are implemented; automated tests use an offline fixture catalogue.
+
+---
+
+## AI models
+
+DESK routes work through five tiers. L0 is deterministic Python with no model call. L1 to L4 call models of rising capability for reasoning, planning and explanation, with validation on the way back. Providers: NVIDIA NIM over HTTP (default `nvidia/nemotron-3-ultra-550b-a55b`, tool calling verified 2026-11-12), Gemini CLI and the Pi multi-provider CLI.
+
+```powershell
+# set NVIDIA_API_KEY in the environment or the DESK credential vault
+python desk.py auth configure
+python desk.py agent projects/MY_BOARD "read the sheet and list every unconnected pin"
+python desk.py agent projects/MY_BOARD "wire U1.VDD to +3V3" --allow-mutation
+```
+
+The agent reads the live sheet, plans and explains. It mutates only with `--allow-mutation`, through the same guarded tools an engineer would run by hand. Model output never overrides a calculated width, a verified pin map or a quality gate.
+
+---
+
+## Quick start
+
+Requirements: Python 3.9 or newer (3.11 or 3.12 recommended), Windows 11 is the tested platform. Optional: EasyEDA Pro for live work, Java 17 or newer for Freerouting (Java 25 with Freerouting 2.5.0 is what has been exercised).
+
+```powershell
 git clone https://github.com/NijoP/DESK.git
 cd DESK
 
-# Run the test suite
-python -m unittest discover -s tests -p "test_*.py"
+python -m unittest discover -s tests -p "test_*.py"   # 549 tests, no network, no ECAD needed
+python desk.py doctor                                 # Python, Java, Freerouting, EasyEDA bridge, project binding
+python desk.py tools                                  # one line per tool
 
-# Check environment prerequisites
-python desk.py doctor
+python tools/new_project.py MY_BOARD                  # projects/MY_BOARD from the template
+python desk.py domains classify projects/MY_BOARD/REQUIREMENTS.md
+python tools/ctx.py projects/MY_BOARD brief           # where the project is, what comes next
+python desk.py dashboard                              # local Mission Control on http://localhost:49630
 ```
 
-### Essential CLI Commands
-
-```powershell
-# Check workbench status
-python desk.py status
-
-# Launch Mission Control dashboard
-python desk.py dashboard
-
-# Route a board with Routing Intelligence V2
-python tools/route.py projects/WATCH --mode BALANCED
-
-# Run routing benchmarks
-python tools/routing_benchmarks.py
-
-# Component search and BOM
-python tools/bom.py projects/WATCH
-
-# PCB design-rule check
-python tools/drc.py projects/WATCH
-
-# Start Rework Mode
-python desk.py rework start projects/WATCH
-
-# Audit existing PCB across 8 domains
-python desk.py rework audit projects/WATCH
-
-# Quality gates and manufacturing readiness
-python desk.py rework report projects/WATCH
-```
+Working on an existing board rather than a new one: `python desk.py rework start|audit|plan|approve|execute|report projects/MY_BOARD` runs an eight-domain audit (requirements, netlist, footprints, placement, routing, power, copper, fabrication), captures a baseline and plans surgical repairs that require an approval token before execution.
 
 ---
 
-## 13. Documentation
+## Repository map
 
-| Area | Document |
+| Path | Contents |
 |---|---|
-| **Domain Intelligence (100 archetypes, rule engine)** | [`docs/domain_intelligence/NEW_USER_GUIDE.md`](docs/domain_intelligence/NEW_USER_GUIDE.md), [`TAXONOMY_REFERENCE.md`](docs/domain_intelligence/TAXONOMY_REFERENCE.md), [`RULE_ENGINE_ARCHITECTURE.md`](docs/domain_intelligence/RULE_ENGINE_ARCHITECTURE.md) |
-| **Routing Intelligence V2** | [`docs/ROUTING_INTELLIGENCE_V2.md`](docs/ROUTING_INTELLIGENCE_V2.md) |
-| **Dense PCB Intelligence** | [`docs/engineering/DENSE_PCB_INTELLIGENCE.md`](docs/engineering/DENSE_PCB_INTELLIGENCE.md) |
-| **Congestion Optimisation** | [`docs/engineering/CONGESTION_OPTIMISATION.md`](docs/engineering/CONGESTION_OPTIMISATION.md) |
-| **Power Distribution** | [`docs/engineering/POWER_DISTRIBUTION_INTELLIGENCE.md`](docs/engineering/POWER_DISTRIBUTION_INTELLIGENCE.md) |
-| **Copper Zone Generation** | [`docs/engineering/COPPER_ZONE_GENERATION.md`](docs/engineering/COPPER_ZONE_GENERATION.md) |
-| **Placement Co-optimisation** | [`docs/engineering/PLACEMENT_ROUTING_COOPTIMISATION.md`](docs/engineering/PLACEMENT_ROUTING_COOPTIMISATION.md) |
-| **EasyEDA Integration** | [`docs/ecosystem/02_EASYEDA_PRO_INTEGRATION.md`](docs/ecosystem/02_EASYEDA_PRO_INTEGRATION.md) |
-| **LCSC Integration** | [`docs/ecosystem/LCSC_INTEGRATION_ARCHITECTURE.md`](docs/ecosystem/LCSC_INTEGRATION_ARCHITECTURE.md) |
-| **JLCPCB Manufacturing** | [`docs/ecosystem/JLCPCB_MANUFACTURING_ARCHITECTURE.md`](docs/ecosystem/JLCPCB_MANUFACTURING_ARCHITECTURE.md) |
-| **Capability Matrix** | [`docs/product_assessment/PRODUCT_CAPABILITY_MATRIX.md`](docs/product_assessment/PRODUCT_CAPABILITY_MATRIX.md) |
-| **Requirements Audit** | [`docs/product_assessment/CONVERSATION_REQUIREMENTS_AUDIT.md`](docs/product_assessment/CONVERSATION_REQUIREMENTS_AUDIT.md) |
-| **ESP32 Benchmark Baseline** | [`docs/product_assessment/ESP32_BENCHMARK_BASELINE.md`](docs/product_assessment/ESP32_BENCHMARK_BASELINE.md) |
-| **Live Test Status** | [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
-| **THE SENTINEL Identity** | [`docs/identity/DESK_CHARACTER_IDENTITY.md`](docs/identity/DESK_CHARACTER_IDENTITY.md) |
-| **Rework Mode (16-part series)** | [`docs/rework/01_REWORK_MODE_OVERVIEW.md`](docs/rework/01_REWORK_MODE_OVERVIEW.md) |
-| **Getting Started** | [`docs/getting-started.md`](docs/getting-started.md) |
-| **Mission Control** | [`docs/local-dashboard.md`](docs/local-dashboard.md) |
-| **Product Charter & Teams** | [`docs/organisation/PRODUCT_CHARTER_AND_TEAMS.md`](docs/organisation/PRODUCT_CHARTER_AND_TEAMS.md) |
-| **Learning Repository** | [`learning/README.md`](learning/README.md) |
+| [`desk/`](desk/) | Engineering engines: `ipc.py`, `profile.py`, `spec.py`, `copper.py`, `power_distribution.py`, `placement*.py`, `drc_engine.py`, `erc.py`, `quality.py`, `routing/`, `rework/`, `component_intelligence/`, `domain_intelligence/`, `manufacturing/`, `orchestrator/`, `runtime/` |
+| [`tools/`](tools/) | Command-line tools for every stage; `python desk.py tools` lists them |
+| [`library/`](library/) | Resolved devices, verified pin maps (`library/pins/`), PCB domain knowledge (`library/pcb_domains/`) |
+| [`projects/`](projects/) | One directory per board: requirements, block plan, block specs, design profile, ledger |
+| [`docs/`](docs/) | Workflow (00 to 09), engineering notes, ecosystem integration, domain intelligence, rework mode, verification |
+| [`tests/`](tests/) | Offline unit and fixture tests; live-only checks are skipped unless an ECAD session is present |
+| [`learning/`](learning/) | Incidents, lessons and playbooks captured from real sessions |
+| [`.agents/skills/`](.agents/skills/) | Procedural skills loaded by AI agents; [`AGENTS.md`](AGENTS.md) is the operating manual |
 
 ---
 
-## 14. Engineering Safety
+## Verification status
 
-1. **Baseline Capture:** Multi-domain SHA-256 hashes record every footprint, trace, and copper boundary before any operation.
-2. **Single-Writer Mutex:** Reentrant canvas locks prevent concurrent process collisions.
-3. **Atomic Rollback:** Pre-mutation checkpoints for instant rollback on failure.
-4. **Independent Readback:** Geometry re-read from the CAD engine to confirm physical truth.
-5. **Fail-Closed Gates:** Missing verification evidence blocks manufacturing release.
-6. **Human Approval Required:** Rework mutations require explicit cryptographic approval tokens.
-7. **Customer Protection:** Active client projects (WATCH, BEEBOX) are mutation-protected in code.
+The test suite was last run on 2026-11-12: 549 tests, 0 failures, 3 live-only skips.
 
----
-
-## 15. Contributing
-
-We welcome contributions from electronics engineers and software developers:
-
-1. All code must use **100% Python standard library** (zero external pip packages).
-2. Base trace width and clearance rules on physical equations or documented fabricator standards.
-3. Run all automated tests: `python -m unittest discover -s tests -p "test_*.py"`.
-4. See [AGENTS.md](AGENTS.md) for development conventions and agent-system architecture.
+| Area | Status | Evidence |
+|---|---|---|
+| IPC-2221 width, clearance, creepage calculations | Offline tested; table values not yet checked against standard text | `tests/test_ipc_models.py`, `tests/test_hardware_reference_values.py`, `tests/test_profile_hardening.py` |
+| Domain intelligence (taxonomy, classifier, rule engine, profile compiler) | Offline tested; 13 of 100 archetypes exercised by fixtures, 87 are DRAFT entries | `tests/test_domain_taxonomy.py`, `tests/test_rule_engine.py`, `tests/test_cross_domain_cases.py` and six more |
+| Routing intelligence, DSN/SES, connectivity, recovery | Offline tested | 11 `tests/test_routing_*.py` files |
+| Power distribution, copper planes, return paths | Offline tested | `tests/test_power_distribution.py`, `tests/test_copper_*.py` |
+| Placement, DRC, ERC, quality gates | Offline tested | `tests/test_placement.py`, `tests/test_quality_fail_closed.py` |
+| Component intelligence, BOM, JLCPCB | Offline tested with fixture catalogue | `tests/test_ci_*.py`, `tests/test_jlcpcb_integration.py` |
+| EasyEDA Pro read-back | Live verified (read-only sessions) | [`docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md`](docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md) |
+| NVIDIA NIM tool-calling agent | Live verified against the NIM endpoint, 2026-11-12 | `desk/orchestrator/agent_loop.py` |
+| EasyEDA Pro live mutation (placement, copper, routing write-back) | **Implemented, not live verified** | [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
+| Freerouting stopped-job SES with full connectivity | **Not confirmed** | [`docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`](docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md) |
 
 ---
 
-## 16. License
+## Known limitations
 
-[MIT License](LICENSE) — See [NOTICE](NOTICE) for attribution.
+- Live board mutation through the EasyEDA bridge has not completed a controlled live test. The code paths exist and are offline tested; they are marked not live verified in source.
+- Trace width uses the IPC-2221 power law, not IPC-2152 chart data. Results are conservative for external layers.
+- Placement refinement is single pass. It proposes moves; it does not iterate with the router.
+- No switching-loop area minimisation and no RF-specific ground-plane synthesis yet. Those rules are ADVISORY in the domain library.
+- Junction-temperature and component-rating rules are UNSUPPORTED: DESK lists them, it cannot evaluate them.
+- JLCPCB constraints are a static declaration; there is no live DFM or quoting API call.
+- Developed and tested on Windows 11. Linux and macOS should work (stdlib only) but have no test evidence yet.
+- No timed end-to-end benchmark exists. Time targets in the docs are targets, not measurements.
 
 ---
 
-<p align="center">
-  <b>DESK is actively developed. Some live hardware workflows still require validation.</b><br>
-  <b>A healthy PCB is not merely a board without visible errors. It is a design whose intent, structure, and physical constraints remain intact.</b><br>
-  <b>DESK exists to protect that integrity.</b>
-</p>
+## Documentation
+
+| Topic | Document |
+|---|---|
+| Getting started | [`docs/getting-started.md`](docs/getting-started.md) |
+| Requirements and part selection gates | [`docs/00_REQUIREMENTS.md`](docs/00_REQUIREMENTS.md), [`docs/00b_COMPONENT_SELECTION.md`](docs/00b_COMPONENT_SELECTION.md) |
+| Block workflow, placement, routing | [`docs/03_BLOCK_WORKFLOW.md`](docs/03_BLOCK_WORKFLOW.md), [`docs/04_PLACEMENT.md`](docs/04_PLACEMENT.md), [`docs/05_ROUTING.md`](docs/05_ROUTING.md) |
+| Domain intelligence | [`docs/domain_intelligence/NEW_USER_GUIDE.md`](docs/domain_intelligence/NEW_USER_GUIDE.md), [`TAXONOMY_REFERENCE.md`](docs/domain_intelligence/TAXONOMY_REFERENCE.md), [`RULE_CATALOGUE.md`](docs/domain_intelligence/RULE_CATALOGUE.md), [`EVIDENCE_AND_MATURITY_POLICY.md`](docs/domain_intelligence/EVIDENCE_AND_MATURITY_POLICY.md) |
+| Routing intelligence | [`docs/ROUTING_INTELLIGENCE_V2.md`](docs/ROUTING_INTELLIGENCE_V2.md), [`docs/engineering/DENSE_PCB_INTELLIGENCE.md`](docs/engineering/DENSE_PCB_INTELLIGENCE.md) |
+| Power and copper | [`docs/engineering/POWER_DISTRIBUTION_INTELLIGENCE.md`](docs/engineering/POWER_DISTRIBUTION_INTELLIGENCE.md), [`docs/engineering/COPPER_ZONE_GENERATION.md`](docs/engineering/COPPER_ZONE_GENERATION.md) |
+| EasyEDA Pro, LCSC, JLCPCB | [`docs/ecosystem/02_EASYEDA_PRO_INTEGRATION.md`](docs/ecosystem/02_EASYEDA_PRO_INTEGRATION.md), [`docs/ecosystem/LCSC_INTEGRATION_ARCHITECTURE.md`](docs/ecosystem/LCSC_INTEGRATION_ARCHITECTURE.md), [`docs/ecosystem/JLCPCB_MANUFACTURING_ARCHITECTURE.md`](docs/ecosystem/JLCPCB_MANUFACTURING_ARCHITECTURE.md) |
+| Rework mode for existing boards | [`docs/rework/01_REWORK_MODE_OVERVIEW.md`](docs/rework/01_REWORK_MODE_OVERVIEW.md) |
+| Context engine and learning | [`docs/07_CONTEXT_ENGINE.md`](docs/07_CONTEXT_ENGINE.md), [`docs/08_LEARNING_ENGINE.md`](docs/08_LEARNING_ENGINE.md) |
+| Mission Control dashboard | [`docs/local-dashboard.md`](docs/local-dashboard.md) |
+| Live test status and checklist | [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md), [`docs/LIVE_INTEGRATION_CHECKLIST.md`](docs/LIVE_INTEGRATION_CHECKLIST.md) |
+| Agent operating manual | [`AGENTS.md`](AGENTS.md) |
+
+---
+
+## Contributing
+
+1. Python standard library only. No pip dependencies.
+2. Every width, clearance or creepage rule must cite a formula, a standard table or a fabricator document. No magic numbers.
+3. Never weaken a quality gate, bypass DRC or connectivity checks, or replace missing evidence with confidence.
+4. Run the full suite before and after a change: `python -m unittest discover -s tests -p "test_*.py"`. Zero failures, zero errors.
+5. Read [`AGENTS.md`](AGENTS.md) for conventions, the block workflow and the safety rules.
+
+## License
+
+[MIT](LICENSE). See [NOTICE](NOTICE) for attribution.
