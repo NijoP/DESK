@@ -198,5 +198,6 @@ class DatabaseManager:
 
             if current_version < 1:
                 cursor.executescript(MIGRATION_V1)
-                cursor.execute("INSERT INTO schema_version (version, applied_at) VALUES (1, unixepoch());")
+                # strftime instead of unixepoch(): the latter needs SQLite >= 3.38, which Python 3.9 builds do not bundle
+                cursor.execute("INSERT INTO schema_version (version, applied_at) VALUES (1, CAST(strftime('%s', 'now') AS INTEGER));")
                 conn.commit()
