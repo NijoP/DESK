@@ -1,0 +1,48 @@
+{
+ "name": "Precision analog",
+ "description": "Signal chains where noise, leakage and grounding set accuracy.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "resolution_bits",
+    "op": ">=",
+    "value": 14
+   },
+   {
+    "field": "signal_type",
+    "op": "in",
+    "value": [
+     "analog",
+     "sensor",
+     "audio"
+    ]
+   }
+  ]
+ },
+ "adds_component_families": [
+  "voltage_reference",
+  "ldo_regulator"
+ ],
+ "placement_rules": [
+  "Signal chain in line; references away from heat; digital parts far away"
+ ],
+ "routing_rules": [
+  "Guard rings on high-impedance nodes; matched differential routing"
+ ],
+ "copper_rules": [
+  "Single unbroken ground; no pour on high-impedance nodes"
+ ],
+ "emi_emc_rules": [
+  "RC/ferrite filtering at entries"
+ ],
+ "verification_requirements": [
+  "Noise budget and ground partition reviewed"
+ ],
+ "precedence": 45,
+ "schema_version": "1.0.0",
+ "overlay_id": "precision_analog",
+ "rule_ids": [
+  "PLACE-THERM-017",
+  "ROUTE-GUARD-030"
+ ]
+}

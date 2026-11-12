@@ -1,0 +1,54 @@
+{
+ "name": "Switching power stage",
+ "description": "Any switched-mode converter on the board.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "converter",
+    "op": "exists",
+    "value": true
+   },
+   {
+    "field": "switching_frequency_hz",
+    "op": ">",
+    "value": 10000.0
+   }
+  ]
+ },
+ "adds_component_families": [
+  "inductor",
+  "input_capacitor",
+  "output_capacitor"
+ ],
+ "placement_rules": [
+  "Hot loop minimal; feedback away from the switch node"
+ ],
+ "routing_rules": [
+  "Switch node short, single layer; power path widths from desk.ipc"
+ ],
+ "copper_rules": [
+  "Thermal vias under power pads; ground join at one point"
+ ],
+ "emi_emc_rules": [
+  "Snubber and input filter footprints"
+ ],
+ "verification_requirements": [
+  "Currents declared; hot-loop area recorded"
+ ],
+ "precedence": 55,
+ "schema_version": "1.0.0",
+ "overlay_id": "switching_power",
+ "rule_ids": [
+  "ELEC-VIA-005",
+  "ELEC-DROP-006",
+  "PLACE-HOTLOOP-012",
+  "PLACE-FB-013",
+  "ROUTE-SW-023",
+  "ROUTE-RETURN-027",
+  "ROUTE-GATE-028",
+  "COPPER-THERMVIA-046",
+  "THERM-TJ-050",
+  "EMI-LOOP-060",
+  "DCDC-VIN-121"
+ ]
+}

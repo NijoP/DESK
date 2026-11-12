@@ -1,0 +1,51 @@
+{
+ "name": "Industrial interfaces",
+ "description": "RS-485, CAN, 24 V I/O and fieldbuses in industrial environments.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "protocols",
+    "op": "intersects",
+    "value": [
+     "rs485",
+     "can",
+     "modbus",
+     "profibus",
+     "ethercat"
+    ]
+   },
+   {
+    "field": "input_voltage_v",
+    "op": "between",
+    "value": [
+     18,
+     36
+    ]
+   }
+  ]
+ },
+ "adds_component_families": [
+  "tvs_diode",
+  "terminal_block"
+ ],
+ "placement_rules": [
+  "Protection at the terminals; transceivers adjacent"
+ ],
+ "routing_rules": [
+  "120 ohm pairs; termination at bus ends only"
+ ],
+ "copper_rules": [],
+ "emi_emc_rules": [
+  "Surge/burst components at every field terminal"
+ ],
+ "verification_requirements": [
+  "Bus termination/bias recorded; surge level recorded"
+ ],
+ "precedence": 45,
+ "schema_version": "1.0.0",
+ "overlay_id": "industrial_interfaces",
+ "rule_ids": [
+  "ROUTE-DIFF-021",
+  "EMI-SURGE-063"
+ ]
+}

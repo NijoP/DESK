@@ -1,0 +1,45 @@
+{
+ "name": "Thermal management",
+ "description": "Boards with devices dissipating more than about 0.5 W or operating hot.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "power_w",
+    "op": ">=",
+    "value": 5.0
+   },
+   {
+    "field": "max_ambient_c",
+    "op": ">=",
+    "value": 60
+   }
+  ]
+ },
+ "adds_component_families": [
+  "heatsink",
+  "ntc_thermistor"
+ ],
+ "placement_rules": [
+  "Hot parts spread; heat-sensitive parts (references, electrolytics, sensors) away from them",
+  "Exposed pads with via arrays"
+ ],
+ "routing_rules": [
+  "Wide copper to spread heat from power pads"
+ ],
+ "copper_rules": [
+  "Copper area per watt from device datasheets; thermal vias to the opposite side"
+ ],
+ "emi_emc_rules": [],
+ "verification_requirements": [
+  "Junction temperature per device at max ambient recorded with the thermal-resistance source"
+ ],
+ "precedence": 50,
+ "schema_version": "1.0.0",
+ "overlay_id": "thermal_management",
+ "rule_ids": [
+  "PLACE-THERM-017",
+  "COPPER-THERMVIA-046",
+  "THERM-TJ-050",
+  "THERM-COPPER-051"
+ ]
+}

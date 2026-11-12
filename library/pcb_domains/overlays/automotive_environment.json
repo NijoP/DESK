@@ -1,0 +1,38 @@
+{
+ "name": "Automotive environment",
+ "description": "Vehicle power and EMC environment.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "power_source",
+    "op": "intersects",
+    "value": [
+     "vehicle"
+    ]
+   }
+  ]
+ },
+ "adds_component_families": [
+  "tvs_diode",
+  "automotive_buck_regulator"
+ ],
+ "placement_rules": [
+  "Input protection at the connector"
+ ],
+ "routing_rules": [
+  "Battery input sized for the fused current"
+ ],
+ "copper_rules": [],
+ "emi_emc_rules": [
+  "CISPR 25 filtering"
+ ],
+ "verification_requirements": [
+  "Cold-crank/load-dump range declared"
+ ],
+ "precedence": 70,
+ "schema_version": "1.0.0",
+ "overlay_id": "automotive_environment",
+ "rule_ids": [
+  "EMI-SURGE-063"
+ ]
+}

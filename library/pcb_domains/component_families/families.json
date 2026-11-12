@@ -1,0 +1,6711 @@
+{
+ "schema_version": "1.0.0",
+ "groups": {
+  "power": "Power components",
+  "passive": "Passive components",
+  "digital": "Digital components",
+  "rf": "RF components",
+  "analog": "Analog components",
+  "interface_protection": "Interfaces and protection",
+  "sensor_actuator": "Sensors and actuators",
+  "electromechanical": "Electromechanical and connectors",
+  "display_optical": "Display and optical"
+ },
+ "families": [
+  {
+   "group": "power",
+   "name": "LDO linear regulator",
+   "description": "Low-dropout linear regulator for clean, low-current rails.",
+   "electrical_characteristics": [
+    "Dropout voltage at load",
+    "Quiescent current",
+    "PSRR vs frequency",
+    "Output capacitor ESR window"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "output_voltage",
+    "output_current",
+    "dropout_voltage",
+    "thermal_resistance"
+   ],
+   "compatibility_requirements": [
+    "Dissipation (Vin-Vout)*Iout within the package at max ambient",
+    "Output capacitor type per stability note"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Stability note for ceramic output capacitors",
+    "Thermal pad presence and connection"
+   ],
+   "placement_constraints": [
+    "Input and output capacitors adjacent to the pins",
+    "Thermal pad vias to a copper area for > 0.3 W"
+   ],
+   "routing_considerations": [
+    "Short input/output traces; ground return to the regulator ground pin"
+   ],
+   "aliases": [
+    "ldo",
+    "linear regulator"
+   ],
+   "schema_version": "1.0.0",
+   "family_id": "ldo_regulator",
+   "relevant_archetypes": [
+    "audio_codec_dac_board",
+    "battery_fuel_gauge",
+    "battery_management_system",
+    "current_loop_4_20ma_interface",
+    "embedded_data_logger",
+    "encoder_feedback_interface",
+    "environmental_sensor_board",
+    "esp32_dev_board",
+    "fpga_dev_board",
+    "gigabit_ethernet_board",
+    "gnss_receiver",
+    "headphone_line_amplifier",
+    "high_speed_adc_dac_board",
+    "imu_motion_sensor_board",
+    "industrial_remote_io",
+    "logic_analyzer_board",
+    "lora_transceiver",
+    "low_power_sensor_node",
+    "mcu_carrier_board",
+    "microphone_array_board",
+    "mipi_camera_board",
+    "multi_sensor_controller",
+    "non_isolated_ac_dc",
+    "ph_electrochemical_frontend",
+    "photodiode_optical_frontend",
+    "precision_adc_frontend",
+    "rf_front_end",
+    "rp2040_dev_board",
+    "sdr_hardware",
+    "signal_generator_board",
+    "stm32_controller",
+    "swd_jtag_programmer",
+    "usb_hub_board",
+    "uwb_communication",
+    "wearable_electronics",
+    "wifi_ble_module_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Buck regulator (integrated switch)",
+   "description": "Step-down converter IC with an internal switch; needs inductor, capacitors and a feedback divider.",
+   "electrical_characteristics": [
+    "Switching frequency",
+    "Peak switch current",
+    "Input range",
+    "Feedback reference voltage"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "output_voltage",
+    "output_current",
+    "switching_frequency",
+    "inductor_value_range"
+   ],
+   "compatibility_requirements": [
+    "Inductor saturation current above the peak inductor current",
+    "Input capacitor RMS rating"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Reference layout in the datasheet",
+    "Bootstrap and compensation values"
+   ],
+   "placement_constraints": [
+    "Hot loop (Cin, IC switch, catch diode/low-side) minimal",
+    "Feedback divider at the FB pin away from the switch node"
+   ],
+   "routing_considerations": [
+    "Switch node short and single-layer",
+    "Power path width from desk.ipc for the declared current"
+   ],
+   "aliases": [
+    "step-down ic",
+    "dc-dc buck"
+   ],
+   "schema_version": "1.0.0",
+   "family_id": "buck_regulator",
+   "relevant_archetypes": [
+    "addressable_led_controller",
+    "battery_iot_node",
+    "benchtop_power_supply_control",
+    "brushed_dc_h_bridge",
+    "buck_converter",
+    "cellular_lte_nbiot",
+    "ddr_memory_subsystem",
+    "din_rail_controller",
+    "embedded_data_logger",
+    "fan_pump_controller",
+    "fpga_dev_board",
+    "high_speed_adc_dac_board",
+    "industrial_hmi_controller",
+    "industrial_remote_io",
+    "mcu_carrier_board",
+    "mpu_som_carrier",
+    "multi_sensor_controller",
+    "nvme_storage_board",
+    "pcie_add_in_card",
+    "power_path_management",
+    "rp2040_dev_board",
+    "sdr_hardware",
+    "servo_controller",
+    "stepper_driver",
+    "stm32_controller",
+    "three_phase_bldc_controller",
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Buck controller (external MOSFETs)",
+   "description": "Controller driving external high-side/low-side MOSFETs for higher currents.",
+   "electrical_characteristics": [
+    "Gate drive voltage and peak current",
+    "Current-sense method",
+    "Frequency"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "output_voltage",
+    "output_current",
+    "gate_drive_voltage"
+   ],
+   "compatibility_requirements": [
+    "MOSFET gate charge within the driver capability",
+    "Bootstrap diode/capacitor per datasheet"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Dead-time and sense thresholds"
+   ],
+   "placement_constraints": [
+    "Controller adjacent to the MOSFETs; gate loops short",
+    "Sense resistor Kelvin to the controller"
+   ],
+   "routing_considerations": [
+    "Gate traces short with return on the adjacent layer"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "buck_controller",
+   "relevant_archetypes": [
+    "buck_converter"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Boost regulator",
+   "description": "Step-up converter IC (integrated switch) with inductor at the input and rectifier at the output.",
+   "electrical_characteristics": [
+    "Switch current limit",
+    "Maximum duty cycle",
+    "Output voltage range"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "output_voltage",
+    "output_current",
+    "switching_frequency"
+   ],
+   "compatibility_requirements": [
+    "Input current (Iout/(1-D)) within the inductor and switch ratings",
+    "Output disconnect when required"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Switch voltage rating vs output",
+    "Reference layout"
+   ],
+   "placement_constraints": [
+    "Hot loop (switch, diode, Cout) minimal",
+    "Inductor at the SW pin"
+   ],
+   "routing_considerations": [
+    "Input path sized for the input current, not the output current"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "boost_regulator",
+   "relevant_archetypes": [
+    "boost_converter",
+    "oled_epaper_display_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Buck-boost regulator",
+   "description": "Four-switch or SEPIC converter regulating across a varying input.",
+   "electrical_characteristics": [
+    "Mode transitions",
+    "Efficiency across the input range"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "output_voltage",
+    "output_current"
+   ],
+   "compatibility_requirements": [
+    "Component ratings at the worst corner (min Vin, max Iout)"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Reference layout for both hot loops"
+   ],
+   "placement_constraints": [
+    "Both switch nodes away from feedback"
+   ],
+   "routing_considerations": [
+    "Two power loops minimised"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "buck_boost_regulator",
+   "relevant_archetypes": [
+    "buck_boost_converter",
+    "usb_pd_sink_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "High-voltage non-isolated buck",
+   "description": "Offline buck IC with an internal HV switch for mA-level mains supplies.",
+   "electrical_characteristics": [
+    "Input up to ~700 V",
+    "Output current tens of mA"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "output_voltage",
+    "output_current"
+   ],
+   "compatibility_requirements": [
+    "Entire circuit at mains potential; enclosure with no accessible parts"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Creepage of the package itself"
+   ],
+   "placement_constraints": [
+    "Mains creepage around every pin and trace"
+   ],
+   "routing_considerations": [
+    "Mains clearance rules on every net"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "hv_buck_regulator",
+   "relevant_archetypes": [
+    "non_isolated_ac_dc"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Power MOSFET",
+   "description": "N/P-channel switch for converters, bridges and load switching.",
+   "electrical_characteristics": [
+    "Vds rating",
+    "Rds(on) at the gate voltage used and at temperature",
+    "Qg and Qgd",
+    "Body-diode recovery",
+    "SOA"
+   ],
+   "required_parameters": [
+    "vds_rating",
+    "id_continuous",
+    "rds_on",
+    "qg",
+    "package_thermal_resistance"
+   ],
+   "compatibility_requirements": [
+    "Vds >= bus voltage plus spike margin",
+    "Gate drive voltage matches the Rds(on) spec point"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Rds(on) at the actual gate voltage",
+    "Thermal resistance to the board"
+   ],
+   "placement_constraints": [
+    "Adjacent to the driver; exposed pad with via array"
+   ],
+   "routing_considerations": [
+    "Source/drain copper polygons sized by current; gate trace short"
+   ],
+   "aliases": [
+    "fet",
+    "nmos",
+    "pmos"
+   ],
+   "schema_version": "1.0.0",
+   "family_id": "mosfet",
+   "relevant_archetypes": [
+    "automotive_12v_controller",
+    "battery_management_system",
+    "battery_protection_board",
+    "benchtop_power_supply_control",
+    "boost_converter",
+    "brushed_dc_h_bridge",
+    "buck_boost_converter",
+    "buck_converter",
+    "cell_balancing_board",
+    "constant_current_led_driver",
+    "dual_active_bridge",
+    "fan_pump_controller",
+    "flyback_converter",
+    "forward_converter",
+    "full_bridge_converter",
+    "half_bridge_converter",
+    "industrial_vfd_gate_drive",
+    "isolated_ac_dc",
+    "led_backlight_driver",
+    "mains_lighting_driver",
+    "multi_cell_charger",
+    "oled_epaper_display_board",
+    "pfc_board",
+    "poe_power_board",
+    "push_pull_converter",
+    "servo_controller",
+    "solar_battery_controller",
+    "solenoid_relay_driver",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Synchronous-rectifier MOSFET",
+   "description": "Low-voltage, low-Rds(on) MOSFET replacing the output diode in isolated converters.",
+   "electrical_characteristics": [
+    "Vds vs reflected voltage",
+    "Rds(on)",
+    "Body-diode behaviour"
+   ],
+   "required_parameters": [
+    "vds_rating",
+    "id_continuous",
+    "rds_on"
+   ],
+   "compatibility_requirements": [
+    "SR controller compatibility"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Adjacent to the transformer secondary and Cout"
+   ],
+   "routing_considerations": [
+    "Secondary loop minimal"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "mosfet_sr",
+   "relevant_archetypes": [
+    "full_bridge_converter",
+    "half_bridge_converter"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "IGBT",
+   "description": "Insulated-gate bipolar transistor for high-voltage bridges and inverters.",
+   "electrical_characteristics": [
+    "Vce rating",
+    "Vce(sat)",
+    "Switching losses",
+    "Short-circuit withstand"
+   ],
+   "required_parameters": [
+    "vce_rating",
+    "ic_continuous",
+    "vce_sat",
+    "switching_energy"
+   ],
+   "compatibility_requirements": [
+    "Gate driver with negative bias and desat per the device"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Module or discrete with heatsink interface"
+   ],
+   "routing_considerations": [
+    "Gate loop minimal; DC link low-inductance"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "igbt",
+   "relevant_archetypes": [
+    "ac_motor_controller",
+    "dual_active_bridge",
+    "full_bridge_converter"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Intelligent power module",
+   "description": "Integrated three-phase inverter with gate drivers and protection.",
+   "electrical_characteristics": [
+    "Bus voltage",
+    "Current rating",
+    "Bootstrap requirements"
+   ],
+   "required_parameters": [
+    "bus_voltage",
+    "phase_current",
+    "switching_frequency"
+   ],
+   "compatibility_requirements": [
+    "Bootstrap capacitors and shunt per the module app note"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Heatsink mounting; shunt Kelvin"
+   ],
+   "routing_considerations": [
+    "Bus and phase polygons"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ipm_module",
+   "relevant_archetypes": [
+    "ac_motor_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Gate driver",
+   "description": "Half-bridge or single gate driver with level shifting, bootstrap or isolation.",
+   "electrical_characteristics": [
+    "Peak source/sink current",
+    "Propagation delay and matching",
+    "Bootstrap voltage",
+    "Dead time"
+   ],
+   "required_parameters": [
+    "drive_voltage",
+    "peak_current",
+    "dead_time",
+    "isolation_rating"
+   ],
+   "compatibility_requirements": [
+    "Driver supply within the MOSFET gate rating"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Bootstrap diode requirement",
+    "Dead-time setting"
+   ],
+   "placement_constraints": [
+    "Adjacent to the MOSFETs; bootstrap cap at the driver"
+   ],
+   "routing_considerations": [
+    "Gate and return traces as a pair"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "gate_driver",
+   "relevant_archetypes": [
+    "ac_motor_controller",
+    "brushed_dc_h_bridge",
+    "dual_active_bridge",
+    "forward_converter",
+    "full_bridge_converter",
+    "half_bridge_converter",
+    "pfc_board",
+    "push_pull_converter"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Three-phase gate driver",
+   "description": "Driver for three half-bridges with current-sense amplifiers and fault logic.",
+   "electrical_characteristics": [
+    "Drive current",
+    "Integrated CSAs",
+    "Fault thresholds"
+   ],
+   "required_parameters": [
+    "drive_voltage",
+    "peak_current",
+    "csa_gain",
+    "fault_thresholds"
+   ],
+   "compatibility_requirements": [
+    "Sense resistor values within the CSA range"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Reference layout",
+    "Dead time"
+   ],
+   "placement_constraints": [
+    "Central to the three half-bridges"
+   ],
+   "routing_considerations": [
+    "Six gate pairs short; sense pairs Kelvin"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "three_phase_gate_driver",
+   "relevant_archetypes": [
+    "servo_controller",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Isolated gate driver",
+   "description": "Gate driver with galvanic isolation for high-side or HV devices.",
+   "electrical_characteristics": [
+    "Isolation voltage and CMTI",
+    "Desat/Miller clamp features"
+   ],
+   "required_parameters": [
+    "isolation_rating",
+    "drive_voltage",
+    "peak_current",
+    "cmti"
+   ],
+   "compatibility_requirements": [
+    "Package creepage >= the required creepage"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Isolation working voltage"
+   ],
+   "placement_constraints": [
+    "Straddles the barrier; isolated supply adjacent"
+   ],
+   "routing_considerations": [
+    "No copper under the barrier"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "isolated_gate_driver",
+   "relevant_archetypes": [
+    "industrial_vfd_gate_drive"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "H-bridge driver IC",
+   "description": "Integrated full bridge for brushed DC motors or bipolar loads.",
+   "electrical_characteristics": [
+    "Supply range",
+    "Continuous/peak current",
+    "Current limit"
+   ],
+   "required_parameters": [
+    "supply_voltage",
+    "peak_current",
+    "pwm_frequency"
+   ],
+   "compatibility_requirements": [
+    "Stall current within the peak rating"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Thermal pad"
+   ],
+   "placement_constraints": [
+    "Bulk capacitor at the supply pins"
+   ],
+   "routing_considerations": [
+    "Output polygons for the stall current"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "h_bridge_driver",
+   "relevant_archetypes": [
+    "brushed_dc_h_bridge",
+    "servo_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Stepper driver IC",
+   "description": "Dual H-bridge with current chopping and microstepping.",
+   "electrical_characteristics": [
+    "Phase current",
+    "Supply range",
+    "Interface"
+   ],
+   "required_parameters": [
+    "supply_voltage",
+    "phase_current",
+    "microstep_mode"
+   ],
+   "compatibility_requirements": [
+    "Sense resistor per datasheet"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Thermal pad"
+   ],
+   "placement_constraints": [
+    "Thermal pad vias; sense resistors Kelvin"
+   ],
+   "routing_considerations": [
+    "Phase traces sized for the phase current"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "stepper_driver_ic",
+   "relevant_archetypes": [
+    "stepper_driver"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Low-side switch",
+   "description": "MOSFET or integrated low-side driver for inductive and resistive loads.",
+   "electrical_characteristics": [
+    "Current",
+    "Clamp energy"
+   ],
+   "required_parameters": [
+    "load_current",
+    "load_voltage"
+   ],
+   "compatibility_requirements": [
+    "Clamp rated for the inductive energy"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Flyback diode at the load terminal"
+   ],
+   "routing_considerations": [
+    "Load return separate from logic ground"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "low_side_switch",
+   "relevant_archetypes": [
+    "fan_pump_controller",
+    "solenoid_relay_driver"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "High-side switch",
+   "description": "Protected high-side driver with diagnostics for 12/24 V loads.",
+   "electrical_characteristics": [
+    "Current limit",
+    "Diagnostics"
+   ],
+   "required_parameters": [
+    "load_current",
+    "supply_voltage"
+   ],
+   "compatibility_requirements": [
+    "Inrush within the current limit"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the output terminal"
+   ],
+   "routing_considerations": [
+    "Output traces sized"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "high_side_switch",
+   "relevant_archetypes": [
+    "automotive_12v_controller",
+    "industrial_remote_io",
+    "plc_io_module",
+    "solenoid_relay_driver"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Load switch",
+   "description": "Controlled power switch with soft start and optional current limit.",
+   "electrical_characteristics": [
+    "Rds(on)",
+    "Slew rate",
+    "Quiescent current"
+   ],
+   "required_parameters": [
+    "input_voltage",
+    "load_current",
+    "slew_rate"
+   ],
+   "compatibility_requirements": [
+    "Inrush into bulk capacitance within the limit"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the controlled rail"
+   ],
+   "routing_considerations": [
+    "Rail width for the load current"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "load_switch",
+   "relevant_archetypes": [
+    "battery_iot_node",
+    "bed_of_nails_test_fixture",
+    "environmental_sensor_board",
+    "hdmi_interface_board",
+    "low_power_sensor_node",
+    "power_path_management",
+    "swd_jtag_programmer",
+    "usb_c_interface",
+    "usb_hub_board",
+    "usb_pd_sink_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Ideal-diode controller",
+   "description": "Controls a MOSFET to emulate a low-drop diode for OR-ing and reverse protection.",
+   "electrical_characteristics": [
+    "Reverse-current response",
+    "Gate drive"
+   ],
+   "required_parameters": [
+    "input_voltage",
+    "load_current"
+   ],
+   "compatibility_requirements": [
+    "MOSFET Vds and current"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Adjacent to the MOSFET"
+   ],
+   "routing_considerations": [
+    "Power path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ideal_diode_controller",
+   "relevant_archetypes": [
+    "power_path_management"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "PMIC with power path",
+   "description": "Integrated charger, power-path and regulators for battery products.",
+   "electrical_characteristics": [
+    "Input current limit",
+    "System rail",
+    "Charge profile"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "system_current",
+    "charge_current",
+    "chemistry"
+   ],
+   "compatibility_requirements": [
+    "Chemistry matches the charge voltage"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Thermal regulation"
+   ],
+   "placement_constraints": [
+    "Thermal pad; capacitors at the pins"
+   ],
+   "routing_considerations": [
+    "Input/system/battery paths sized"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "pmic_power_path",
+   "relevant_archetypes": [
+    "power_path_management"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Li-ion charger IC",
+   "description": "CC/CV charger for single-cell lithium batteries.",
+   "electrical_characteristics": [
+    "Charge voltage accuracy",
+    "Charge current",
+    "Thermal regulation",
+    "NTC thresholds"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "charge_current",
+    "charge_voltage",
+    "chemistry"
+   ],
+   "compatibility_requirements": [
+    "Charge voltage equals the cell chemistry"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Thermal pad",
+    "NTC resistor values"
+   ],
+   "placement_constraints": [
+    "Copper area for dissipation; NTC at the cell"
+   ],
+   "routing_considerations": [
+    "Battery path width for the charge current"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "li_ion_charger",
+   "relevant_archetypes": [
+    "battery_iot_node",
+    "power_path_management",
+    "single_cell_liion_charger",
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Switching charger",
+   "description": "Buck or buck-boost charger for 1-6 cells with input current limiting.",
+   "electrical_characteristics": [
+    "Topology",
+    "Sense resistors"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "cell_count",
+    "charge_current",
+    "chemistry"
+   ],
+   "compatibility_requirements": [
+    "Chemistry and cell count declared"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Hot loop per topology; Kelvin sense"
+   ],
+   "routing_considerations": [
+    "Charge path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "switching_charger",
+   "relevant_archetypes": [
+    "multi_cell_charger"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "MPPT charge controller",
+   "description": "Solar charge controller IC or MCU-based MPPT with a DC-DC stage.",
+   "electrical_characteristics": [
+    "Input Voc rating",
+    "MPPT method"
+   ],
+   "required_parameters": [
+    "pv_voc_max",
+    "battery_voltage",
+    "charge_current",
+    "chemistry"
+   ],
+   "compatibility_requirements": [
+    "Voc at cold within the input rating"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Input protection at the PV terminals"
+   ],
+   "routing_considerations": [
+    "Power path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "mppt_charge_controller",
+   "relevant_archetypes": [
+    "solar_battery_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Solar charge controller (PWM)",
+   "description": "Simple PWM solar charger for small systems.",
+   "electrical_characteristics": [
+    "Input rating"
+   ],
+   "required_parameters": [
+    "pv_voc_max",
+    "battery_voltage",
+    "charge_current"
+   ],
+   "compatibility_requirements": [
+    "Reverse blocking at night"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Diode or ideal diode at the panel"
+   ],
+   "routing_considerations": [
+    "Power path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "solar_charge_controller",
+   "relevant_archetypes": []
+  },
+  {
+   "group": "power",
+   "name": "Battery protection IC",
+   "description": "Over-charge/discharge/current protection controlling series MOSFETs.",
+   "electrical_characteristics": [
+    "Thresholds",
+    "Delay times",
+    "Discharge current via Rds(on) or shunt"
+   ],
+   "required_parameters": [
+    "cell_count",
+    "chemistry",
+    "thresholds",
+    "discharge_current"
+   ],
+   "compatibility_requirements": [
+    "Thresholds per the cell datasheet"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Delay capacitors"
+   ],
+   "placement_constraints": [
+    "MOSFETs in the pack negative path"
+   ],
+   "routing_considerations": [
+    "Pack current path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "battery_protection_ic",
+   "relevant_archetypes": [
+    "battery_iot_node",
+    "battery_protection_board",
+    "single_cell_liion_charger",
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Battery monitor AFE",
+   "description": "Multi-cell voltage/temperature monitor with balancing and FET control.",
+   "electrical_characteristics": [
+    "Cell count",
+    "Measurement accuracy",
+    "Balance current"
+   ],
+   "required_parameters": [
+    "cell_count",
+    "chemistry",
+    "balance_current",
+    "communication"
+   ],
+   "compatibility_requirements": [
+    "Cell-tap filtering per datasheet"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Cell input series resistors"
+   ],
+   "placement_constraints": [
+    "Cell taps in order; filters at the inputs"
+   ],
+   "routing_considerations": [
+    "Taps away from power copper"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "battery_monitor_afe",
+   "relevant_archetypes": [
+    "battery_management_system",
+    "cell_balancing_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Fuel gauge",
+   "description": "State-of-charge estimation via coulomb counting or impedance tracking.",
+   "electrical_characteristics": [
+    "Sense resistor range",
+    "Chemistry profile"
+   ],
+   "required_parameters": [
+    "chemistry",
+    "capacity_mah",
+    "sense_resistor"
+   ],
+   "compatibility_requirements": [
+    "Chemistry ID supported"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Shunt adjacent with Kelvin sense"
+   ],
+   "routing_considerations": [
+    "No current in sense traces"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "fuel_gauge",
+   "relevant_archetypes": [
+    "battery_fuel_gauge",
+    "battery_management_system",
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "PoE PD controller",
+   "description": "Powered-device interface: detection, classification, inrush and isolated converter control.",
+   "electrical_characteristics": [
+    "Class",
+    "Inrush"
+   ],
+   "required_parameters": [
+    "poe_class",
+    "output_power"
+   ],
+   "compatibility_requirements": [
+    "Classification resistors per class"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the bridge rectifiers"
+   ],
+   "routing_considerations": [
+    "Isolation barrier"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "poe_pd_controller",
+   "relevant_archetypes": [
+    "poe_power_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Flyback controller",
+   "description": "PWM controller for flyback converters (PSR or opto feedback).",
+   "electrical_characteristics": [
+    "Frequency",
+    "Current-sense threshold",
+    "Start-up"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "output_power",
+    "regulation_method"
+   ],
+   "compatibility_requirements": [
+    "Transformer design matches"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Primary hot loop minimal"
+   ],
+   "routing_considerations": [
+    "Sense resistor Kelvin"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "flyback_controller",
+   "relevant_archetypes": [
+    "flyback_converter",
+    "isolated_ac_dc"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "PWM controller",
+   "description": "General PWM/resonant controller for isolated topologies.",
+   "electrical_characteristics": [
+    "Frequency",
+    "Modes"
+   ],
+   "required_parameters": [
+    "topology",
+    "frequency",
+    "output_power"
+   ],
+   "compatibility_requirements": [
+    "Driver compatibility"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the primary switches"
+   ],
+   "routing_considerations": [
+    "Gate loops"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "pwm_controller",
+   "relevant_archetypes": [
+    "forward_converter",
+    "full_bridge_converter",
+    "half_bridge_converter",
+    "push_pull_converter"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "PFC controller",
+   "description": "Boost PFC controller (CrM/CCM/interleaved).",
+   "electrical_characteristics": [
+    "Mode",
+    "Bus regulation"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "bus_voltage",
+    "output_power"
+   ],
+   "compatibility_requirements": [
+    "Sense divider string rated"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the boost switch"
+   ],
+   "routing_considerations": [
+    "400 V nets creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "pfc_controller",
+   "relevant_archetypes": [
+    "pfc_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "DC LED driver",
+   "description": "Buck/boost constant-current LED driver.",
+   "electrical_characteristics": [
+    "Current accuracy",
+    "Dimming"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "string_voltage",
+    "string_current"
+   ],
+   "compatibility_requirements": [
+    "Output rating > string voltage"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Hot loop tight"
+   ],
+   "routing_considerations": [
+    "LED path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "led_driver_dc",
+   "relevant_archetypes": [
+    "constant_current_led_driver"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Offline LED driver",
+   "description": "Mains LED driver controller (isolated or non-isolated).",
+   "electrical_characteristics": [
+    "Topology",
+    "PFC"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "string_voltage",
+    "string_current",
+    "isolation"
+   ],
+   "compatibility_requirements": [
+    "Isolation grade declared"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Barrier rules"
+   ],
+   "routing_considerations": [
+    "Mains creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "led_driver_offline",
+   "relevant_archetypes": [
+    "mains_lighting_driver"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "LED backlight driver",
+   "description": "Multi-string boost LED driver with current sinks.",
+   "electrical_characteristics": [
+    "Strings",
+    "Dimming ratio"
+   ],
+   "required_parameters": [
+    "string_count",
+    "string_voltage",
+    "string_current"
+   ],
+   "compatibility_requirements": [
+    "Output capacitor rating"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Boost loop tight"
+   ],
+   "routing_considerations": [
+    "String traces"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "led_backlight_driver",
+   "relevant_archetypes": [
+    "industrial_hmi_controller",
+    "lcd_tft_display_board",
+    "led_backlight_driver"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "DDR termination regulator",
+   "description": "VTT/VREF regulator sourcing and sinking current for DDR termination.",
+   "electrical_characteristics": [
+    "Sink/source current",
+    "Tracking"
+   ],
+   "required_parameters": [
+    "ddr_type",
+    "vtt_current"
+   ],
+   "compatibility_requirements": [
+    "Placement near the terminations"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "At the termination resistors"
+   ],
+   "routing_considerations": [
+    "Wide VTT trace"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ddr_termination_regulator",
+   "relevant_archetypes": [
+    "ddr_memory_subsystem"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Power sequencer",
+   "description": "Sequences and monitors multiple rails.",
+   "electrical_characteristics": [
+    "Channels",
+    "Thresholds"
+   ],
+   "required_parameters": [
+    "rail_count",
+    "sequence_order"
+   ],
+   "compatibility_requirements": [
+    "Order per the load datasheet"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Central to the regulators"
+   ],
+   "routing_considerations": [
+    "Enable traces"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "power_sequencer",
+   "relevant_archetypes": [
+    "fpga_dev_board",
+    "mipi_camera_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Isolated DC-DC module",
+   "description": "Encapsulated isolated converter for isolated supplies.",
+   "electrical_characteristics": [
+    "Isolation voltage",
+    "Output power",
+    "Capacitive coupling"
+   ],
+   "required_parameters": [
+    "isolation_rating",
+    "input_voltage",
+    "output_voltage",
+    "output_power"
+   ],
+   "compatibility_requirements": [
+    "Isolation >= requirement"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Straddles the barrier"
+   ],
+   "routing_considerations": [
+    "No copper under the module's barrier area"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "isolated_dc_dc_module",
+   "relevant_archetypes": [
+    "ac_motor_controller",
+    "can_bus_interface",
+    "dual_active_bridge",
+    "hv_monitoring_board",
+    "industrial_vfd_gate_drive",
+    "isolated_serial_interface",
+    "plc_io_module",
+    "rs485_modbus_interface"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Automotive buck regulator",
+   "description": "AEC-Q100 buck with 40 V+ input and low quiescent current.",
+   "electrical_characteristics": [
+    "Input transient rating",
+    "Iq"
+   ],
+   "required_parameters": [
+    "input_voltage_range",
+    "output_voltage",
+    "output_current",
+    "aec_grade"
+   ],
+   "compatibility_requirements": [
+    "Input covers load dump clamp"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Hot loop tight"
+   ],
+   "routing_considerations": [
+    "Input path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "automotive_buck_regulator",
+   "relevant_archetypes": [
+    "automotive_12v_controller",
+    "obd_can_telematics"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Flyback/freewheel diode",
+   "description": "Diode across inductive loads to clamp turn-off voltage.",
+   "electrical_characteristics": [
+    "Current",
+    "Recovery"
+   ],
+   "required_parameters": [
+    "current",
+    "voltage"
+   ],
+   "compatibility_requirements": [
+    "Rated for the load current"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "At the load terminal"
+   ],
+   "routing_considerations": [
+    "Short loop"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "flyback_diode",
+   "relevant_archetypes": [
+    "fan_pump_controller",
+    "relay_output_module",
+    "solenoid_relay_driver"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Schottky diode",
+   "description": "Low-forward-drop rectifier for converters and reverse protection.",
+   "electrical_characteristics": [
+    "Vrrm",
+    "Vf at current",
+    "Leakage at temperature"
+   ],
+   "required_parameters": [
+    "vrrm",
+    "if_average"
+   ],
+   "compatibility_requirements": [
+    "Vrrm > applied reverse voltage with margin"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "In the hot loop"
+   ],
+   "routing_considerations": [
+    "Current path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "schottky_diode",
+   "relevant_archetypes": [
+    "boost_converter",
+    "buck_converter",
+    "constant_current_led_driver",
+    "flyback_converter",
+    "forward_converter",
+    "isolated_ac_dc",
+    "led_backlight_driver",
+    "mains_lighting_driver",
+    "solar_battery_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "SiC Schottky diode",
+   "description": "Zero-recovery diode for PFC and HV converters.",
+   "electrical_characteristics": [
+    "Vrrm 650-1200 V"
+   ],
+   "required_parameters": [
+    "vrrm",
+    "if_average"
+   ],
+   "compatibility_requirements": [
+    "Surge rating for inrush"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Hot loop"
+   ],
+   "routing_considerations": [
+    "HV creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "sic_diode",
+   "relevant_archetypes": [
+    "pfc_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Rectifier diode",
+   "description": "Fast or standard rectifiers for secondary sides.",
+   "electrical_characteristics": [
+    "Vrrm",
+    "trr"
+   ],
+   "required_parameters": [
+    "vrrm",
+    "if_average"
+   ],
+   "compatibility_requirements": [
+    "Vrrm > Vout + reflected"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Secondary loop"
+   ],
+   "routing_considerations": [
+    "Current path"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rectifier_diode",
+   "relevant_archetypes": [
+    "full_bridge_converter",
+    "half_bridge_converter",
+    "push_pull_converter"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Bridge rectifier",
+   "description": "Full-wave rectifier for mains or AC inputs.",
+   "electrical_characteristics": [
+    "Vrrm",
+    "Surge current"
+   ],
+   "required_parameters": [
+    "vrrm",
+    "if_average",
+    "ifsm"
+   ],
+   "compatibility_requirements": [
+    "Surge > inrush"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "After the fuse/MOV"
+   ],
+   "routing_considerations": [
+    "Mains creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "bridge_rectifier",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "ac_motor_controller",
+    "isolated_ac_dc",
+    "mains_lighting_driver",
+    "non_isolated_ac_dc",
+    "pfc_board",
+    "poe_power_board"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Triac",
+   "description": "Bidirectional thyristor for AC load switching.",
+   "electrical_characteristics": [
+    "Vdrm",
+    "It(rms)",
+    "Gate current",
+    "dV/dt"
+   ],
+   "required_parameters": [
+    "vdrm",
+    "it_rms",
+    "igt"
+   ],
+   "compatibility_requirements": [
+    "Heatsinking for It"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Heatsink interface"
+   ],
+   "routing_considerations": [
+    "Mains copper width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "triac",
+   "relevant_archetypes": [
+    "triac_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Opto-triac driver",
+   "description": "Optically isolated triac trigger (zero-cross or random).",
+   "electrical_characteristics": [
+    "Isolation",
+    "Trigger current"
+   ],
+   "required_parameters": [
+    "isolation_rating",
+    "trigger_type"
+   ],
+   "compatibility_requirements": [
+    "Creepage across the package"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "On the barrier"
+   ],
+   "routing_considerations": [
+    "Gate trace short"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "opto_triac_driver",
+   "relevant_archetypes": [
+    "triac_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Brake chopper",
+   "description": "IGBT/MOSFET and resistor dissipating regenerative energy.",
+   "electrical_characteristics": [
+    "Resistor energy",
+    "Switch rating"
+   ],
+   "required_parameters": [
+    "bus_voltage",
+    "brake_power"
+   ],
+   "compatibility_requirements": [
+    "Resistor power"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Resistor off-board or heatsinked"
+   ],
+   "routing_considerations": [
+    "Bus creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "brake_chopper",
+   "relevant_archetypes": [
+    "ac_motor_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Relay driver",
+   "description": "Transistor array or driver IC for relay coils with clamps.",
+   "electrical_characteristics": [
+    "Coil current",
+    "Clamp"
+   ],
+   "required_parameters": [
+    "coil_current",
+    "coil_voltage"
+   ],
+   "compatibility_requirements": [
+    "Clamp diodes present"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the relays"
+   ],
+   "routing_considerations": [
+    "Coil return"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "relay_driver",
+   "relevant_archetypes": [
+    "relay_output_module"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Solid-state relay",
+   "description": "Optically isolated semiconductor switch for AC/DC loads.",
+   "electrical_characteristics": [
+    "Load rating",
+    "Isolation"
+   ],
+   "required_parameters": [
+    "load_current",
+    "load_voltage",
+    "isolation_rating"
+   ],
+   "compatibility_requirements": [
+    "Derating at temperature"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Barrier"
+   ],
+   "routing_considerations": [
+    "Load copper"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ssr",
+   "relevant_archetypes": [
+    "relay_output_module"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Current-sense amplifier",
+   "description": "Amplifies the voltage across a shunt at high common-mode voltage.",
+   "electrical_characteristics": [
+    "Common-mode range",
+    "Gain",
+    "Bandwidth"
+   ],
+   "required_parameters": [
+    "common_mode_range",
+    "gain",
+    "bandwidth"
+   ],
+   "compatibility_requirements": [
+    "Shunt voltage within input range"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the shunt"
+   ],
+   "routing_considerations": [
+    "Kelvin pair"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "current_sense_amplifier",
+   "relevant_archetypes": [
+    "current_voltage_measurement",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Power monitor IC",
+   "description": "Digital current/voltage/power monitor over I2C.",
+   "electrical_characteristics": [
+    "Shunt range",
+    "Bus voltage range"
+   ],
+   "required_parameters": [
+    "shunt_resistance",
+    "bus_voltage_max"
+   ],
+   "compatibility_requirements": [
+    "Bus voltage within rating"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the shunt"
+   ],
+   "routing_considerations": [
+    "Kelvin pair"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "power_monitor_ic",
+   "relevant_archetypes": [
+    "current_voltage_measurement"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Hall current sensor",
+   "description": "Isolated current sensor with a Hall element.",
+   "electrical_characteristics": [
+    "Range",
+    "Bandwidth",
+    "Isolation"
+   ],
+   "required_parameters": [
+    "current_range",
+    "isolation_rating"
+   ],
+   "compatibility_requirements": [
+    "Primary conductor rating"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Primary path through the sensor"
+   ],
+   "routing_considerations": [
+    "Primary copper width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "hall_current_sensor",
+   "relevant_archetypes": [
+    "current_voltage_measurement"
+   ]
+  },
+  {
+   "group": "power",
+   "name": "Current transformer",
+   "description": "AC current sensing with isolation.",
+   "electrical_characteristics": [
+    "Ratio",
+    "Burden"
+   ],
+   "required_parameters": [
+    "ratio",
+    "burden_resistor"
+   ],
+   "compatibility_requirements": [
+    "Burden always connected"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the measured conductor"
+   ],
+   "routing_considerations": [
+    "Secondary short"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "current_transformer",
+   "relevant_archetypes": [
+    "dual_active_bridge",
+    "full_bridge_converter",
+    "hv_monitoring_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "DDS synthesiser",
+   "description": "Direct digital synthesis IC for waveform generation.",
+   "electrical_characteristics": [
+    "Clock",
+    "Resolution"
+   ],
+   "required_parameters": [
+    "clock_frequency",
+    "output_frequency_max"
+   ],
+   "compatibility_requirements": [
+    "Clock jitter"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the clock and DAC filter"
+   ],
+   "routing_considerations": [
+    "Clock trace controlled"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "dds_ic",
+   "relevant_archetypes": [
+    "signal_generator_board"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Decoupling capacitor",
+   "description": "MLCC at supply pins providing local charge.",
+   "electrical_characteristics": [
+    "Capacitance vs DC bias",
+    "ESL"
+   ],
+   "required_parameters": [
+    "value",
+    "voltage_rating",
+    "dielectric"
+   ],
+   "compatibility_requirements": [
+    "DC-bias derating at the rail voltage"
+   ],
+   "datasheet_verification": [
+    "Value per the IC datasheet"
+   ],
+   "placement_constraints": [
+    "At the pin, smallest closest"
+   ],
+   "routing_considerations": [
+    "Via to ground plane adjacent to the pad"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "decoupling_capacitor",
+   "relevant_archetypes": [
+    "automotive_12v_controller",
+    "battery_fuel_gauge",
+    "battery_iot_node",
+    "boost_converter",
+    "buck_boost_converter",
+    "buck_converter",
+    "cellular_lte_nbiot",
+    "class_d_amplifier",
+    "ddr_memory_subsystem",
+    "embedded_data_logger",
+    "environmental_sensor_board",
+    "esp32_dev_board",
+    "fast_ethernet_interface",
+    "flyback_converter",
+    "fpga_dev_board",
+    "gigabit_ethernet_board",
+    "gnss_receiver",
+    "hdmi_interface_board",
+    "high_speed_adc_dac_board",
+    "i2c_spi_expander_board",
+    "imu_motion_sensor_board",
+    "industrial_vfd_gate_drive",
+    "isolated_serial_interface",
+    "lcd_tft_display_board",
+    "logic_analyzer_board",
+    "lora_transceiver",
+    "low_power_sensor_node",
+    "mcu_carrier_board",
+    "microphone_array_board",
+    "mipi_camera_board",
+    "mpu_som_carrier",
+    "multi_sensor_controller",
+    "nvme_storage_board",
+    "oled_epaper_display_board",
+    "pcie_add_in_card",
+    "rf_front_end",
+    "rf_measurement_hardware",
+    "rp2040_dev_board",
+    "sdr_hardware",
+    "stm32_controller",
+    "subghz_transmitter",
+    "usb_c_interface",
+    "usb_hub_board",
+    "usb_pd_sink_board",
+    "uwb_communication",
+    "wearable_electronics",
+    "wifi_ble_module_board"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Bootstrap capacitor",
+   "description": "Capacitor supplying the high-side gate driver.",
+   "electrical_characteristics": [
+    "Value per driver",
+    "Voltage"
+   ],
+   "required_parameters": [
+    "value",
+    "voltage_rating"
+   ],
+   "compatibility_requirements": [
+    "Value per the driver datasheet"
+   ],
+   "datasheet_verification": [
+    "Driver datasheet"
+   ],
+   "placement_constraints": [
+    "At the driver BST pin"
+   ],
+   "routing_considerations": [
+    "Short loop to the switch node"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "bootstrap_capacitor",
+   "relevant_archetypes": [
+    "buck_converter"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Converter input capacitor",
+   "description": "Ceramic/electrolytic at a converter input carrying the ripple current.",
+   "electrical_characteristics": [
+    "RMS current rating",
+    "ESR"
+   ],
+   "required_parameters": [
+    "value",
+    "voltage_rating",
+    "ripple_current"
+   ],
+   "compatibility_requirements": [
+    "Ripple current rating met"
+   ],
+   "datasheet_verification": [
+    "Ripple current spec"
+   ],
+   "placement_constraints": [
+    "In the hot loop"
+   ],
+   "routing_considerations": [
+    "Wide short connections"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "input_capacitor",
+   "relevant_archetypes": [
+    "boost_converter",
+    "buck_boost_converter",
+    "buck_converter",
+    "constant_current_led_driver",
+    "flyback_converter",
+    "forward_converter",
+    "half_bridge_converter",
+    "led_backlight_driver",
+    "multi_cell_charger",
+    "power_path_management",
+    "push_pull_converter",
+    "single_cell_liion_charger",
+    "solar_battery_controller"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Converter output capacitor",
+   "description": "Output filter capacitor setting ripple and loop response.",
+   "electrical_characteristics": [
+    "ESR",
+    "Capacitance at bias"
+   ],
+   "required_parameters": [
+    "value",
+    "voltage_rating",
+    "esr"
+   ],
+   "compatibility_requirements": [
+    "ESR within the control-loop window"
+   ],
+   "datasheet_verification": [
+    "Stability note"
+   ],
+   "placement_constraints": [
+    "At the inductor output"
+   ],
+   "routing_considerations": [
+    "Short to the load"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "output_capacitor",
+   "relevant_archetypes": [
+    "boost_converter",
+    "buck_boost_converter",
+    "buck_converter",
+    "constant_current_led_driver",
+    "flyback_converter",
+    "forward_converter",
+    "full_bridge_converter",
+    "half_bridge_converter",
+    "isolated_ac_dc",
+    "led_backlight_driver",
+    "mains_lighting_driver",
+    "multi_cell_charger",
+    "poe_power_board",
+    "power_path_management",
+    "push_pull_converter",
+    "single_cell_liion_charger",
+    "solar_battery_controller"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Bulk capacitor",
+   "description": "Electrolytic/polymer reservoir for peak currents.",
+   "electrical_characteristics": [
+    "Ripple current",
+    "ESR",
+    "Lifetime at temperature"
+   ],
+   "required_parameters": [
+    "value",
+    "voltage_rating",
+    "ripple_current"
+   ],
+   "compatibility_requirements": [
+    "Lifetime at the hot-spot temperature"
+   ],
+   "datasheet_verification": [
+    "Ripple and lifetime"
+   ],
+   "placement_constraints": [
+    "Near the load's supply pins"
+   ],
+   "routing_considerations": [
+    "Wide traces"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "bulk_capacitor",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "addressable_led_controller",
+    "brushed_dc_h_bridge",
+    "cellular_lte_nbiot",
+    "class_d_amplifier",
+    "isolated_ac_dc",
+    "mains_lighting_driver",
+    "non_isolated_ac_dc",
+    "pfc_board",
+    "stepper_driver",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "DC-link capacitor",
+   "description": "Film or electrolytic bank across a bridge's DC bus.",
+   "electrical_characteristics": [
+    "Ripple current",
+    "ESL"
+   ],
+   "required_parameters": [
+    "value",
+    "voltage_rating",
+    "ripple_current"
+   ],
+   "compatibility_requirements": [
+    "Voltage with margin over the bus"
+   ],
+   "datasheet_verification": [
+    "Ripple"
+   ],
+   "placement_constraints": [
+    "Tight to the bridge switches"
+   ],
+   "routing_considerations": [
+    "Low-inductance connection"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "dc_link_capacitor",
+   "relevant_archetypes": [
+    "ac_motor_controller",
+    "dual_active_bridge",
+    "full_bridge_converter",
+    "servo_controller",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Film capacitor",
+   "description": "Low-distortion capacitor for audio and filters.",
+   "electrical_characteristics": [
+    "Dielectric",
+    "Tolerance"
+   ],
+   "required_parameters": [
+    "value",
+    "voltage_rating"
+   ],
+   "compatibility_requirements": [
+    "Voltage rating"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "In the filter"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "film_capacitor",
+   "relevant_archetypes": [
+    "audio_codec_dac_board",
+    "class_d_amplifier",
+    "headphone_line_amplifier",
+    "oled_epaper_display_board",
+    "photodiode_optical_frontend",
+    "precision_adc_frontend"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "X capacitor",
+   "description": "Safety-rated capacitor across the mains lines.",
+   "electrical_characteristics": [
+    "X1/X2 class"
+   ],
+   "required_parameters": [
+    "value",
+    "safety_class"
+   ],
+   "compatibility_requirements": [
+    "Discharge resistor present"
+   ],
+   "datasheet_verification": [
+    "Safety approval"
+   ],
+   "placement_constraints": [
+    "After the fuse"
+   ],
+   "routing_considerations": [
+    "Mains creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "x_capacitor",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "mains_lighting_driver",
+    "non_isolated_ac_dc"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Y capacitor",
+   "description": "Safety-rated capacitor across the isolation barrier or to earth.",
+   "electrical_characteristics": [
+    "Y1/Y2 class",
+    "Leakage current"
+   ],
+   "required_parameters": [
+    "value",
+    "safety_class"
+   ],
+   "compatibility_requirements": [
+    "Leakage limit of the safety standard"
+   ],
+   "datasheet_verification": [
+    "Safety approval"
+   ],
+   "placement_constraints": [
+    "Across the barrier only"
+   ],
+   "routing_considerations": [
+    "Creepage along the body"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "y_capacitor",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "flyback_converter",
+    "isolated_ac_dc",
+    "poe_power_board"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Resonant capacitor",
+   "description": "Film capacitor in LLC tanks with high ripple current.",
+   "electrical_characteristics": [
+    "Ripple current",
+    "dV/dt"
+   ],
+   "required_parameters": [
+    "value",
+    "voltage_rating",
+    "ripple_current"
+   ],
+   "compatibility_requirements": [
+    "Ripple"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "In the tank"
+   ],
+   "routing_considerations": [
+    "Low inductance"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "resonant_capacitor",
+   "relevant_archetypes": [
+    "half_bridge_converter"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Supercapacitor",
+   "description": "High-capacitance reservoir for pulses and backup.",
+   "electrical_characteristics": [
+    "ESR",
+    "Voltage",
+    "Leakage"
+   ],
+   "required_parameters": [
+    "capacitance",
+    "voltage_rating",
+    "esr"
+   ],
+   "compatibility_requirements": [
+    "Voltage never exceeded (balancing for series)"
+   ],
+   "datasheet_verification": [
+    "Leakage"
+   ],
+   "placement_constraints": [
+    "Near the pulse load"
+   ],
+   "routing_considerations": [
+    "Wide traces"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "supercapacitor",
+   "relevant_archetypes": [
+    "battery_iot_node",
+    "gnss_receiver",
+    "low_power_sensor_node",
+    "obd_can_telematics"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Power inductor",
+   "description": "Energy-storage inductor for converters.",
+   "electrical_characteristics": [
+    "Saturation current",
+    "DCR",
+    "Shielding"
+   ],
+   "required_parameters": [
+    "inductance",
+    "isat",
+    "dcr"
+   ],
+   "compatibility_requirements": [
+    "Isat > peak inductor current"
+   ],
+   "datasheet_verification": [
+    "Isat vs temperature"
+   ],
+   "placement_constraints": [
+    "At the SW pin"
+   ],
+   "routing_considerations": [
+    "Current path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "inductor",
+   "relevant_archetypes": [
+    "boost_converter",
+    "buck_boost_converter",
+    "buck_converter",
+    "constant_current_led_driver",
+    "lcd_tft_display_board",
+    "led_backlight_driver",
+    "multi_cell_charger",
+    "non_isolated_ac_dc",
+    "oled_epaper_display_board",
+    "solar_battery_controller"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Coupled inductor",
+   "description": "Dual-winding inductor for SEPIC/Zeta.",
+   "electrical_characteristics": [
+    "Coupling",
+    "Isat"
+   ],
+   "required_parameters": [
+    "inductance",
+    "isat"
+   ],
+   "compatibility_requirements": [
+    "Isat per winding"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Near the switch"
+   ],
+   "routing_considerations": [
+    "Both loops short"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "coupled_inductor",
+   "relevant_archetypes": [
+    "buck_boost_converter"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Output inductor",
+   "description": "Filter inductor in forward/half-bridge outputs or class-D filters.",
+   "electrical_characteristics": [
+    "Isat",
+    "DCR",
+    "Core loss"
+   ],
+   "required_parameters": [
+    "inductance",
+    "isat"
+   ],
+   "compatibility_requirements": [
+    "Isat"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the rectifier/amplifier output"
+   ],
+   "routing_considerations": [
+    "Output path width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "output_inductor",
+   "relevant_archetypes": [
+    "class_d_amplifier",
+    "forward_converter",
+    "full_bridge_converter",
+    "push_pull_converter"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Resonant inductor",
+   "description": "Series inductor in LLC/DAB tanks.",
+   "electrical_characteristics": [
+    "Core loss",
+    "Isat"
+   ],
+   "required_parameters": [
+    "inductance",
+    "isat"
+   ],
+   "compatibility_requirements": [
+    "Isat"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "In the tank"
+   ],
+   "routing_considerations": [
+    "Short"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "resonant_inductor",
+   "relevant_archetypes": [
+    "dual_active_bridge",
+    "half_bridge_converter"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "PFC boost inductor",
+   "description": "Large inductor for PFC stages.",
+   "electrical_characteristics": [
+    "Isat",
+    "Core loss"
+   ],
+   "required_parameters": [
+    "inductance",
+    "isat"
+   ],
+   "compatibility_requirements": [
+    "Isat at low line"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Hot loop"
+   ],
+   "routing_considerations": [
+    "Current path"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "boost_inductor_pfc",
+   "relevant_archetypes": [
+    "pfc_board"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Ferrite bead",
+   "description": "Impedance element for supply filtering.",
+   "electrical_characteristics": [
+    "Impedance at frequency",
+    "DC current rating",
+    "DCR"
+   ],
+   "required_parameters": [
+    "impedance",
+    "current_rating"
+   ],
+   "compatibility_requirements": [
+    "DC current below rating"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Between rails"
+   ],
+   "routing_considerations": [
+    "Short"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ferrite_bead",
+   "relevant_archetypes": [
+    "automotive_12v_controller",
+    "class_d_amplifier",
+    "precision_adc_frontend",
+    "strain_gauge_loadcell_amplifier",
+    "thermocouple_rtd_measurement",
+    "usb_c_interface"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Common-mode choke",
+   "description": "Filters common-mode noise on power or signal pairs.",
+   "electrical_characteristics": [
+    "Impedance",
+    "Current",
+    "Safety rating"
+   ],
+   "required_parameters": [
+    "impedance",
+    "current_rating"
+   ],
+   "compatibility_requirements": [
+    "Current rating"
+   ],
+   "datasheet_verification": [
+    "Safety for mains"
+   ],
+   "placement_constraints": [
+    "At the entry"
+   ],
+   "routing_considerations": [
+    "Pairs through the choke"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "common_mode_choke",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "can_bus_interface",
+    "gigabit_ethernet_board",
+    "hdmi_interface_board",
+    "isolated_ac_dc"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Crystal",
+   "description": "Quartz resonator for MCU/RF clocks.",
+   "electrical_characteristics": [
+    "Frequency",
+    "Load capacitance",
+    "ESR",
+    "Tolerance"
+   ],
+   "required_parameters": [
+    "frequency",
+    "load_capacitance",
+    "tolerance"
+   ],
+   "compatibility_requirements": [
+    "Load caps computed for CL"
+   ],
+   "datasheet_verification": [
+    "Drive level"
+   ],
+   "placement_constraints": [
+    "Within 5 mm of the pins; no traces under"
+   ],
+   "routing_considerations": [
+    "Guard ring"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "crystal",
+   "relevant_archetypes": [
+    "audio_codec_dac_board",
+    "embedded_data_logger",
+    "esp32_dev_board",
+    "fast_ethernet_interface",
+    "gigabit_ethernet_board",
+    "imu_motion_sensor_board",
+    "lora_transceiver",
+    "mipi_camera_board",
+    "rp2040_dev_board",
+    "stm32_controller",
+    "subghz_transmitter",
+    "usb_hub_board",
+    "uwb_communication",
+    "wifi_ble_module_board"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Precision resistor",
+   "description": "Thin-film resistor for references, dividers and sense.",
+   "electrical_characteristics": [
+    "Tolerance",
+    "Tempco"
+   ],
+   "required_parameters": [
+    "value",
+    "tolerance",
+    "tempco"
+   ],
+   "compatibility_requirements": [
+    "Tolerance budget"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Away from heat"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "precision_resistor",
+   "relevant_archetypes": [
+    "addressable_led_controller",
+    "current_loop_4_20ma_interface",
+    "ddr_memory_subsystem",
+    "headphone_line_amplifier",
+    "ph_electrochemical_frontend",
+    "photodiode_optical_frontend",
+    "precision_adc_frontend",
+    "rs485_modbus_interface",
+    "strain_gauge_loadcell_amplifier",
+    "swd_jtag_programmer",
+    "thermocouple_rtd_measurement"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Feedback divider resistor",
+   "description": "Divider setting a converter's output.",
+   "electrical_characteristics": [
+    "Tolerance"
+   ],
+   "required_parameters": [
+    "value",
+    "tolerance"
+   ],
+   "compatibility_requirements": [
+    "1 % or better"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the FB pin"
+   ],
+   "routing_considerations": [
+    "Away from the switch node"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "feedback_resistor",
+   "relevant_archetypes": [
+    "boost_converter",
+    "buck_boost_converter",
+    "buck_converter"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Current-sense resistor",
+   "description": "Low-value shunt with Kelvin pads.",
+   "electrical_characteristics": [
+    "Power rating",
+    "Tempco",
+    "Inductance"
+   ],
+   "required_parameters": [
+    "value",
+    "power_rating",
+    "tolerance"
+   ],
+   "compatibility_requirements": [
+    "Power at peak current"
+   ],
+   "datasheet_verification": [
+    "Kelvin footprint"
+   ],
+   "placement_constraints": [
+    "In the measured path"
+   ],
+   "routing_considerations": [
+    "Sense traces from the inner pad edges"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "current_sense_resistor",
+   "relevant_archetypes": [
+    "ac_motor_controller",
+    "battery_fuel_gauge",
+    "battery_management_system",
+    "battery_protection_board",
+    "benchtop_power_supply_control",
+    "brushed_dc_h_bridge",
+    "constant_current_led_driver",
+    "current_voltage_measurement",
+    "fan_pump_controller",
+    "forward_converter",
+    "hv_monitoring_board",
+    "mains_lighting_driver",
+    "multi_cell_charger",
+    "pfc_board",
+    "push_pull_converter",
+    "servo_controller",
+    "solar_battery_controller",
+    "stepper_driver",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Balancing resistor",
+   "description": "Bleed resistor for passive balancing.",
+   "electrical_characteristics": [
+    "Power"
+   ],
+   "required_parameters": [
+    "value",
+    "power_rating"
+   ],
+   "compatibility_requirements": [
+    "Continuous dissipation"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Spread for heat"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "balancing_resistor",
+   "relevant_archetypes": [
+    "battery_management_system",
+    "cell_balancing_board"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Power resistor",
+   "description": "Series/dropper/bleeder resistor dissipating continuously.",
+   "electrical_characteristics": [
+    "Power",
+    "Voltage rating"
+   ],
+   "required_parameters": [
+    "value",
+    "power_rating",
+    "voltage_rating"
+   ],
+   "compatibility_requirements": [
+    "Derate 60-70 %"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Away from heat-sensitive parts"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "power_resistor",
+   "relevant_archetypes": [
+    "non_isolated_ac_dc"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "X-capacitor discharge resistor",
+   "description": "Bleeder across X capacitors.",
+   "electrical_characteristics": [
+    "Voltage rating"
+   ],
+   "required_parameters": [
+    "value",
+    "power_rating"
+   ],
+   "compatibility_requirements": [
+    "Discharge time per safety standard"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Across the X cap"
+   ],
+   "routing_considerations": [
+    "Mains creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "discharge_resistor",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "non_isolated_ac_dc"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Gate resistor",
+   "description": "Series resistor shaping the gate drive edge.",
+   "electrical_characteristics": [
+    "Power pulse"
+   ],
+   "required_parameters": [
+    "value"
+   ],
+   "compatibility_requirements": [
+    "Value per the driver/MOSFET"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the driver output"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "gate_resistor",
+   "relevant_archetypes": [
+    "industrial_vfd_gate_drive"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "RCD clamp",
+   "description": "Resistor-capacitor-diode clamp for flyback leakage spikes.",
+   "electrical_characteristics": [
+    "Energy",
+    "Voltage"
+   ],
+   "required_parameters": [
+    "clamp_voltage",
+    "power"
+   ],
+   "compatibility_requirements": [
+    "Clamp below switch rating"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the transformer primary"
+   ],
+   "routing_considerations": [
+    "Short loop"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rcd_clamp",
+   "relevant_archetypes": [
+    "flyback_converter"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "RC snubber",
+   "description": "Damping network across switches or contacts.",
+   "electrical_characteristics": [
+    "Power",
+    "dV/dt"
+   ],
+   "required_parameters": [
+    "resistance",
+    "capacitance"
+   ],
+   "compatibility_requirements": [
+    "Power at frequency"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the switch node"
+   ],
+   "routing_considerations": [
+    "Short"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "snubber_rc",
+   "relevant_archetypes": [
+    "relay_output_module",
+    "triac_controller"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "NTC thermistor",
+   "description": "Temperature sensing element (battery/charger).",
+   "electrical_characteristics": [
+    "Beta",
+    "Resistance"
+   ],
+   "required_parameters": [
+    "r25",
+    "beta"
+   ],
+   "compatibility_requirements": [
+    "Matches the charger's table"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the measured object"
+   ],
+   "routing_considerations": [
+    "Away from noise"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ntc_thermistor",
+   "relevant_archetypes": [
+    "battery_fuel_gauge",
+    "battery_management_system",
+    "battery_protection_board",
+    "cell_balancing_board",
+    "constant_current_led_driver",
+    "fan_pump_controller",
+    "multi_cell_charger",
+    "single_cell_liion_charger"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "NTC inrush limiter",
+   "description": "Power thermistor limiting mains inrush.",
+   "electrical_characteristics": [
+    "Energy",
+    "Current"
+   ],
+   "required_parameters": [
+    "r25",
+    "max_current"
+   ],
+   "compatibility_requirements": [
+    "Energy for the bulk cap"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "In series after the fuse"
+   ],
+   "routing_considerations": [
+    "Mains width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ntc_inrush_limiter",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "ac_motor_controller",
+    "pfc_board"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "MOV varistor",
+   "description": "Metal-oxide varistor clamping surges.",
+   "electrical_characteristics": [
+    "Voltage",
+    "Energy"
+   ],
+   "required_parameters": [
+    "varistor_voltage",
+    "energy"
+   ],
+   "compatibility_requirements": [
+    "Voltage above max mains"
+   ],
+   "datasheet_verification": [
+    "Thermal fuse if required"
+   ],
+   "placement_constraints": [
+    "After the fuse"
+   ],
+   "routing_considerations": [
+    "Mains creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "mov_varistor",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "isolated_ac_dc",
+    "mains_lighting_driver",
+    "non_isolated_ac_dc",
+    "triac_controller"
+   ]
+  },
+  {
+   "group": "passive",
+   "name": "Potentiometer",
+   "description": "Variable resistor for volume/trim.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "value"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Accessible"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "potentiometer",
+   "relevant_archetypes": [
+    "headphone_line_amplifier"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Microcontroller",
+   "description": "General MCU running the application.",
+   "electrical_characteristics": [
+    "Supply",
+    "I/O levels",
+    "Clock sources"
+   ],
+   "required_parameters": [
+    "core",
+    "flash",
+    "io_voltage",
+    "interfaces"
+   ],
+   "compatibility_requirements": [
+    "Peripheral count sufficient"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Strap pins",
+    "Decoupling table"
+   ],
+   "placement_constraints": [
+    "Central; decoupling at pins; crystal adjacent"
+   ],
+   "routing_considerations": [
+    "Clocks first"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "mcu",
+   "relevant_archetypes": [
+    "ac_motor_controller",
+    "addressable_led_controller",
+    "automotive_12v_controller",
+    "battery_iot_node",
+    "battery_management_system",
+    "bed_of_nails_test_fixture",
+    "benchtop_power_supply_control",
+    "brushed_dc_h_bridge",
+    "cell_balancing_board",
+    "current_voltage_measurement",
+    "din_rail_controller",
+    "dual_active_bridge",
+    "embedded_data_logger",
+    "encoder_feedback_interface",
+    "environmental_sensor_board",
+    "fan_pump_controller",
+    "hv_monitoring_board",
+    "imu_motion_sensor_board",
+    "industrial_hmi_controller",
+    "industrial_remote_io",
+    "lcd_tft_display_board",
+    "logic_analyzer_board",
+    "lora_transceiver",
+    "low_power_sensor_node",
+    "microphone_array_board",
+    "multi_cell_charger",
+    "multi_sensor_controller",
+    "obd_can_telematics",
+    "oled_epaper_display_board",
+    "ph_electrochemical_frontend",
+    "plc_io_module",
+    "precision_adc_frontend",
+    "relay_output_module",
+    "rf_measurement_hardware",
+    "rp2040_dev_board",
+    "servo_controller",
+    "signal_generator_board",
+    "solar_battery_controller",
+    "solenoid_relay_driver",
+    "stepper_driver",
+    "stm32_controller",
+    "strain_gauge_loadcell_amplifier",
+    "subghz_transmitter",
+    "swd_jtag_programmer",
+    "thermocouple_rtd_measurement",
+    "three_phase_bldc_controller",
+    "triac_controller",
+    "uwb_communication"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Wireless MCU module",
+   "description": "Certified module with MCU and radio (ESP32, nRF, etc.).",
+   "electrical_characteristics": [
+    "Supply current peaks",
+    "Antenna type"
+   ],
+   "required_parameters": [
+    "module",
+    "antenna_type",
+    "interfaces"
+   ],
+   "compatibility_requirements": [
+    "Module layout guide"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Antenna keep-out"
+   ],
+   "placement_constraints": [
+    "Antenna at edge with keep-out"
+   ],
+   "routing_considerations": [
+    "RF per the module guide"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "mcu_wireless_module",
+   "relevant_archetypes": [
+    "battery_iot_node",
+    "esp32_dev_board",
+    "low_power_sensor_node",
+    "wearable_electronics",
+    "wifi_ble_module_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "FPGA",
+   "description": "Programmable logic device.",
+   "electrical_characteristics": [
+    "Rails",
+    "Banks",
+    "Transceivers"
+   ],
+   "required_parameters": [
+    "family",
+    "package",
+    "io_standards"
+   ],
+   "compatibility_requirements": [
+    "PDN"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Sequencing"
+   ],
+   "placement_constraints": [
+    "Decoupling per guide"
+   ],
+   "routing_considerations": [
+    "Escape routing"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "fpga",
+   "relevant_archetypes": [
+    "fpga_dev_board",
+    "high_speed_adc_dac_board",
+    "logic_analyzer_board",
+    "pcie_add_in_card",
+    "sdr_hardware"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Configuration flash",
+   "description": "SPI/QSPI flash for FPGA/MCU configuration.",
+   "electrical_characteristics": [
+    "Speed"
+   ],
+   "required_parameters": [
+    "size",
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Supported by the loader"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the controller"
+   ],
+   "routing_considerations": [
+    "Short matched QSPI"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "configuration_flash",
+   "relevant_archetypes": [
+    "fpga_dev_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "QSPI flash",
+   "description": "External program/storage flash.",
+   "electrical_characteristics": [
+    "Speed",
+    "Voltage"
+   ],
+   "required_parameters": [
+    "size",
+    "interface_speed"
+   ],
+   "compatibility_requirements": [
+    "Voltage matches MCU"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Adjacent"
+   ],
+   "routing_considerations": [
+    "Short matched traces"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "qspi_flash",
+   "relevant_archetypes": [
+    "rp2040_dev_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "EEPROM/flash memory",
+   "description": "Small non-volatile memory.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "size",
+    "interface"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the host"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "eeprom_flash",
+   "relevant_archetypes": []
+  },
+  {
+   "group": "digital",
+   "name": "DDR memory",
+   "description": "SDRAM for processors/FPGAs.",
+   "electrical_characteristics": [
+    "Generation",
+    "Speed"
+   ],
+   "required_parameters": [
+    "type",
+    "width",
+    "speed_grade"
+   ],
+   "compatibility_requirements": [
+    "Controller support"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Topology"
+   ],
+   "placement_constraints": [
+    "Near the controller"
+   ],
+   "routing_considerations": [
+    "Length matching"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ddr_memory",
+   "relevant_archetypes": [
+    "ddr_memory_subsystem",
+    "fpga_dev_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Clock generator/oscillator",
+   "description": "Oscillators and PLL clock generators.",
+   "electrical_characteristics": [
+    "Jitter",
+    "Output type"
+   ],
+   "required_parameters": [
+    "frequency",
+    "jitter",
+    "output_type"
+   ],
+   "compatibility_requirements": [
+    "Jitter budget"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Central to loads"
+   ],
+   "routing_considerations": [
+    "Controlled traces"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "clock_generator",
+   "relevant_archetypes": [
+    "audio_codec_dac_board",
+    "fpga_dev_board",
+    "high_speed_adc_dac_board",
+    "nvme_storage_board",
+    "pcie_add_in_card",
+    "sdr_hardware",
+    "signal_generator_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Real-time clock",
+   "description": "Timekeeping IC with backup supply.",
+   "electrical_characteristics": [
+    "Backup current"
+   ],
+   "required_parameters": [
+    "interface",
+    "backup_source"
+   ],
+   "compatibility_requirements": [
+    "Crystal match"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Crystal adjacent"
+   ],
+   "routing_considerations": [
+    "Away from digital noise"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rtc",
+   "relevant_archetypes": [
+    "embedded_data_logger",
+    "industrial_hmi_controller",
+    "mpu_som_carrier"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Level shifter",
+   "description": "Voltage translation between logic domains.",
+   "electrical_characteristics": [
+    "Type (direction)",
+    "Speed"
+   ],
+   "required_parameters": [
+    "voltage_a",
+    "voltage_b",
+    "speed"
+   ],
+   "compatibility_requirements": [
+    "Type matches the bus"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Between domains"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "level_shifter",
+   "relevant_archetypes": [
+    "addressable_led_controller",
+    "cellular_lte_nbiot",
+    "hdmi_interface_board",
+    "i2c_spi_expander_board",
+    "lcd_tft_display_board",
+    "logic_analyzer_board",
+    "mcu_carrier_board",
+    "swd_jtag_programmer"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "GPIO expander",
+   "description": "I2C/SPI port expander.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "interface",
+    "channels"
+   ],
+   "compatibility_requirements": [
+    "Address free"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the loads"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "gpio_expander",
+   "relevant_archetypes": [
+    "i2c_spi_expander_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "I2C multiplexer",
+   "description": "Bus switch for address conflicts.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "channels"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "i2c_multiplexer",
+   "relevant_archetypes": [
+    "environmental_sensor_board",
+    "i2c_spi_expander_board",
+    "multi_sensor_controller"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "USB-UART bridge",
+   "description": "USB to serial converter IC.",
+   "electrical_characteristics": [
+    "USB speed"
+   ],
+   "required_parameters": [
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Driver availability"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the USB connector"
+   ],
+   "routing_considerations": [
+    "USB pair"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "usb_uart_bridge",
+   "relevant_archetypes": [
+    "esp32_dev_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "USB hub controller",
+   "description": "Multi-port hub IC.",
+   "electrical_characteristics": [
+    "Ports",
+    "Speed"
+   ],
+   "required_parameters": [
+    "ports",
+    "speed"
+   ],
+   "compatibility_requirements": [
+    "Configuration"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Central"
+   ],
+   "routing_considerations": [
+    "90 ohm pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "usb_hub_controller",
+   "relevant_archetypes": [
+    "mpu_som_carrier",
+    "usb_hub_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "USB PD controller",
+   "description": "CC negotiation controller.",
+   "electrical_characteristics": [
+    "PDO support"
+   ],
+   "required_parameters": [
+    "role",
+    "pdos"
+   ],
+   "compatibility_requirements": [
+    "VBUS switch control"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near CC pins"
+   ],
+   "routing_considerations": [
+    "CC traces"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "usb_pd_controller",
+   "relevant_archetypes": [
+    "usb_c_interface",
+    "usb_pd_sink_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "USB/alt-mode mux",
+   "description": "High-speed mux for orientation/alt modes.",
+   "electrical_characteristics": [
+    "Bandwidth"
+   ],
+   "required_parameters": [
+    "lanes"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the connector"
+   ],
+   "routing_considerations": [
+    "Pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "usb_mux",
+   "relevant_archetypes": [
+    "usb_c_interface"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Touch controller",
+   "description": "Capacitive touch panel controller.",
+   "electrical_characteristics": [
+    "EMC"
+   ],
+   "required_parameters": [
+    "interface"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the FPC"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "touch_controller",
+   "relevant_archetypes": [
+    "industrial_hmi_controller",
+    "lcd_tft_display_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Image sensor",
+   "description": "CMOS image sensor with MIPI/parallel output.",
+   "electrical_characteristics": [
+    "Rails",
+    "Sequencing"
+   ],
+   "required_parameters": [
+    "resolution",
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Sequencing"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Under the lens datum"
+   ],
+   "routing_considerations": [
+    "D-PHY pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "image_sensor",
+   "relevant_archetypes": [
+    "mipi_camera_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "PCIe endpoint",
+   "description": "Device-side PCIe silicon.",
+   "electrical_characteristics": [
+    "Generation",
+    "Lanes"
+   ],
+   "required_parameters": [
+    "generation",
+    "lanes"
+   ],
+   "compatibility_requirements": [
+    "REFCLK"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the edge"
+   ],
+   "routing_considerations": [
+    "85/100 ohm pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "pcie_endpoint",
+   "relevant_archetypes": [
+    "nvme_storage_board",
+    "pcie_add_in_card"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "High-speed ADC",
+   "description": "MSPS-GSPS converter.",
+   "electrical_characteristics": [
+    "Jitter sensitivity"
+   ],
+   "required_parameters": [
+    "sample_rate",
+    "resolution",
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Clock quality"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Analog/digital partition"
+   ],
+   "routing_considerations": [
+    "Data lanes matched"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "high_speed_adc",
+   "relevant_archetypes": [
+    "high_speed_adc_dac_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "High-speed DAC",
+   "description": "MSPS-GSPS DAC.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "sample_rate",
+    "resolution"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Partition"
+   ],
+   "routing_considerations": [
+    "Clock"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "high_speed_dac",
+   "relevant_archetypes": [
+    "high_speed_adc_dac_board",
+    "signal_generator_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Audio codec",
+   "description": "ADC/DAC with I2S.",
+   "electrical_characteristics": [
+    "MCLK"
+   ],
+   "required_parameters": [
+    "sample_rates",
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "MCLK source"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Analog partition"
+   ],
+   "routing_considerations": [
+    "I2S group"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "audio_codec",
+   "relevant_archetypes": [
+    "audio_codec_dac_board",
+    "microphone_array_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Audio DAC",
+   "description": "I2S DAC.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "resolution",
+    "interface"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "I2S"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "audio_dac",
+   "relevant_archetypes": [
+    "audio_codec_dac_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Class-D amplifier IC",
+   "description": "Switching audio amplifier.",
+   "electrical_characteristics": [
+    "Output power",
+    "Supply"
+   ],
+   "required_parameters": [
+    "supply_voltage",
+    "output_power",
+    "load_impedance"
+   ],
+   "compatibility_requirements": [
+    "Thermal"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Filter at pins"
+   ],
+   "routing_considerations": [
+    "Output pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "class_d_amplifier_ic",
+   "relevant_archetypes": [
+    "class_d_amplifier"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Headphone driver",
+   "description": "Dedicated headphone amplifier.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "load_impedance",
+    "output_power"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "headphone_driver",
+   "relevant_archetypes": [
+    "headphone_line_amplifier"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "HDMI level shifter/retimer",
+   "description": "TMDS buffer.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "data_rate"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the connector"
+   ],
+   "routing_considerations": [
+    "TMDS pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "hdmi_level_shifter",
+   "relevant_archetypes": [
+    "hdmi_interface_board"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Ethernet PHY",
+   "description": "10/100/1000 PHY.",
+   "electrical_characteristics": [
+    "Host interface"
+   ],
+   "required_parameters": [
+    "speed",
+    "host_interface"
+   ],
+   "compatibility_requirements": [
+    "Magnetics match"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near magnetics"
+   ],
+   "routing_considerations": [
+    "MDI pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ethernet_phy",
+   "relevant_archetypes": [
+    "din_rail_controller",
+    "fast_ethernet_interface",
+    "gigabit_ethernet_board",
+    "mcu_carrier_board",
+    "mpu_som_carrier"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Cellular module",
+   "description": "LTE/NB-IoT modem module.",
+   "electrical_characteristics": [
+    "Burst current",
+    "I/O level"
+   ],
+   "required_parameters": [
+    "bands",
+    "io_voltage"
+   ],
+   "compatibility_requirements": [
+    "Supply burst"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Layout guide"
+   ],
+   "placement_constraints": [
+    "Bulk caps adjacent"
+   ],
+   "routing_considerations": [
+    "RF per guide"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "cellular_module",
+   "relevant_archetypes": [
+    "cellular_lte_nbiot",
+    "obd_can_telematics"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "GNSS module",
+   "description": "GPS/GNSS receiver module.",
+   "electrical_characteristics": [
+    "Antenna bias"
+   ],
+   "required_parameters": [
+    "constellations",
+    "antenna_type"
+   ],
+   "compatibility_requirements": [
+    "RF rail clean"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "RF path"
+   ],
+   "routing_considerations": [
+    "50 ohm"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "gnss_module",
+   "relevant_archetypes": [
+    "gnss_receiver",
+    "obd_can_telematics"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Magnetic encoder IC",
+   "description": "Hall-based angle sensor.",
+   "electrical_characteristics": [
+    "Magnet spec"
+   ],
+   "required_parameters": [
+    "resolution",
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Magnet geometry"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Centred on the magnet axis"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "magnetic_encoder_ic",
+   "relevant_archetypes": [
+    "encoder_feedback_interface"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Resolver-to-digital converter",
+   "description": "Resolver excitation and demodulation.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "resolution"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near connector"
+   ],
+   "routing_considerations": [
+    "Pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "resolver_to_digital",
+   "relevant_archetypes": [
+    "encoder_feedback_interface"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Encoder interface",
+   "description": "ABZ/SSI/BiSS receiver logic.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "Differential pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "encoder_interface",
+   "relevant_archetypes": [
+    "encoder_feedback_interface",
+    "servo_controller",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "Hall sensor interface",
+   "description": "Pull-ups/filters for motor hall sensors.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "count"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "Away from phase copper"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "hall_sensor_interface",
+   "relevant_archetypes": [
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "digital",
+   "name": "4-20 mA transmitter IC",
+   "description": "Loop-powered transmitter.",
+   "electrical_characteristics": [
+    "Quiescent current"
+   ],
+   "required_parameters": [
+    "loop_voltage"
+   ],
+   "compatibility_requirements": [
+    "< 3.5 mA budget"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "loop_transmitter_ic",
+   "relevant_archetypes": [
+    "current_loop_4_20ma_interface"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Potentiostat AFE",
+   "description": "Electrochemical front end.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "electrodes"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Guarded"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "potentiostat_afe",
+   "relevant_archetypes": [
+    "ph_electrochemical_frontend"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "RF transceiver",
+   "description": "Radio transceiver IC (sub-GHz, 2.4 GHz, UWB, wideband).",
+   "electrical_characteristics": [
+    "Frequency",
+    "Output power",
+    "Matching"
+   ],
+   "required_parameters": [
+    "band",
+    "output_power",
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Matching per reference"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory",
+    "Reference design"
+   ],
+   "placement_constraints": [
+    "Near the antenna; crystal adjacent"
+   ],
+   "routing_considerations": [
+    "50 ohm"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rf_transceiver",
+   "relevant_archetypes": [
+    "battery_iot_node",
+    "lora_transceiver",
+    "sdr_hardware",
+    "subghz_transmitter",
+    "uwb_communication",
+    "wifi_ble_module_board"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "RF power amplifier",
+   "description": "PA for transmit paths.",
+   "electrical_characteristics": [
+    "Gain",
+    "P1dB",
+    "Supply"
+   ],
+   "required_parameters": [
+    "band",
+    "output_power"
+   ],
+   "compatibility_requirements": [
+    "Thermal pad"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Thermal vias"
+   ],
+   "routing_considerations": [
+    "50 ohm; supply decoupling"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "power_amplifier",
+   "relevant_archetypes": [
+    "rf_front_end"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "Low-noise amplifier",
+   "description": "Receive-path amplifier.",
+   "electrical_characteristics": [
+    "NF",
+    "Gain"
+   ],
+   "required_parameters": [
+    "band",
+    "noise_figure"
+   ],
+   "compatibility_requirements": [
+    "Clean rail"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "At the antenna port"
+   ],
+   "routing_considerations": [
+    "50 ohm"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "lna",
+   "relevant_archetypes": [
+    "gnss_receiver",
+    "rf_front_end",
+    "sdr_hardware"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "RF switch",
+   "description": "SPDT/SPnT RF switch.",
+   "electrical_characteristics": [
+    "Insertion loss",
+    "Isolation"
+   ],
+   "required_parameters": [
+    "band",
+    "power_handling"
+   ],
+   "compatibility_requirements": [
+    "Control logic levels"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Between PA/LNA and antenna"
+   ],
+   "routing_considerations": [
+    "50 ohm"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rf_switch",
+   "relevant_archetypes": [
+    "lora_transceiver",
+    "rf_front_end",
+    "sdr_hardware"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "SAW/BAW filter",
+   "description": "Band filter.",
+   "electrical_characteristics": [
+    "Band",
+    "Loss"
+   ],
+   "required_parameters": [
+    "band"
+   ],
+   "compatibility_requirements": [
+    "Matching"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "In the RF path"
+   ],
+   "routing_considerations": [
+    "50 ohm"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "saw_filter",
+   "relevant_archetypes": [
+    "gnss_receiver",
+    "rf_front_end",
+    "subghz_transmitter"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "Balun",
+   "description": "Balanced-unbalanced transformer.",
+   "electrical_characteristics": [
+    "Band",
+    "Impedance"
+   ],
+   "required_parameters": [
+    "band",
+    "impedance_ratio"
+   ],
+   "compatibility_requirements": [
+    "Transceiver port impedance"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "At the transceiver"
+   ],
+   "routing_considerations": [
+    "Symmetric"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "balun",
+   "relevant_archetypes": [
+    "high_speed_adc_dac_board",
+    "rf_front_end",
+    "sdr_hardware"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "RF matching component",
+   "description": "0402/0201 L/C in pi networks.",
+   "electrical_characteristics": [
+    "Q",
+    "SRF",
+    "Tolerance"
+   ],
+   "required_parameters": [
+    "value",
+    "tolerance"
+   ],
+   "compatibility_requirements": [
+    "SRF above band"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Inline between port and antenna"
+   ],
+   "routing_considerations": [
+    "No stubs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rf_matching_component",
+   "relevant_archetypes": [
+    "antenna_matching_network",
+    "lora_transceiver",
+    "rf_front_end",
+    "subghz_transmitter",
+    "uwb_communication",
+    "wifi_ble_module_board"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "Antenna",
+   "description": "PCB trace, chip or external antenna.",
+   "electrical_characteristics": [
+    "Band",
+    "Gain",
+    "Keep-out"
+   ],
+   "required_parameters": [
+    "band",
+    "type",
+    "keepout_mm"
+   ],
+   "compatibility_requirements": [
+    "Ground plane size"
+   ],
+   "datasheet_verification": [
+    "Keep-out drawing"
+   ],
+   "placement_constraints": [
+    "Board edge with keep-out"
+   ],
+   "routing_considerations": [
+    "50 ohm feed"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "antenna",
+   "relevant_archetypes": [
+    "antenna_matching_network",
+    "battery_iot_node",
+    "cellular_lte_nbiot",
+    "gnss_receiver",
+    "lora_transceiver",
+    "obd_can_telematics",
+    "subghz_transmitter",
+    "uwb_communication",
+    "wearable_electronics",
+    "wifi_ble_module_board"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "RF connector",
+   "description": "u.FL/SMA/MMCX.",
+   "electrical_characteristics": [
+    "Frequency",
+    "Launch"
+   ],
+   "required_parameters": [
+    "type",
+    "frequency_max"
+   ],
+   "compatibility_requirements": [
+    "Launch geometry"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the edge"
+   ],
+   "routing_considerations": [
+    "Launch per manufacturer"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rf_connector",
+   "relevant_archetypes": [
+    "antenna_matching_network",
+    "cellular_lte_nbiot",
+    "gnss_receiver",
+    "lora_transceiver",
+    "rf_front_end",
+    "rf_measurement_hardware",
+    "sdr_hardware",
+    "wifi_ble_module_board"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "RF test connector/switch",
+   "description": "Measurement port.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Inline"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rf_test_connector",
+   "relevant_archetypes": [
+    "antenna_matching_network"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "RF power detector",
+   "description": "Log/RMS detector IC.",
+   "electrical_characteristics": [
+    "Range"
+   ],
+   "required_parameters": [
+    "band",
+    "dynamic_range"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the coupler"
+   ],
+   "routing_considerations": [
+    "Filtered output"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rf_detector",
+   "relevant_archetypes": [
+    "rf_measurement_hardware"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "Directional coupler",
+   "description": "Forward/reflected sampling.",
+   "electrical_characteristics": [
+    "Directivity"
+   ],
+   "required_parameters": [
+    "band",
+    "coupling_db"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Symmetric"
+   ],
+   "routing_considerations": [
+    "50 ohm"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "directional_coupler",
+   "relevant_archetypes": [
+    "rf_measurement_hardware"
+   ]
+  },
+  {
+   "group": "rf",
+   "name": "RF attenuator",
+   "description": "Fixed/variable attenuation.",
+   "electrical_characteristics": [
+    "Power rating"
+   ],
+   "required_parameters": [
+    "attenuation_db",
+    "power_rating"
+   ],
+   "compatibility_requirements": [
+    "Power"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "50 ohm"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rf_attenuator",
+   "relevant_archetypes": [
+    "rf_measurement_hardware",
+    "signal_generator_board"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Operational amplifier",
+   "description": "General/precision op-amp.",
+   "electrical_characteristics": [
+    "Offset",
+    "Bias current",
+    "GBW",
+    "Noise"
+   ],
+   "required_parameters": [
+    "gbw",
+    "input_bias_current",
+    "offset",
+    "supply_range"
+   ],
+   "compatibility_requirements": [
+    "Input range includes signal"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the source"
+   ],
+   "routing_considerations": [
+    "Short inputs; guard for high-Z"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "op_amp",
+   "relevant_archetypes": [
+    "audio_codec_dac_board",
+    "benchtop_power_supply_control",
+    "current_loop_4_20ma_interface",
+    "headphone_line_amplifier",
+    "high_speed_adc_dac_board",
+    "ph_electrochemical_frontend",
+    "photodiode_optical_frontend",
+    "plc_io_module",
+    "precision_adc_frontend",
+    "rf_measurement_hardware",
+    "signal_generator_board"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Instrumentation amplifier",
+   "description": "High-CMRR differential amplifier.",
+   "electrical_characteristics": [
+    "CMRR",
+    "Gain set"
+   ],
+   "required_parameters": [
+    "gain",
+    "cmrr"
+   ],
+   "compatibility_requirements": [
+    "Gain resistor"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the inputs"
+   ],
+   "routing_considerations": [
+    "Matched pair"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "instrumentation_amplifier",
+   "relevant_archetypes": [
+    "precision_adc_frontend",
+    "strain_gauge_loadcell_amplifier",
+    "thermocouple_rtd_measurement"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Comparator",
+   "description": "Threshold detection.",
+   "electrical_characteristics": [
+    "Speed",
+    "Hysteresis"
+   ],
+   "required_parameters": [
+    "propagation_delay"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "comparator",
+   "relevant_archetypes": [
+    "logic_analyzer_board"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "ADC",
+   "description": "Precision or general ADC.",
+   "electrical_characteristics": [
+    "Resolution",
+    "Reference",
+    "Input structure"
+   ],
+   "required_parameters": [
+    "resolution",
+    "sample_rate",
+    "reference"
+   ],
+   "compatibility_requirements": [
+    "Reference quality"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Reference adjacent; partition"
+   ],
+   "routing_considerations": [
+    "Short inputs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "adc",
+   "relevant_archetypes": [
+    "bed_of_nails_test_fixture",
+    "benchtop_power_supply_control",
+    "current_loop_4_20ma_interface",
+    "current_voltage_measurement",
+    "multi_sensor_controller",
+    "photodiode_optical_frontend",
+    "plc_io_module",
+    "precision_adc_frontend",
+    "rf_measurement_hardware"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "DAC",
+   "description": "Precision DAC.",
+   "electrical_characteristics": [
+    "Resolution",
+    "Settling"
+   ],
+   "required_parameters": [
+    "resolution",
+    "reference"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "dac",
+   "relevant_archetypes": [
+    "benchtop_power_supply_control",
+    "plc_io_module"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Bridge ADC",
+   "description": "ADC with integrated PGA for load cells.",
+   "electrical_characteristics": [
+    "Gain",
+    "Noise"
+   ],
+   "required_parameters": [
+    "gain",
+    "resolution"
+   ],
+   "compatibility_requirements": [
+    "Ratiometric"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the terminals"
+   ],
+   "routing_considerations": [
+    "Matched inputs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "bridge_adc",
+   "relevant_archetypes": [
+    "strain_gauge_loadcell_amplifier"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Thermocouple converter",
+   "description": "Cold-junction-compensated converter.",
+   "electrical_characteristics": [
+    "Types"
+   ],
+   "required_parameters": [
+    "thermocouple_type"
+   ],
+   "compatibility_requirements": [
+    "CJ sensor placement"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "At the terminals"
+   ],
+   "routing_considerations": [
+    "Filtered inputs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "thermocouple_converter",
+   "relevant_archetypes": [
+    "thermocouple_rtd_measurement"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "RTD converter",
+   "description": "Ratiometric RTD front end.",
+   "electrical_characteristics": [
+    "Wires"
+   ],
+   "required_parameters": [
+    "rtd_type",
+    "wires"
+   ],
+   "compatibility_requirements": [
+    "Reference resistor"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rtd_converter",
+   "relevant_archetypes": [
+    "thermocouple_rtd_measurement"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Voltage reference",
+   "description": "Precision reference.",
+   "electrical_characteristics": [
+    "Drift",
+    "Noise"
+   ],
+   "required_parameters": [
+    "voltage",
+    "drift",
+    "noise"
+   ],
+   "compatibility_requirements": [
+    "Load within rating"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Away from heat; decoupled"
+   ],
+   "routing_considerations": [
+    "No pour under output"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "voltage_reference",
+   "relevant_archetypes": [
+    "benchtop_power_supply_control",
+    "current_voltage_measurement",
+    "hv_monitoring_board",
+    "multi_sensor_controller",
+    "ph_electrochemical_frontend",
+    "photodiode_optical_frontend",
+    "precision_adc_frontend",
+    "rf_measurement_hardware",
+    "signal_generator_board",
+    "strain_gauge_loadcell_amplifier",
+    "thermocouple_rtd_measurement"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Analog switch/mux",
+   "description": "Signal routing.",
+   "electrical_characteristics": [
+    "Ron",
+    "Leakage"
+   ],
+   "required_parameters": [
+    "channels",
+    "ron"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "analog_switch",
+   "relevant_archetypes": [
+    "bed_of_nails_test_fixture"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Isolated amplifier",
+   "description": "Amplifier across a barrier.",
+   "electrical_characteristics": [
+    "Isolation",
+    "Bandwidth"
+   ],
+   "required_parameters": [
+    "isolation_rating",
+    "gain"
+   ],
+   "compatibility_requirements": [
+    "Creepage"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "On the barrier"
+   ],
+   "routing_considerations": [
+    "No copper under"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "isolated_amplifier",
+   "relevant_archetypes": [
+    "hv_monitoring_board"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Isolated ADC",
+   "description": "Delta-sigma modulator across a barrier.",
+   "electrical_characteristics": [
+    "Isolation"
+   ],
+   "required_parameters": [
+    "isolation_rating",
+    "resolution"
+   ],
+   "compatibility_requirements": [
+    "Creepage"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "On the barrier"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "isolated_adc",
+   "relevant_archetypes": [
+    "hv_monitoring_board"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Voltage-sense divider",
+   "description": "Resistor string scaling HV to ADC range.",
+   "electrical_characteristics": [
+    "Voltage rating per resistor"
+   ],
+   "required_parameters": [
+    "ratio",
+    "voltage"
+   ],
+   "compatibility_requirements": [
+    "Series string for rating"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Creepage along the string"
+   ],
+   "routing_considerations": [
+    "HV clearance"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "voltage_sense_divider",
+   "relevant_archetypes": [
+    "current_voltage_measurement",
+    "dual_active_bridge",
+    "hv_monitoring_board",
+    "pfc_board"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "Photodiode",
+   "description": "Light-to-current sensor.",
+   "electrical_characteristics": [
+    "Capacitance",
+    "Dark current"
+   ],
+   "required_parameters": [
+    "wavelength",
+    "capacitance"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Adjacent to the TIA"
+   ],
+   "routing_considerations": [
+    "Guarded"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "photodiode",
+   "relevant_archetypes": [
+    "photodiode_optical_frontend"
+   ]
+  },
+  {
+   "group": "display_optical",
+   "name": "LED emitter",
+   "description": "Illumination/indicator LED.",
+   "electrical_characteristics": [
+    "Vf",
+    "If",
+    "Thermal"
+   ],
+   "required_parameters": [
+    "forward_current",
+    "forward_voltage"
+   ],
+   "compatibility_requirements": [
+    "Thermal path"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Thermal vias"
+   ],
+   "routing_considerations": [
+    "Current path"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "led_emitter",
+   "relevant_archetypes": [
+    "constant_current_led_driver",
+    "photodiode_optical_frontend"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "CAN transceiver",
+   "description": "ISO 11898-2 transceiver.",
+   "electrical_characteristics": [
+    "Bit rate",
+    "Fault voltage"
+   ],
+   "required_parameters": [
+    "bit_rate",
+    "supply"
+   ],
+   "compatibility_requirements": [
+    "Termination plan"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the connector"
+   ],
+   "routing_considerations": [
+    "120 ohm pair"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "can_transceiver",
+   "relevant_archetypes": [
+    "automotive_12v_controller",
+    "battery_management_system",
+    "can_bus_interface",
+    "din_rail_controller",
+    "industrial_hmi_controller",
+    "industrial_remote_io",
+    "obd_can_telematics",
+    "servo_controller",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "LIN transceiver",
+   "description": "LIN bus transceiver.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "supply"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near connector"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "lin_transceiver",
+   "relevant_archetypes": [
+    "automotive_12v_controller"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "K-line transceiver",
+   "description": "ISO 9141 K-line interface.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "supply"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "kline_transceiver",
+   "relevant_archetypes": [
+    "obd_can_telematics"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "RS-485 transceiver",
+   "description": "TIA-485 driver/receiver.",
+   "electrical_characteristics": [
+    "Bit rate",
+    "Fail-safe"
+   ],
+   "required_parameters": [
+    "bit_rate",
+    "supply"
+   ],
+   "compatibility_requirements": [
+    "Bias/termination"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Near the terminals"
+   ],
+   "routing_considerations": [
+    "120 ohm pair"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rs485_transceiver",
+   "relevant_archetypes": [
+    "din_rail_controller",
+    "industrial_hmi_controller",
+    "industrial_remote_io",
+    "rs485_modbus_interface"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "RS-422 line receiver",
+   "description": "Differential receiver for encoders.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "channels"
+   ],
+   "compatibility_requirements": [
+    "Termination"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "Pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rs422_receiver",
+   "relevant_archetypes": [
+    "encoder_feedback_interface",
+    "servo_controller"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "Digital isolator",
+   "description": "Capacitive/magnetic isolator.",
+   "electrical_characteristics": [
+    "Isolation",
+    "CMTI",
+    "Channels"
+   ],
+   "required_parameters": [
+    "isolation_rating",
+    "channels",
+    "data_rate"
+   ],
+   "compatibility_requirements": [
+    "Creepage"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "On the barrier"
+   ],
+   "routing_considerations": [
+    "No copper under"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "digital_isolator",
+   "relevant_archetypes": [
+    "can_bus_interface",
+    "current_loop_4_20ma_interface",
+    "din_rail_controller",
+    "hv_monitoring_board",
+    "industrial_remote_io",
+    "isolated_serial_interface",
+    "ph_electrochemical_frontend",
+    "plc_io_module",
+    "rs485_modbus_interface",
+    "solenoid_relay_driver",
+    "thermocouple_rtd_measurement"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "I2C isolator",
+   "description": "Bidirectional isolator.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "isolation_rating"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Barrier"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "i2c_isolator",
+   "relevant_archetypes": [
+    "isolated_serial_interface"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "Optocoupler",
+   "description": "Optical isolator for feedback/inputs.",
+   "electrical_characteristics": [
+    "CTR",
+    "Isolation",
+    "Speed"
+   ],
+   "required_parameters": [
+    "isolation_rating",
+    "ctr"
+   ],
+   "compatibility_requirements": [
+    "CTR degradation margin"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Barrier"
+   ],
+   "routing_considerations": [
+    "No copper under"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "optocoupler",
+   "relevant_archetypes": [
+    "flyback_converter",
+    "forward_converter",
+    "half_bridge_converter",
+    "industrial_remote_io",
+    "isolated_ac_dc",
+    "plc_io_module",
+    "poe_power_board",
+    "push_pull_converter",
+    "relay_output_module"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "ESD protection",
+   "description": "Low-capacitance ESD diode array.",
+   "electrical_characteristics": [
+    "Capacitance",
+    "Clamp"
+   ],
+   "required_parameters": [
+    "channels",
+    "capacitance",
+    "working_voltage"
+   ],
+   "compatibility_requirements": [
+    "Capacitance vs data rate"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "At the connector"
+   ],
+   "routing_considerations": [
+    "Inline, short to ground"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "esd_protection",
+   "relevant_archetypes": [
+    "addressable_led_controller",
+    "audio_codec_dac_board",
+    "bed_of_nails_test_fixture",
+    "can_bus_interface",
+    "cellular_lte_nbiot",
+    "class_d_amplifier",
+    "embedded_data_logger",
+    "encoder_feedback_interface",
+    "esp32_dev_board",
+    "gnss_receiver",
+    "hdmi_interface_board",
+    "headphone_line_amplifier",
+    "i2c_spi_expander_board",
+    "industrial_hmi_controller",
+    "isolated_serial_interface",
+    "lcd_tft_display_board",
+    "logic_analyzer_board",
+    "mcu_carrier_board",
+    "mpu_som_carrier",
+    "multi_sensor_controller",
+    "pcie_add_in_card",
+    "precision_adc_frontend",
+    "rp2040_dev_board",
+    "stm32_controller",
+    "strain_gauge_loadcell_amplifier",
+    "swd_jtag_programmer",
+    "usb_c_interface",
+    "usb_hub_board",
+    "usb_pd_sink_board",
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "TVS diode",
+   "description": "Surge clamp.",
+   "electrical_characteristics": [
+    "Working voltage",
+    "Clamp",
+    "Peak power"
+   ],
+   "required_parameters": [
+    "working_voltage",
+    "peak_power"
+   ],
+   "compatibility_requirements": [
+    "Working voltage above max normal"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the entry"
+   ],
+   "routing_considerations": [
+    "Short ground"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "tvs_diode",
+   "relevant_archetypes": [
+    "automotive_12v_controller",
+    "battery_management_system",
+    "brushed_dc_h_bridge",
+    "can_bus_interface",
+    "current_loop_4_20ma_interface",
+    "current_voltage_measurement",
+    "din_rail_controller",
+    "fast_ethernet_interface",
+    "gigabit_ethernet_board",
+    "hv_monitoring_board",
+    "industrial_hmi_controller",
+    "industrial_remote_io",
+    "industrial_vfd_gate_drive",
+    "multi_cell_charger",
+    "obd_can_telematics",
+    "plc_io_module",
+    "poe_power_board",
+    "power_path_management",
+    "rs485_modbus_interface",
+    "single_cell_liion_charger",
+    "solar_battery_controller",
+    "solenoid_relay_driver",
+    "stepper_driver",
+    "three_phase_bldc_controller",
+    "usb_c_interface",
+    "usb_pd_sink_board"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "Gas discharge tube",
+   "description": "High-energy surge arrester.",
+   "electrical_characteristics": [
+    "DC spark-over"
+   ],
+   "required_parameters": [
+    "sparkover_voltage"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the entry"
+   ],
+   "routing_considerations": [
+    "Creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "gdt",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "rs485_modbus_interface"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "Zener diode",
+   "description": "Voltage clamp/regulator.",
+   "electrical_characteristics": [
+    "Power"
+   ],
+   "required_parameters": [
+    "voltage",
+    "power"
+   ],
+   "compatibility_requirements": [
+    "Dissipation"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "zener_diode",
+   "relevant_archetypes": [
+    "non_isolated_ac_dc"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "Desat sense diode",
+   "description": "HV diode for desaturation detection.",
+   "electrical_characteristics": [
+    "Voltage"
+   ],
+   "required_parameters": [
+    "voltage"
+   ],
+   "compatibility_requirements": [
+    "> bus"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Near the driver"
+   ],
+   "routing_considerations": [
+    "HV creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "desat_diode",
+   "relevant_archetypes": [
+    "industrial_vfd_gate_drive"
+   ]
+  },
+  {
+   "group": "interface_protection",
+   "name": "Fuse",
+   "description": "Overcurrent protection.",
+   "electrical_characteristics": [
+    "Rating",
+    "Breaking capacity",
+    "Type"
+   ],
+   "required_parameters": [
+    "current_rating",
+    "voltage_rating",
+    "type"
+   ],
+   "compatibility_requirements": [
+    "Rating vs inrush"
+   ],
+   "datasheet_verification": [
+    "Safety approval for mains"
+   ],
+   "placement_constraints": [
+    "First after the input"
+   ],
+   "routing_considerations": [
+    "Mains width/creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "fuse",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "ac_motor_controller",
+    "addressable_led_controller",
+    "battery_management_system",
+    "isolated_ac_dc",
+    "mains_lighting_driver",
+    "non_isolated_ac_dc",
+    "pfc_board",
+    "triac_controller"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "USB connector",
+   "description": "USB-A/B/micro.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "90 ohm pair"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "usb_connector",
+   "relevant_archetypes": [
+    "benchtop_power_supply_control",
+    "cellular_lte_nbiot",
+    "embedded_data_logger",
+    "esp32_dev_board",
+    "logic_analyzer_board",
+    "mcu_carrier_board",
+    "mpu_som_carrier",
+    "power_path_management",
+    "rp2040_dev_board",
+    "sdr_hardware",
+    "single_cell_liion_charger",
+    "swd_jtag_programmer",
+    "usb_hub_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "USB-C connector",
+   "description": "Type-C receptacle.",
+   "electrical_characteristics": [
+    "Current",
+    "Pin set"
+   ],
+   "required_parameters": [
+    "type",
+    "current_rating"
+   ],
+   "compatibility_requirements": [
+    "Mid-mount vs top"
+   ],
+   "datasheet_verification": [
+    "Drawing"
+   ],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "CC/USB pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "usb_c_connector",
+   "relevant_archetypes": [
+    "usb_c_interface",
+    "usb_pd_sink_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "HDMI connector",
+   "description": "HDMI receptacle.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Drawing"
+   ],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "TMDS"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "hdmi_connector",
+   "relevant_archetypes": [
+    "hdmi_interface_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "RJ45 connector",
+   "description": "Ethernet jack (with/without magnetics).",
+   "electrical_characteristics": [
+    "Integrated magnetics"
+   ],
+   "required_parameters": [
+    "magnetics_integrated"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Drawing"
+   ],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "MDI pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "rj45_connector",
+   "relevant_archetypes": [
+    "fast_ethernet_interface",
+    "gigabit_ethernet_board",
+    "mpu_som_carrier",
+    "poe_power_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Ethernet magnetics",
+   "description": "Isolation transformers for Ethernet.",
+   "electrical_characteristics": [
+    "Isolation"
+   ],
+   "required_parameters": [
+    "speed",
+    "poe"
+   ],
+   "compatibility_requirements": [
+    "PHY compatibility"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Between PHY and jack"
+   ],
+   "routing_considerations": [
+    "Isolation gap"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "ethernet_magnetics",
+   "relevant_archetypes": [
+    "fast_ethernet_interface",
+    "gigabit_ethernet_board",
+    "poe_power_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Mains connector",
+   "description": "IEC/terminal mains entry.",
+   "electrical_characteristics": [
+    "Rating"
+   ],
+   "required_parameters": [
+    "current_rating"
+   ],
+   "compatibility_requirements": [
+    "Safety approval"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "Creepage"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "mains_connector",
+   "relevant_archetypes": [
+    "ac_mains_input_protection",
+    "isolated_ac_dc",
+    "triac_controller"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Terminal block",
+   "description": "Screw/push-in terminals.",
+   "electrical_characteristics": [
+    "Rating",
+    "Pitch"
+   ],
+   "required_parameters": [
+    "current_rating",
+    "pitch"
+   ],
+   "compatibility_requirements": [
+    "Pitch vs creepage"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "Width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "terminal_block",
+   "relevant_archetypes": [
+    "addressable_led_controller",
+    "benchtop_power_supply_control",
+    "can_bus_interface",
+    "current_loop_4_20ma_interface",
+    "din_rail_controller",
+    "encoder_feedback_interface",
+    "industrial_remote_io",
+    "isolated_serial_interface",
+    "multi_sensor_controller",
+    "plc_io_module",
+    "relay_output_module",
+    "rs485_modbus_interface",
+    "solar_battery_controller",
+    "solenoid_relay_driver",
+    "strain_gauge_loadcell_amplifier",
+    "thermocouple_rtd_measurement"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Battery connector",
+   "description": "JST/pack connector.",
+   "electrical_characteristics": [
+    "Current"
+   ],
+   "required_parameters": [
+    "current_rating"
+   ],
+   "compatibility_requirements": [
+    "Keying"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "Width"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "battery_connector",
+   "relevant_archetypes": [
+    "battery_fuel_gauge",
+    "battery_management_system",
+    "battery_protection_board",
+    "multi_cell_charger",
+    "single_cell_liion_charger",
+    "solar_battery_controller"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Cell-tap connector",
+   "description": "Multi-pin balance connector.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "pins"
+   ],
+   "compatibility_requirements": [
+    "Order"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "cell_tap_connector",
+   "relevant_archetypes": [
+    "cell_balancing_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Motor connector",
+   "description": "Phase connector.",
+   "electrical_characteristics": [
+    "Current"
+   ],
+   "required_parameters": [
+    "current_rating"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Near the bridge"
+   ],
+   "routing_considerations": [
+    "Polygons"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "motor_connector",
+   "relevant_archetypes": [
+    "brushed_dc_h_bridge",
+    "servo_controller",
+    "stepper_driver",
+    "three_phase_bldc_controller"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Fan connector",
+   "description": "2/3/4-pin fan header.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "pins"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "fan_connector",
+   "relevant_archetypes": [
+    "fan_pump_controller"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "OBD-II connector",
+   "description": "SAE J1962 plug.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "obd_connector",
+   "relevant_archetypes": [
+    "obd_can_telematics"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Automotive connector",
+   "description": "Sealed vehicle connector.",
+   "electrical_characteristics": [
+    "Rating",
+    "Sealing"
+   ],
+   "required_parameters": [
+    "pins",
+    "current_rating"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "automotive_connector",
+   "relevant_archetypes": [
+    "automotive_12v_controller"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Board-to-board connector",
+   "description": "Mezzanine/edge connector.",
+   "electrical_characteristics": [
+    "Pitch",
+    "Stack height"
+   ],
+   "required_parameters": [
+    "pins",
+    "pitch",
+    "stack_height"
+   ],
+   "compatibility_requirements": [
+    "Mating height"
+   ],
+   "datasheet_verification": [
+    "Drawing"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "High-speed per guide"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "board_to_board_connector",
+   "relevant_archetypes": [
+    "industrial_vfd_gate_drive",
+    "mcu_carrier_board",
+    "mpu_som_carrier"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "High-speed connector",
+   "description": "FMC/PCIe/SFP class connector.",
+   "electrical_characteristics": [
+    "Bandwidth"
+   ],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Drawing"
+   ],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "Pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "high_speed_connector",
+   "relevant_archetypes": [
+    "fpga_dev_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Card-edge fingers",
+   "description": "PCIe/M.2 gold fingers.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "spec"
+   ],
+   "compatibility_requirements": [
+    "Chamfer"
+   ],
+   "datasheet_verification": [
+    "CEM/M.2 drawing"
+   ],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "Pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "card_edge_connector",
+   "relevant_archetypes": [
+    "pcie_add_in_card"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "M.2 socket",
+   "description": "M.2 key socket.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "key"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "PCIe pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "m2_connector",
+   "relevant_archetypes": [
+    "nvme_storage_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "MIPI FPC connector",
+   "description": "Camera/display FPC.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "pins",
+    "pitch"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Drawing"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "D-PHY pairs"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "mipi_connector",
+   "relevant_archetypes": [
+    "mipi_camera_board",
+    "mpu_som_carrier"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Display connector",
+   "description": "FPC/ZIF for panels.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "pins",
+    "pitch"
+   ],
+   "compatibility_requirements": [
+    "Pinout from panel drawing"
+   ],
+   "datasheet_verification": [
+    "Drawing"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "Bus matched"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "display_connector",
+   "relevant_archetypes": [
+    "industrial_hmi_controller",
+    "lcd_tft_display_board",
+    "led_backlight_driver",
+    "oled_epaper_display_board",
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "SD card socket",
+   "description": "microSD/SD socket.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "SDIO aligned"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "sd_card_socket",
+   "relevant_archetypes": [
+    "embedded_data_logger",
+    "mpu_som_carrier"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "SIM holder",
+   "description": "Nano-SIM/eSIM.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [
+    "ESD"
+   ],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Near module"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "sim_holder",
+   "relevant_archetypes": [
+    "cellular_lte_nbiot"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Audio jack",
+   "description": "3.5 mm jack.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "audio_jack",
+   "relevant_archetypes": [
+    "audio_codec_dac_board",
+    "class_d_amplifier",
+    "headphone_line_amplifier"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Speaker connector",
+   "description": "Speaker terminals.",
+   "electrical_characteristics": [
+    "Current"
+   ],
+   "required_parameters": [
+    "current_rating"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [
+    "Wide"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "speaker_connector",
+   "relevant_archetypes": [
+    "class_d_amplifier"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "BNC connector",
+   "description": "BNC for instruments.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Edge"
+   ],
+   "routing_considerations": [
+    "50 ohm"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "bnc_connector",
+   "relevant_archetypes": [
+    "ph_electrochemical_frontend",
+    "signal_generator_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Debug header",
+   "description": "SWD/JTAG header.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "pinout"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Accessible"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "debug_header",
+   "relevant_archetypes": [
+    "fpga_dev_board",
+    "stm32_controller",
+    "swd_jtag_programmer"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Pin header",
+   "description": "0.1 in headers.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "pins"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "pin_header",
+   "relevant_archetypes": [
+    "bed_of_nails_test_fixture",
+    "i2c_spi_expander_board",
+    "logic_analyzer_board",
+    "mcu_carrier_board"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Pogo pin",
+   "description": "Spring probe.",
+   "electrical_characteristics": [
+    "Current",
+    "Travel"
+   ],
+   "required_parameters": [
+    "current_rating",
+    "travel"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "At the test-point coordinates"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "pogo_pin",
+   "relevant_archetypes": [
+    "bed_of_nails_test_fixture"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Tactile switch",
+   "description": "Push button.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Accessible"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "tactile_switch",
+   "relevant_archetypes": [
+    "esp32_dev_board",
+    "rp2040_dev_board",
+    "stm32_controller"
+   ]
+  },
+  {
+   "group": "display_optical",
+   "name": "Indicator LED",
+   "description": "Status LED with resistor.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "colour"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Visible"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "led_indicator",
+   "relevant_archetypes": [
+    "din_rail_controller",
+    "esp32_dev_board",
+    "relay_output_module",
+    "single_cell_liion_charger"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Relay",
+   "description": "Electromechanical relay.",
+   "electrical_characteristics": [
+    "Coil",
+    "Contact rating"
+   ],
+   "required_parameters": [
+    "coil_voltage",
+    "contact_rating"
+   ],
+   "compatibility_requirements": [
+    "Contact creepage"
+   ],
+   "datasheet_verification": [
+    "Approval for mains"
+   ],
+   "placement_constraints": [
+    "Near terminals"
+   ],
+   "routing_considerations": [
+    "Contact copper"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "relay",
+   "relevant_archetypes": [
+    "bed_of_nails_test_fixture",
+    "din_rail_controller",
+    "industrial_remote_io",
+    "plc_io_module",
+    "relay_output_module"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Heatsink",
+   "description": "Thermal interface.",
+   "electrical_characteristics": [
+    "Rth"
+   ],
+   "required_parameters": [
+    "thermal_resistance"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [
+    "Mounting holes"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "heatsink",
+   "relevant_archetypes": [
+    "ac_motor_controller",
+    "benchtop_power_supply_control",
+    "stepper_driver",
+    "triac_controller"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Coin-cell holder",
+   "description": "CR2032 holder.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "cell"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "coin_cell_holder",
+   "relevant_archetypes": [
+    "embedded_data_logger",
+    "gnss_receiver",
+    "low_power_sensor_node"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Power transformer",
+   "description": "Isolated converter transformer.",
+   "electrical_characteristics": [
+    "Turns ratio",
+    "Isolation",
+    "Leakage"
+   ],
+   "required_parameters": [
+    "turns_ratio",
+    "isolation_rating",
+    "power"
+   ],
+   "compatibility_requirements": [
+    "Creepage of the bobbin"
+   ],
+   "datasheet_verification": [
+    "Safety rating"
+   ],
+   "placement_constraints": [
+    "Barrier"
+   ],
+   "routing_considerations": [
+    "Primary/secondary loops"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "power_transformer",
+   "relevant_archetypes": [
+    "dual_active_bridge",
+    "forward_converter",
+    "full_bridge_converter",
+    "half_bridge_converter",
+    "push_pull_converter"
+   ]
+  },
+  {
+   "group": "electromechanical",
+   "name": "Flyback transformer",
+   "description": "Coupled inductor for flyback.",
+   "electrical_characteristics": [
+    "Lp",
+    "Isat",
+    "Isolation"
+   ],
+   "required_parameters": [
+    "primary_inductance",
+    "turns_ratio",
+    "isolation_rating"
+   ],
+   "compatibility_requirements": [
+    "Creepage"
+   ],
+   "datasheet_verification": [
+    "Safety rating"
+   ],
+   "placement_constraints": [
+    "Barrier"
+   ],
+   "routing_considerations": [
+    "Loops"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "flyback_transformer",
+   "relevant_archetypes": [
+    "cell_balancing_board",
+    "flyback_converter",
+    "isolated_ac_dc",
+    "mains_lighting_driver",
+    "poe_power_board"
+   ]
+  },
+  {
+   "group": "analog",
+   "name": "Shunt reference (TL431)",
+   "description": "Adjustable shunt for feedback.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "reference_voltage"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Secondary side"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "shunt_reference",
+   "relevant_archetypes": [
+    "flyback_converter",
+    "forward_converter",
+    "isolated_ac_dc"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "Environmental sensor",
+   "description": "Temperature/humidity/pressure sensor.",
+   "electrical_characteristics": [
+    "Interface",
+    "Self-heating"
+   ],
+   "required_parameters": [
+    "type",
+    "interface"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Thermally isolated"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "environmental_sensor",
+   "relevant_archetypes": [
+    "battery_iot_node",
+    "environmental_sensor_board",
+    "low_power_sensor_node",
+    "multi_sensor_controller"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "Gas sensor",
+   "description": "Metal-oxide/electrochemical gas sensor.",
+   "electrical_characteristics": [
+    "Heater current"
+   ],
+   "required_parameters": [
+    "gas",
+    "heater_current"
+   ],
+   "compatibility_requirements": [
+    "Heater budget"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Vented"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "gas_sensor",
+   "relevant_archetypes": [
+    "environmental_sensor_board"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "Light sensor",
+   "description": "Ambient light sensor.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "interface"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Window"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "light_sensor",
+   "relevant_archetypes": [
+    "environmental_sensor_board"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "IMU",
+   "description": "Accelerometer/gyroscope.",
+   "electrical_characteristics": [
+    "Range",
+    "ODR"
+   ],
+   "required_parameters": [
+    "axes",
+    "interface"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Rigid area"
+   ],
+   "routing_considerations": [
+    "Short"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "imu",
+   "relevant_archetypes": [
+    "imu_motion_sensor_board",
+    "multi_sensor_controller",
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "Magnetometer",
+   "description": "Magnetic field sensor.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Keep-out from magnets"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Away from current"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "magnetometer",
+   "relevant_archetypes": [
+    "imu_motion_sensor_board"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "Optical sensor (PPG)",
+   "description": "LED+photodiode AFE.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Clean rail"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Window"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "optical_sensor",
+   "relevant_archetypes": [
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "MEMS microphone",
+   "description": "PDM/I2S microphone.",
+   "electrical_characteristics": [
+    "Port"
+   ],
+   "required_parameters": [
+    "interface"
+   ],
+   "compatibility_requirements": [
+    "Port keep-out"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Port hole"
+   ],
+   "routing_considerations": [
+    "Clock matched"
+   ],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "mems_microphone",
+   "relevant_archetypes": [
+    "microphone_array_board"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "Haptic driver",
+   "description": "LRA/ERM driver.",
+   "electrical_characteristics": [],
+   "required_parameters": [
+    "actuator_type"
+   ],
+   "compatibility_requirements": [],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "haptic_driver",
+   "relevant_archetypes": [
+    "wearable_electronics"
+   ]
+  },
+  {
+   "group": "sensor_actuator",
+   "name": "Zero-cross detector",
+   "description": "Mains zero-cross sensing (isolated).",
+   "electrical_characteristics": [
+    "Isolation"
+   ],
+   "required_parameters": [
+    "isolation_rating"
+   ],
+   "compatibility_requirements": [
+    "Creepage"
+   ],
+   "datasheet_verification": [
+    "Pin map from tools/pins.py against the real symbol; never from memory"
+   ],
+   "placement_constraints": [
+    "Barrier"
+   ],
+   "routing_considerations": [],
+   "aliases": [],
+   "schema_version": "1.0.0",
+   "family_id": "zero_cross_detector",
+   "relevant_archetypes": [
+    "triac_controller"
+   ]
+  }
+ ]
+}

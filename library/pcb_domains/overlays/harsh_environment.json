@@ -1,0 +1,38 @@
+{
+ "name": "Harsh environment",
+ "description": "Outdoor, industrial or extended-temperature deployment.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "max_ambient_c",
+    "op": ">=",
+    "value": 70
+   },
+   {
+    "field": "environment",
+    "op": "in",
+    "value": [
+     "outdoor",
+     "industrial",
+     "marine"
+    ]
+   }
+  ]
+ },
+ "adds_component_families": [],
+ "placement_rules": [
+  "Sensors vented; electrolytics derated"
+ ],
+ "routing_rules": [],
+ "copper_rules": [],
+ "emi_emc_rules": [],
+ "verification_requirements": [
+  "Temperature range declared; conformal coating decision changes the clearance condition"
+ ],
+ "precedence": 30,
+ "schema_version": "1.0.0",
+ "overlay_id": "harsh_environment",
+ "rule_ids": [
+  "MFG-COAT-073"
+ ]
+}

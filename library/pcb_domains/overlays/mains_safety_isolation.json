@@ -1,0 +1,58 @@
+{
+ "name": "Mains safety and isolation",
+ "description": "Any net at mains or hazardous voltage, or a safety isolation barrier.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "mains",
+    "op": "==",
+    "value": true
+   },
+   {
+    "field": "input_voltage_v",
+    "op": ">=",
+    "value": 60
+   },
+   {
+    "field": "isolation",
+    "op": "==",
+    "value": true
+   }
+  ]
+ },
+ "adds_component_families": [
+  "fuse",
+  "mov_varistor",
+  "x_capacitor",
+  "y_capacitor"
+ ],
+ "placement_rules": [
+  "Primary/secondary separated by the barrier; fuse first; no logic within creepage of HV"
+ ],
+ "routing_rules": [
+  "Creepage/clearance from IEC 60664-1 for the working voltage (desk.ipc); slot where needed; no vias in the barrier"
+ ],
+ "copper_rules": [
+  "No pour across the barrier; edge setback for HV"
+ ],
+ "emi_emc_rules": [
+  "X/Y capacitors and CM choke per the filter topology"
+ ],
+ "verification_requirements": [
+  "Every HV net declared (fail-closed); creepage table per net pair; hipot plan (hardware)"
+ ],
+ "precedence": 100,
+ "schema_version": "1.0.0",
+ "overlay_id": "mains_safety_isolation",
+ "rule_ids": [
+  "ELEC-CREEP-004",
+  "PLACE-ISO-016",
+  "ROUTE-HV-025",
+  "COPPER-BARRIER-044",
+  "MFG-COAT-073",
+  "MFG-SLOT-074",
+  "MAINS-DECL-160",
+  "MAINS-FUSE-161",
+  "MAINS-INS-163"
+ ]
+}

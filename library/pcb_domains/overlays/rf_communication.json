@@ -1,0 +1,64 @@
+{
+ "name": "RF communication",
+ "description": "Any board with a radio, antenna or RF transmission line.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "rf_frequency_hz",
+    "op": ">",
+    "value": 1000000.0
+   },
+   {
+    "field": "protocols",
+    "op": "intersects",
+    "value": [
+     "wifi",
+     "ble",
+     "lora",
+     "lte",
+     "gnss",
+     "zigbee",
+     "uwb",
+     "subghz"
+    ]
+   }
+  ]
+ },
+ "adds_component_families": [
+  "antenna",
+  "rf_matching_component",
+  "esd_protection"
+ ],
+ "placement_rules": [
+  "Antenna keep-out on every layer per the antenna datasheet",
+  "Matching network inline; crystal/TCXO adjacent to the transceiver",
+  "Switching regulators away from the RF section"
+ ],
+ "routing_rules": [
+  "RF feed as 50 ohm microstrip/CPWG from the fabricator stackup",
+  "No vias or stubs on the RF trace",
+  "Ground via fence along the feed"
+ ],
+ "copper_rules": [
+  "Unbroken ground under the RF section",
+  "No pour in the antenna keep-out"
+ ],
+ "emi_emc_rules": [
+  "Regulator harmonics out of band; shield can option"
+ ],
+ "verification_requirements": [
+  "RF width/gap recorded against the fabricator calculator",
+  "Keep-out verified as a DRC keep-out",
+  "Band plan and module certification recorded"
+ ],
+ "precedence": 60,
+ "schema_version": "1.0.0",
+ "overlay_id": "rf_communication",
+ "rule_ids": [
+  "PLACE-ANT-014",
+  "ROUTE-RF-022",
+  "ROUTE-RETURN-027",
+  "COPPER-ANT-045",
+  "EMI-RFHARM-064"
+ ]
+}

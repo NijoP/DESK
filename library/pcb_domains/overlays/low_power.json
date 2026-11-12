@@ -1,0 +1,34 @@
+{
+ "name": "Low-power electronics",
+ "description": "Battery life dominated by sleep current.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "sleep_current_ua",
+    "op": "<=",
+    "value": 100
+   },
+   {
+    "field": "battery_life_target",
+    "op": "exists",
+    "value": true
+   }
+  ]
+ },
+ "adds_component_families": [
+  "load_switch"
+ ],
+ "placement_rules": [
+  "Always-on parts minimised; load switches for sensor rails"
+ ],
+ "routing_rules": [],
+ "copper_rules": [],
+ "emi_emc_rules": [],
+ "verification_requirements": [
+  "Sleep budget: sum of quiescent currents recorded per part"
+ ],
+ "precedence": 30,
+ "schema_version": "1.0.0",
+ "overlay_id": "low_power",
+ "rule_ids": []
+}

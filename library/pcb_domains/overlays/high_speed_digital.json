@@ -1,0 +1,46 @@
+{
+ "name": "High-speed digital",
+ "description": "Controlled-impedance buses above ~100 MHz or any multi-gigabit lane.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "protocols",
+    "op": "intersects",
+    "value": [
+     "pcie",
+     "ddr",
+     "usb3",
+     "hdmi",
+     "mipi",
+     "sata",
+     "gigabit"
+    ]
+   }
+  ]
+ },
+ "adds_component_families": [
+  "clock_generator"
+ ],
+ "placement_rules": [
+  "Memory/transceivers close to their controller; terminations at the driver"
+ ],
+ "routing_rules": [
+  "Impedance per layer from the fabricator table; length matching per interface; no reference crossings"
+ ],
+ "copper_rules": [
+  "Unbroken reference planes; stitching at layer changes"
+ ],
+ "emi_emc_rules": [
+  "Edge-rate control; shielded connectors"
+ ],
+ "verification_requirements": [
+  "Impedance and length-match reports recorded"
+ ],
+ "precedence": 50,
+ "schema_version": "1.0.0",
+ "overlay_id": "high_speed_digital",
+ "rule_ids": [
+  "ROUTE-DIFF-021",
+  "ROUTE-RETURN-027"
+ ]
+}

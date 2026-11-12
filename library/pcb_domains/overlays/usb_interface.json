@@ -1,0 +1,40 @@
+{
+ "name": "USB interface",
+ "description": "Any USB port.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "protocols",
+    "op": "intersects",
+    "value": [
+     "usb"
+    ]
+   }
+  ]
+ },
+ "adds_component_families": [
+  "usb_connector",
+  "esd_protection"
+ ],
+ "placement_rules": [
+  "ESD at the connector; series resistors where the controller requires"
+ ],
+ "routing_rules": [
+  "D+/D- 90 ohm pair, matched; SS pairs 90 ohm",
+  "No stubs"
+ ],
+ "copper_rules": [],
+ "emi_emc_rules": [
+  "Shield ground plan recorded"
+ ],
+ "verification_requirements": [
+  "Pair geometry recorded against the stackup; CC configuration for Type-C"
+ ],
+ "precedence": 40,
+ "schema_version": "1.0.0",
+ "overlay_id": "usb_interface",
+ "rule_ids": [
+  "ROUTE-DIFF-021",
+  "MCU-USB-102"
+ ]
+}

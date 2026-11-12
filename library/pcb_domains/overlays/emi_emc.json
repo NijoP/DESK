@@ -1,0 +1,50 @@
+{
+ "name": "EMI/EMC",
+ "description": "Products subject to emissions/immunity testing or containing fast switching.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "emc_class",
+    "op": "in",
+    "value": [
+     "A",
+     "B",
+     "industrial",
+     "automotive",
+     "medical"
+    ]
+   },
+   {
+    "field": "switching_frequency_hz",
+    "op": ">",
+    "value": 10000.0
+   }
+  ]
+ },
+ "adds_component_families": [
+  "common_mode_choke",
+  "ferrite_bead",
+  "tvs_diode"
+ ],
+ "placement_rules": [
+  "Filters at the entry; noisy and quiet sections separated by placement"
+ ],
+ "routing_rules": [
+  "Return paths under every signal; no plane crossings"
+ ],
+ "copper_rules": [
+  "Stitching vias around pours; continuous ground"
+ ],
+ "emi_emc_rules": [
+  "Hot-loop area minimised; cable shield termination plan"
+ ],
+ "verification_requirements": [
+  "EMC test class recorded; immunity levels are hardware tests"
+ ],
+ "precedence": 55,
+ "schema_version": "1.0.0",
+ "overlay_id": "emi_emc",
+ "rule_ids": [
+  "EMI-FILTER-061"
+ ]
+}

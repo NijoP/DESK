@@ -1,0 +1,39 @@
+{
+ "name": "Galvanic isolation (non-mains)",
+ "description": "Isolation barriers for functional or safety reasons below mains.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "isolation",
+    "op": "==",
+    "value": true
+   }
+  ]
+ },
+ "adds_component_families": [
+  "digital_isolator",
+  "isolated_dc_dc_module"
+ ],
+ "placement_rules": [
+  "Isolators straddle the barrier; isolated supply adjacent"
+ ],
+ "routing_rules": [
+  "Barrier creepage per the isolation voltage; isolator package creepage >= requirement"
+ ],
+ "copper_rules": [
+  "No copper under the barrier"
+ ],
+ "emi_emc_rules": [],
+ "verification_requirements": [
+  "Isolation voltage declared; barrier verified as a keep-out"
+ ],
+ "precedence": 80,
+ "schema_version": "1.0.0",
+ "overlay_id": "galvanic_isolation",
+ "rule_ids": [
+  "ELEC-CREEP-004",
+  "PLACE-ISO-016",
+  "ROUTE-HV-025",
+  "COPPER-BARRIER-044"
+ ]
+}

@@ -1,0 +1,38 @@
+{
+ "name": "CAN interface",
+ "description": "CAN or CAN-FD bus.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "protocols",
+    "op": "intersects",
+    "value": [
+     "can"
+    ]
+   }
+  ]
+ },
+ "adds_component_families": [
+  "can_transceiver",
+  "tvs_diode"
+ ],
+ "placement_rules": [
+  "Transceiver at the connector"
+ ],
+ "routing_rules": [
+  "CANH/CANL 120 ohm pair"
+ ],
+ "copper_rules": [],
+ "emi_emc_rules": [
+  "Common-mode choke option"
+ ],
+ "verification_requirements": [
+  "Termination plan recorded"
+ ],
+ "precedence": 35,
+ "schema_version": "1.0.0",
+ "overlay_id": "can_interface",
+ "rule_ids": [
+  "ROUTE-DIFF-021"
+ ]
+}

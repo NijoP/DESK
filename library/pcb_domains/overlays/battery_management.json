@@ -1,0 +1,48 @@
+{
+ "name": "Battery management",
+ "description": "Boards charging, protecting or powered by rechargeable cells.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "power_source",
+    "op": "intersects",
+    "value": [
+     "battery",
+     "solar"
+    ]
+   },
+   {
+    "field": "cells",
+    "op": ">=",
+    "value": 1
+   }
+  ]
+ },
+ "adds_component_families": [
+  "battery_protection_ic",
+  "ntc_thermistor",
+  "battery_connector"
+ ],
+ "placement_rules": [
+  "Protection FETs and shunt on the pack negative; NTC at the cell"
+ ],
+ "routing_rules": [
+  "Charge/discharge path width for the peak current; Kelvin shunt"
+ ],
+ "copper_rules": [
+  "Pack negative polygon; sense ground star"
+ ],
+ "emi_emc_rules": [],
+ "verification_requirements": [
+  "Chemistry, cell count and charge voltage declared; protection present independent of the charger"
+ ],
+ "precedence": 65,
+ "schema_version": "1.0.0",
+ "overlay_id": "battery_management",
+ "rule_ids": [
+  "ELEC-DROP-006",
+  "BAT-CHEM-130",
+  "BAT-PROT-131",
+  "BAT-NTC-132"
+ ]
+}

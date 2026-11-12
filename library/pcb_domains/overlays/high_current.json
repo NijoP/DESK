@@ -1,0 +1,44 @@
+{
+ "name": "High-current design",
+ "description": "Nets carrying more than about 3 A continuous or 10 A peak.",
+ "applies_when": {
+  "any": [
+   {
+    "field": "current_a",
+    "op": ">=",
+    "value": 3.0
+   }
+  ]
+ },
+ "adds_component_families": [
+  "bulk_capacitor",
+  "current_sense_resistor"
+ ],
+ "placement_rules": [
+  "Power devices grouped with their capacitors; connectors at the edge nearest the power stage"
+ ],
+ "routing_rules": [
+  "Polygons instead of traces above 3 A; widths from desk.ipc for the declared current and rise",
+  "Parallel vias for layer changes per desk.ipc.vias_required",
+  "Kelvin sense pairs"
+ ],
+ "copper_rules": [
+  "Thermal relief off on power pads; heavy copper option recorded"
+ ],
+ "emi_emc_rules": [
+  "Switching edges controlled; snubber footprints"
+ ],
+ "verification_requirements": [
+  "Peak and continuous currents declared per net (fail-closed)",
+  "Voltage drop within budget (power_distribution)"
+ ],
+ "precedence": 70,
+ "schema_version": "1.0.0",
+ "overlay_id": "high_current",
+ "rule_ids": [
+  "ELEC-VIA-005",
+  "ELEC-DROP-006",
+  "ROUTE-POLY-026",
+  "PWR-ROUTE-170"
+ ]
+}
