@@ -3,17 +3,21 @@
   pole of inaccessibility (shapely polylabel) if the via fits inside the piece;
 - every plane-net SMD pad on a layer whose fill does not reach it gets a via on the nearest free spot
   (ring search 0.6..2.0 mm, clear of other-net copper by --clearance) plus a straight track pad->via.
+- every via made for an orphan PAD also gets an explicit bottom-layer track to the nearest existing plane-net via
+  (straight, clearance-checked, <= 10 mm), because EasyEDA's DRC does not reliably join a via to a static
+  pcb_PrimitiveFill (see desk.copper_fill.explicit_link). Disable with --no-link.
 Then re-run tools/copper_fill.py so both planes absorb the new vias.
-Usage: python tools/stitch_orphans.py projects/<P> [--net GND] [--clearance 0.2] [--dry]"""
+Usage: python tools/stitch_orphans.py projects/<P> [--net GND] [--clearance 0.2] [--force-pads R2.2,C8.2] [--no-link] [--dry]"""
 import sys, os, json, math
 from _common import ex, guard, load_project, check
-from desk.copper_fill import compute_plane_fill, pad_geometry, MIL
+from desk.copper_fill import compute_plane_fill, pad_geometry, explicit_link, MIL
 
 args = sys.argv[1:]
 proj = args[0]
 net = args[args.index("--net") + 1] if "--net" in args else "GND"
 clr = float(args[args.index("--clearance") + 1]) if "--clearance" in args else 0.2
 dry = "--dry" in args
+link = "--no-link" not in args
 force = set(args[args.index("--force-pads") + 1].split(",")) if "--force-pads" in args else set()   # e.g. R2.2,C8.2 (DRC-reported opens)
 VD, VH, TW = 0.6, 0.3, 0.25   # via pad / drill / track width (mm)
 from shapely.geometry import Point, LineString, box, Polygon
@@ -62,6 +66,8 @@ def connected(poly):
     vs = own_vias + [Point(x, y) for x, y in new_vias]
     return any(poly.contains(v) for v in vs) or any(poly.intersects(t) for t in th_gnd)
 done = set()
+own_tracks = {L: [LineString([(t["x1"] / MIL, t["y1"] / MIL), (t["x2"] / MIL, t["y2"] / MIL)]).buffer(t["w"] / MIL / 2)
+                  for t in tracks if t["net"] == net and t["layer"] == L] for L in (1, 2)}
 for p in pads:
     if p["net"] != net or p["layer"] not in (1, 2): continue
     key = (round(p["x"], 1), round(p["y"], 1)); 
@@ -69,6 +75,7 @@ for p in pads:
     done.add(key)
     g = pad_geometry(p)
     if f'{p["ref"]}.{p["num"]}' not in force and any(f.intersects(g) and connected(f) for f in fills[p["layer"]]): continue
+    if f'{p["ref"]}.{p["num"]}' not in force and any(t.intersects(g) for t in own_tracks[p["layer"]]): continue   # already tracked
     c = g.centroid; best = None
     for r in [0.6 + 0.1 * i for i in range(25)]:
         for k in range(24):
@@ -81,6 +88,12 @@ for p in pads:
     if best is None:
         print("NO SPOT for", p["ref"], p["num"]); continue
     new_vias.append((round(best.x, 3), round(best.y, 3))); new_tracks.append((p["layer"], c.x, c.y, best.x, best.y, f'{p["ref"]}.{p["num"]}'))
+    if link:
+        tgt = explicit_link((best.x, best.y), [(q.x, q.y) for q in own_vias], oth[2], clr, TW)
+        if tgt is None:
+            print("NO EXPLICIT LINK for", p["ref"], p["num"], "(relies on the via-to-fill join; check DRC)")
+        else:
+            new_tracks.append((2, best.x, best.y, tgt[0], tgt[1], f'{p["ref"]}.{p["num"]}:link'))
 print("new vias", len(new_vias), "new tracks", len(new_tracks), [t[5] for t in new_tracks])
 if not dry and new_vias:
     ids = check(ex(G + 'const o=[]; for(const [x,y] of %s){ const v=await eda.pcb_PrimitiveVia.create(%s,x,y,%.3f,%.3f); o.push(v?v.getState_PrimitiveId():null);} return o;'

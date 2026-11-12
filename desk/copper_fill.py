@@ -158,3 +158,27 @@ def polygon_to_easyeda_complex(poly) -> List[List[Any]]:
     from shapely.geometry.polygon import orient
     poly = orient(poly, sign=1.0)   # exterior CCW, holes CW (holes with the wrong winding were filled solid)
     return [ring(poly.exterior.coords)] + [ring(h.coords) for h in poly.interiors]
+
+
+def explicit_link(start_mm: Tuple[float, float], targets_mm: Sequence[Tuple[float, float]], obstacles,
+                  clearance_mm: float, width_mm: float, max_len_mm: float = 10.0,
+                  skip_within_mm: float = 0.05) -> Optional[Tuple[float, float]]:
+    """Nearest target reachable by one straight track of `width_mm` that keeps `clearance_mm` from `obstacles`
+    (a shapely geometry of other-net copper on the track's layer), or None.
+
+    Why: EasyEDA Pro 3.2's DRC connectivity does not reliably join a via to a static `pcb_PrimitiveFill`
+    (Plotus run 2026-11-12: two vias sitting fully inside both GND fills, with copper confirmed in the
+    Gerbers, still gave 'Connection Error'. The result also depended on creation order). A pad whose only
+    path to the plane is a stitch via therefore also gets an explicit track to an existing plane-net via."""
+    _, Point, LineString, *_ = _sh()
+    sp = Point(start_mm)
+    best = None
+    for t in sorted(targets_mm, key=lambda q: sp.distance(Point(q))):
+        d = sp.distance(Point(t))
+        if d <= skip_within_mm or d > max_len_mm:
+            continue
+        seg = LineString([start_mm, t]).buffer(width_mm / 2)
+        if obstacles is None or obstacles.is_empty or seg.distance(obstacles) >= clearance_mm:
+            best = (float(t[0]), float(t[1]))
+            break
+    return best

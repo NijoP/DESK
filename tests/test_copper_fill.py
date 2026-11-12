@@ -39,6 +39,14 @@ class TestCopperFill(unittest.TestCase):
         self.assertEqual(src[0][2], "L")
         self.assertEqual(src[0][:2], src[0][-2:])   # closed ring
 
+    def test_explicit_link_avoids_blocked_target(self):
+        from shapely.geometry import LineString
+        wall = LineString([(5, -1), (5, 1)]).buffer(0.1)          # other-net track between start and the near via
+        t = self.cf.explicit_link((4, 0), [(6, 0), (4, 3)], wall, clearance_mm=0.2, width_mm=0.25)
+        self.assertEqual(t, (4.0, 3.0))                            # nearer (6,0) is blocked, (4,3) is reachable
+        self.assertIsNone(self.cf.explicit_link((4, 0), [(6, 0)], wall, 0.2, 0.25))
+        self.assertIsNone(self.cf.explicit_link((4, 0), [(40, 0)], None, 0.2, 0.25))   # beyond max length
+
 
 if __name__ == "__main__":
     unittest.main()
