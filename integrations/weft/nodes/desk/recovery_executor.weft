@@ -1,0 +1,31 @@
+# DeskRecoveryExecutor 0.1.0: Execute an approved recovery action against the live design. [UNAVAILABLE, fails closed: live recovery runs in the DESK process with the bridge; the node service cannot verify a live mutation and therefore does not execute one]
+Group(service: String, projectId: String, runId: String) -> (passed: Boolean, blocking: List[String], evidence: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: desk.reliability.recovery_executor
+  type DeskRecoveryExecutorEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: JsonDict,
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskRecoveryExecutor"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskRecoveryExecutorEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+}

@@ -217,7 +217,92 @@ def _extract(ctx: Context, i: Dict[str, Any]) -> Result:
     return {"notesRef": ref, "provider": doc["provider"], "model": doc["model"]}, [], [ctx.store.ref("notes", ref)]
 
 
+def _failure_record(ctx: Context, i: Dict[str, Any]) -> Result:
+    from desk.reliability.models import FailureRecord, FailureCategory, ExecutionState
+    from desk.reliability.failure_classifier import classify_record
+    try:
+        cat = FailureCategory(i["category"])
+    except ValueError:
+        raise NodeError("INVALID_INPUT", f"unknown failure category {i['category']!r}")
+    state = ExecutionState.UNKNOWN
+    if i.get("executionState"):
+        try:
+            state = ExecutionState(i["executionState"])
+        except ValueError:
+            raise NodeError("INVALID_INPUT", f"unknown execution state {i['executionState']!r}")
+    rec = FailureRecord.new(cat, i["module"], i["operation"], i["message"], execution_state=state, project_id=ctx.store.project_id,
+                            document_uuid=str(i.get("documentUuid") or ""), window_id=str(i.get("windowId") or ""), run_id=ctx.run_id)
+    for e in (i.get("evidence") or {}).get("items", []) or []:
+        if isinstance(e, dict):
+            rec.add_evidence(str(e.get("kind", "file")), str(e.get("source", "")), str(e.get("summary", "")))
+    classify_record(rec)
+    name = ctx.store.put_failure(rec.to_dict())
+    return {"failureRef": name, "signature": rec.signature, "category": rec.category.value}, [], [ctx.store.ref("failures", name)]
+
+
+def _diagnose(ctx: Context, i: Dict[str, Any]) -> Result:
+    from desk.reliability.models import FailureRecord
+    from desk.reliability.evidence import EvidenceCollector
+    from desk.reliability import root_cause as RCA, registry as KF
+    rec = FailureRecord.from_dict(ctx.store.get_failure(i["failureRef"]))
+    facts = EvidenceCollector(project_path=ctx.store.project_dir).collect(rec)
+    hyps = RCA.diagnose(rec, facts)
+    rec.hypotheses = hyps
+    rc = rec.root_cause
+    rec.confidence = rc.confidence if rc else rec.confidence
+    ctx.store.put_failure(rec.to_dict())
+    blocking = [] if rc and rc.confidence.value in ("CONFIRMED", "STRONGLY_SUPPORTED") else ["root cause not confirmed by a deterministic rule"]
+    return ({"rootCauseCategory": rc.category.value if rc else "", "confidence": rc.confidence.value if rc else "UNVERIFIED",
+             "statement": rc.statement if rc else "", "knownFailures": [k.id for k in KF.match(rec)],
+             "missingEvidence": list(rc.missing_evidence) if rc else [], "hypothesisCount": len(hyps)},
+            blocking, [ctx.store.ref("failures", i["failureRef"])])
+
+
+def _plan(ctx: Context, i: Dict[str, Any]) -> Result:
+    from desk.reliability.models import FailureRecord
+    from desk.reliability.evidence import EvidenceCollector
+    from desk.reliability import recovery_planner as RP, registry as KF
+    from desk.reliability.recovery_policy import RecoveryPolicy
+    rec = FailureRecord.from_dict(ctx.store.get_failure(i["failureRef"]))
+    facts = EvidenceCollector(project_path=ctx.store.project_dir).collect(rec)
+    plan = RP.plan(rec, facts, RecoveryPolicy(), KF.match(rec), facts.get("signature", ""))
+    rec.plan = plan
+    ctx.store.put_failure(rec.to_dict())
+    ref = ctx.store.put_plan(i["failureRef"], plan.to_dict())
+    blocking = ["plan needs a Captain approval"] if plan.requires_approval else []
+    return ({"planRef": ref, "actionKinds": [a.kind for a in plan.actions], "requiresApproval": plan.requires_approval,
+             "refused": list(plan.refused), "verificationCriteria": list(plan.verification_criteria)},
+            blocking, [ctx.store.ref("plans", ref)])
+
+
+def _checkpoint_status(ctx: Context, i: Dict[str, Any]) -> Result:
+    import json as _json
+    import os as _os
+    wd = _os.path.join(ctx.store.project_dir, "state", "route")
+    pc_path = _os.path.join(wd, "progress_chunks.json")
+    pc: Dict[str, Any] = {}
+    if _os.path.exists(pc_path):
+        with open(pc_path, encoding="utf-8") as f:
+            pc = _json.load(f)
+    ck = pc.get("checkpoint") or {}
+    rf_path = _os.path.join(wd, "route_failure.json")
+    cat = ""
+    if _os.path.exists(rf_path):
+        with open(rf_path, encoding="utf-8") as f:
+            cat = str(_json.load(f).get("category") or "")
+    best = ck.get("best_unrouted")
+    return ({"hasBest": bool(ck.get("has_best")), "bestUnrouted": int(best) if best is not None else -1,
+             "chunkOutcomes": [str(o) for o in pc.get("outcomes", [])], "engineVersion": str(ck.get("engine_version") or ""),
+             "failureCategory": cat},
+            ["no routing checkpoint"] if not ck.get("has_best") else [],
+            [p for p in ("state/route/progress_chunks.json", "state/route/route_failure.json") if _os.path.exists(_os.path.join(ctx.store.project_dir, p))])
+
+
 HANDLERS: Dict[str, Callable[[Context, Dict[str, Any]], Result]] = {
+    "DeskFailureRecorder": _failure_record,
+    "DeskFailureDiagnoser": _diagnose,
+    "DeskRecoveryPlanner": _plan,
+    "DeskRoutingCheckpointStatus": _checkpoint_status,
     "DeskRequirementIntake": _intake,
     "DeskRequirementValidator": _validate_requirements,
     "DeskDomainClassifier": _classify,

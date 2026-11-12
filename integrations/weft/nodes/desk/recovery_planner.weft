@@ -1,0 +1,37 @@
+# DeskRecoveryPlanner 1.0.0: Policy-classified recovery plan for a diagnosed failure: AUTO actions, APPROVAL actions and refused ones. Proposals only; nothing is executed through the node service.
+Group(service: String, projectId: String, runId: String, failureRef: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], planRef: String, actionKinds: List[String], requiresApproval: Boolean, refused: List[String], verificationCriteria: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: desk.reliability.recovery_planner.plan
+  type DeskRecoveryPlannerEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { planRef: String, actionKinds: List[String], requiresApproval: Boolean, refused: List[String], verificationCriteria: List[String], .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskRecoveryPlanner"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    failureRef: self.failureRef
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskRecoveryPlannerEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.planRef = checked.value.outputs.planRef
+  self.actionKinds = checked.value.outputs.actionKinds
+  self.requiresApproval = checked.value.outputs.requiresApproval
+  self.refused = checked.value.outputs.refused
+  self.verificationCriteria = checked.value.outputs.verificationCriteria
+}

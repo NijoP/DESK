@@ -85,6 +85,20 @@ class RecordStore:
         """Evidence reference, relative to the project folder."""
         return f"state/weft/{kind}/{name}.json"
 
+    # ---- reliability (desk/reliability) -------------------------------------------------------------------
+    def put_failure(self, doc: Dict[str, Any]) -> str:
+        """Store a FailureRecord dict (desk.reliability.models.FailureRecord.to_dict); returns its ref name."""
+        name = str(doc.get("failure_id") or "").replace(":", "-")
+        self._write("failures", name, doc)
+        return name
+
+    def get_failure(self, name: str) -> Dict[str, Any]:
+        return self._read("failures", name)
+
+    def put_plan(self, failure_name: str, doc: Dict[str, Any]) -> str:
+        self._write("plans", failure_name, doc)
+        return failure_name
+
     # ---- requirements -----------------------------------------------------------------------------------
     def put_requirements(self, text: str) -> str:
         h = sha256_text(text)

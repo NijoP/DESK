@@ -265,6 +265,49 @@ CONTRACTS: Tuple[NodeContract, ...] = (
         timeout_s=120.0, max_attempts=2,
         errors=("INVALID_INPUT", "PROJECT_NOT_FOUND", "RECORD_NOT_FOUND", "PROVIDER_UNAVAILABLE", "PROVIDER_OUTPUT_INVALID",
                 "ENGINE_ERROR", "TIMEOUT")),
+    # ---- reliability (desk/reliability): diagnosis and recovery planning are deterministic and read-only ----
+    NodeContract(
+        "DeskFailureRecorder", "1.0.0",
+        "Store a structured failure record (category, execution state, identity, evidence) and classify its signature.",
+        "desk.reliability.failure_classifier.classify_record", "reliability",
+        inputs=(_PROJECT, _RUN, F("category", "string", "one of desk.reliability.models.FailureCategory"),
+                F("module", "string"), F("operation", "string"), F("message", "string"),
+                F("executionState", "string", "desk.reliability.models.ExecutionState", required=False),
+                F("documentUuid", "string", required=False), F("windowId", "string", required=False),
+                F("evidence", "object", "{id-free list under 'items': [{kind, source, summary}]}", required=False)),
+        outputs=(F("failureRef", "string", "DESK record name of the failure"), F("signature", "string"), F("category", "string")),
+        idempotency="none",
+        errors=("INVALID_INPUT", "PROJECT_NOT_FOUND", "ENGINE_ERROR", "TIMEOUT")),
+    NodeContract(
+        "DeskFailureDiagnoser", "1.0.0",
+        "Deterministic root-cause diagnosis of a stored failure from its evidence and the project's route/journal files. "
+        "Returns hypotheses with confidence; CONFIRMED only from rules, never from a model.",
+        "desk.reliability.root_cause.diagnose", "reliability",
+        inputs=(_PROJECT, _RUN, F("failureRef", "string")),
+        outputs=(F("rootCauseCategory", "string", "empty when UNKNOWN"), F("confidence", "string"), F("statement", "string"),
+                 F("knownFailures", "list[string]"), F("missingEvidence", "list[string]"), F("hypothesisCount", "number")),
+        errors=("INVALID_INPUT", "PROJECT_NOT_FOUND", "RECORD_NOT_FOUND", "ENGINE_ERROR", "TIMEOUT")),
+    NodeContract(
+        "DeskRecoveryPlanner", "1.0.0",
+        "Policy-classified recovery plan for a diagnosed failure: AUTO actions, APPROVAL actions and refused ones. "
+        "Proposals only; nothing is executed through the node service.",
+        "desk.reliability.recovery_planner.plan", "reliability",
+        inputs=(_PROJECT, _RUN, F("failureRef", "string")),
+        outputs=(F("planRef", "string"), F("actionKinds", "list[string]"), F("requiresApproval", "boolean"),
+                 F("refused", "list[string]"), F("verificationCriteria", "list[string]")),
+        errors=("INVALID_INPUT", "PROJECT_NOT_FOUND", "RECORD_NOT_FOUND", "ENGINE_ERROR", "TIMEOUT")),
+    NodeContract(
+        "DeskRoutingCheckpointStatus", "1.0.0",
+        "Read the routing checkpoint of a project: best valid SES, unrouted count, chunk outcomes and the engine profile.",
+        "desk.routing.checkpoint.RoutingCheckpoint", "reliability",
+        inputs=(_PROJECT, _RUN),
+        outputs=(F("hasBest", "boolean"), F("bestUnrouted", "number", "-1 when no checkpoint"), F("chunkOutcomes", "list[string]"),
+                 F("engineVersion", "string"), F("failureCategory", "string", "empty when the last run ended without a failure")),
+        idempotency="none",
+        errors=("INVALID_INPUT", "PROJECT_NOT_FOUND", "ENGINE_ERROR", "TIMEOUT")),
+    _planned("DeskRecoveryExecutor", "reliability", "Execute an approved recovery action against the live design.",
+             "desk.reliability.recovery_executor", "live recovery runs in the DESK process with the bridge; the node service "
+             "cannot verify a live mutation and therefore does not execute one", mutation=True, approval="recovery"),
     # ---- declared, not yet backed: they fail closed -----------------------------------------------------
     _planned("DeskComponentSearch", "components", "Search supplier catalogues for candidate parts.",
              "desk.component_intelligence.api.find_component", "needs supplier network access; not wired into the node service yet"),

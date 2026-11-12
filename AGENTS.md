@@ -87,7 +87,22 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
 - **Verified API Surface:** Do not claim unverified EasyEDA API support.
 - **Single-Writer Lock:** Never work on two blocks at once; never run two writers on a live project.
 - **Approval Record:** every live mutation goes through `ops.write_op(..., approval=<id>)`; the id comes from `ops.cli_approval` (operator ran the tool), `ops.record_approval` (agent with `--allow-mutation`) or a rework `RW-APR-` token. `DESK_MUTATION_POLICY=require` refuses unapproved non-idempotent mutations (`tests/test_mutation_policy.py`).
-- **Typed Errors:** raise `desk.errors` classes (`ProjectError`, `BridgeUnreachable`, `WriteLockHeld`, `ApprovalRequired`, `UsageError`...) instead of bare `SystemExit`; they still exit a CLI cleanly and are catchable by name.
+- **Reliability layer (`desk/reliability/`, docs/reliability/):** a mutating bridge script needs a verified window
+  binding (project uuid via `tools/rebind.py projects/<P>`, `project.json window_id` or `EDA_WINDOW_ID`); unbound
+  mutations are refused (`DESK_ALLOW_UNBOUND_WINDOW=1` is the operator's explicit override). Window ids rotate on every
+  gateway reconnect: never retry a write on an old id; the bridge rebinds by project uuid when exactly one window
+  matches. Live mutations that must prove their effect go through `desk.reliability.mutation.MutationContract` with a
+  verification contract from `desk.reliability.api_registry` (a `true` return is not completion: `importChanges`
+  and `clearRouting` are DIALOG, `delete` can leave survivors). Failures are handled by
+  `desk.reliability.supervisor.Supervisor` (evidence -> deterministic diagnosis -> policy-gated recovery ->
+  independent verification -> incident); a failure is healed only when `record.healed` is True.
+- **Spacing decisions:** `desk/spacing.py` keeps clearance, creepage and the fabricator minimum apart; the routing
+  feasibility gate blocks a rule the package geometry cannot meet and records an engineering decision. Never lower a
+  spacing value to make routing succeed; `spacing_policy: FUNCTIONAL` is a Captain decision logged in the ledger.
+- **Routing checkpoints:** the best valid SES lives in `state/route/checkpoint/`; chunk sizes come from measured pass
+  durations (`desk/routing/adaptive.py`); Freerouting 2.1.x is refused as unboundable. `ROUTING VERDICT: FULL` comes
+  from the connectivity readback only.
+- **Typed Errors:** raise `desk.errors` classes (`ProjectError`, `BridgeUnreachable`, `WriteLockHeld`, `ApprovalRequired`, `IdentityUnverified`, `BridgeWindowRotated`, `EngineeringDecisionRequired`, `UsageError`...) instead of bare `SystemExit`; they still exit a CLI cleanly and are catchable by name.
 
 ---
 

@@ -1,0 +1,36 @@
+# DeskRoutingCheckpointStatus 1.0.0: Read the routing checkpoint of a project: best valid SES, unrouted count, chunk outcomes and the engine profile.
+Group(service: String, projectId: String, runId: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], hasBest: Boolean, bestUnrouted: Number, chunkOutcomes: List[String], engineVersion: String, failureCategory: String) {
+  # Generated from desk/weft/contracts.py. Engine: desk.routing.checkpoint.RoutingCheckpoint
+  type DeskRoutingCheckpointStatusEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { hasBest: Boolean, bestUnrouted: Number, chunkOutcomes: List[String], engineVersion: String, failureCategory: String, .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskRoutingCheckpointStatus"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskRoutingCheckpointStatusEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.hasBest = checked.value.outputs.hasBest
+  self.bestUnrouted = checked.value.outputs.bestUnrouted
+  self.chunkOutcomes = checked.value.outputs.chunkOutcomes
+  self.engineVersion = checked.value.outputs.engineVersion
+  self.failureCategory = checked.value.outputs.failureCategory
+}

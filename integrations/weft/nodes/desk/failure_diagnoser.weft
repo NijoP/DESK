@@ -1,0 +1,38 @@
+# DeskFailureDiagnoser 1.0.0: Deterministic root-cause diagnosis of a stored failure from its evidence and the project's route/journal files. Returns hypotheses with confidence; CONFIRMED only from rules, never from a model.
+Group(service: String, projectId: String, runId: String, failureRef: String) -> (passed: Boolean, blocking: List[String], evidence: List[String], rootCauseCategory: String, confidence: String, statement: String, knownFailures: List[String], missingEvidence: List[String], hypothesisCount: Number) {
+  # Generated from desk/weft/contracts.py. Engine: desk.reliability.root_cause.diagnose
+  type DeskFailureDiagnoserEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { rootCauseCategory: String, confidence: String, statement: String, knownFailures: List[String], missingEvidence: List[String], hypothesisCount: Number, .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskFailureDiagnoser"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    failureRef: self.failureRef
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskFailureDiagnoserEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.rootCauseCategory = checked.value.outputs.rootCauseCategory
+  self.confidence = checked.value.outputs.confidence
+  self.statement = checked.value.outputs.statement
+  self.knownFailures = checked.value.outputs.knownFailures
+  self.missingEvidence = checked.value.outputs.missingEvidence
+  self.hypothesisCount = checked.value.outputs.hypothesisCount
+}

@@ -1,0 +1,42 @@
+# DeskFailureRecorder 1.0.0: Store a structured failure record (category, execution state, identity, evidence) and classify its signature.
+Group(service: String, projectId: String, runId: String, category: String, module: String, operation: String, message: String, executionState: String, documentUuid: String, windowId: String, evidence: JsonDict) -> (passed: Boolean, blocking: List[String], evidence: List[String], failureRef: String, signature: String, category: String) {
+  # Generated from desk/weft/contracts.py. Engine: desk.reliability.failure_classifier.classify_record
+  type DeskFailureRecorderEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: { failureRef: String, signature: String, category: String, .. },
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskFailureRecorder"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+    category: self.category
+    module: self.module
+    operation: self.operation
+    message: self.message
+    executionState?: self.executionState
+    documentUuid?: self.documentUuid
+    windowId?: self.windowId
+    evidence?: self.evidence
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskFailureRecorderEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+  self.failureRef = checked.value.outputs.failureRef
+  self.signature = checked.value.outputs.signature
+  self.category = checked.value.outputs.category
+}
