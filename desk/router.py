@@ -437,6 +437,17 @@ class RoutingPlanGenerator:
             blocking_issues = profile.validate_electrical_inputs(list(net_graph.nets))
         blocked_nets = {msg.split(":", 1)[0] for msg in blocking_issues}
 
+        # Single source for the spacing floor: the fabricator profile. Never a literal in this module.
+        from desk.profile import ManufacturerProfile
+        manufacturing = getattr(profile, "manufacturing", None) if profile is not None else None
+        fab_min_clearance_mil = float(manufacturing.min_clearance_mil if manufacturing is not None
+                                      else ManufacturerProfile().min_clearance_mil)
+        assumptions: List[str] = []
+        if profile is None:
+            blocking_issues.append(
+                "PROFILE: no DesignProfile supplied; currents come from name heuristics and clearances from "
+                "the fabricator minimum (ASSUMED). Declare a DesignProfile before routing.")
+
         for net_name in net_graph.nets:
             is_pwr = net_name.upper() in power_set or net_name in high_c
             tier = 6
@@ -452,7 +463,9 @@ class RoutingPlanGenerator:
             elif net_name in high_c:
                 current_A = high_c[net_name]
             elif is_pwr:
-                current_A = 1.0
+                # No declared current. TraceWidthCalculator sizes it from the net name; that is an
+                # assumption, recorded here, and the plan is already blocked for this net.
+                assumptions.append(f"{net_name}: power-net current undeclared; width from name heuristic (ASSUMED)")
 
             # Target layer preferences
             pref_layers = [1, 2] if len(stackup) == 2 else [1, 4, 3, 2]
@@ -478,7 +491,12 @@ class RoutingPlanGenerator:
             if net_profile and hasattr(net_profile, "derive_clearance_mil"):
                 clearance = net_profile.derive_clearance_mil(net_name, "GND")
             else:
-                clearance = 4.02 if not is_pwr else 6.0
+                # No voltage data for this net: the only defensible spacing is the fabricator minimum,
+                # and the plan stays blocked until a DesignProfile declares the rail.
+                clearance = fab_min_clearance_mil
+                if is_pwr or net_name in blocked_nets:
+                    assumptions.append(f"{net_name}: clearance = fabricator minimum {fab_min_clearance_mil:g} mil; "
+                                       "no declared voltage (ASSUMED)")
 
             if profile and hasattr(profile, "rf_nets") and net_name in profile.rf_nets:
                 rf_cfg = profile.rf_nets[net_name]
@@ -497,7 +515,8 @@ class RoutingPlanGenerator:
             board_stackup=stackup,
             stage_nets=stages,
             net_constraints=constraints,
-            blocking_issues=blocking_issues
+            blocking_issues=blocking_issues,
+            assumptions=assumptions,
         )
 
 

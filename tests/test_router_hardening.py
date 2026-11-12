@@ -9,8 +9,9 @@ from desk.router import (
     RoutingPlan,
     RoutingConstraint,
 )
-from desk.models import NetEndpoint
-from desk.profile import DesignProfile, RFProfile, DiffPairProfile
+from desk.models import NetEndpoint, NetConnectivityGraph
+from desk.profile import DesignProfile, RFProfile, DiffPairProfile, ManufacturerProfile
+from desk.router import RoutingPlanGenerator
 
 
 class TestRouterHardening(unittest.TestCase):
@@ -85,6 +86,33 @@ class TestRouterHardening(unittest.TestCase):
         self.assertEqual(res["routed_net_count"], 1)
         self.assertEqual(res["missing_nets"], ["NET_2"])
         self.assertEqual(res["coverage_pct"], 50.0)
+
+
+class TestPlanFailsClosedWithoutProfile(unittest.TestCase):
+    """F-02: no literal clearances or assumed currents; every heuristic is recorded and the plan is blocked."""
+
+    def _graph(self):
+        return NetConnectivityGraph(nets={
+            "VBUS": [NetEndpoint("U1", "1", "VBUS", 0.0, 0.0, 1), NetEndpoint("C1", "1", "VBUS", 5.0, 0.0, 1)],
+            "DATA": [NetEndpoint("U1", "2", "DATA", 0.0, 1.0, 1), NetEndpoint("U2", "2", "DATA", 5.0, 1.0, 1)],
+        })
+
+    def test_no_profile_blocks_plan_and_records_assumptions(self):
+        plan = RoutingPlanGenerator.generate_plan(self._graph(), {}, (50.0, 50.0), rules={"power_nets": ["VBUS"]})
+        self.assertTrue(plan.blocking_issues and plan.blocking_issues[0].startswith("PROFILE:"))
+        fab_min = ManufacturerProfile().min_clearance_mil
+        for c in plan.net_constraints.values():
+            self.assertEqual(c.clearance_mil, fab_min)
+        self.assertTrue(any(a.startswith("VBUS:") and "ASSUMED" in a for a in plan.assumptions), plan.assumptions)
+
+    def test_profile_drives_every_number(self):
+        profile = DesignProfile(project_id="P_PLAN", voltage_rails={"VBUS": 5.0}, current_limits_A={"VBUS": 1.5})
+        plan = RoutingPlanGenerator.generate_plan(self._graph(), {}, (50.0, 50.0), rules={"power_nets": ["VBUS"]},
+                                                  profile=profile)
+        self.assertEqual(plan.blocking_issues, [])
+        self.assertEqual(plan.assumptions, [])
+        self.assertEqual(plan.net_constraints["VBUS"].clearance_mil, profile.derive_clearance_mil("VBUS", "GND"))
+        self.assertEqual(plan.net_constraints["VBUS"].min_width_mil, profile.derive_trace_width_mil("VBUS", is_inner=False, layer_idx=1))
 
 
 if __name__ == "__main__":

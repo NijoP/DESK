@@ -95,6 +95,8 @@ profiler.end_phase()
 # Fail-closed electrical pre-flight (roadmap H-01/H-02): a power rail without a declared current or a
 # high-voltage net without a declared voltage must not be sized by guesswork.
 blocked_nets = set()
+for _m in getattr(routing_plan, "assumptions", []):
+    print("ASSUMED:", _m)
 if routing_plan.blocking_issues:
     for _m in routing_plan.blocking_issues:
         print("ELECTRICAL UNKNOWN:", _m)

@@ -209,6 +209,9 @@ class RoutingPlan:
     # Fail-closed electrical unknowns (undeclared rail current or HV voltage). Non-empty means the
     # plan must not be executed without explicit operator override (roadmap H-01/H-02).
     blocking_issues: List[str] = field(default_factory=list)
+    # Every heuristic the generator had to fall back on (name-based current, fabricator-minimum
+    # clearance without voltage data). Empty when a complete DesignProfile drove every number.
+    assumptions: List[str] = field(default_factory=list)
 
 @dataclass
 class RoutingAttempt:
