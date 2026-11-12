@@ -1,0 +1,34 @@
+# Layout: placement, placement validation, routing plan, routing and copper
+Group(service: String, projectId: String, runId: String, ready: Boolean) -> (passed: Boolean) {
+  place = @include("__catalog/desk/placement_planner.weft")
+  place._should_flow = self.ready
+  place.service = self.service
+  place.projectId = self.projectId
+  place.runId = self.runId
+
+  placement = @include("__catalog/desk/placement_validator.weft")
+  placement._should_flow = place.passed
+  placement.service = self.service
+  placement.projectId = self.projectId
+  placement.runId = self.runId
+
+  plan = @include("__catalog/desk/routing_planner.weft")
+  plan._should_flow = placement.passed
+  plan.service = self.service
+  plan.projectId = self.projectId
+  plan.runId = self.runId
+
+  route = @include("__catalog/desk/routing_executor.weft")
+  route._should_flow = plan.passed
+  route.service = self.service
+  route.projectId = self.projectId
+  route.runId = self.runId
+
+  copper = @include("__catalog/desk/copper_planner.weft")
+  copper._should_flow = route.passed
+  copper.service = self.service
+  copper.projectId = self.projectId
+  copper.runId = self.runId
+
+  self.passed = copper.passed
+}

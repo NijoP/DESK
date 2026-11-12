@@ -12,6 +12,8 @@
                                                      Domain Intelligence: 100 PCB archetypes, component families and the deterministic rule engine (--json for machine output)
                                                      tool-calling agent on NVIDIA NIM (Nemotron 3 Ultra by default): reads the sheet, plans wires, mutates only with --allow-mutation
   python tools/desk.py config show|schema [--json]   effective configuration (env > ~/.desk/config.json > desk.config.json > default), secrets masked
+  python tools/desk.py weft status|workflows|nodes|validate [<workflow>]|serve|run <workflow> --project <P> --requirements <file>|history --project <P>|resume <run-id>
+                                                     Weft orchestration: typed workflows over DESK nodes; `weft` alone prints the full help (docs/weft/)
   python tools/desk.py recover projects/<P>          list unfinished/dirty live operations and how to resolve each
   python tools/desk.py recover projects/<P> --clear  resolve dirty builds by running tools/clear_block.py for them (live)
   python tools/desk.py recover projects/<P> --mark-resolved <op_id> --reason "checked by hand"
@@ -428,6 +430,10 @@ def main(argv):
     if a[0] == "doctor":
         from desk.doctor import main as doctor_main
         return doctor_main(a[1:])
+
+    if a[0] == "weft":
+        from desk.weft.cli import main as weft_main
+        return weft_main(a[1:])
 
     if a[0] == "domains":
         from desk.domain_intelligence import api as dapi

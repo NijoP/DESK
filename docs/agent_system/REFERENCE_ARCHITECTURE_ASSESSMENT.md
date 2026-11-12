@@ -42,6 +42,8 @@
 
 ## 5. WeaveMindAI/wefth → actually `weft`
 
+> **Superseded 2026-11-12.** The Captain directed that Weft be integrated as the workflow runtime. The decision below (concepts only, reject the language, compiler and runtime) no longer holds; its licence and stability concerns are addressed in `docs/weft/` (commit pin, no code copied, licence review). Current state: `docs/weft/04_STATUS.md`.
+
 The given URL returns 404; the intended repo is `WeaveMindAI/weft`: "a programming language and framework for AI orchestration" compiling typed node graphs to Rust binaries. License "O'Saasy License" (not SPDX, not OSI-approved per the pages read; hosted-use partnerships require contacting the company). ~2k stars; README says "early, breaking changes still possible".
 
 **Concepts.** Typed ports with `_should_flow` gating; `Switch`/`FirstInOrder` routing nodes; durable human waits that release the worker and resume on answer; every run journaled; "Sequential Diffusion Programming" (freeze accepted steps, replay).

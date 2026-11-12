@@ -92,6 +92,13 @@ SCHEMA: List[Setting] = [
     Setting(r"DESK_L[1-4]_THINKING", ENUM, None, "models", "Per-tier thinking level.", pattern=True,
             choices=("off", "low", "medium", "high")),
     Setting("DESK_CONFIG_FILE", PATH, None, "project", "User config file (default ~/.desk/config.json)."),
+    # -- Weft orchestration (desk/weft/, merged 2026-11-12; these are still read directly there) ----------
+    Setting("DESK_WEFT_SERVICE_URL", STR, None, "weft", "DESK node service URL for Weft workflows (default http://127.0.0.1:<service.DEFAULT_PORT>)."),
+    Setting("DESK_WEFT_TOKEN", SECRET, None, "weft", "Bearer token for the node service (else the token file)."),
+    Setting("DESK_WEFT_MODEL", STR, None, "weft", "Model for model-backed Weft nodes (falls back to DESK_AGENT_MODEL)."),
+    Setting("DESK_WEFT_VALIDATOR", PATH, None, "weft", "Path to the built Weft validator binary."),
+    Setting("DESK_WEFT_CHECKOUT", STR, None, "weft", "Commit of the Weft checkout, compared with the DESK pin."),
+    Setting("DESK_WEFT_PROJECTS_ROOT", PATH, None, "weft", "Root directory Weft runs may touch."),
 ]
 
 _EXACT: Dict[str, Setting] = {s.key: s for s in SCHEMA if not s.pattern}

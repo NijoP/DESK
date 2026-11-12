@@ -23,3 +23,4 @@ desk.config.local.json
 *.egg-info/
 build/
 dist/
+.desk_weft/

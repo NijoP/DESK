@@ -1,0 +1,81 @@
+# DESK hardware design workflow: client requirements to manufacturing release.
+# Weft orchestrates; DESK engineers. Each stage is a DESK node (or a group of them) over a DESK engine.
+# Stages whose DESK engine is not wired into the node service yet fail closed: the run stops there with
+# NODE_UNAVAILABLE instead of skipping the stage. `python desk.py weft nodes` lists which are which.
+# Start it with: python desk.py weft run hardware_design --project <P> --requirements <file>
+
+# Run inputs, supplied by `desk.py weft run`.
+service = Text { value: "http://127.0.0.1:14500" }
+projectId = Text { value: "UNSET" }
+requirements = Text { value: "UNSET" }
+# Name of the DESK verification-evidence record the quality gates read (DRC, connectivity, board revision).
+evidenceRef = Text { value: "UNSET" }
+
+run = GetRunId
+tag = TagRun { project: projectId.value }
+
+# 1. Requirements, domain classification, engineering profile.
+understand = @include("__catalog/desk_stages/understand.weft")
+understand.service = service.value
+understand.projectId = projectId.value
+understand.runId = run.runId
+understand.requirements = requirements.value
+
+# 2. Component families, selection and verification, then a person approves the BOM.
+bom = @include("__catalog/desk_stages/bom.weft")
+bom.service = service.value
+bom.projectId = projectId.value
+bom.runId = run.runId
+bom.ready = understand.passed
+bom.profileHash = understand.profileHash
+bom.subject = understand.archetype
+
+# 3. Schematic, then a hardware engineer approves it.
+schematic = @include("__catalog/desk_stages/schematic.weft")
+schematic.service = service.value
+schematic.projectId = projectId.value
+schematic.runId = run.runId
+schematic.ready = bom.approved
+
+schematicApproval = @include("__catalog/desk_stages/approve.weft")
+schematicApproval._should_flow = schematic.passed
+schematicApproval.service = service.value
+schematicApproval.projectId = projectId.value
+schematicApproval.runId = run.runId
+schematicApproval.stage = "schematic"
+schematicApproval.title = "Approve the schematic?"
+schematicApproval.subject = understand.archetype
+schematicApproval.subjectHash = understand.profileHash
+schematicApproval.details = understand.missingInformation
+
+# 4. PCB placement, routing and copper.
+layout = @include("__catalog/desk_stages/layout.weft")
+layout.service = service.value
+layout.projectId = projectId.value
+layout.runId = run.runId
+layout.ready = schematicApproval.approved
+
+# 5. Connectivity, DRC, thermal, manufacturing checks; power distribution from the profile.
+verification = @include("__catalog/desk_stages/verification.weft")
+verification.service = service.value
+verification.projectId = projectId.value
+verification.runId = run.runId
+verification.ready = layout.passed
+
+power = @include("__catalog/desk/power_distribution_analyzer.weft")
+power._should_flow = layout.passed
+power.service = service.value
+power.projectId = projectId.value
+power.runId = run.runId
+power.profileHash = understand.profileHash
+
+# 6. Quality gates, human manufacturing approval, release gate, release generation.
+verified = All { verification: verification.passed, power: power.passed }
+release = @include("__catalog/desk_stages/release.weft")
+release.service = service.value
+release.projectId = projectId.value
+release.runId = run.runId
+release.ready = verified.yes
+release.profileHash = understand.profileHash
+release.evidenceRef = evidenceRef.value
+release.subject = understand.archetype

@@ -1,0 +1,31 @@
+# DeskSchematicCompiler 0.1.0: Draw the schematic in EasyEDA. [UNAVAILABLE, fails closed: live EasyEDA mutation; needs DESK write_op, an approval record and explicit authorization]
+Group(service: String, projectId: String, runId: String) -> (passed: Boolean, blocking: List[String], evidence: List[String]) {
+  # Generated from desk/weft/contracts.py. Engine: tools/build.py
+  type DeskSchematicCompilerEnvelope = {
+    node: String,
+    version: String,
+    ok: Boolean,
+    passed: Boolean,
+    outputs: JsonDict,
+    blockingIssues: List[String],
+    evidence: List[String],
+    ..
+  }
+  url = Format(service: String) {
+    service: self.service
+    template: "{{service}}/v1/nodes/DeskSchematicCompiler"
+  }
+  request = JsonObject {
+    projectId: self.projectId
+    runId: self.runId
+  }
+  call = HttpRequest {
+    url: url.text
+    method: "POST"
+    body: request.object
+  }
+  checked = Cast -> (value: DeskSchematicCompilerEnvelope) { value: call.body }
+  self.passed = checked.value.passed
+  self.blocking = checked.value.blockingIssues
+  self.evidence = checked.value.evidence
+}

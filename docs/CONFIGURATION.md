@@ -37,5 +37,11 @@ Generated from `desk/config.py` SCHEMA (`python desk.py config schema`). Precede
 | `DESK_L[1-4]_TIMEOUT` (pattern) | float |  | models | Per-tier timeout in seconds (defaults 30/90/180/300). |
 | `DESK_L[1-4]_THINKING` (pattern) | enum |  | models | Per-tier thinking level. One of: off, low, medium, high. |
 | `DESK_CONFIG_FILE` | path |  | project | User config file (default ~/.desk/config.json). |
+| `DESK_WEFT_SERVICE_URL` | str |  | weft | DESK node service URL for Weft workflows (default http://127.0.0.1:<service.DEFAULT_PORT>). |
+| `DESK_WEFT_TOKEN` | secret |  | weft | Bearer token for the node service (else the token file). |
+| `DESK_WEFT_MODEL` | str |  | weft | Model for model-backed Weft nodes (falls back to DESK_AGENT_MODEL). |
+| `DESK_WEFT_VALIDATOR` | path |  | weft | Path to the built Weft validator binary. |
+| `DESK_WEFT_CHECKOUT` | str |  | weft | Commit of the Weft checkout, compared with the DESK pin. |
+| `DESK_WEFT_PROJECTS_ROOT` | path |  | weft | Root directory Weft runs may touch. |
 
-Keys read directly from the environment and not yet routed through `desk.config`: `DESK_PI_PATH` and `DESK_PI_EXTENSIONS` inside `desk/orchestrator/pi_adapter.py` (that file carries an uncommitted change from another workstream and was left untouched; the keys are in the schema and will be switched when it lands).
+Keys read directly from the environment and not yet routed through `desk.config`: `DESK_PI_PATH` and `DESK_PI_EXTENSIONS` in `desk/orchestrator/pi_adapter.py` (uncommitted change pending in another workstream) and the `DESK_WEFT_*` keys plus `NVIDIA_API_KEY`/`DESK_AGENT_MODEL` inside `desk/weft/` (merged 2026-11-12). `tests/test_config.py` lists these files as the only allowed exceptions.

@@ -1,0 +1,76 @@
+//! desk-weft-validate: strict Weft validation with upstream's own compiler.
+//!
+//! Links weft-compiler and weft-core from a pinned Weft checkout and compiles upstream's catalog loader
+//! (crates/weft-catalog/src/lib.rs) unmodified as a module, so a .weft program is checked by the same
+//! parse -> enrich -> validate pipeline `weft validate` runs, on a machine that has no Weft runtime.
+//! It builds nothing and runs nothing.
+//!
+//!   desk-weft-validate <project-root> <file.weft> <node-root>...
+//!
+//! Prints {"diagnostics": [...], "nodeTypes": n, "catalogWarnings": n}; exit 0 when no error diagnostic.
+#[path = "@CHECKOUT@/crates/weft-catalog/src/lib.rs"]
+#[allow(dead_code, unused, clippy::all)]
+mod weft_catalog;
+
+use std::path::{Path, PathBuf};
+use weft_compiler::validate::ValidationMode;
+use weft_compiler::CompileFs;
+
+fn main() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    if args.len() < 3 {
+        eprintln!("usage: desk-weft-validate <project-root> <file.weft> <node-root>...");
+        std::process::exit(2);
+    }
+    let root = PathBuf::from(&args[0]);
+    let file = PathBuf::from(&args[1]);
+    let roots: Vec<&Path> = args[2..].iter().map(|r| Path::new(r.as_str())).collect();
+    let source = match std::fs::read_to_string(&file) {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("cannot read {}: {e}", file.display());
+            std::process::exit(2);
+        }
+    };
+    let catalog = match weft_catalog::FsCatalog::discover_roots(&roots) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("catalog: {e}");
+            std::process::exit(2);
+        }
+    };
+    let base = file.parent().map(|p| p.to_path_buf()).unwrap_or_else(|| root.clone());
+    let fs = CompileFs::disk(&root).anchored_at(Some(&base));
+    let source_id = match weft_compiler::source_name::file_id(Some(&root), Some(&file)) {
+        Ok(id) => id,
+        Err(e) => {
+            eprintln!("file id: {e}");
+            std::process::exit(2);
+        }
+    };
+    let (_, diagnostics) = weft_compiler::compile_strict(
+        &source,
+        uuid::Uuid::nil(),
+        fs,
+        &catalog,
+        ValidationMode::Runtime,
+        source_id.as_deref(),
+    );
+    let errors = serde_json::to_value(&diagnostics)
+        .ok()
+        .and_then(|v| {
+            v.as_array().map(|a| {
+                a.iter()
+                    .filter(|d| d.get("severity").and_then(|s| s.as_str()) != Some("warning"))
+                    .count()
+            })
+        })
+        .unwrap_or(1);
+    let out = serde_json::json!({
+        "diagnostics": diagnostics,
+        "catalogWarnings": catalog.warnings().len(),
+        "nodeTypes": weft_core::MetadataCatalog::all(&catalog).len(),
+    });
+    println!("{}", serde_json::to_string(&out).unwrap());
+    std::process::exit(if errors == 0 { 0 } else { 1 });
+}
