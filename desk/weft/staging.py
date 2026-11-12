@@ -22,6 +22,7 @@ NODES_SRC = os.path.join(WEFT_DIR, "nodes")
 PIN_FILE = os.path.join(WEFT_DIR, "WEFT_PIN.json")
 BUILD_DIR = os.path.join(REPO, ".desk_weft")
 NODE_PACKAGES = ("desk", "desk_stages")
+KEPT_ACROSS_RESTAGE = ("nodes/base_catalog", ".weft")
 
 
 def pin() -> Dict[str, Any]:
@@ -53,18 +54,23 @@ def stage(name: str, build_dir: str = BUILD_DIR) -> str:
     """Copy the workflow and the DESK node library into <build_dir>/stage/<name>. Returns that folder."""
     src = workflow_dir(name)
     dst = os.path.join(build_dir, "stage", name)
-    keep = os.path.join(dst, "nodes", "base_catalog")
-    tmp_keep = None
-    if os.path.isdir(keep):          # a standard library already fetched for this folder survives a restage
-        tmp_keep = dst + ".base_catalog"
-        shutil.rmtree(tmp_keep, ignore_errors=True)
-        shutil.move(keep, tmp_keep)
+    # What Weft fetched or built for this folder survives a restage: the standard library mirror (`weft catalog
+    # update`) and the project's .weft/ build cache (weft-compiler Project::state_dir). Neither is DESK source.
+    kept = []
+    for rel in KEPT_ACROSS_RESTAGE:
+        here = os.path.join(dst, *rel.split("/"))
+        if os.path.isdir(here):
+            tmp = f"{dst}.keep.{rel.replace('/', '_')}"
+            shutil.rmtree(tmp, ignore_errors=True)
+            shutil.move(here, tmp)
+            kept.append((tmp, here))
     shutil.rmtree(dst, ignore_errors=True)
     shutil.copytree(src, dst)
     for pkg in NODE_PACKAGES:
         shutil.copytree(os.path.join(NODES_SRC, pkg), os.path.join(dst, "nodes", pkg))
-    if tmp_keep:
-        shutil.move(tmp_keep, keep)
+    for tmp, here in kept:
+        os.makedirs(os.path.dirname(here), exist_ok=True)
+        shutil.move(tmp, here)
     with open(os.path.join(dst, "DESK_STAGED.json"), "w", encoding="utf-8") as f:
         json.dump({"workflow": name, "weft_pin": pin()["commit"]}, f)
     return dst

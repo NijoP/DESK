@@ -148,11 +148,16 @@ class WeftRuntime:
                                   linux_cwd=where["linux_cwd"])
         return _diagnostics("weft-cli", rc, out, err)
 
+    def check_run(self, staged: str, name: str, inputs: Dict[str, str]) -> Dict[str, Any]:
+        """Whether Weft would admit the run `run()` starts (`weft run --check`): nothing is built or run."""
+        where = self.place(staged, name)
+        rc, out, err = self._weft(["--json", "run", "--check"] + flag_args(run_flags(inputs, durable=False)), cwd=where["cwd"],
+                                  timeout=300.0, linux_cwd=where["linux_cwd"])
+        return _check_result("weft-cli", rc, out, err)
+
     def run(self, staged: str, name: str, inputs: Dict[str, str], durable: bool = True) -> Dict[str, Any]:
         where = self.place(staged, name)
-        args = ["--json", "run", "--detach"] + (["--durable"] if durable else [])
-        for node, value in inputs.items():
-            args += ["--from", f"{node}={json.dumps({'value': value})}"]
+        args = ["--json", "run", "--detach"] + flag_args(run_flags(inputs, durable))
         rc, out, err = self._weft(args, cwd=where["cwd"], timeout=1800.0, linux_cwd=where["linux_cwd"])
         run_id, phases = None, []
         for line in out.splitlines():
@@ -200,6 +205,38 @@ class WeftRuntime:
         return {"ok": rc == 0, "detail": (_clean(out) or _clean(err))[-500:]}
 
 
+def run_flags(inputs: Dict[str, str], durable: bool) -> Dict[str, Any]:
+    """The `weft run` flags for a DESK workflow run, as upstream's `RunFlags` JSON (crates/weft-core/src/run_flags.rs).
+
+    Each run input is a `Text` node; `--from <node>={"value": ...}` hands its `value` input port (catalog/basic/text)
+    and starts the cut there. The compiler harness judges these same flags with upstream's admission check.
+    """
+    flags: Dict[str, Any] = {"from": [f"{node}={json.dumps({'value': value})}" for node, value in inputs.items()]}
+    if durable:
+        flags["durable"] = True
+    return flags
+
+
+def flag_args(flags: Dict[str, Any]) -> List[str]:
+    args: List[str] = []
+    for start in flags.get("from", []):
+        args += ["--from", start]
+    if flags.get("durable"):
+        args.append("--durable")
+    return args
+
+
+def _check_result(checker: str, rc: int, out: str, err: str) -> Dict[str, Any]:
+    try:
+        doc = json.loads(_clean(out).splitlines()[-1]) if _clean(out) else None
+    except ValueError:
+        doc = None
+    if not isinstance(doc, dict) or "ok" not in doc:
+        return {"checker": checker, "ok": False, "refusal": (_clean(err) or _clean(out))[-1000:] or f"no answer (exit {rc})", "runs": []}
+    return {"checker": checker, "ok": bool(doc["ok"]), "refusal": doc.get("refusal"), "runs": doc.get("runs", []),
+            "errors": [d for d in doc.get("diagnostics", []) if d.get("severity") != "warning"]}
+
+
 def _sh(s: Optional[str]) -> str:
     return "'" + str(s).replace("'", "'\"'\"'") + "'"
 
@@ -240,5 +277,93 @@ def harness_validate(staged: str, h: Dict[str, str], runner: Runner = _run) -> D
     roots = [os.path.join(h["checkout"], "catalog")] + [os.path.join(staged, "nodes", p) for p in staging.NODE_PACKAGES] + [os.path.join(staged, "src")]
     rc, out, err = runner([h["exe"], staged, os.path.join(staged, "src", "main.weft")] + roots, None, None, 120.0)
     result = _diagnostics("compiler-harness", rc, out, err)
+    result["checkout"] = h["checkout"]
+    return result
+
+
+def harness_addresses(staged: str, h: Dict[str, str], node_type: str = "HttpRequest", runner: Runner = _run) -> Dict[str, Any]:
+    """Every place of `node_type`, spelled the way `weft connect <node>` takes it (upstream's `project::address_of`)."""
+    roots = [os.path.join(h["checkout"], "catalog")] + [os.path.join(staged, "nodes", p) for p in staging.NODE_PACKAGES] + [os.path.join(staged, "src")]
+    rc, out, err = runner([h["exe"], "addresses", staged, os.path.join(staged, "src", "main.weft"), node_type] + roots, None, None, 120.0)
+    try:
+        doc = json.loads(_clean(out))
+    except ValueError:
+        return {"ok": False, "addresses": [], "detail": (_clean(err) or _clean(out))[-1000:]}
+    return {"ok": rc == 0 and bool(doc.get("ok")), "addresses": list(doc.get("addresses", [])), "detail": None}
+
+
+# ---- human approval through Weft's signal API ----------------------------------------------------------------
+# Routes from upstream crates/weft-dispatcher/src/api/mod.rs (outside_caller_routes); the client shape follows
+# upstream's own headless e2e client (crates/weft-e2e/src/signal.rs, human.rs). An approve_reject field takes
+# "approve" or "reject" (crates/weft-core/src/signal/form/fields.rs). The signal token rides the Authorization
+# header and is never printed.
+
+DECISIONS = ("approve", "reject", "skip")
+
+
+def _http(method: str, url: str, token: Optional[str] = None, body: Optional[Dict[str, Any]] = None, timeout: float = 15.0) -> Tuple[int, Any]:
+    import urllib.error
+    import urllib.request
+    data = json.dumps(body).encode("utf-8") if body is not None else None
+    req = urllib.request.Request(url, data=data, method=method)
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            raw = r.read().decode("utf-8", "replace")
+            status = r.status
+    except urllib.error.HTTPError as e:
+        raw, status = e.read().decode("utf-8", "replace"), e.code
+    except (urllib.error.URLError, OSError) as e:
+        return 0, str(e)
+    try:
+        return status, json.loads(raw) if raw.strip() else None
+    except ValueError:
+        return status, raw
+
+
+def waiting_signals(dispatcher: str, signal_token: str) -> Dict[str, Any]:
+    """The nodes waiting on a person that this signal token can see (`GET /signal-token/signals`)."""
+    status, doc = _http("GET", dispatcher.rstrip("/") + "/signal-token/signals", token=signal_token)
+    if status != 200 or not isinstance(doc, list):
+        return {"ok": False, "status": status, "signals": [], "detail": doc if isinstance(doc, str) else None}
+    keep = ("nodeId", "kind", "runId", "projectId", "title")
+    return {"ok": True, "status": status, "signals": [dict({k: s.get(k) for k in keep if k in s}, token=s.get("token")) for s in doc if isinstance(s, dict)]}
+
+
+def _node_matches(node_id: str, wanted: str) -> bool:
+    """`approve.review` matches a listed node id `approve.review`, `approve/review` or `x.approve.review`."""
+    have, want = node_id.replace("/", "."), wanted.replace("/", ".")
+    return bool(want) and (have == want or have.endswith("." + want))
+
+
+def answer_signal(dispatcher: str, signal_token: str, node: str, decision: str, field: str = "decision") -> Dict[str, Any]:
+    """Answer the ONE waiting approval whose node id ends with `node`. A person's decision, passed explicitly."""
+    if decision not in DECISIONS:
+        return {"ok": False, "detail": f"decision must be one of {', '.join(DECISIONS)}"}
+    listed = waiting_signals(dispatcher, signal_token)
+    if not listed["ok"]:
+        return {"ok": False, "detail": f"could not list waiting nodes (HTTP {listed['status']})"}
+    matches = [s for s in listed["signals"] if _node_matches(str(s.get("nodeId") or ""), node)]
+    if len(matches) != 1:
+        return {"ok": False, "detail": f"{len(matches)} waiting node(s) match '{node}'; exactly one must (waiting: "
+                                       f"{', '.join(str(s.get('nodeId')) for s in listed['signals']) or 'none'})"}
+    link = matches[0]["token"]
+    base = dispatcher.rstrip("/") + f"/signal/{link}"
+    status, doc = (_http("POST", base + "/skip") if decision == "skip" else _http("POST", base, body={field: decision}))
+    return {"ok": 200 <= status < 300, "status": status, "nodeId": matches[0].get("nodeId"), "decision": decision,
+            "detail": doc if not (200 <= status < 300) else None}
+
+
+def harness_check_run(staged: str, h: Dict[str, str], flags: Dict[str, Any], runner: Runner = _run) -> Dict[str, Any]:
+    """Judge a run of the staged workflow with upstream's admission check (`run_spec::judge`), through the harness."""
+    roots = [os.path.join(h["checkout"], "catalog")] + [os.path.join(staged, "nodes", p) for p in staging.NODE_PACKAGES] + [os.path.join(staged, "src")]
+    flags_file = os.path.join(staged, "desk-run-flags.json")
+    with open(flags_file, "w", encoding="utf-8") as f:
+        json.dump(flags, f)
+    rc, out, err = runner([h["exe"], "check-run", staged, os.path.join(staged, "src", "main.weft"), flags_file] + roots, None, None, 120.0)
+    result = _check_result("compiler-harness", rc, out, err)
     result["checkout"] = h["checkout"]
     return result

@@ -6,8 +6,17 @@
 //! It builds nothing and runs nothing.
 //!
 //!   desk-weft-validate <project-root> <file.weft> <node-root>...
+//!     Prints {"diagnostics": [...], "nodeTypes": n, "catalogWarnings": n}; exit 0 when no error diagnostic.
 //!
-//! Prints {"diagnostics": [...], "nodeTypes": n, "catalogWarnings": n}; exit 0 when no error diagnostic.
+//!   desk-weft-validate check-run <project-root> <file.weft> <flags.json> <node-root>...
+//!     Compiles the program, then judges a run of it shaped by <flags.json> (upstream's `RunFlags`, the
+//!     flags `weft run` takes, as JSON) with upstream's `run_spec::judge::judge`: the admission check
+//!     `weft run --check` and the dispatcher apply before a run starts. Prints {"ok": bool, "refusal": ...,
+//!     "runs": [places the run would run], "diagnostics": [...]}; exit 0 when the run could start.
+//!
+//!   desk-weft-validate addresses <project-root> <file.weft> <node-type> <node-root>...
+//!     Lists every place of a node type, spelled the way `weft connect <node>` takes it (upstream's
+//!     `project::address_of`). DESK uses it to pick the node-service connection for every HttpRequest.
 #[path = "@CHECKOUT@/crates/weft-catalog/src/lib.rs"]
 #[allow(dead_code, unused, clippy::all)]
 mod weft_catalog;
@@ -16,39 +25,23 @@ use std::path::{Path, PathBuf};
 use weft_compiler::validate::ValidationMode;
 use weft_compiler::CompileFs;
 
-fn main() {
-    let args: Vec<String> = std::env::args().skip(1).collect();
-    if args.len() < 3 {
-        eprintln!("usage: desk-weft-validate <project-root> <file.weft> <node-root>...");
-        std::process::exit(2);
-    }
-    let root = PathBuf::from(&args[0]);
-    let file = PathBuf::from(&args[1]);
-    let roots: Vec<&Path> = args[2..].iter().map(|r| Path::new(r.as_str())).collect();
-    let source = match std::fs::read_to_string(&file) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("cannot read {}: {e}", file.display());
-            std::process::exit(2);
-        }
-    };
-    let catalog = match weft_catalog::FsCatalog::discover_roots(&roots) {
-        Ok(c) => c,
-        Err(e) => {
-            eprintln!("catalog: {e}");
-            std::process::exit(2);
-        }
-    };
-    let base = file.parent().map(|p| p.to_path_buf()).unwrap_or_else(|| root.clone());
-    let fs = CompileFs::disk(&root).anchored_at(Some(&base));
-    let source_id = match weft_compiler::source_name::file_id(Some(&root), Some(&file)) {
-        Ok(id) => id,
-        Err(e) => {
-            eprintln!("file id: {e}");
-            std::process::exit(2);
-        }
-    };
-    let (_, diagnostics) = weft_compiler::compile_strict(
+fn fail(why: String) -> ! {
+    eprintln!("{why}");
+    std::process::exit(2);
+}
+
+/// Compile `file` strictly in runtime mode, the way `weft validate` does.
+fn compile(
+    root: &Path,
+    file: &Path,
+    roots: &[&Path],
+) -> (weft_core::project::ProjectDefinition, Vec<weft_compiler::Diagnostic>, weft_catalog::FsCatalog) {
+    let source = std::fs::read_to_string(file).unwrap_or_else(|e| fail(format!("cannot read {}: {e}", file.display())));
+    let catalog = weft_catalog::FsCatalog::discover_roots(roots).unwrap_or_else(|e| fail(format!("catalog: {e}")));
+    let base = file.parent().map(|p| p.to_path_buf()).unwrap_or_else(|| root.to_path_buf());
+    let fs = CompileFs::disk(root).anchored_at(Some(&base));
+    let source_id = weft_compiler::source_name::file_id(Some(root), Some(file)).unwrap_or_else(|e| fail(format!("file id: {e}")));
+    let (project, diagnostics) = weft_compiler::compile_strict(
         &source,
         uuid::Uuid::nil(),
         fs,
@@ -56,7 +49,11 @@ fn main() {
         ValidationMode::Runtime,
         source_id.as_deref(),
     );
-    let errors = serde_json::to_value(&diagnostics)
+    (project, diagnostics, catalog)
+}
+
+fn error_count(diagnostics: &[weft_compiler::Diagnostic]) -> usize {
+    serde_json::to_value(diagnostics)
         .ok()
         .and_then(|v| {
             v.as_array().map(|a| {
@@ -65,12 +62,93 @@ fn main() {
                     .count()
             })
         })
-        .unwrap_or(1);
+        .unwrap_or(1)
+}
+
+fn validate(args: &[String]) -> i32 {
+    if args.len() < 3 {
+        fail("usage: desk-weft-validate <project-root> <file.weft> <node-root>...".into());
+    }
+    let roots: Vec<&Path> = args[2..].iter().map(|r| Path::new(r.as_str())).collect();
+    let (_, diagnostics, catalog) = compile(&PathBuf::from(&args[0]), &PathBuf::from(&args[1]), &roots);
+    let errors = error_count(&diagnostics);
     let out = serde_json::json!({
         "diagnostics": diagnostics,
         "catalogWarnings": catalog.warnings().len(),
         "nodeTypes": weft_core::MetadataCatalog::all(&catalog).len(),
     });
     println!("{}", serde_json::to_string(&out).unwrap());
-    std::process::exit(if errors == 0 { 0 } else { 1 });
+    if errors == 0 { 0 } else { 1 }
+}
+
+fn check_run(args: &[String]) -> i32 {
+    if args.len() < 4 {
+        fail("usage: desk-weft-validate check-run <project-root> <file.weft> <flags.json> <node-root>...".into());
+    }
+    let flags_text = std::fs::read_to_string(&args[2]).unwrap_or_else(|e| fail(format!("cannot read {}: {e}", args[2])));
+    let flags: weft_core::run_flags::RunFlags =
+        serde_json::from_str(&flags_text).unwrap_or_else(|e| fail(format!("{} is not weft's RunFlags: {e}", args[2])));
+    let roots: Vec<&Path> = args[3..].iter().map(|r| Path::new(r.as_str())).collect();
+    let (project, diagnostics, _) = compile(&PathBuf::from(&args[0]), &PathBuf::from(&args[1]), &roots);
+    let errors = error_count(&diagnostics);
+    let mut out = serde_json::json!({ "diagnostics": diagnostics });
+    if errors > 0 {
+        out["ok"] = false.into();
+        out["refusal"] = "the program does not compile".into();
+        println!("{}", serde_json::to_string(&out).unwrap());
+        return 1;
+    }
+    let spec = match weft_core::run_flags::spec_from_flags("desk-check", &flags) {
+        Ok(spec) => spec,
+        Err(why) => {
+            out["ok"] = false.into();
+            out["refusal"] = why.into();
+            println!("{}", serde_json::to_string(&out).unwrap());
+            return 1;
+        }
+    };
+    let verdict = weft_core::run_spec::judge::judge(&project, Some(&spec), false, &[], &[]);
+    let refusal = verdict.refusal();
+    let runs: Vec<String> = verdict
+        .resolved
+        .as_ref()
+        .map(|r| r.runs.iter().map(|place| place.to_string()).collect())
+        .unwrap_or_default();
+    out["ok"] = refusal.is_none().into();
+    out["refusal"] = refusal.clone().map(serde_json::Value::from).unwrap_or(serde_json::Value::Null);
+    out["runs"] = runs.into();
+    println!("{}", serde_json::to_string(&out).unwrap());
+    if refusal.is_none() { 0 } else { 1 }
+}
+
+fn addresses(args: &[String]) -> i32 {
+    if args.len() < 4 {
+        fail("usage: desk-weft-validate addresses <project-root> <file.weft> <node-type> <node-root>...".into());
+    }
+    let roots: Vec<&Path> = args[3..].iter().map(|r| Path::new(r.as_str())).collect();
+    let (project, diagnostics, _) = compile(&PathBuf::from(&args[0]), &PathBuf::from(&args[1]), &roots);
+    if error_count(&diagnostics) > 0 {
+        println!("{}", serde_json::json!({ "ok": false, "diagnostics": diagnostics }));
+        return 1;
+    }
+    // The way upstream's `weft connect` spells a place (crates/weft-cli/src/commands/connect.rs, spellings_of).
+    let mut found: Vec<String> = weft_core::project::places::every_place(&project)
+        .into_iter()
+        .filter(|place| project.nodes.iter().any(|n| n.id == place.id && n.node_type == args[2]))
+        .map(|place| weft_core::project::address_of(&project, &place.id, &place.path))
+        .collect();
+    found.sort();
+    found.dedup();
+    println!("{}", serde_json::json!({ "ok": true, "nodeType": args[2], "addresses": found }));
+    0
+}
+
+fn main() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let code = match args.first().map(String::as_str) {
+        Some("check-run") => check_run(&args[1..]),
+        Some("addresses") => addresses(&args[1..]),
+        _ => validate(&args),
+    };
+    std::process::exit(code);
 }
