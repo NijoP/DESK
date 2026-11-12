@@ -13,8 +13,11 @@ OpenAI-compatible endpoint works via DESK_HTTP_BASE_URL / DESK_HTTP_API_KEY_ENV.
 
 Zero external dependencies.
 """
+import base64
 import json
+import mimetypes
 import os
+from desk import config as deskcfg
 import time
 import urllib.error
 import urllib.request
@@ -55,10 +58,10 @@ class OpenAICompatAdapter:
                  api_key: Optional[str] = None,
                  api_key_env: Optional[str] = None):
         self.name = provider_name
-        self.base_url = (base_url or os.environ.get("DESK_HTTP_BASE_URL")
+        self.base_url = (base_url or deskcfg.get("DESK_HTTP_BASE_URL")
                          or "https://integrate.api.nvidia.com/v1").rstrip("/")
         self._api_key = api_key
-        self._api_key_env = api_key_env or os.environ.get("DESK_HTTP_API_KEY_ENV") or "NVIDIA_API_KEY"
+        self._api_key_env = api_key_env or deskcfg.get("DESK_HTTP_API_KEY_ENV") or "NVIDIA_API_KEY"
         self._models_cache: List[str] = []
 
     # ---- auth ------------------------------------------------------------------------------
@@ -116,13 +119,13 @@ class OpenAICompatAdapter:
                 + json.dumps(task.output_schema))
         if system:
             messages.append({"role": "system", "content": system})
-        messages.append({"role": "user", "content": task.prompt})
+        messages.append({"role": "user", "content": self.user_content(task.prompt, task.images)})
 
         body: Dict[str, Any] = {
             "model": task.preferred_model,
             "messages": messages,
             "temperature": 0,
-            "max_tokens": int(os.environ.get("DESK_HTTP_MAX_TOKENS", "2048")),
+            "max_tokens": deskcfg.get_int("DESK_HTTP_MAX_TOKENS", 2048),
         }
         if task.output_schema:
             body["response_format"] = {"type": "json_object"}
@@ -135,15 +138,35 @@ class OpenAICompatAdapter:
             body["reasoning_effort"] = level
         return body
 
+    @staticmethod
+    def image_url(ref: str) -> str:
+        """`data:` and `http(s):` references pass through; a file path is inlined as a base64 data URL."""
+        if ref.startswith(("data:", "http://", "https://")):
+            return ref
+        mime = mimetypes.guess_type(ref)[0] or "image/png"
+        with open(ref, "rb") as f:
+            return f"data:{mime};base64," + base64.b64encode(f.read()).decode("ascii")
+
+    @classmethod
+    def user_content(cls, prompt: str, images: Optional[List[str]] = None) -> Any:
+        """OpenAI-style content: a plain string without images, else text + image_url parts
+        (the form NVIDIA NIM accepts for nemotron-3.5-super-vl; verified 2026-11-12, see capabilities.py)."""
+        if not images:
+            return prompt
+        parts: List[Dict[str, Any]] = [{"type": "text", "text": prompt}]
+        for ref in images:
+            parts.append({"type": "image_url", "image_url": {"url": cls.image_url(ref)}})
+        return parts
+
     def chat_completion(self, messages: List[Dict[str, Any]], model: Optional[str] = None,
                         tools: Optional[List[Dict[str, Any]]] = None, tool_choice: str = "auto",
                         thinking: Optional[str] = "off", max_tokens: Optional[int] = None,
                         timeout: float = 120.0, temperature: float = 0.0) -> Dict[str, Any]:
         """Raw chat call with optional OpenAI-style tools. Returns {"message": {...}, "usage": {...}} or {"error": ...}.
         Verified on NVIDIA NIM 2026-11-12: Nemotron 3 Ultra / 3.5 emit `tool_calls` with tool_choice auto."""
-        model = model or os.environ.get("DESK_AGENT_MODEL") or "nvidia/nemotron-3-ultra-550b-a55b"
+        model = model or deskcfg.get("DESK_AGENT_MODEL") or "nvidia/nemotron-3-ultra-550b-a55b"
         body: Dict[str, Any] = {"model": model, "messages": messages, "temperature": temperature,
-                                "max_tokens": int(max_tokens or os.environ.get("DESK_HTTP_MAX_TOKENS", "2048"))}
+                                "max_tokens": int(max_tokens or deskcfg.get_int("DESK_HTTP_MAX_TOKENS", 2048))}
         if tools:
             body["tools"] = tools
             body["tool_choice"] = tool_choice

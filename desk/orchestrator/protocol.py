@@ -21,6 +21,7 @@ class TaskRequest:
     preferred_model: Optional[str] = None
     thinking_level: Optional[str] = None   # "off" | "low" | "medium" | "high"; None = router applies tier default
     requires_vision: bool = False          # task includes an image (board screenshot); router picks a vision model
+    images: List[str] = field(default_factory=list)  # image file paths or data:/http(s): URLs sent as image_url parts
     created_at: float = field(default_factory=time.time)
 
     def to_dict(self) -> Dict[str, Any]:

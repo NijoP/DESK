@@ -29,6 +29,7 @@ Per-tier timeouts apply when the caller leaves TaskRequest.timeout_sec unset:
 Zero external dependencies.
 """
 import os
+from desk import config as deskcfg
 import re
 import time
 import json
@@ -63,7 +64,8 @@ _FRONTIER_HINT = re.compile(r"pro|ultra|opus|sonnet|frontier|max|large", re.I)
 
 
 def _env(name: str) -> Optional[str]:
-    v = os.environ.get(name, "").strip()
+    """Configured value: environment, then ~/.desk/config.json, then desk.config.json (desk/config.py)."""
+    v = (deskcfg.get(name) or "").strip()
     return v or None
 
 
@@ -101,7 +103,8 @@ def _task_for(task: TaskRequest, provider: str, level: int) -> TaskRequest:
     t.preferred_provider = provider
     if not t.preferred_model:
         t.preferred_model = tier_model(level, provider)
-    if t.requires_vision:
+    if t.requires_vision or t.images:
+        t.requires_vision = True
         t.preferred_model = get_registry().ensure_capability(provider, t.preferred_model, "vision") or t.preferred_model
     if not t.timeout_sec:
         t.timeout_sec = tier_timeout(level)

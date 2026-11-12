@@ -27,6 +27,7 @@ class ModelCapability:
     thinking_controllable: bool = False
     free_tier: bool = False
     verified_on: Optional[str] = None # ISO date of live probe; None = UNVERIFIED
+    vision_verified_on: Optional[str] = None  # ISO date an image was actually sent and understood; None = vision UNVERIFIED
     probe_latency_s: Optional[float] = None  # one-line JSON answer, thinking off
     notes: str = ""
 
@@ -34,9 +35,16 @@ class ModelCapability:
     def status(self) -> str:
         return "VERIFIED" if self.verified_on else "UNVERIFIED"
 
+    @property
+    def vision_status(self) -> str:
+        if not self.vision:
+            return "NONE"
+        return "VERIFIED" if self.vision_verified_on else "UNVERIFIED"
+
     def to_dict(self) -> Dict:
         d = asdict(self)
         d["status"] = self.status
+        d["vision_status"] = self.vision_status
         return d
 
 
@@ -55,8 +63,10 @@ _BUILTIN: List[ModelCapability] = [
         provider="pi", model_id="nvidia/nemotron-3.5-super-vl-120b-a12b", context_window=131072,
         vision=True, structured_output=True, tool_calling=True,
         thinking_default_on=True, thinking_controllable=True, free_tier=True,
-        verified_on="2026-11-11", probe_latency_s=51.6,
-        notes="Vision-language. Intermittent HTTP 503 'content safety screening is temporarily unavailable' "
+        verified_on="2026-11-11", probe_latency_s=51.6, vision_verified_on="2026-11-12",
+        notes="Vision VERIFIED 2026-11-12: a 96x96 PNG sent as an image_url data: part (OpenAICompatAdapter.user_content) "
+              "was described correctly as a red square and a blue rectangle in JSON mode with thinking off, 1.2 s. "
+              "Vision-language. Intermittent HTTP 503 'content safety screening is temporarily unavailable' "
               "on the free tier; 51.6 s for a one-line JSON answer with thinking off during the probe. "
               "Treat as L2 with a 90 s timeout and expect fallback to AGY.",
     ),
