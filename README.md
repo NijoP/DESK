@@ -125,10 +125,24 @@ Orchestrated workflows are written in [Weft](https://github.com/WeaveMindAI/weft
 python desk.py weft status                 # is Weft installed, does it match the pin, is the node service up
 python desk.py weft nodes                  # which nodes are backed by an engine, which fail closed and why
 python desk.py weft validate               # compile-check the workflows with the Weft compiler
+python desk.py weft check-run hardware_design   # would Weft admit the run? (Weft's own admission check, runs nothing)
 python desk.py weft run hardware_design --project projects/MY_BOARD --requirements requirements.json
+python desk.py weft answer approve.review approve   # a person's decision on a waiting approval
 ```
 
-Weft is not bundled. It is pinned to an upstream commit, needs Docker, and on Windows runs inside WSL2. Without it the engines and every other tool work as before; `weft run` refuses to start and there is no fallback orchestrator. **Status: the workflows compile under the real Weft compiler and the DESK side is tested, but no workflow has been run by a Weft runtime yet.** Live runs are deferred to a separate Linux machine; the scripted procedure is [`docs/weft/05_LINUX_VALIDATION.md`](docs/weft/05_LINUX_VALIDATION.md). See [`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md).
+Weft is not bundled. It is pinned to an upstream commit (`integrations/weft/WEFT_PIN.json`), runs on Linux or macOS
+with Docker (on Windows only inside WSL2), and is built from source at the pin. Without it the engines and every
+other tool work as before; `weft run` refuses to start and there is no fallback orchestrator.
+
+**Status: no workflow has been run by a Weft runtime yet.** What is proven on the development machine:
+
+- both workflows compile under upstream's real compiler;
+- Weft's own admission check accepts the runs DESK starts;
+- the DESK side is tested against the real engines.
+
+Live runs are deferred to a separate Linux machine. The scripted procedure is
+[`docs/weft/05_LINUX_VALIDATION.md`](docs/weft/05_LINUX_VALIDATION.md); what is and is not proven is in
+[`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md).
 
 ---
 
@@ -160,7 +174,7 @@ Working on an existing board rather than a new one: `python desk.py rework start
 
 | Path | Contents |
 |---|---|
-| [`desk/`](desk/) | Engineering engines: `ipc.py`, `profile.py`, `spec.py`, `copper.py`, `power_distribution.py`, `placement*.py`, `drc_engine.py`, `erc.py`, `quality.py`, `routing/`, `rework/`, `component_intelligence/`, `domain_intelligence/`, `manufacturing/`, `orchestrator/`, `runtime/` |
+| [`desk/`](desk/) | Engineering engines: `ipc.py`, `profile.py`, `spec.py`, `copper.py`, `power_distribution.py`, `placement*.py`, `drc_engine.py`, `erc.py`, `quality.py`, `routing/`, `rework/`, `component_intelligence/`, `domain_intelligence/`, `manufacturing/`, `orchestrator/`, `runtime/`, `weft/`; settings in `config.py` |
 | [`tools/`](tools/) | Command-line tools for every stage; `python desk.py tools` lists them |
 | [`library/`](library/) | Resolved devices, verified pin maps (`library/pins/`), PCB domain knowledge (`library/pcb_domains/`) |
 | [`projects/`](projects/) | One directory per board: requirements, block plan, block specs, design profile, ledger |
@@ -229,20 +243,28 @@ The test suite was last run on 2026-11-12: 713 tests, 0 failures. Environment-de
 | NVIDIA NIM tool-calling agent | Live verified against the NIM endpoint, 2026-11-12 | `desk/orchestrator/agent_loop.py` |
 | EasyEDA Pro live mutation (placement, copper, routing write-back) | **Exercised live once** in the timed ESP32-S3 benchmark: blocks built, 38 parts placed, SES imported, API-only GND fills written, all read back. The benchmark verdict was FAIL; DRC reached 0 after the benchmark. Other paths are still not live verified. | [`live-test/`](live-test/README.md), [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
 | API-only copper planes (`pcb_PrimitiveFill`) | Live exercised (Plotus); offline tested. Needs the optional `shapely` package (the tests skip without it) | `tests/test_copper_fill.py`, [`desk/copper_fill.py`](desk/copper_fill.py) |
-| Weft orchestration (node contracts, node service, workflows) | Offline tested; workflows compile under upstream's compiler. **No run on a Weft runtime yet** | `tests/test_weft_*.py`, [`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md) |
+| Weft orchestration (node contracts, node service, workflows) | Offline tested; workflows compile under upstream's compiler and runs pass upstream's admission check. Linux validation procedure written, **not yet run**. **No run on a Weft runtime yet** | `tests/test_weft_*.py`, [`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md) |
 | Freerouting stopped-job SES with full connectivity | **Not confirmed** | [`docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`](docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md) |
 
 ---
 
 ## Known limitations
 
-- Live board mutation through the EasyEDA bridge has not completed a controlled live test. The code paths exist and are offline tested; they are marked not live verified in source.
+- Live board mutation through the EasyEDA bridge has been exercised once, in the timed ESP32-S3 benchmark, which
+  failed. No controlled live test of each mutation path exists yet; paths not exercised there are marked not live
+  verified in source.
 - Trace width uses the IPC-2221 power law, not IPC-2152 chart data. Results are conservative for external layers.
 - Placement refinement is single pass. It proposes moves; it does not iterate with the router.
 - No switching-loop area minimisation and no RF-specific ground-plane synthesis yet. Those rules are ADVISORY in the domain library.
 - Junction-temperature and component-rating rules are UNSUPPORTED: DESK lists them, it cannot evaluate them.
 - JLCPCB constraints are a static declaration; there is no live DFM or quoting API call.
-- Developed and tested on Windows 11. Linux and macOS should work (stdlib only) but have no test evidence yet.
+- Developed and tested on Windows 11. GitHub CI on `main` at `b168be9` (run 43181657514, 2026-11-12) passes on **5 of 8**
+  jobs:
+  - Passing: Ubuntu with Python 3.11 and 3.12, Windows with 3.11 and 3.12, macOS with 3.12.
+  - Python 3.9 on Ubuntu 22.04 and Windows: 4 errors in `test_ci_storage`, because that Python's SQLite has no
+    `unixepoch`.
+  - macOS with Python 3.11: 1 failure in `test_bridge_port_discovery`.
+  - Weft runs are not part of CI (see the Weft section).
 - Weft workflows have not been executed by a Weft runtime: durable waits, approval pauses and recovery are unproven, and 22 of the 32 DESK nodes are declared but fail closed until their engine adapter is written.
 - One timed end-to-end benchmark exists ([`live-test/`](live-test/README.md)). It **failed** at the copper stage after
   102.8 of 225 minutes. Treat the other time targets in the docs as targets, not measurements.
@@ -275,11 +297,12 @@ The test suite was last run on 2026-11-12: 713 tests, 0 failures. Environment-de
 
 ## Contributing
 
-1. Python standard library only. No pip dependencies.
-2. Every width, clearance or creepage rule must cite a formula, a standard table or a fabricator document. No magic numbers.
-3. Never weaken a quality gate, bypass DRC or connectivity checks, or replace missing evidence with confidence.
-4. Run the full suite before and after a change: `python -m unittest discover -s tests -p "test_*.py"`. Zero failures, zero errors.
-5. Read [`AGENTS.md`](AGENTS.md) for conventions, the block workflow and the safety rules.
+1. Python standard library only. No new pip dependencies; the single optional one (`shapely`, API-only copper fill) is imported lazily.
+2. Read settings through `desk.config`, never `os.environ` directly (`tests/test_config.py` enforces it).
+3. Every width, clearance or creepage rule must cite a formula, a standard table or a fabricator document. No magic numbers.
+4. Never weaken a quality gate, bypass DRC or connectivity checks, or replace missing evidence with confidence.
+5. Run the full suite before and after a change: `python -m unittest discover -s tests -p "test_*.py"`. Zero failures, zero errors.
+6. Read [`AGENTS.md`](AGENTS.md) for conventions, the block workflow and the safety rules.
 
 ## License
 
