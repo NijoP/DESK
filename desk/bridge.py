@@ -14,7 +14,7 @@ import io
 import socket
 import select
 from typing import Dict, List, Optional, Any, Tuple
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 
 if hasattr(sys.stdout, "buffer"):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
@@ -37,6 +37,11 @@ class BridgeSession:
     sheet_uuid: Optional[str]
     last_health_ts: float
     is_valid: bool = True
+    project_uuid: Optional[str] = None
+    bound_by: str = "unbound"           # explicit | project.json | env | uuid-scan | unbound
+    window_generation: int = 0
+    rotations: List[Dict[str, Any]] = field(default_factory=list)
+    last_response_meta: Dict[str, Any] = field(default_factory=dict)
 
 class SessionRegistry:
     """Manages active bridge sessions per project, preventing cross-project interference."""
@@ -202,38 +207,70 @@ class SessionRegistry:
 DEFAULT_PORT: int = 49620
 PORT: int = DEFAULT_PORT
 
-def _find_window_for_project(port: int, target_uuids: Tuple[str, ...], timeout: float = 1.0) -> Optional[str]:
-    """Finds the specific EasyEDA Pro window hosting the project's documents."""
-    if not target_uuids or not any(target_uuids):
+class GatewayHTTP:
+    """The gateway as the reliability layer sees it (desk.reliability.project_isolation.GatewayClient)."""
+
+    def __init__(self, port: int, timeout: float = 5.0):
+        self.port = port
+        self.timeout = timeout
+
+    def windows(self) -> List[Dict[str, Any]]:
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}/eda-windows")
+        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        wins = data.get("windows", []) if isinstance(data, dict) else []
+        active = data.get("activeWindowId") if isinstance(data, dict) else None
+        for w in wins:
+            if isinstance(w, dict) and active and w.get("windowId") == active:
+                w["active"] = True
+        return wins
+
+    def execute(self, window_id: Optional[str], code: str, timeout: float = 5.0) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {"code": code}
+        if window_id:
+            payload["windowId"] = window_id
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}/execute", data=json.dumps(payload).encode("utf-8"),
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode("utf-8")
+                data = json.loads(body)
+                err = data.get("error") if isinstance(data, dict) else body
+            except Exception:
+                err = str(e)
+            return {"success": False, "error": str(err), "http_status": e.code}
+
+
+def _resolver(port: int):
+    from desk.reliability.project_isolation import SessionResolver
+    return SessionResolver(GatewayHTTP(port))
+
+
+def _find_window_for_project(port: int, target_uuids: Tuple[str, ...], timeout: float = 1.0,
+                             project_uuid: Optional[str] = None) -> Optional[str]:
+    """The ONE window hosting the project (by project uuid) or whose active document is one of `target_uuids`.
+    Returns None when no window or more than one window matches: ambiguity is never resolved by guessing."""
+    if not project_uuid and not (target_uuids and any(target_uuids)):
         return None
     try:
-        req = urllib.request.Request(f"http://127.0.0.1:{port}/eda-windows")
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            wins = json.loads(r.read().decode("utf-8")).get("windows", [])
-        for w in wins:
-            wid = w.get("windowId")
-            if not wid: continue
-            try:
-                chk = urllib.request.Request(
-                    f"http://127.0.0.1:{port}/execute",
-                    data=json.dumps({
-                        "code": "const d=await eda.dmt_SelectControl.getCurrentDocumentInfo(); return d?d.uuid:null;",
-                        "windowId": wid
-                    }).encode("utf-8"),
-                    headers={"Content-Type": "application/json"}
-                )
-                with urllib.request.urlopen(chk, timeout=1.0) as cr:
-                    cres = json.loads(cr.read().decode("utf-8"))
-                    if cres.get("result") in target_uuids:
-                        return wid
-            except Exception:
-                pass
+        from desk.reliability.project_isolation import SessionResolver
+        res = SessionResolver(GatewayHTTP(port, timeout=max(timeout, 1.0)))
+        wins = res.discover()
+        hits = [w for w in wins if SessionResolver.matches(w, project_uuid or "", tuple(u for u in target_uuids if u))]
+        return hits[0].window_id if len(hits) == 1 else None
     except Exception:
-        pass
-    return None
+        return None
+
 
 def get_or_create_session(project_path: Optional[str] = None, window_id: Optional[str] = None) -> BridgeSession:
-    """Retrieves an existing valid session or establishes an isolated session bound to project."""
+    """Retrieves an existing valid session or establishes an isolated session bound to project.
+
+    Binding order: explicit `window_id`, `project.json["window_id"]`, `EDA_WINDOW_ID`, then the unique window that
+    hosts the project uuid / document uuids. When nothing resolves the session is UNBOUND (`window_id=None`): a read
+    then goes to the active window and says so; a mutation is refused by `ex()` (KF-20261112-008)."""
     session = SessionRegistry.get_session(project_path)
     now = time.time()
     port = SessionRegistry.get_port()
@@ -250,6 +287,7 @@ def get_or_create_session(project_path: Optional[str] = None, window_id: Optiona
 
     pcb_uuid = p_info.get("pcb_uuid")
     sheet_uuid = p_info.get("sheet_uuid")
+    project_uuid = p_info.get("project_uuid")
     proj_id = p_info.get("name") or (os.path.basename(p_path) if p_path else "unknown")
 
     # If session is active and verified within 30s, reuse it
@@ -258,17 +296,16 @@ def get_or_create_session(project_path: Optional[str] = None, window_id: Optiona
             return session
 
     # Resolve target window strictly for this project
+    bound_by = "unbound"
     target_win = window_id or p_info.get("window_id") or deskcfg.get("EDA_WINDOW_ID")
-    if not target_win and (pcb_uuid or sheet_uuid):
+    if target_win:
+        bound_by = "explicit" if window_id else ("project.json" if p_info.get("window_id") else "env")
+    if not target_win and (project_uuid or pcb_uuid or sheet_uuid):
         uuids = tuple(u for u in (pcb_uuid, sheet_uuid) if u)
-        target_win = _find_window_for_project(port, uuids)
-        if target_win and p_path and os.path.exists(os.path.join(p_path, "project.json")):
-            try:
-                from desk.fsutil import atomic_write_json
-                p_info["window_id"] = target_win
-                atomic_write_json(os.path.join(p_path, "project.json"), p_info, indent=1)
-            except Exception:
-                pass
+        target_win = _find_window_for_project(port, uuids, project_uuid=project_uuid)
+        if target_win:
+            bound_by = "uuid-scan"
+            _persist_window_id(p_path, p_info, target_win)
 
     session = BridgeSession(
         project_id=proj_id,
@@ -279,24 +316,94 @@ def get_or_create_session(project_path: Optional[str] = None, window_id: Optiona
         pcb_uuid=pcb_uuid,
         sheet_uuid=sheet_uuid,
         last_health_ts=now,
-        is_valid=True
+        is_valid=True,
+        project_uuid=project_uuid,
+        bound_by=bound_by,
     )
     if p_path:
         SessionRegistry.register_session(session)
     return session
 
+
+def _persist_window_id(p_path: Optional[str], p_info: Dict[str, Any], window_id: str) -> None:
+    if not (p_path and os.path.exists(os.path.join(p_path, "project.json"))):
+        return
+    try:
+        from desk.fsutil import atomic_write_json
+        p_info["window_id"] = window_id
+        atomic_write_json(os.path.join(p_path, "project.json"), p_info, indent=1)
+    except Exception:
+        pass
+
+
+def rebind_session(session: BridgeSession, reason: str) -> str:
+    """The bound window id is gone (gateway reconnect rotates every id): rediscover the ONE window that hosts the
+    project by uuid, store it, bump the generation. Raises IdentityUnverified when no or several windows match;
+    never falls back to the active window."""
+    from desk.reliability.project_isolation import ProjectSession
+    ps = ProjectSession(project_id=session.project_id, project_path=session.project_path,
+                        project_uuid=session.project_uuid or "", schematic_uuid=session.sheet_uuid or "",
+                        pcb_uuid=session.pcb_uuid or "", gateway_endpoint=session.endpoint, window_id=session.window_id)
+    ps.invalidate(reason)
+    _resolver(session.port).resolve(ps)          # raises IdentityUnverified on 0 or >1 matches
+    old = session.window_id
+    session.window_id = ps.window_id
+    session.window_generation += 1
+    session.rotations.append({"ts": time.time(), "from": old, "to": ps.window_id, "reason": str(reason)[:200]})
+    pj = os.path.join(session.project_path or "", "project.json")
+    if session.project_path and os.path.exists(pj):
+        try:
+            with open(pj, encoding="utf-8") as f:
+                p_info = json.load(f)
+        except Exception:
+            p_info = {}
+        _persist_window_id(session.project_path, p_info, ps.window_id or "")
+    return ps.window_id or ""
+
+
+_MUTATING_RX = __import__("re").compile(
+    r"\.(create|delete|modify|importChanges|importAutoRouteSesFile|setNetlist|clearRouting|rebuildCopperRegion|"
+    r"createPanel|overwrite[A-Za-z]*|modifyPcbName|save)\s*\(")
+
+
+def looks_mutating(code: str) -> bool:
+    """A script that calls a creating/deleting/modifying/saving API is a mutation whatever the caller says."""
+    return bool(_MUTATING_RX.search(code or ""))
+
+
 def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str] = None,
-       project_path: Optional[str] = None, is_mutation: bool = False) -> Any:
+       project_path: Optional[str] = None, is_mutation: bool = False, allow_unbound: bool = False) -> Any:
     """Execute JS body inside EasyEDA Pro.
     Classifies errors, protects against blind retries on mutations, and binds execution to project session.
+
+    Reliability rules (desk/reliability):
+    * a mutating script (flag or `looks_mutating`) is refused without a verified window binding unless
+      `allow_unbound` / DESK_ALLOW_UNBOUND_WINDOW=1 says the operator accepts the active window;
+    * "window no longer connected" means the script did NOT run: the session is rebound by project uuid
+      (exactly one match, else IdentityUnverified) and the call is sent once more to the new id;
+    * a timeout on a mutating script is never repeated (BridgeMutationTimeout, journalled dirty);
+    * the gateway port has a circuit breaker so a dead gateway fails fast after three attempts.
     """
     from desk.profiler import TelemetryCollector
+    from desk.reliability.project_isolation import is_window_disconnected_error
+    from desk.reliability.circuit_breaker import BreakerRegistry
+    from desk.errors import IdentityUnverified
     collector = TelemetryCollector.get_instance()
     collector.record_bridge_call()
 
     session = get_or_create_session(project_path, window_id=window_id)
     port = session.port
     target_window = session.window_id
+    mutating = bool(is_mutation) or looks_mutating(code)
+    if mutating and not target_window and not allow_unbound and not deskcfg.get_bool("DESK_ALLOW_UNBOUND_WINDOW", False):
+        raise IdentityUnverified(
+            f"STOP: mutating script for project '{session.project_id}' has no verified EasyEDA window binding; it would "
+            "run in whichever window is ACTIVE (KF-20261112-008). Bind the project first: python tools/rebind.py "
+            "projects/<P> (matches the project uuid), or set EDA_WINDOW_ID, or project.json window_id.",
+            project_id=session.project_id, bound_by=session.bound_by)
+    breaker = BreakerRegistry.get(f"gateway:{port}", failure_threshold=3, recovery_timeout_s=20.0)
+    breaker.check()
+    rebound_once = False
 
     for attempt in range(retries + 1):
         payload = {"code": code}
@@ -310,16 +417,24 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
                 data=body,
                 headers={"Content-Type": "application/json"}
             )
+            t_req = time.time()
             with urllib.request.urlopen(req, timeout=timeout) as r:
                 resp = json.loads(r.read().decode("utf-8"))
 
             session.last_health_ts = time.time()
+            session.last_response_meta = {"ts": session.last_health_ts, "ms": round((time.time() - t_req) * 1000.0, 1),
+                                          "success": bool(resp.get("success")), "window_id": target_window,
+                                          "error": str(resp.get("error") or "")[:200]}
+            breaker.record_success()
 
             if not resp.get("success"):
                 err_msg = str(resp.get("error"))
-                # Classified error handling
                 if "WRONG SHEET" in err_msg:
                     raise BridgeDocumentMismatch(f"Bridge document mismatch: {err_msg}", active=resp.get("result"))
+                if is_window_disconnected_error(err_msg) and not rebound_once:
+                    rebound_once = True
+                    target_window = rebind_session(session, err_msg)
+                    continue   # the gateway refused before executing: safe to resend once
                 raise BridgeScriptError("EDA error: " + err_msg)
 
             return resp.get("result")
@@ -329,23 +444,30 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
                 raw_body = e.read().decode("utf-8")
                 err_data = json.loads(raw_body)
                 err_detail = err_data.get("error") or raw_body
-                raise BridgeScriptError(f"EasyEDA JavaScript Runtime Error: {err_detail}", http_status=e.code)
-            except SystemExit:
-                raise
             except Exception:
-                raise BridgeScriptError(f"Bridge HTTP Error {e.code}: {e}", http_status=e.code)
+                err_detail = str(e)
+            session.last_response_meta = {"ts": time.time(), "success": False, "http_status": e.code,
+                                          "window_id": target_window, "error": str(err_detail)[:200]}
+            if is_window_disconnected_error(str(err_detail)) and not rebound_once:
+                rebound_once = True
+                target_window = rebind_session(session, str(err_detail))
+                continue
+            raise BridgeScriptError(f"EasyEDA JavaScript Runtime Error: {err_detail}", http_status=e.code)
 
         except (OSError, TimeoutError) as e:
+            is_timeout = isinstance(e, (TimeoutError, socket.timeout)) or "timed out" in str(e).lower()
+            if not is_timeout:
+                breaker.record_failure(str(e))
             # Never blindly repeat a mutating operation on network/bridge timeout
-            if is_mutation and (isinstance(e, TimeoutError) or isinstance(e, socket.timeout)
-                                or "timed out" in str(e).lower()):
+            if mutating and is_timeout:
                 SessionRegistry.invalidate_session(project_path)
                 raise BridgeMutationTimeout(f"Mutation timeout: operation may have partially succeeded. "
                                             f"Inspect PCB state before retrying. ({e})")
 
             # Auto-resolve window if lost
-            if session.pcb_uuid or session.sheet_uuid:
-                resolved = _find_window_for_project(port, tuple(u for u in (session.pcb_uuid, session.sheet_uuid) if u))
+            if session.pcb_uuid or session.sheet_uuid or session.project_uuid:
+                resolved = _find_window_for_project(port, tuple(u for u in (session.pcb_uuid, session.sheet_uuid) if u),
+                                                    project_uuid=session.project_uuid)
                 if resolved and resolved != target_window:
                     target_window = resolved
                     session.window_id = resolved
