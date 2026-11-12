@@ -1,0 +1,35 @@
+{
+  "start_wall": "2026-11-12T04:50:28.403+05:30",
+  "start_mono_ns": 44609281000000,
+  "total_budget_min": 225,
+  "deadline_wall": "2026-11-12T08:35:28+05:30",
+  "clock": "time.monotonic_ns (system-wide)",
+  "stage_budgets_min": {
+    "1": 45,
+    "2": 45,
+    "3": 90,
+    "4": 30,
+    "5": 15
+  },
+  "stages": {
+    "1": {
+      "duration_min": 28.302,
+      "result": "PASS"
+    },
+    "2": {
+      "duration_min": 11.923,
+      "result": "PASS_WITH_DEVIATION"
+    },
+    "3": {
+      "duration_min": 38.09,
+      "result": "PASS_WITH_DEVIATION"
+    },
+    "4": {
+      "duration_min": 23.277,
+      "result": "FAIL"
+    }
+  },
+  "end_wall": "2026-11-12T06:33:18.412+05:30",
+  "end_mono_ns": 50779296000000,
+  "total_elapsed_min": 102.834
+}

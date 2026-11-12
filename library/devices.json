@@ -237,6 +237,14 @@
   "name": "AO3401A",
   "footprint": ""
  },
+ "AP2112K-3.3TRG1": {
+  "name": "AP2112K-3.3TRG1",
+  "lcsc": "C51118",
+  "mfr": "AP2112K-3.3TRG1",
+  "footprint": "SOT-25-5_L2.9-W1.6-P0.95-LS2.8-BL",
+  "uuid": "8c72fdff8032447e8704660d377171f6",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
+ },
  "AUX_WIREPAD_4P": {
   "libraryUuid": "7db9ad37e8bc4e319ee58552cbf680c9",
   "uuid": "e143fe4c6483b546",
@@ -467,6 +475,22 @@
   "uuid": "7d1afce20f814c1ba990ec25d3974dd9",
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
  },
+ "PZ254V-11-20P": {
+  "name": "PZ254V-11-20P",
+  "lcsc": "C22465880",
+  "mfr": "PZ254V-11-20P",
+  "footprint": "HDR-TH_20P-P2.54-V-M-4",
+  "uuid": "e529ce3945bc4992a6c4e4fd84dcbfb5",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
+ },
+ "RH-5015": {
+  "name": "RH-5015",
+  "lcsc": "C5199798",
+  "mfr": "RH-5015",
+  "footprint": "SMD_RH-5015",
+  "uuid": "2c8f5aa255f94855b169ea64be46e4e6",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
+ },
  "RT0402BRD07150KL": {
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",
   "uuid": "68ff901abaee71a4",
@@ -529,11 +553,27 @@
   "name": "SM04B-SRSS-TB(LF)(SN)",
   "footprint": ""
  },
+ "SMD1206P050TF": {
+  "name": "SMD1206P050TF",
+  "lcsc": "C146251",
+  "mfr": "SMD1206P050TF",
+  "footprint": "F1206",
+  "uuid": "a0b1e68eed3a4452916858e8a4c92220",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
+ },
  "SMD1812P110TF/33": {
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",
   "uuid": "363f5876227374f9",
   "name": "SMD1812P110TF/33",
   "footprint": ""
+ },
+ "SMF5.0A": {
+  "name": "SMF5.0A",
+  "lcsc": "C132591",
+  "mfr": "SMF5.0A",
+  "footprint": "SOD-123_L2.8-W1.8-LS3.7-RD",
+  "uuid": "fc9ca03007d644cab5d5466060f13909",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
  },
  "SN74LV595ARGYR": {
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",
@@ -578,10 +618,12 @@
   "footprint": ""
  },
  "SS34": {
-  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",
-  "uuid": "281ecd79b2c19699",
-  "name": "SS34",
-  "footprint": ""
+  "name": "SS34_C8678",
+  "lcsc": "C8678",
+  "mfr": "SS34",
+  "footprint": "SMA_L4.3-W2.6-LS5.2-RD",
+  "uuid": "804240ef97df427480be2a5281ccea31",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
  },
  "SWPA3015S2R2NT": {
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",
@@ -622,10 +664,12 @@
   "footprint": ""
  },
  "TPD4E05U06DQAR": {
-  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",
-  "uuid": "2c4afc31108a5ce0",
   "name": "TPD4E05U06DQAR",
-  "footprint": ""
+  "lcsc": "C125795",
+  "mfr": "TPD4E05U06DQAR",
+  "footprint": "USON-10_L2.5-W1.0-P0.50-BL",
+  "uuid": "71bd5434893a460c8be823067c2f4e47",
+  "libraryUuid": "0819f05c4eef4c71ace90d822a990e87"
  },
  "TPS22918DBVR": {
   "libraryUuid": "0819f05c4eef4c71ace90d822a990e87",

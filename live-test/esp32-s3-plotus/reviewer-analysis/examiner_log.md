@@ -1,0 +1,11 @@
+# Examiner log
+- 04:50:44 +05:30 first collector launch (PID 30644) died immediately: unquoted path with space in -File arg. No rows written.
+- 04:51:06 relaunched with quoted path, PID 33512 (telemetry_pid.txt). Rows appearing at 60s cadence. First row CPU deltas are 0 (no prior sample) - not real.
+- Engineering clock start per timing.json: 2026-11-12T04:50:28.403+05:30; deadline 08:35:28.
+- Note: GPU readings 0% / 0 MB / 47C on first row; remote inference so idle expected.
+- 05:00 T+10 written. Builds 01,02 failed; register empty; RAM avail 579MB.
+- 05:21 T+20 (LATE, retroactive) and T+30 written after coordinator checkpoint. Stage1 ended 05:18:46 PASS 28.3min. 3 of 4 neatness PNGs byte-identical. ERC warning un-itemised. Examiner run had ended before T+20; limitation: subagent cannot idle-wait.
+- 05:32 T+40 written (1.5 min late, via checkpoint). S2 closed PASS_WITH_DEVIATION 11.92min; I judge S2 hard gates NOT fully met (rounded corners deferred, C5 2.7mm, check passed=false). H-001 human intervention accepted. S3 started 05:31:00.
+- 05:41 T+50 written. S3 at 9.4 min, no routing yet; 8 min lost to missing router (F-012, H-002). Jar sha verified. design_profile 10mil/6mil on 2-layer not 90ohm.
+- 06:12 T+60,T+70 retroactive, T+80 written after checkpoint. S3 ended PASS_WITH_DEVIATION 38.09. GND gate NOT MET at S3. DESK connectivity_report says 2/43 vs builder 42/43 (conflict). Raw DRC verified (174 clearance in run1, 0 in run6). U1 moved 1 mm after S2 close; S2 records stale.
+- 2026-11-12T06:36:25+05:30 FINAL reports written; telemetry PID 33512 stopped by me. Verdict FAIL.
