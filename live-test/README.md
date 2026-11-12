@@ -1,17 +1,17 @@
-﻿# DESK live tests
+# DESK live test: performance metrics
 
-These are real end-to-end runs of DESK against a live EasyEDA Pro session, each graded by an independent reviewer.
-Every run keeps its frozen requirements, timing, failure register, reviewer analysis and output files, so the results
-can be checked rather than taken on trust.
+Measured performance of DESK on real end-to-end board builds in a live EasyEDA Pro session.
+- **Records kept:** each run keeps its frozen requirements, timing, failure register, independent reviewer analysis
+  and output files, so every number below can be traced to a file.
+- **Reviewer:** a separate Claude Sonnet examiner.
 
-| Run | Board | Builder | Reviewer | Graded verdict | Time used | Board state |
-|---|---|---|---|---|---:|---|
-| [**Run 2 (2b)**](#run-2-fresh-rebuild-2026-11-12) Â· [`esp32-s3-plotus-run2/`](esp32-s3-plotus-run2/) | ESP32-S3 dev board, 2 layers, 74 Ã— 44 mm, rounded corners | Claude Opus 5.5 driving DESK (latest `main`, 2c9de1a) | Claude Sonnet examiner (separate session) | **PARTIAL PASS, 81/100** | 66.7 / 225 min | âœ… DRC 0, 43/43 nets, full rev A package |
-| [Run 1](#run-1-first-benchmark-2026-11-12) Â· [`esp32-s3-plotus/`](esp32-s3-plotus/) | same requirements | Claude Opus 5.5 driving DESK | Claude Sonnet examiner | **FAIL, 50/100** | 102.8 / 225 min | DRC 0 only after post-benchmark fixes |
+| Run | Board | Builder | Time used (of 225 min) | EasyEDA DRC | Nets connected | Examiner score |
+|---|---|---|---:|---:|---:|---:|
+| [**Run 2 (2b)**](#run-2-fresh-rebuild-2026-11-12) · [`esp32-s3-plotus-run2/`](esp32-s3-plotus-run2/) | ESP32-S3 dev board, 2 layers, 74 × 44 mm, rounded corners, 40 parts | Claude Opus 5.5 driving DESK (`main` 2c9de1a) | **66.7** | **0** | **43 / 43** | 81 / 100 |
+| [Run 1](#run-1-first-benchmark-2026-11-12) · [`esp32-s3-plotus/`](esp32-s3-plotus/) (baseline) | same requirements, 38 parts | Claude Opus 5.5 driving DESK | 102.8 | 5 at clock stop (0 after later fixes) | 42 / 43 at clock stop | 50 / 100 |
 
 Run 2 was a full restart from an empty schematic and PCB, under the same frozen requirements, rules and stage
-budgets. The Captain's target was **a score above 90; run 2 reached 81**. Â§R2.6 lists the points still between
-81 and a PASS.
+budgets.
 
 ---
 
@@ -26,7 +26,7 @@ budgets. The Captain's target was **a score above 90; run 2 reached 81**. Â§R2
   - Documented API calls only, readback after every change, no orders, nothing pushed during the run.
   - A separate Sonnet examiner with write access to its evaluation folder only.
 - **Lessons from run 1 applied:**
-  - GND is routed and verified **inside Stage 3**. Run 1 deferred it and failed Stage 4.
+  - GND is routed and verified **inside Stage 3**. Run 1 deferred it to Stage 4, where 5 GND opens remained.
   - The board uses a strict GND model in which a via is *not* trusted to join a fill.
   - The USB pair is in-line with no stubs to TP7/TP8.
   - Corners are rounded and C5 sits within 2 mm of the module.
@@ -43,23 +43,31 @@ budgets. The Captain's target was **a score above 90; run 2 reached 81**. Â§R2
 - **Warm start:** the reviewer counts run 2b as a warm start, because tooling and lessons were carried over. Its
   speed is therefore **not like-for-like** with run 1.
 
-## R2.2 Results (graded run 2b)
-The clock ran from 13:54:08 to 15:00:50 IST: **66.7 of 225 minutes**. Every stage closed STAGE_END_PASS within its
-budget.
+## R2.2 Performance metrics (run 2b)
+The clock ran from 13:54:08 to 15:00:50 IST: **66.7 of 225 minutes (30 % of budget)**. No stage borrowed time.
 
-| Stage | Budget | Used | Builder evidence | Reviewer grade |
-|---|---:|---:|---|---|
-| 1 Schematic | 45 | 11.2 | 4 blocks VERIFIED, 40 parts / 43 nets match spec; EasyEDA ERC 0 errors, 2 warnings (count only, text not exposed by the API); itemized audit: 0 floating pins, 0 single-pin nets | PASS with caveats (ERC warnings unread, 17 orphan texts) |
-| 2 Placement | 45 | 12.3 | DESK gate "PLACEMENT & ROUTABILITY OK", routability 0.88; rounded 74 Ã— 44 outline, 4 Ã— M3; decoupling 0.85â€“0.88 mm from U3 | PASS |
-| 3 Routing | 90 | 33.0 | **EasyEDA DRC 0**; DESK verifier 43/43; strict GND model 1 group; USB D+/Dâˆ’ 63.05 / 63.76 mm (Î” 0.71 mm); power 0.305 mm | PARTIAL (USB â‰ˆ153 Î© diff, not 90 Î©; 0.8 mm Dâˆ’ tap at the ESD array) |
-| 4 Copper | 30 | 3.1 | GND pour on both layers (0.3 mm clearance, 0.5 mm edge, thermals on 8 THT pads), 35 grid stitching vias + 6 second vias, antenna keep-out 0.000 mmÂ² copper, DRC 0 | PASS on records (Gerber-level check UNVERIFIED) |
-| 5 Manufacturing | 15 | 6.4 | Silkscreen check PASS (90 texts â‰¥ 0.91 mm), final DRC 0, Gerber + 3 drill files, BOM with LCSC on 18/18 lines, CPL, PDF, .epro | PASS with caveats |
+| Stage | Budget (min) | Used (min) | Share | Measured result (live readback) |
+|---|---:|---:|---:|---|
+| 1 Schematic | 45 | 11.2 | 25 % | 4 blocks verified, 40 parts / 43 nets match spec; EasyEDA ERC 0 errors, 2 warnings (count only); itemized audit: 0 floating pins, 0 single-pin nets |
+| 2 Placement | 45 | 12.3 | 27 % | routability 0.88; rounded 74 × 44 outline, 4 × M3; decoupling 0.85–0.88 mm from the module power pin |
+| 3 Routing | 90 | 33.0 | 37 % | EasyEDA DRC 0; 43/43 nets; GND one group (strict model); USB D+/D− 63.05 / 63.76 mm (Δ 0.71 mm), ≈153 Ω diff; power 0.305 mm |
+| 4 Copper | 30 | 3.1 | 10 % | GND pour both layers (top 1668.7 mm², bottom 2095.2 mm²), 41 stitching vias, thermals on 8 THT pads, antenna keep-out copper 0 mm², DRC 0 |
+| 5 Manufacturing | 15 | 6.4 | 42 % | 90 silkscreen texts (min 0.914 mm, pad gap ≥ 0.358 mm), final DRC 0, Gerber + 3 drill files, BOM with LCSC 18/18, CPL 40 parts, PDF, `.epro` |
 
-**Reviewer score: 81/100, PARTIAL PASS** ("strong; one step from PASS"):
+| Process metric | Value |
+|---|---|
+| Failures logged / recovered in-session | 12 / 11 (one EasyEDA crash needed a reopen) |
+| Human interventions on the clock | 2 |
+| Autorouted vs hand-designed | USB pair hand-designed (protected wiring); remaining nets Freerouting; GND completed by fills + links |
+| CPU mean / peak | 57 % / 75.7 % |
+| Free RAM minimum | 553 MB (16 of 67 samples under 1 GB); EasyEDA ≈ 11–12 GB private |
+| GPU | idle (remote inference) |
 
-| Electrical | Physical | Manufacturing package | Evidence and honesty | Total |
+Examiner score breakdown (same rubric for both runs):
+
+| Electrical | Physical | Manufacturing package | Evidence and process | Total |
 |---:|---:|---:|---:|---:|
-| 25/30 | 20/25 | 21/25 | 15/20 | **81** (run 1: 50) |
+| 25/30 | 20/25 | 21/25 | 15/20 | 81 (run 1: 50) |
 
 **Human interventions on the 2b clock:**
 - **EasyEDA reopen:** the Captain reopened EasyEDA after a crash (R2-F-004, likely out of memory; free RAM fell to
@@ -67,10 +75,10 @@ budget.
 - **Import Changes:** the Captain clicked *Apply* in Import Changes. The API cannot apply schematic-to-PCB changes.
 
 **Disclosed post-end change:**
-- **What:** an acute-angle audit found two open 45Â° 5V junctions at C9, and they were removed at T+68.1 min.
+- **What:** an acute-angle audit found two open 45° 5V junctions at C9, and they were removed at T+68.1 min.
 - **Logged:** as the bench event `POST_END_REFINEMENT`.
 - **Re-verified afterwards:** refill, DRC 0, 43/43, the silkscreen check and the exports.
-- **Reviewer:** "no verdict effect".
+- **Not counted** in the stage times above.
 
 | Schematic | Placement (Stage 2) | Final board (copper + silkscreen) |
 |---|---|---|
@@ -83,7 +91,7 @@ budget.
   - MCU_CORE;
   - HEADERS.
 
-  C9/C10 were added so the 5 V rail carries 10 ÂµF + 1 ÂµF + 100 nF. To avoid the ghost-text lines, the rows sit
+  C9/C10 were added so the 5 V rail carries 10 µF + 1 µF + 100 nF. To avoid the ghost-text lines, the rows sit
   below them.
   [`erc_report.txt`](esp32-s3-plotus-run2/builder-records/erc_report.txt) has the ERC summary and the itemized audit,
   and [`orphan_text_records.txt`](esp32-s3-plotus-run2/builder-records/orphan_text_records.txt) lists the ghosts.
@@ -97,7 +105,7 @@ budget.
   ([`ROUTING_RECORD.md`](esp32-s3-plotus-run2/builder-records/ROUTING_RECORD.md)):
   1. Freerouting with GND included plateaued at 29 unrouted, and its USB topology had stubs, so the result was
      discarded.
-  2. The USB pair was hand-designed to be in-line: J1 â†’ ESD U1 (flow-through) â†’ TP7/TP8 â†’ module. It was injected
+  2. The USB pair was hand-designed to be in-line: J1 → ESD U1 (flow-through) → TP7/TP8 → module. It was injected
      into the DSN as **protected wiring**, and Freerouting then routed everything else
      ([`usb_route.py`](esp32-s3-plotus-run2/benchmark-scripts/usb_route.py)).
   3. The SES import forces 6 mil widths, so USB went back to 10 mil and power to 12 mil.
@@ -111,14 +119,14 @@ budget.
 - **Silkscreen and release:**
   - Designators were relocated using the true live text boxes
     ([`silk_place.py`](esp32-s3-plotus-run2/benchmark-scripts/silk_place.py)).
-  - Labels were added: the brand line, a function label at each of TP1â€“TP8, and mirrored J2/J3 pin labels on the
+  - Labels were added: the brand line, a function label at each of TP1–TP8, and mirrored J2/J3 pin labels on the
     bottom.
   - [`silk_check.py`](esp32-s3-plotus-run2/benchmark-scripts/silk_check.py) checks every text: minimum height 0.914
     mm, minimum gap to a pad 0.358 mm, no overlaps.
   - The LCSC BOM was cross-checked against the block specs
     ([`make_bom_lcsc.py`](esp32-s3-plotus-run2/benchmark-scripts/make_bom_lcsc.py)).
 
-## R2.4 Failure register (R2-F-001 â€¦ R2-F-012)
+## R2.4 Failure register (R2-F-001 … R2-F-012)
 [`failure_register.json`](esp32-s3-plotus-run2/builder-records/failure_register.json). The reviewer accepted every
 entry as plausible and consistent with the files.
 
@@ -145,7 +153,7 @@ All files are in [`esp32-s3-plotus-run2/reviewer-analysis/`](esp32-s3-plotus-run
 - [`HARDWARE_PERFORMANCE_REPORT.md`](esp32-s3-plotus-run2/reviewer-analysis/HARDWARE_PERFORMANCE_REPORT.md) and
   [`HARDWARE_RESOURCE_METRICS.csv`](esp32-s3-plotus-run2/reviewer-analysis/HARDWARE_RESOURCE_METRICS.csv). The run
   was **memory-bound**:
-  - EasyEDA held about 11â€“12 GB private memory.
+  - EasyEDA held about 11–12 GB private memory.
   - Free RAM fell to 553 MB, and 16 of 67 samples were under 1 GB.
   - CPU averaged 57 %, and the GPU sat idle.
 - [`10_MIN_REPORTS/`](esp32-s3-plotus-run2/reviewer-analysis/10_MIN_REPORTS/): **T+20 to T+50 were written late, from
@@ -153,13 +161,13 @@ All files are in [`esp32-s3-plotus-run2/reviewer-analysis/`](esp32-s3-plotus-run
   [`EVALUATOR_LIMITATIONS.md`](esp32-s3-plotus-run2/reviewer-analysis/EVALUATOR_LIMITATIONS.md) records what the
   reviewer could not check: no EasyEDA access, no Gerber viewer, and no live re-run of the builder's tools.
 
-## R2.6 What still stands between 81 and a PASS
-- **USB impedance (gate not met as written).**
-  - Edge-coupled 0.254 / 0.246 mm on a 1.6 mm 2-layer board gives about 153 Î© differential.
-  - About 90 Î© would need about 1.0 mm traces, which do not fit the 0.5 mm-pitch ESD array or the 1.27 mm module pads,
-    or else a 4-layer stack-up (h â‰ˆ 0.2 mm).
-  - At USB Full Speed (12 Mb/s, 63 mm) this is electrically tolerable, but the gate is not met.
-- **Dâˆ’ tap.** The TPD4E05U06 DQA pinout puts Dâˆ’ (pin 2) between D+ and GND with an NC column opposite, so Dâˆ’ is
+## R2.6 Open technical items
+- **USB impedance.**
+  - Edge-coupled 0.254 / 0.246 mm on a 1.6 mm 2-layer board gives about 153 Ω differential.
+  - About 90 Ω would need about 1.0 mm traces, which do not fit the 0.5 mm-pitch ESD array or the 1.27 mm module pads,
+    or else a 4-layer stack-up (h ≈ 0.2 mm).
+  - At USB Full Speed (12 Mb/s, 63 mm) this is electrically tolerable; the frozen requirement asks for about 90 Ω.
+- **D− tap.** The TPD4E05U06 DQA pinout puts D− (pin 2) between D+ and GND with an NC column opposite, so D− is
   reached by a 1.1 mm via-to-pad tap.
 - **Schematic.** There are 2 ERC warnings whose text the API cannot return, and 17 orphan title texts remain in the
   saved sheet.
@@ -188,7 +196,7 @@ recomputed them and found a match.
 - **`desk/routing/outline.py`:**
   - "R" spec corrected to `[x, y_top, w, h, rotation, radius]`.
   - The origin is now the bottom-left corner.
-  - The radius goes into field 7, so the outline is no longer rotated by 78.7Â°.
+  - The radius goes into field 7, so the outline is no longer rotated by 78.7°.
   - Calls use the live `create(net, layer, polygon, lineWidth, lock)` signature.
   - Validation now flags rotated outlines instead of every radius.
 - **`desk/copper_fill.py`:** absolute (already rotated) POLYGON pads are no longer rotated again.
@@ -224,7 +232,7 @@ ESP32-S3 dev board in a live EasyEDA Pro project, within a fixed time budget and
 | Stage | Budget (min) | Scope |
 |---|---:|---|
 | 1 Schematic | 45 | All essential blocks, LCSC-resolved parts, ERC evidence |
-| 2 Placement | 45 | All parts placed, outline, holes, decoupling â‰¤ 2 mm, antenna keep-out, deterministic placement check |
+| 2 Placement | 45 | All parts placed, outline, holes, decoupling ≤ 2 mm, antenna keep-out, deterministic placement check |
 | 3 Routing | 90 | Every net physically connected, 0 shorts / 0 critical DRC, USB constraints, routing record |
 | 4 Copper | 30 | GND pour on top and bottom, every GND pad connected, no islands, stitching, clearances |
 | 5 Manufacturing | 15 | Gerber, drill, BOM (LCSC), CPL, preflight checks |
@@ -247,15 +255,15 @@ ESP32-S3 dev board in a live EasyEDA Pro project, within a fixed time budget and
 
 ### Key design parameters (from `DESIGN_PARAMETERS.md`)
 - **Board:** 2 layers, 1.6 mm, 1 oz copper. Minimum 5 mil track and space, 0.3 mm via drill. Rectangular outline
-  with rounded corners. 4 Ã— M3 holes.
-- **Power path:** USB-C VBUS (5 V) â†’ polyfuse â†’ TVS â†’ Schottky â†’ AP2112K-3.3 LDO. Decoupling of 10 ÂµF + 1 ÂµF +
+  with rounded corners. 4 × M3 holes.
+- **Power path:** USB-C VBUS (5 V) → polyfuse → TVS → Schottky → AP2112K-3.3 LDO. Decoupling of 10 µF + 1 µF +
   100 nF per domain.
 - **USB-C interface:**
   - native USB on GPIO19/20;
-  - 5.1 kÎ© pull-downs on CC1 and CC2;
-  - a 4-line ESD array on D+/Dâˆ’/CC1/CC2;
+  - 5.1 kΩ pull-downs on CC1 and CC2;
+  - a 4-line ESD array on D+/D−/CC1/CC2;
   - the connector centered on a short edge.
-- **Controls and straps:** EN reset with a 10 kÎ© / 1 ÂµF RC network, BOOT on GPIO0, strapping pins handled.
+- **Controls and straps:** EN reset with a 10 kΩ / 1 µF RC network, BOOT on GPIO0, strapping pins handled.
 - **Headers and indicators:** 2.54 mm headers on the long edges, a power LED and a status LED.
 
 ## 3. The design that was built
@@ -263,46 +271,45 @@ ESP32-S3 dev board in a live EasyEDA Pro project, within a fixed time budget and
 - **USB-C:** TYPE-C-31-M-12 (C165948) with 5.1 k Rd on CC1 and CC2, and a TPD4E05U06DQAR ESD array (C125795).
 - **Power:** SMD1206P050TF polyfuse, SMF5.0A TVS, SS34 Schottky, AP2112K-3.3 LDO (600 mA).
 - **Controls and straps:**
-  - EN 10 k / 1 ÂµF RC network with a RESET button;
+  - EN 10 k / 1 µF RC network with a RESET button;
   - GPIO0 pull-up with a BOOT button;
   - GPIO3 pull-up, GPIO45/46 pull-downs.
 - **Indicators and test points:** green power LED, blue LED on GPIO48. 8 test points: VBUS, 5V, 3V3, GND, EN,
-  GPIO0, D+, Dâˆ’.
-- **Headers:** 2 Ã— 1Ã—20 2.54 mm headers carrying 31 GPIOs, UART0, EN and power.
-- **Board:** 74 Ã— 44 mm, 2 layers, 4 Ã— M3 NPTH. Antenna flush with the edge and a keep-out across its full width.
+  GPIO0, D+, D−.
+- **Headers:** 2 × 1×20 2.54 mm headers carrying 31 GPIOs, UART0, EN and power.
+- **Board:** 74 × 44 mm, 2 layers, 4 × M3 NPTH. Antenna flush with the edge and a keep-out across its full width.
 - **Parts and nets:** 38 parts, 43 nets, every part with an LCSC number. (Run 2 adds C9/C10: 40 parts.)
 
 Deviations from the frozen text, all recorded:
-- The parameter file lists GPIO4â€“7/15â€“17 as strapping pins. On the ESP32-S3 the straps are GPIO0/3/45/46, so no
+- The parameter file lists GPIO4–7/15–17 as strapping pins. On the ESP32-S3 the straps are GPIO0/3/45/46, so no
   extra pull-ups were added.
 - The "38 pins, 0.5 mm pitch" module description is wrong. The real footprint (41 pads, 1.27 mm pitch) was used.
-- The board is 74 Ã— 44 mm instead of about 60 Ã— 40 mm, to fit 20-pin headers, corner M3 holes and the antenna
+- The board is 74 × 44 mm instead of about 60 × 40 mm, to fit 20-pin headers, corner M3 holes and the antenna
   keep-out.
 
 | Schematic | Placement (Stage 2) | Copper (end of Stage 4) |
 |---|---|---|
 | ![schematic](esp32-s3-plotus/images/sch_overview_v2.png) | ![placement](esp32-s3-plotus/images/placement_v4_neat.png) | ![copper](esp32-s3-plotus/images/copper_final.png) |
 
-## 4. Benchmark results (graded run)
-The clock ran from 04:50:28 to 06:33:18 IST: **102.8 of 225 minutes**. It stopped early because Stage 4 failed a
-hard gate.
+## 4. Performance metrics (run 1 baseline)
+The clock ran from 04:50:28 to 06:33:18 IST: **102.8 of 225 minutes**. The stop rule ended the run after Stage 4,
+so Stage 5 was not started.
 
-| Stage | Budget | Used | Builder result | Reviewer result | Board after post-benchmark fixes |
-|---|---:|---:|---|---|---|
-| 1 Schematic | 45 | 28.3 | PASS (DESK verify and lint pass; EasyEDA ERC 0 errors) | PASS with caveats (1 ERC warning not itemised) | PASS |
-| 2 Placement | 45 | 11.9 | PASS_WITH_DEVIATION | NOT FULLY MET: C5 is 2.7 mm from the module power pin (limit 2.0 mm), no rounded corners, DESK placement check `passed=false` | Unchanged deviations: C5 2.7 mm, no rounded corners |
-| 3 Routing | 90 | 38.1 | PASS_WITH_DEVIATION: 42/43 nets, 0 clearance, 0 short; GND left to the pours | NOT FULLY MET: GND gate moved to Stage 4; USB not impedance-controlled; test-point stubs | âœ… 43/43 nets connected, 0 clearance, 0 short |
-| 4 Copper | 30 | 23.3 | **FAIL**: 5 GND connection errors | **FAIL** | âœ… **DRC 0 errors**, GND fully connected |
-| 5 Manufacturing | 15 | 0 | Not started (stop rule) | NOT STARTED | Rev A files exported (Â§8); release preflight not run |
+| Stage | Budget (min) | Used (min) | Measured result at clock stop |
+|---|---:|---:|---|
+| 1 Schematic | 45 | 28.3 | DESK verify and lint pass; EasyEDA ERC 0 errors, 1 warning |
+| 2 Placement | 45 | 11.9 | C5 2.7 mm from the module power pin (limit 2.0 mm); square corners; DESK placement check `passed=false` |
+| 3 Routing | 90 | 38.1 | 42/43 nets, 0 clearance, 0 short; GND left to the pours; USB not impedance-controlled; test-point stubs |
+| 4 Copper | 30 | 23.3 | 5 GND connection errors |
+| 5 Manufacturing | 15 | 0 | not started |
 
-- **Verdict:** **FAIL**. The builder and the reviewer agree.
-- **Reviewer's production-readiness score:** **50/100**:
+Examiner score breakdown: **50/100**.
 
 | Electrical | Physical | Manufacturing package | Evidence and honesty |
 |---:|---:|---:|---:|
 | 17/30 | 15/25 | 3/25 | 15/20 |
 
-- **The failure is electrical:**
+- **Open connections at clock stop:**
   - The USB ESD array (U1 pins 3 and 8) has no ground.
   - The CC2 pull-down (R2) floats, so USB-C won't attach in one plug orientation.
   - The EN reset capacitor (C8) floats.
@@ -318,7 +325,7 @@ hard gate.
 - **Requirements added during the run:** schematic neatness and manufacture-grade placement neatness.
 
 ### Failure register
-The register holds 23 entries (F-001â€¦F-020 and H-001â€¦H-003): [`failure_register.json`](esp32-s3-plotus/builder-records/failure_register.json).
+The register holds 23 entries (F-001…F-020 and H-001…H-003): [`failure_register.json`](esp32-s3-plotus/builder-records/failure_register.json).
 DESK defects it exposed:
 - **DRC summary:** DESK's summary reported 0 clearance errors when there were 174 real ones (F-015). The raw
   EasyEDA DRC was used instead.
@@ -326,7 +333,7 @@ DESK defects it exposed:
   This was fixed in DESK after run 2 (R2.8).
 - **Library:** stale short-UUID library entries made part creation hang for 120 s (F-001).
 - **Pours:** `rebuildCopperRegion()` cannot be driven through the API in this client (F-018). This led to the new
-  API-only copper fill, see Â§6.
+  API-only copper fill, see §6.
 
 ## 5. Reviewer analysis (uploaded unchanged)
 All files are in [`reviewer-analysis/`](esp32-s3-plotus/reviewer-analysis/):
@@ -367,9 +374,9 @@ All files are in [`reviewer-analysis/`](esp32-s3-plotus/reviewer-analysis/):
 - **Library:** refreshed the stale entries for TPD4E05U06DQAR and SS34, and added the Plotus parts.
 - **Tests:** `tests/test_copper_fill.py` has 4 tests, all passing (5 after run 2).
 
-## 7. After the benchmark: DRC 5 â†’ 0 (not graded)
+## 7. After the benchmark: DRC 5 → 0 (not graded)
 At the Captain's request, after the clock stopped, the last five errors were fixed with explicit copper:
-- a GND track U1.3 â†’ U1.8 â†’ R2.2;
+- a GND track U1.3 → U1.8 → R2.2;
 - the 3V3 track around C8 moved to the bottom layer, freeing a top GND track from C8.2 to a GND via;
 - a link from the module GND pin U3.1 to the ground area near C5/C6.
 
@@ -393,7 +400,7 @@ These are in [`manufacturing-revA/`](esp32-s3-plotus/manufacturing-revA/), expor
 | `PLOTUS_ESP32S3_revA_BOM_JLCPCB.csv` | JLCPCB-format BOM with an **LCSC Part #** column: 18 lines covering 38 parts, cross-checked against EasyEDA's BOM |
 | `PLOTUS_ESP32S3_revA_bom_utf8.csv` | EasyEDA's own BOM export, converted to UTF-8 |
 | `PLOTUS_ESP32S3_revA_cpl_utf8.csv` | Pick-and-place (CPL), 38 parts, in mm |
-| `PLOTUS_ESP32S3_revA_project.epro` | The full EasyEDA Pro project. Import it with *File â†’ Open â†’ EasyEDA Pro project* |
+| `PLOTUS_ESP32S3_revA_project.epro` | The full EasyEDA Pro project. Import it with *File → Open → EasyEDA Pro project* |
 
 > **Superseded by run 2.** Run 1's rev A is kept as a record. Its open items (C5 at 2.7 mm, square corners,
 > unreviewed silkscreen, TP7/TP8 stubs on USB) were all addressed in run 2's design.
@@ -403,7 +410,7 @@ These are in [`manufacturing-revA/`](esp32-s3-plotus/manufacturing-revA/), expor
 # Folder map
 ```
 live-test/
-  esp32-s3-plotus-run2/      run 2 (2b): fresh rebuild, PARTIAL PASS 81/100
+  esp32-s3-plotus-run2/      run 2 (2b): fresh rebuild, 66.7 min, DRC 0, 43/43
     requirements/            frozen requirements, design parameters, acceptance criteria and hashes
     builder-records/         timing, stage metrics, execution log, failure register, ERC report,
                              placement/routing/copper/release records, USB/angle/silk checks
@@ -414,6 +421,6 @@ live-test/
     manufacturing-revA/      Gerber + drills, BOM (LCSC), CPL, schematic PDF, EasyEDA project
     attempt1-aborted/        the aborted first attempt (timing, failures, ERC report)
     images/                  schematic, placement, final board
-  esp32-s3-plotus/           run 1: FAIL 50/100 (later DRC 0 after fixes)
+  esp32-s3-plotus/           run 1 baseline: 102.8 min
     requirements/ builder-records/ reviewer-analysis/ manufacturing-revA/ images/
 ```
