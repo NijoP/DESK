@@ -55,12 +55,19 @@ def get_process_start_time(pid: int) -> Optional[float]:
             return None
         except Exception:
             return None
-    else:
+    if os.path.isdir("/proc"):
         try:
-            st = os.stat(f"/proc/{pid}")
-            return st.st_ctime
+            return os.stat(f"/proc/{pid}").st_ctime
         except Exception:
             return None
+    # macOS / BSD have no procfs: `ps -o etimes=` reports elapsed seconds since the process started.
+    try:
+        import subprocess
+        out = subprocess.run(["ps", "-o", "etimes=", "-p", str(pid)], capture_output=True, text=True,
+                             timeout=2).stdout.strip()
+        return time.time() - float(out) if out else None
+    except Exception:
+        return None
 
 
 def is_process_alive(pid: int) -> bool:

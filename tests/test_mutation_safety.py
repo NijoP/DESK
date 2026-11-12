@@ -5,9 +5,11 @@ Unit tests for Mutation Safety, Atomic Ownership, and Lock Reclamation in desk/o
 import json
 import os
 import shutil
+import subprocess
 import tempfile
 import time
 import unittest
+from unittest import mock
 
 from desk.ops import (
     OP_IDEMPOTENT_MUTATION,
@@ -97,3 +99,26 @@ class TestMutationSafety(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestProcessStartTimeDarwin(unittest.TestCase):
+    """F-17: without procfs (macOS/BSD) the start time comes from `ps -o etimes=`, not None."""
+
+    def test_ps_fallback_when_no_procfs(self):
+        from desk import ops
+        fake = mock.Mock(stdout="120\n")
+        with mock.patch.object(ops.os, "name", "posix"), \
+             mock.patch.object(ops.os.path, "isdir", return_value=False), \
+             mock.patch.object(subprocess, "run", return_value=fake) as run:
+            t = ops.get_process_start_time(4242)
+        self.assertIsNotNone(t)
+        self.assertAlmostEqual(time.time() - t, 120.0, delta=5.0)
+        self.assertEqual(run.call_args[0][0][:3], ["ps", "-o", "etimes="])
+
+    def test_ps_failure_returns_none(self):
+        from desk import ops
+        with mock.patch.object(ops.os, "name", "posix"), \
+             mock.patch.object(ops.os.path, "isdir", return_value=False), \
+             mock.patch.object(subprocess, "run", side_effect=OSError("no ps")):
+            self.assertIsNone(ops.get_process_start_time(4242))
+
