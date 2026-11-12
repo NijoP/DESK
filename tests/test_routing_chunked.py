@@ -11,7 +11,8 @@ from desk.routing.orchestrator import RoutingEngineOrchestrator, EngineExecution
 def fake_result(ses_path, initial, final, write=True, seconds=10.0):
     if write:
         with open(ses_path, "w", encoding="utf-8") as f:
-            f.write(f"(session fake (unrouted {final}))\n")
+            # a minimal real SES: the checkpoint only adopts a file that parses and carries routed copper
+            f.write(f"(session fake (unrouted {final})\n  (routes (resolution mil 10)\n    (network_out (net N1 (wire (path TopLayer 60 0 0 1000 0))))))\n")
     return EngineExecutionResult(success=True, status="SUCCESS", engine_name="Freerouting", engine_version="v2.5.0",
                                  engine_path="x.jar", command=["java"], duration_sec=seconds, returncode=0,
                                  passes_completed=6, initial_unrouted=initial, final_unrouted=final, ses_generated=write,

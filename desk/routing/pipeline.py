@@ -94,11 +94,10 @@ def run(argv) -> int:
     profile = None
     profile_path = os.path.join(proj, "design_profile.json")
     if os.path.exists(profile_path):
-        try:
-            from desk.profile import DesignProfile
-            profile = DesignProfile.load(profile_path)
-        except Exception as e:
-            print(f"Warning: Failed to load design profile: {e}")
+        # A profile that cannot be loaded is DESIGN_PROFILE_INVALID and stops the run here with the offending key
+        # (UPS_1000 F-011); it is never downgraded to a warning followed by heuristic sizing.
+        from desk.profile import DesignProfile
+        profile = DesignProfile.load(profile_path)
 
     routing_plan = RoutingPlanGenerator.generate_plan(
         net_graph, dump, tuple(plan.get("board_mm", [50.0, 50.0])), rules=rules_dict, profile=profile
@@ -284,6 +283,50 @@ def run(argv) -> int:
     print(f"Pre-flight OK: planes {preflight.planes_in_dsn}/{preflight.planes_declared}, outline primitives {preflight.outline_primitives}, "
           f"pads in router keep-outs {len(preflight.pads_in_router_keepouts)}")
 
+    # Phase 9e: routing feasibility (desk/routing/feasibility.py). Every pad is checked against the clearance rule of
+    # ITS net (not the fabricator minimum). A rule that exceeds the pin-field gap of its own pads can never be met and
+    # is an engineering decision for the Captain, not a reason to lower the rule or to launch a long engine run
+    # (UPS_1000: 6 attempts against a board whose 1.25-1.30 mm rules sat on 1.27 mm-pitch pins).
+    from desk.routing import feasibility as FZ
+    _fab_min = float(getattr(getattr(profile, "manufacturing", None), "min_clearance_mil", 4.02) if profile else 4.02)
+    feas = FZ.evaluate(dump, {n: c.clearance_mil for n, c in routing_plan.net_constraints.items()}, _fab_min,
+                       stackup=_stack_names, plane_layers=plane_layers_from_planes(plan.get("planes", []), _stack_names),
+                       route_keepouts=plan.get("route_keepouts") or [], origin_mm=tuple(plan.get("origin_mm", [0.0, 0.0])),
+                       power_nets=power_nets)
+    try:
+        atomic_write_json(os.path.join(wd, "feasibility.json"), feas.to_dict(), indent=1)
+    except Exception:
+        pass
+    print(f"Feasibility ({feas.analysis_ms:.0f} ms): {feas.summary}")
+    for _w in feas.warnings:
+        print("FEASIBILITY WARNING:", _w)
+    for _b in feas.blocked[:10]:
+        print(f"  {_b.classification}: {_b.pad_id} [{_b.net}] {_b.detail}")
+    if feas.decisions:
+        try:
+            atomic_write_json(os.path.join(wd, "engineering_decisions.json"), [d.to_dict() for d in feas.decisions], indent=1)
+        except Exception:
+            pass
+        for _d in feas.decisions:
+            print(f"ENGINEERING DECISION {_d.decision_id} ({_d.status}): net {_d.net} rule {_d.rule_mm:.3f} mm > pin-field gap "
+                  f"{_d.pin_field_mm:.3f} mm at {len(_d.pads)} pad(s); options:")
+            for _o in _d.options:
+                print("    -", _o)
+    if not feas.feasible:
+        if "--acknowledge-blocked" in args:
+            ops.record_approval(proj, "route_blocked_feasibility", "PCB", granted_by="operator",
+                                how="cli tools/route.py --acknowledge-blocked",
+                                reason="; ".join(d.decision_id for d in feas.decisions) or feas.summary)
+            print("WARNING: continuing although feasibility is blocked (--acknowledge-blocked recorded as an approval).")
+        else:
+            from desk.errors import EngineeringDecisionRequired
+            raise EngineeringDecisionRequired(
+                f"STOP: routing is blocked before the engine starts: {feas.summary}. See state/route/feasibility.json"
+                + (" and state/route/engineering_decisions.json" if feas.decisions else "")
+                + ". No spacing rule was changed; decide the options above (Captain sign-off) or fix placement, then rerun."
+                + " --acknowledge-blocked launches the engine anyway and records that choice.",
+                category="ROUTER_RULE_CONFLICT" if feas.decisions else "ROUTER_NO_LEGAL_ESCAPE", decisions=[d.decision_id for d in feas.decisions])
+
     # Phase 10-12: External engine execution via RoutingEngineOrchestrator
     profiler.start_phase(10, category="PROCESS")
     ses = os.path.join(wd, "desk_route.ses")
@@ -305,15 +348,19 @@ def run(argv) -> int:
     _via_costs = 80 if len(dense_report.routable_layers) <= 2 else None   # discourage via hopping when only 2 signal layers remain
     # Chunked execution: every chunk ends on its own so the engine writes its SES; the best SES is kept and
     # continued (-de dsn+ses). A plateau never terminates the JVM (on Windows that loses the board; INC-20261112-009).
+    # Adaptive chunks (desk/routing/adaptive.py): the cap per chunk comes from the pass budget, the window from the
+    # mode, the actual passes per chunk from measured pass durations. The checkpoint keeps the best valid SES.
+    _chunk_cap = max(4, min(8, passes // 4))
     exec_result = orchestrator.execute_routing_chunked(
         dsn_path=tuned_dsn_path,
         ses_path=ses,
         working_dir=wd,
-        chunk_passes=max(4, min(8, passes // 4)),
-        max_chunks=max(2, passes // max(4, min(8, passes // 4)) + 1),
+        chunk_passes=_chunk_cap,
+        max_chunks=max(2, passes // 2 + 1),
         plateau_chunks=2,
         budget_sec=mode_cfg.timeout_sec,
-        chunk_timeout_sec=min(300.0, mode_cfg.timeout_sec),
+        chunk_timeout_sec=max(300.0, mode_cfg.timeout_sec / 3.0),
+        first_passes=2,
         priority_net_classes=priority_classes,
         plane_nets=plane_nets,
         via_costs=_via_costs,
@@ -321,9 +368,26 @@ def run(argv) -> int:
     )
     profiler.end_phase()
     for _c in exec_result.engine_config.get("chunks", []):
-        print(f"  chunk {_c['chunk']}: {_c['status']} unrouted {_c['initial_unrouted']} -> {_c['final_unrouted']} in {_c['seconds']}s ({_c['passes']} passes)")
-    print(f"Engine {exec_result.engine_version}: {exec_result.passes_completed} passes, best {exec_result.best_unrouted} unrouted at pass "
-          f"{exec_result.best_pass}, last {exec_result.final_unrouted}, restores {exec_result.restores_seen}")
+        print(f"  chunk {_c['chunk']}: {_c['status']} [{_c.get('outcome', '')}] unrouted {_c['initial_unrouted']} -> {_c['final_unrouted']} "
+              f"in {_c['seconds']}s ({_c['passes']}/{_c.get('planned_passes', '?')} passes, ses {_c.get('ses')}, accepted {_c.get('accepted')})")
+    _ec = exec_result.engine_config
+    print(f"Engine {exec_result.engine_version}: {exec_result.passes_completed} passes, checkpoint best {exec_result.final_unrouted} unrouted, "
+          f"observed best {_ec.get('observed_best_unrouted')}, outcomes {_ec.get('chunk_outcomes')}, restores {exec_result.restores_seen}")
+    if _ec.get("failure_category"):
+        from desk.reliability.models import FailureRecord, FailureCategory
+        _fr = FailureRecord.new(FailureCategory(_ec["failure_category"]), "desk.routing.orchestrator", "execute_routing_chunked",
+                                exec_result.error_message or exec_result.status, project_id=os.path.basename(proj.rstrip("/\\")),
+                                document_uuid=P["pcb_uuid"], window_id=str(P.get("window_id") or ""), engine_version=exec_result.engine_version,
+                                command=list(exec_result.command), params={"chunks": _ec.get("chunks"), "plans": _ec.get("plans"),
+                                                                            "outcomes": _ec.get("chunk_outcomes"), "mode": mode_cfg.mode_name},
+                                stdout_tail=exec_result.stdout_summary[-2000:], stderr_tail=exec_result.stderr_summary[-2000:])
+        _fr.add_evidence("file", os.path.join(wd, "progress_chunks.json"), "chunk history with plans and outcomes")
+        _fr.add_evidence("file", os.path.join(wd, "freerouting.log"), "engine log of the last chunk")
+        try:
+            atomic_write_json(os.path.join(wd, "route_failure.json"), _fr.to_dict(), indent=1)
+        except Exception:
+            pass
+        print(f"ROUTE FAILURE {_fr.failure_id}: {_fr.category.value} (state/route/route_failure.json)")
     if exec_result.ses_generated:
         try:
             shutil.copyfile(ses, os.path.join(wd, "desk_route_prev.ses"))   # kept for --continue (incremental re-route)
@@ -434,6 +498,9 @@ def run(argv) -> int:
     if declared_zones:
         print(f"Connectivity evidence: {len(declared_zones)} declared plane polygon(s) treated as conductors (not poured-copper readback)")
     print("Physical Connectivity:", conn_result.summary)
+    _fully_routed = conn_result.total_nets > 0 and conn_result.fully_connected_nets == conn_result.total_nets
+    print("ROUTING VERDICT:", "FULL (every populated net physically connected on readback)" if _fully_routed else
+          f"PARTIAL ({conn_result.fully_connected_nets}/{conn_result.total_nets} nets; engine status {exec_result.status} is not a routing verdict)")
     profiler.end_phase()
 
     # Phase 20: Final report generation and logging
@@ -461,4 +528,4 @@ def run(argv) -> int:
     profiler.end_phase()
 
     print("NEXT: python tools/drc.py", proj, "--converge")
-    return 0
+    return 0 if _fully_routed else 3

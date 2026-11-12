@@ -151,6 +151,11 @@ class DesignProfile:
     material_group: str = "III"            # CTI group I, II, III (IIIa/IIIb)
     # Fail-closed policy for power nets without a declared current: "fail" raises, "default_1A" sizes at 1 A.
     unknown_current_policy: str = "fail"
+    # Spacing model (desk/spacing.py). CREEPAGE_AS_CLEARANCE keeps the historical max(clearance, creepage) router
+    # rule; FUNCTIONAL uses the IPC-2221B clearance as the net rule and enforces creepage only across the declared
+    # insulation_barriers. Switching to FUNCTIONAL is a Captain decision recorded in the ledger (AGENTS.md A).
+    spacing_policy: str = "CREEPAGE_AS_CLEARANCE"
+    insulation_barriers: List[Dict[str, Any]] = field(default_factory=list)
     # Domain Intelligence (desk/domain_intelligence): archetype/overlay ids, resolved rule ids and compile status.
     # Optional and informational; engines never read numbers from it. Empty for profiles made before DDIS.
     domain_profile: Dict[str, Any] = field(default_factory=dict)
@@ -311,12 +316,41 @@ class DesignProfile:
         final_width = max(ipc_width, net_class_min, min_width)
         return round(final_width, 1)
 
+    def spacing_requirement(self, net1: str, net2: str, allow_unknown_voltage: bool = False,
+                            pin_field_mm: Optional[float] = None):
+        """The separated spacing quantities for a net pair (desk.spacing.SpacingRequirement): functional clearance,
+        creepage across a declared barrier (or None), fabricator minimum and the policy that turns them into the
+        router rule. Raises ValueError for an undeclared high-voltage net (fail-closed, H-01)."""
+        from desk import spacing as SP
+        volts = []
+        for net in (net1, net2):
+            v, conf = self.get_net_voltage_status(net)
+            if conf == CurrentConfidence.UNKNOWN:
+                if not allow_unknown_voltage:
+                    raise ValueError(
+                        f"Unsafe electrical assumption: Net '{net}' looks high-voltage but has no entry in "
+                        f"'voltage_rails'. Declare its working voltage before deriving clearance.")
+                v = 0.0
+            volts.append(v)
+        return SP.requirement(net1, net2, volts[0], volts[1], self.clearance_condition,
+                              self.manufacturing.min_clearance_mil / SP.MIL, SP.parse_policy(self.spacing_policy),
+                              SP.parse_barriers(self.insulation_barriers), pin_field_mm=pin_field_mm,
+                              pollution_degree=self.pollution_degree, material_group=self.material_group)
+
     def derive_clearance_mil(self, net1: str, net2: str, allow_unknown_voltage: bool = False) -> float:
-        """Electrical spacing between two nets: max(IPC-2221B clearance for the profile's condition,
+        """Electrical spacing between two nets as the router rule under the profile's spacing_policy.
+
+        CREEPAGE_AS_CLEARANCE (default, historical): max(IPC-2221B clearance for the profile's condition,
         IEC 60664-1 creepage for its pollution degree and material group, fabricator minimum).
+        FUNCTIONAL: max(IPC-2221B clearance, fabricator minimum), plus creepage only when a declared
+        insulation barrier separates the two nets. See desk/spacing.py.
 
         Raises ValueError when either net looks high-voltage but has no declared voltage, unless
         `allow_unknown_voltage` is set (roadmap H-01, fail-closed)."""
+        return self.spacing_requirement(net1, net2, allow_unknown_voltage).router_rule_mil
+
+    def _legacy_derive_clearance_mil(self, net1: str, net2: str, allow_unknown_voltage: bool = False) -> float:
+        """The pre-spacing-model computation, kept for the equivalence test (tests/test_reliability_spacing.py)."""
         from desk import ipc
         base = self.manufacturing.min_clearance_mil
         volts = []
@@ -373,6 +407,8 @@ class DesignProfile:
             "pollution_degree": self.pollution_degree,
             "material_group": self.material_group,
             "unknown_current_policy": self.unknown_current_policy,
+            "spacing_policy": self.spacing_policy,
+            "insulation_barriers": self.insulation_barriers,
             "domain_profile": self.domain_profile,
             "created_at": self.created_at,
             "profile_hash": self.profile_hash,
@@ -405,5 +441,21 @@ class DesignProfile:
 
     @classmethod
     def load(cls, filepath: str) -> "DesignProfile":
-        with open(filepath, encoding="utf-8") as f:
-            return cls.from_dict(json.load(f))
+        """Load design_profile.json. An unknown key or a wrong type is a DesignProfileInvalid that names the field
+        (UPS_1000 F-011: a hand-edited 'name_note' key made the loader fail and the router then sized nothing)."""
+        from desk.errors import DesignProfileInvalid
+        try:
+            with open(filepath, encoding="utf-8") as f:
+                data = json.load(f)
+        except (OSError, ValueError) as e:
+            raise DesignProfileInvalid(f"STOP: {filepath} cannot be read as JSON: {e}", path=filepath, category="DESIGN_PROFILE_INVALID")
+        try:
+            return cls.from_dict(data)
+        except TypeError as e:
+            import re as _re
+            m = _re.search(r"unexpected keyword argument '([^']+)'", str(e))
+            key = m.group(1) if m else "?"
+            raise DesignProfileInvalid(
+                f"STOP: {filepath} has a key the profile schema does not accept: '{key}' ({e}). Remove it (notes belong in "
+                f"PROFILE_NOTES.md) or fix its type; the router refuses to size a board from a profile it cannot load.",
+                path=filepath, key=key, category="DESIGN_PROFILE_INVALID")

@@ -101,3 +101,28 @@ per-net clearances into the DSN, stops the engine when no better unrouted count 
 `stagnation_patience` passes (`PassTracker`), and can continue from the previous session with
 `--continue`. Details and measured results: `docs/engineering/DENSE_PCB_INTELLIGENCE.md`,
 `docs/engineering/CONGESTION_OPTIMISATION.md`, `docs/engineering/DENSE_BOARD_BENCHMARK_REPORT.md`.
+
+## Recoverable routing (added 2026-11-12, after the UPS_1000 live test)
+
+The engine run is now checkpoint-driven and the pre-flight checks each pad against its own net rule. Details and the
+evidence behind every change: `docs/reliability/RELIABILITY_AUDIT.md`, `docs/reliability/SELF_HEALING_ARCHITECTURE.md`.
+
+* **Feasibility gate** (phase 9e, `desk/routing/feasibility.py`): a net rule larger than the copper gap of the package
+  it terminates on is reported as a BLOCKING engineering decision (`state/route/engineering_decisions.json`) and the
+  engine is not started. No spacing value is changed by DESK; `--acknowledge-blocked` records the operator's choice.
+  The spacing model (`desk/spacing.py`) keeps IPC clearance, IEC creepage (only across declared `insulation_barriers`)
+  and the fabricator minimum apart; `design_profile.json` `spacing_policy` defaults to the historical
+  `CREEPAGE_AS_CLEARANCE` and `FUNCTIONAL` is a Captain decision.
+* **Adaptive chunks** (`desk/routing/adaptive.py`): the first chunk measures the board with two passes; later chunks
+  are sized from the measured pass time so a slow board gets one-pass chunks with a window long enough to finish.
+  `DESK_FR_CHUNK_SAFETY` (default 0.6) is the fraction of the window filled with estimated pass time.
+* **Checkpoint** (`desk/routing/checkpoint.py`, `state/route/checkpoint/chunk_best.ses`): the best valid SES survives
+  every later timeout, crash or corrupt file; `--continue` resumes from it.
+* **Engine profiles** (`desk/routing/engine_profiles.py`): Freerouting 2.1.x cannot be bounded on this host (it ignores
+  `max_passes` and `job_timeout`, writes the SES only at 100 %, and a terminated JVM writes nothing); the run is
+  refused with `ENGINE_UNBOUNDABLE`. Use 2.5.0 with the bundled JDK 25.
+* **Outcomes**: every chunk is named (`CHUNK_TIMEOUT`, `ENGINE_TIMEOUT`, `ZERO_PASSES_TIMEOUT`, `SES_NOT_GENERATED`,
+  `SES_CORRUPTED`, `SES_NOT_IMPROVED`, `PARTIAL_ROUTING_SUCCESS`, `FULL_ROUTING_SUCCESS`, `ENGINE_IGNORES_LIMITS`) in
+  `state/route/progress_chunks.json`; an engine failure writes `state/route/route_failure.json`.
+* **Verdict**: `ROUTING VERDICT: FULL` only when the physical connectivity readback connects every populated net;
+  otherwise `PARTIAL` and `tools/route.py` returns 3. An engine SUCCESS is not a routing verdict.

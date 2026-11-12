@@ -287,6 +287,18 @@ class RoutingEngineOrchestrator:
             if "Both an input file and an output file must be specified" in combined or proc.returncode in (0, 1):
                 return (True, ver)
             return (False, "Execution failed")
+        except subprocess.TimeoutExpired as e:
+            # Freerouting 2.1.0 prints its banner within ~2 s and then blocks on its online version check
+            # ("New version available") for > 60 s, so `--help` times out although the JVM loaded the JAR.
+            # A banner without UnsupportedClassVersionError proves class-version compatibility (UPS_1000 F-007).
+            out = e.stdout or b""
+            err = e.stderr or b""
+            combined = (out.decode("utf-8", "replace") if isinstance(out, bytes) else out) + \
+                       (err.decode("utf-8", "replace") if isinstance(err, bytes) else err)
+            if "Freerouting v" in combined and "UnsupportedClassVersionError" not in combined:
+                ver = "v" + combined.split("Freerouting v", 1)[1].split()[0].strip()
+                return (True, ver)
+            return (False, f"probe timed out without a Freerouting banner: {e}")
         except Exception as e:
             return (False, str(e))
 
@@ -687,80 +699,217 @@ class RoutingEngineOrchestrator:
         budget_sec: float = 1200.0,
         chunk_timeout_sec: float = 300.0,
         log_callback: Optional[Any] = None,
+        first_passes: int = 2,
+        safety: Optional[float] = None,
+        checkpoint_dir: Optional[str] = None,
+        engine_version_hint: str = "",
         **engine_kwargs,
     ) -> EngineExecutionResult:
-        """Bounded routing that ALWAYS keeps a SES (rework item B, measured 2026-11-12).
+        """Bounded, resumable routing that NEVER discards a valid SES (UPS_1000 F-012; INC-20261112-009).
 
-        Each chunk runs `chunk_passes` passes and ends on its own, so the engine writes its SES. The
-        best SES (lowest final unrouted) is kept as `ses_path`; the next chunk continues from it with
-        `-de board.dsn+best.ses`. Stops when a chunk reaches 0 unrouted, when `plateau_chunks`
-        consecutive chunks fail to improve, when `max_chunks` or `budget_sec` is reached. This replaces
-        plateau termination, which on Windows kills the JVM before it writes anything.
+        * Every chunk is sized from the pass durations measured so far (`desk.routing.adaptive.ChunkPlanner`):
+          the first chunk runs `first_passes` passes to measure the board; later chunks fit as many passes as
+          `safety` x `chunk_timeout_sec` allows (at most `chunk_passes`), or one pass with a longer window when a
+          single pass is slower than the window. A static four-pass / 300 s chunk is what lost every UPS_1000 run.
+        * The best valid SES lives in a `RoutingCheckpoint` (`checkpoint_dir`, default <working_dir>/checkpoint);
+          a candidate is adopted only after it parses and carries routes, and only when it improves on the best.
+          A chunk that times out, crashes or writes a corrupt file leaves the checkpoint untouched.
+        * The engine profile (`desk.routing.engine_profiles`) says whether the engine can end a chunk by itself.
+          Freerouting 2.1.x ignores max_passes and job_timeout on this host, so with that engine the run is
+          refused up front (status ENGINE_UNBOUNDABLE) instead of burning the budget and importing nothing.
+        * Each chunk's outcome is named (`adaptive.chunk_outcome`) so the supervisor can tell CHUNK_TIMEOUT from
+          ENGINE_TIMEOUT, SES_NOT_GENERATED, SES_CORRUPTED, SES_NOT_IMPROVED and ENGINE_IGNORES_LIMITS.
+        Stops when a chunk reaches 0 unrouted, when `plateau_chunks` consecutive chunks fail to improve, when a
+        chunk returns no SES, when `max_chunks` or `budget_sec` is reached.
         """
-        import shutil as _shutil
+        from desk.routing.adaptive import ChunkPlanner, PassStats
         t0 = time.time()
-        best_unrouted: Optional[int] = None
-        best_ses = os.path.join(working_dir, "chunk_best.ses")
+        run = self._chunk_setup(dsn_path, working_dir, checkpoint_dir, engine_version_hint, engine_kwargs,
+                                chunk_timeout_sec, chunk_passes, first_passes, safety)
+        run.update(budget_sec=budget_sec, plateau_chunks=plateau_chunks, cfg_meta={
+            "chunk_passes": chunk_passes, "max_chunks": max_chunks, "plateau_chunks": plateau_chunks, "budget_sec": budget_sec,
+            "chunk_timeout_sec": chunk_timeout_sec, "first_passes": first_passes, "safety": run["safety"],
+            "engine_profile": run["profile"].to_dict()})
+        ckpt = run["ckpt"]
+        if run["profile"].boundable is False:
+            return self._unboundable_result(run, ses_path, t0)
+        planner: ChunkPlanner = run["planner"]
+        stats = PassStats()
         history: List[Dict[str, Any]] = []
-        chunks_since_improvement = 0
+        plans: List[Dict[str, Any]] = []
+        outcomes: List[str] = []
+        failure_category: Optional[str] = None
+        since_improvement = 0
         last: Optional[EngineExecutionResult] = None
-        input_ses = engine_kwargs.pop("input_ses", None)
-        if input_ses and os.path.exists(input_ses):
-            _shutil.copyfile(input_ses, best_ses)
         for chunk in range(1, max_chunks + 1):
             remaining = budget_sec - (time.time() - t0)
             if remaining < 30.0:
+                outcomes.append("BUDGET_EXHAUSTED")
                 break
-            chunk_ses = os.path.join(working_dir, f"chunk_{chunk:02d}.ses")
-            try:
-                os.remove(chunk_ses)
-            except OSError:
-                pass
-            res = self.execute_routing(
-                dsn_path=dsn_path, ses_path=chunk_ses, max_passes=chunk_passes,
-                timeout_sec=min(chunk_timeout_sec, remaining), working_dir=working_dir,
-                stagnation_patience=max(chunk_passes, 99),   # never stop a chunk early; it must end by itself
-                log_callback=log_callback,
-                input_ses=best_ses if os.path.exists(best_ses) else None,
-                **engine_kwargs,
-            )
-            last = res
-            final = res.final_unrouted if res.final_unrouted is not None else res.best_unrouted
-            history.append({"chunk": chunk, "status": res.status, "passes": res.passes_completed, "seconds": res.duration_sec,
-                            "initial_unrouted": res.initial_unrouted, "final_unrouted": final, "ses": res.ses_generated,
-                            "pass_history": res.pass_history})
+            plan = planner.plan(stats, remaining)
+            plans.append({"chunk": chunk, **plan.to_dict()})
+            if plan.passes <= 0:
+                outcomes.append("BUDGET_EXHAUSTED")
+                break
+            last, rec, outcome = self._run_chunk(run, chunk, plan, remaining, dsn_path, working_dir, log_callback, engine_kwargs, stats)
+            history.append(rec)
+            outcomes.append(outcome)
             write_progress(os.path.join(working_dir, "progress_chunks.json"), {
-                "chunks": history, "best_unrouted": best_unrouted, "elapsed_s": round(time.time() - t0, 1), "budget_s": budget_sec})
-            if not res.ses_generated or final is None:
-                # a chunk that returns nothing is a tool defect, not a routing result: stop and report
+                "chunks": history, "best_unrouted": ckpt.best_unrouted, "observed_best_unrouted": ckpt.state.observed_best_unrouted,
+                "elapsed_s": round(time.time() - t0, 1), "budget_s": budget_sec, "plans": plans, "outcomes": outcomes,
+                "checkpoint": ckpt.summary()})
+            verdict = self._chunk_verdict(outcome, rec, plan, last, stats, ckpt, plateau_chunks, since_improvement)
+            since_improvement = verdict["since_improvement"]
+            if verdict.get("note"):
+                outcomes.append(verdict["note"])
+            if verdict.get("stop"):
+                failure_category = verdict.get("failure_category")
                 break
-            if best_unrouted is None or final < best_unrouted:
-                best_unrouted = final
-                _shutil.copyfile(chunk_ses, best_ses)
-                chunks_since_improvement = 0
-            else:
-                chunks_since_improvement += 1
-            if final == 0 or chunks_since_improvement >= plateau_chunks:
-                break
-        if os.path.exists(best_ses):
-            _shutil.copyfile(best_ses, ses_path)
-        return self._chunked_result(ses_path, history, best_unrouted, last, round(time.time() - t0, 2),
-                                    {"chunk_passes": chunk_passes, "max_chunks": max_chunks,
-                                     "plateau_chunks": plateau_chunks, "budget_sec": budget_sec})
+        ckpt.export(ses_path)
+        return self._chunked_result(ses_path, history, ckpt.best_unrouted, last, round(time.time() - t0, 2), run["cfg_meta"],
+                                    outcomes=outcomes, plans=plans, failure_category=failure_category, checkpoint=ckpt.summary())
+
+    def _chunk_setup(self, dsn_path: str, working_dir: str, checkpoint_dir: Optional[str], engine_version_hint: str,
+                     engine_kwargs: Dict[str, Any], chunk_timeout_sec: float, chunk_passes: int, first_passes: int,
+                     safety: Optional[float]) -> Dict[str, Any]:
+        """Engine profile, checkpoint (seeded from `input_ses` when given) and planner for a chunked run."""
+        from desk.routing.adaptive import ChunkPlanner
+        from desk.routing.checkpoint import RoutingCheckpoint
+        from desk.routing.engine_profiles import profile_for, UNKNOWN as UNKNOWN_PROFILE
+        input_ses = engine_kwargs.pop("input_ses", None)
+        input_unrouted = engine_kwargs.pop("input_unrouted", None)
+        engine_ver = engine_version_hint
+        if not engine_ver:
+            try:
+                _, _, engine_ver = self.discover_engine(engine_kwargs.get("explicit_engine"))
+            except Exception:
+                engine_ver = ""
+        profile = profile_for(engine_ver) if engine_ver else UNKNOWN_PROFILE
+        try:
+            dsn_sha = self.compute_file_sha256(dsn_path)
+        except Exception:
+            dsn_sha = ""
+        ckpt = RoutingCheckpoint(checkpoint_dir or os.path.join(working_dir, "checkpoint"), dsn_sha256=dsn_sha,
+                                 engine_version=engine_ver)
+        if input_ses and os.path.exists(input_ses) and not ckpt.has_best():
+            ckpt.offer(input_ses, int(input_unrouted) if input_unrouted is not None else None, chunk=0, meta={"source": "input_ses"})
+            if not ckpt.has_best():
+                import shutil as _sh      # operator-supplied SES with unknown count still seeds the continuation
+                _sh.copyfile(input_ses, ckpt.best_path)
+                ckpt.state.best_ses = ckpt.best_path
+                ckpt._save()
+        if safety is None:
+            try:
+                safety = float(deskcfg.get("DESK_FR_CHUNK_SAFETY") or 0.6)
+            except (TypeError, ValueError):
+                safety = 0.6
+        planner = ChunkPlanner(window_s=chunk_timeout_sec, safety=safety, min_passes=1, max_passes=chunk_passes,
+                               first_passes=first_passes, profile=profile)
+        return {"engine_ver": engine_ver, "profile": profile, "ckpt": ckpt, "planner": planner, "safety": safety}
+
+    def _unboundable_result(self, run: Dict[str, Any], ses_path: str, t0: float) -> EngineExecutionResult:
+        """The engine cannot end a chunk by itself (Freerouting 2.1.x on this host): refuse before burning the budget."""
+        ckpt, profile, engine_ver = run["ckpt"], run["profile"], run["engine_ver"]
+        msg = (f"engine {engine_ver} ({profile.name}) ignores max_passes and job_timeout on this host and writes its SES "
+               "only at 100 %; a bounded chunk cannot end by itself and stopping the JVM loses the board "
+               "(KF-20261111-006, UPS_1000 attempts 5-6). Use Freerouting >= 2.5 with the bundled JDK 25 "
+               "(library/tools/jdk25) or set FREEROUTING_JAR to it.")
+        res = self._chunked_result(ses_path, [], ckpt.best_unrouted, None, round(time.time() - t0, 2), run["cfg_meta"],
+                                   outcomes=["ENGINE_UNBOUNDABLE"], plans=[], failure_category="EXTERNAL_TOOL_UNSUPPORTED",
+                                   checkpoint=ckpt.summary(), error=msg)
+        res.status, res.engine_version = "ENGINE_UNBOUNDABLE", engine_ver
+        if ckpt.export(ses_path):
+            res.ses_generated, res.ses_path, res.ses_size_bytes = True, ses_path, os.path.getsize(ses_path)
+        return res
+
+    def _run_chunk(self, run: Dict[str, Any], chunk: int, plan: Any, remaining: float, dsn_path: str, working_dir: str,
+                   log_callback: Optional[Any], engine_kwargs: Dict[str, Any], stats: Any
+                   ) -> Tuple[EngineExecutionResult, Dict[str, Any], str]:
+        """Run one chunk from the checkpoint, offer its SES to the checkpoint, name the outcome."""
+        from desk.routing.adaptive import chunk_outcome
+        from desk.routing.engine_profiles import profile_for
+        ckpt = run["ckpt"]
+        chunk_ses = os.path.join(working_dir, f"chunk_{chunk:02d}.ses")
+        try:
+            os.remove(chunk_ses)
+        except OSError:
+            pass
+        res = self.execute_routing(
+            dsn_path=dsn_path, ses_path=chunk_ses, max_passes=plan.passes, timeout_sec=min(plan.timeout_s, remaining),
+            working_dir=working_dir, stagnation_patience=max(plan.passes, 99),   # never stop a chunk early
+            log_callback=log_callback, input_ses=ckpt.resume_input(), **engine_kwargs)
+        if res.engine_version and res.engine_version != run["engine_ver"]:
+            run["engine_ver"] = res.engine_version
+            run["profile"] = profile_for(res.engine_version)
+            run["planner"].profile = run["profile"]
+            run["cfg_meta"]["engine_profile"] = run["profile"].to_dict()
+        stats.extend_from_history(res.pass_history)
+        for p in res.pass_history:
+            ckpt.observe_pass(p.get("unrouted"))
+        final = res.final_unrouted if res.final_unrouted is not None else res.best_unrouted
+        offer = ckpt.offer(chunk_ses, final, chunk, meta={"status": res.status, "passes": res.passes_completed,
+                                                          "seconds": res.duration_sec}) if res.ses_generated else None
+        accepted = bool(offer and offer.get("accepted"))
+        ses_valid = None if offer is None else bool(offer["validation"]["valid"])
+        outcome = chunk_outcome(timed_out=res.status == "TIMEOUT", passes=res.passes_completed, ses_generated=res.ses_generated,
+                                ses_valid=ses_valid, returncode=res.returncode, planned_passes=plan.passes if plan.bounded else None,
+                                unrouted_final=final, improved=accepted, status=res.status)
+        rec = {"chunk": chunk, "status": res.status, "outcome": outcome, "passes": res.passes_completed, "planned_passes": plan.passes,
+               "seconds": res.duration_sec, "initial_unrouted": res.initial_unrouted, "final_unrouted": final, "ses": res.ses_generated,
+               "ses_valid": ses_valid, "accepted": accepted, "pass_history": res.pass_history}
+        return res, rec, outcome
+
+    @staticmethod
+    def _chunk_verdict(outcome: str, rec: Dict[str, Any], plan: Any, res: EngineExecutionResult, stats: Any, ckpt: Any,
+                       plateau_chunks: int, since_improvement: int) -> Dict[str, Any]:
+        """Decide whether the chunked run continues. Pure apart from `stats` (a measured pass may be added)."""
+        tool_defects = {"ENGINE_IGNORES_LIMITS": "EXTERNAL_TOOL_UNSUPPORTED", "ZERO_PASSES_TIMEOUT": "ROUTER_ENGINE_CRASH",
+                        "ENGINE_CRASH": "ROUTER_ENGINE_CRASH", "SES_NOT_GENERATED": "ROUTER_SES_MISSING",
+                        "SES_CORRUPTED": "ROUTER_SES_INVALID"}
+        if outcome in tool_defects:
+            return {"stop": True, "failure_category": tool_defects[outcome], "since_improvement": since_improvement}
+        if outcome == "CHUNK_TIMEOUT":
+            if plan.confidence == "UNVERIFIED" and res.passes_completed > 0 and not stats.n:
+                stats.add(res.duration_sec / max(1, res.passes_completed))   # widen once from the measured rate
+                return {"stop": False, "since_improvement": since_improvement}
+            return {"stop": True, "failure_category": "ROUTER_ENGINE_TIMEOUT", "since_improvement": since_improvement}
+        if rec["final_unrouted"] is None:
+            return {"stop": True, "failure_category": "ROUTER_SES_INVALID", "since_improvement": since_improvement}
+        since = 0 if rec["accepted"] else since_improvement + 1
+        if rec["final_unrouted"] == 0:
+            return {"stop": True, "failure_category": None, "since_improvement": since, "note": "FULL_ROUTING_SUCCESS"}
+        if since >= plateau_chunks:
+            return {"stop": True, "failure_category": "ROUTER_STAGNATION" if ckpt.best_unrouted else None,
+                    "since_improvement": since, "note": "PLATEAU"}
+        return {"stop": False, "since_improvement": since}
 
     @staticmethod
     def _chunked_result(ses_path: str, history: List[Dict[str, Any]], best_unrouted: Optional[int],
-                        last: Optional[EngineExecutionResult], dur: float, cfg: Dict[str, Any]) -> EngineExecutionResult:
-        """Assemble the aggregate result of a chunked run (pure; the SES has already been copied into place)."""
+                        last: Optional[EngineExecutionResult], dur: float, cfg: Dict[str, Any],
+                        outcomes: Optional[List[str]] = None, plans: Optional[List[Dict[str, Any]]] = None,
+                        failure_category: Optional[str] = None, checkpoint: Optional[Dict[str, Any]] = None,
+                        error: Optional[str] = None) -> EngineExecutionResult:
+        """Assemble the aggregate result of a chunked run (pure; the SES has already been copied into place).
+
+        `success` means a valid SES exists. It does NOT mean the board is routed: `final_unrouted` / `best_unrouted`
+        carry the remaining connections and `status` is SUCCESS only at 0 unrouted."""
         ok = os.path.exists(ses_path) and os.path.getsize(ses_path) > 0
         status = ("SUCCESS" if ok and best_unrouted == 0 else
                   "PLATEAU_PARTIAL" if ok else
                   (last.status if last else "NO_RUN"))
+        observed = (checkpoint or {}).get("observed_best_unrouted")
+        hist_msg = "\n".join(f"chunk {h['chunk']}: {h['status']} [{h.get('outcome', '')}] {h['initial_unrouted']} -> {h['final_unrouted']} "
+                              f"in {h['seconds']}s" for h in history)
+        err = error
+        if err is None and not ok:
+            err = (last.error_message if last else "no chunk ran")
+            if failure_category:
+                err = f"[{failure_category}] {err}"
         return EngineExecutionResult(
             success=ok,
             status=status,
             engine_name="Freerouting",
-            engine_version=last.engine_version if last else "",
+            engine_version=last.engine_version if last else str((checkpoint or {}).get("engine_version") or ""),
             engine_path=last.engine_path if last else "",
             command=last.command if last else [],
             duration_sec=dur,
@@ -771,13 +920,15 @@ class RoutingEngineOrchestrator:
             ses_generated=ok,
             ses_path=ses_path if ok else None,
             ses_size_bytes=os.path.getsize(ses_path) if ok else 0,
-            stdout_summary="\n".join(f"chunk {h['chunk']}: {h['status']} {h['initial_unrouted']} -> {h['final_unrouted']} in {h['seconds']}s" for h in history),
+            stdout_summary=hist_msg,
             stderr_summary=last.stderr_summary if last else "",
-            error_message=None if ok else (last.error_message if last else "no chunk ran"),
-            best_unrouted=best_unrouted,
+            error_message=None if ok and not failure_category else err,
+            best_unrouted=best_unrouted if best_unrouted is not None else observed,
             best_pass=None,
             pass_history=[p for h in history for p in h["pass_history"]],
             restores_seen=sum(getattr(x, "restores_seen", 0) for x in [last] if x),
-            engine_config={**cfg, "chunks": [{k: v for k, v in h.items() if k != "pass_history"} for h in history]},
+            engine_config={**cfg, "chunks": [{k: v for k, v in h.items() if k != "pass_history"} for h in history],
+                           "chunk_outcomes": list(outcomes or []), "plans": list(plans or []),
+                           "failure_category": failure_category, "observed_best_unrouted": observed,
+                           "checkpoint": checkpoint or {}},
         )
-
