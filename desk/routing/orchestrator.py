@@ -6,6 +6,7 @@ Zero external dependencies.
 """
 from __future__ import annotations
 import os
+from desk import config as deskcfg
 import re
 import sys
 import json
@@ -116,7 +117,7 @@ def find_java(tools_dir: Optional[str] = None) -> str:
     """Java executable for the engine: DESK_JAVA env, then a JDK bundled under library/tools/jdk*/bin,
     then `java` on PATH. A bundled JDK lets Freerouting >= 2.2 (class file 69 = Java 25) run on a host
     whose system Java is older (KF-20261111-006)."""
-    env = os.environ.get("DESK_JAVA", "").strip()
+    env = (deskcfg.get("DESK_JAVA") or "").strip()
     if env and os.path.exists(env):
         return env
     if tools_dir and os.path.isdir(tools_dir):
@@ -195,7 +196,7 @@ class RoutingEngineOrchestrator:
         engine_type is 'NATIVE' or 'JAR'.
         """
         # 1. Check explicit path from env or parameter
-        target = explicit_path or os.environ.get("FREEROUTING_BIN") or os.environ.get("FREEROUTING_JAR")
+        target = explicit_path or deskcfg.get("FREEROUTING_BIN") or deskcfg.get("FREEROUTING_JAR")
         if target and os.path.exists(target):
             is_jar = target.lower().endswith(".jar")
             if is_jar:
@@ -416,6 +417,151 @@ class RoutingEngineOrchestrator:
         except Exception:
             pass
 
+    # ---- execute_routing, split into testable pieces (T-15) -------------------------------------------
+    @staticmethod
+    def timeout_str(timeout_sec: float) -> str:
+        """Freerouting job_timeout string (HH:MM:SS) for a budget in seconds; minimum one minute."""
+        mins = max(1, int(timeout_sec // 60))
+        secs = int(timeout_sec % 60)
+        return f"00:{mins:02d}:{secs:02d}"
+
+    def prepare_engine_config(self, wd: str, engine_ver: str, timeout_sec: float, max_passes: int,
+                              stagnation_patience: int, priority_net_classes: Optional[List[str]],
+                              plane_nets: Optional[List[str]], via_costs: Optional[int], max_threads: int
+                              ) -> Tuple[Dict[str, Any], Optional[str], str]:
+        """Headless configuration for one run: per-run file for v2.2+, global file for v2.1 (INC-007).
+        Returns (cfg, global_backup_path_or_None, timeout_str)."""
+        timeout_str = self.timeout_str(timeout_sec)
+        settings = dict(stagnation_pass_limit=stagnation_patience, priority_net_classes=priority_net_classes,
+                        plane_nets=plane_nets, via_costs=via_costs, max_threads=max_threads)
+        cfg = self.build_config(timeout_str, max_passes=max_passes, **settings)
+        self.ensure_headless_config(wd, job_timeout_str=timeout_str, max_passes=max_passes, **settings)
+        global_backup = self.install_global_config(cfg) if self._version_tuple(engine_ver) < (2, 2) else None
+        return cfg, global_backup, timeout_str
+
+    def build_command(self, engine_type: str, engine_path: str, engine_ver: str, dsn_path: str, ses_path: str,
+                      max_passes: int, max_threads: int, timeout_str: str, stagnation_patience: int,
+                      priority_net_classes: Optional[List[str]] = None, plane_nets: Optional[List[str]] = None,
+                      via_costs: Optional[int] = None, input_ses: Optional[str] = None) -> List[str]:
+        """Canonical Freerouting command line. Pure (no process, no file writes), so it is unit-tested without Java."""
+        cmd: List[str] = [self.java, "-jar", engine_path] if engine_type == "JAR" else [engine_path]
+        design_arg = os.path.abspath(dsn_path)
+        if input_ses and os.path.exists(input_ses):
+            design_arg += "+" + os.path.abspath(input_ses)
+        cmd.extend(["-de", design_arg, "-do", os.path.abspath(ses_path), "-mp", str(max_passes),
+                    "-mt", str(max_threads), "--gui.enabled=false"])
+        if self._version_tuple(engine_ver) >= (2, 2):
+            cmd.append(f"--router.autorouter.max_passes={max_passes}")
+            if deskcfg.get_bool("DESK_FR_STAGNATION_FLAG", False):
+                # documented for newer builds; v2.5.0 rejects it ("No field found ... stagnation_pass_limit")
+                cmd.append(f"--router.autorouter.stagnation_pass_limit={int(stagnation_patience)}")
+            cmd.append(f"--router.job_timeout={timeout_str}")
+            if priority_net_classes:
+                cmd.append("--router.autorouter.priority_net_classes=" + ",".join(priority_net_classes))
+            if plane_nets:
+                cmd.append("--router.plane_nets=" + ",".join(plane_nets))
+            if via_costs is not None:
+                cmd.append(f"--router.via_costs={int(via_costs)}")
+        return cmd
+
+    def supervise(self, cmd: List[str], wd: str, timeout_sec: float, t0: float, tracker: "PassTracker",
+                  pin_map: "DSNPinMap", problem_nets: Dict[str, int], publish: Any, log_callback: Optional[Any]
+                  ) -> Tuple["subprocess.Popen", List[str], List[str], bool, bool]:
+        """Start the engine, stream its output through the pass tracker, publish progress, and stop it on
+        budget overrun (or on stagnation on POSIX). Returns (proc, stdout_lines, stderr_lines, timed_out, stagnated)."""
+        stdout_lines: List[str] = []
+        stderr_lines: List[str] = []
+        state = {"stagnated": False}
+        proc = subprocess.Popen(cmd, cwd=wd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+                                bufsize=1, universal_newlines=True)
+
+        def read_stdout():
+            for line in proc.stdout:
+                clean_line = line.strip()
+                if clean_line:
+                    stdout_lines.append(clean_line)
+                    if log_callback:
+                        log_callback(clean_line)
+                    for net in pin_map.nets_in(clean_line):
+                        problem_nets[net] = problem_nets.get(net, 0) + 1
+                    rec = tracker.feed(clean_line)
+                    if rec is not None:
+                        publish("routing")
+                        if tracker.stagnated():
+                            state["stagnated"] = True
+
+        def read_stderr():
+            for line in proc.stderr:
+                clean_line = line.strip()
+                if clean_line:
+                    stderr_lines.append(clean_line)
+
+        t_out = threading.Thread(target=read_stdout, daemon=True)
+        t_err = threading.Thread(target=read_stderr, daemon=True)
+        t_out.start()
+        t_err.start()
+
+        timed_out = False
+        while proc.poll() is None:
+            elapsed = time.time() - t0
+            # Freerouting's own job_timeout equals timeout_sec; give it a grace period to exit by itself and write
+            # the SES (-do) with its best board instead of killing it at the same instant and losing the result.
+            if elapsed > timeout_sec + 120.0:
+                timed_out = True
+                self._graceful_stop(proc)
+                break
+            if state["stagnated"] and tracker.passes >= 5 and os.name != "nt":
+                # POSIX: SIGINT lets the JVM run its shutdown hooks. On Windows a child JVM cannot be
+                # stopped gracefully and the SES is written only when the engine ends on its own
+                # (measured 2026-11-12: a plateau terminate at pass 17 lost a 4-unrouted board), so on
+                # Windows the plateau is only recorded; the run ends via max_passes/job_timeout.
+                # Use execute_routing_chunked() for bounded runs that always keep a SES.
+                self._graceful_stop(proc)
+                break
+            time.sleep(0.2)
+        t_out.join(timeout=2.0)
+        t_err.join(timeout=2.0)
+        return proc, stdout_lines, stderr_lines, timed_out, state["stagnated"]
+
+    @staticmethod
+    def classify_outcome(timed_out: bool, stagnated: bool, returncode: Optional[int], ses_exists: bool, ses_size: int,
+                         final_unrouted: Optional[int], timeout_sec: float, stagnation_patience: int,
+                         best_unrouted: Optional[int] = None, best_pass: Optional[int] = None
+                         ) -> Tuple[str, Optional[str], bool]:
+        """Map the raw facts of a run to (status, error_message, success). Pure; unit-tested.
+
+        Order matters and is unchanged from the original implementation: an explicit budget overrun first,
+        then a partial SES written at the engine's own job_timeout, then stagnation, then crash, then no SES."""
+        if timed_out:
+            return "TIMEOUT", f"Routing engine exceeded timeout budget of {timeout_sec:.1f}s", False
+        if ses_exists and ses_size > 0 and returncode != 0 and (final_unrouted or 0) > 0:
+            return "TIMEOUT_PARTIAL", f"Engine stopped at its job_timeout with {final_unrouted} unrouted; partial SES kept", True
+        if stagnated:
+            msg = (f"No new best unrouted count for {stagnation_patience} passes "
+                   f"(best {best_unrouted} at pass {best_pass}, last {final_unrouted})")
+            return "STAGNATED", msg, bool(ses_exists and ses_size > 0)   # partial success if copper was written
+        if returncode != 0:
+            return "CRASHED", f"Engine process exited with non-zero code {returncode}", False
+        if not ses_exists or ses_size == 0:
+            return "NO_SES", "Engine finished but did not generate a valid non-empty SES file", False
+        return "SUCCESS", None, True
+
+    @staticmethod
+    def _progress_publisher(progress_path: str, engine_ver: str, t0: float, tracker: "PassTracker",
+                            timeout_sec: float, problem_nets: Dict[str, int]):
+        """Closure that writes state/route/progress.json (read by Mission Control) for a phase name."""
+        def publish(phase: str) -> None:
+            write_progress(progress_path, {
+                "phase": phase, "engine": engine_ver, "elapsed_s": round(time.time() - t0, 1),
+                "passes": tracker.passes, "initial_unrouted": tracker.initial_unrouted,
+                "last_unrouted": tracker.last_unrouted, "best_unrouted": tracker.best_unrouted,
+                "best_pass": tracker.best_pass, "passes_since_best": tracker.passes_since_best(),
+                "restores": tracker.restores, "budget_s": timeout_sec,
+                "problem_nets": sorted(problem_nets, key=lambda n: -problem_nets[n])[:20],
+                "history": tracker.history[-50:],
+            })
+        return publish
+
     def execute_routing(
         self,
         dsn_path: str,
@@ -443,207 +589,52 @@ class RoutingEngineOrchestrator:
         """
         if not os.path.exists(dsn_path):
             raise FileNotFoundError(f"Input DSN file not found: {dsn_path}")
-
         wd = working_dir or os.path.dirname(os.path.abspath(ses_path))
         os.makedirs(wd, exist_ok=True)
 
         engine_type, engine_path, engine_ver = self.discover_engine(explicit_engine)
-        ver_t = self._version_tuple(engine_ver)
-
-        # 1. Prepare headless configuration (per-run file for v2.2+, global file for v2.1)
-        mins = max(1, int(timeout_sec // 60))
-        secs = int(timeout_sec % 60)
-        timeout_str = f"00:{mins:02d}:{secs:02d}"
-        settings = dict(stagnation_pass_limit=stagnation_patience, priority_net_classes=priority_net_classes,
-                        plane_nets=plane_nets, via_costs=via_costs, max_threads=max_threads)
-        cfg = self.build_config(timeout_str, max_passes=max_passes, **settings)
-        self.ensure_headless_config(wd, job_timeout_str=timeout_str, max_passes=max_passes, **settings)
-        global_backup = self.install_global_config(cfg) if ver_t < (2, 2) else None
-
-        # 2. Build canonical command line
-        cmd: List[str] = []
-        if engine_type == "JAR":
-            cmd = [self.java, "-jar", engine_path]
-        else:
-            cmd = [engine_path]
-
-        design_arg = os.path.abspath(dsn_path)
-        if input_ses and os.path.exists(input_ses):
-            design_arg += "+" + os.path.abspath(input_ses)
-        cmd.extend([
-            "-de", design_arg,
-            "-do", os.path.abspath(ses_path),
-            "-mp", str(max_passes),
-            "-mt", str(max_threads),
-            "--gui.enabled=false"
-        ])
-        if ver_t >= (2, 2):
-            cmd.append(f"--router.autorouter.max_passes={max_passes}")
-            if os.environ.get("DESK_FR_STAGNATION_FLAG") == "1":
-                # documented for newer builds; v2.5.0 rejects it ("No field found ... stagnation_pass_limit")
-                cmd.append(f"--router.autorouter.stagnation_pass_limit={int(stagnation_patience)}")
-            cmd.append(f"--router.job_timeout={timeout_str}")
-            if priority_net_classes:
-                cmd.append("--router.autorouter.priority_net_classes=" + ",".join(priority_net_classes))
-            if plane_nets:
-                cmd.append("--router.plane_nets=" + ",".join(plane_nets))
-            if via_costs is not None:
-                cmd.append(f"--router.via_costs={int(via_costs)}")
+        cfg, global_backup, timeout_str = self.prepare_engine_config(
+            wd, engine_ver, timeout_sec, max_passes, stagnation_patience, priority_net_classes, plane_nets,
+            via_costs, max_threads)
+        cmd = self.build_command(engine_type, engine_path, engine_ver, dsn_path, ses_path, max_passes, max_threads,
+                                 timeout_str, stagnation_patience, priority_net_classes, plane_nets, via_costs, input_ses)
 
         t0 = time.time()
-        stdout_lines: List[str] = []
-        stderr_lines: List[str] = []
         tracker = PassTracker(patience=stagnation_patience)
         pin_map = DSNPinMap.from_file(dsn_path)
         progress_path = os.path.join(wd, "progress.json")
         problem_nets: Dict[str, int] = {}
 
-        def publish(phase: str) -> None:
-            write_progress(progress_path, {
-                "phase": phase, "engine": engine_ver, "elapsed_s": round(time.time() - t0, 1),
-                "passes": tracker.passes, "initial_unrouted": tracker.initial_unrouted,
-                "last_unrouted": tracker.last_unrouted, "best_unrouted": tracker.best_unrouted,
-                "best_pass": tracker.best_pass, "passes_since_best": tracker.passes_since_best(),
-                "restores": tracker.restores, "budget_s": timeout_sec,
-                "problem_nets": sorted(problem_nets, key=lambda n: -problem_nets[n])[:20],
-                "history": tracker.history[-50:],
-            })
+        publish = self._progress_publisher(progress_path, engine_ver, t0, tracker, timeout_sec, problem_nets)
         publish("starting")
 
-        # 3. Supervised execution with background reader threads
-        proc = subprocess.Popen(
-            cmd,
-            cwd=wd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1,
-            universal_newlines=True
-        )
-
-        stagnated = False
-
-        def read_stdout():
-            nonlocal stagnated
-            for line in proc.stdout:
-                clean_line = line.strip()
-                if clean_line:
-                    stdout_lines.append(clean_line)
-                    if log_callback:
-                        log_callback(clean_line)
-                    for net in pin_map.nets_in(clean_line):
-                        problem_nets[net] = problem_nets.get(net, 0) + 1
-                    rec = tracker.feed(clean_line)
-                    if rec is not None:
-                        publish("routing")
-                        if tracker.stagnated():
-                            stagnated = True
-
-        def read_stderr():
-            for line in proc.stderr:
-                clean_line = line.strip()
-                if clean_line:
-                    stderr_lines.append(clean_line)
-
-        t_out = threading.Thread(target=read_stdout, daemon=True)
-        t_err = threading.Thread(target=read_stderr, daemon=True)
-        t_out.start()
-        t_err.start()
-
-        # 4. Supervised loop: check process termination, timeout, or stagnation
-        timed_out = False
-        while proc.poll() is None:
-            now = time.time()
-            elapsed = now - t0
-
-            # Freerouting's own job_timeout equals timeout_sec; give it a grace period to exit by itself and write
-            # the SES (-do) with its best board instead of killing it at the same instant and losing the result.
-            if elapsed > timeout_sec + 120.0:
-                timed_out = True
-                self._graceful_stop(proc)
-                break
-
-            if stagnated and tracker.passes >= 5 and os.name != "nt":
-                # POSIX: SIGINT lets the JVM run its shutdown hooks. On Windows a child JVM cannot be
-                # stopped gracefully and the SES is written only when the engine ends on its own
-                # (measured 2026-11-12: a plateau terminate at pass 17 lost a 4-unrouted board), so on
-                # Windows the plateau is only recorded; the run ends via max_passes/job_timeout.
-                # Use execute_routing_chunked() for bounded runs that always keep a SES.
-                self._graceful_stop(proc)
-                break
-
-            time.sleep(0.2)
-
-        t_out.join(timeout=2.0)
-        t_err.join(timeout=2.0)
+        proc, stdout_lines, stderr_lines, timed_out, stagnated = self.supervise(
+            cmd, wd, timeout_sec, t0, tracker, pin_map, problem_nets, publish, log_callback)
         dur = round(time.time() - t0, 2)
         self.restore_global_config(global_backup)
         ses_exists = os.path.exists(ses_path)
         publish("finished" if ses_exists else ("timeout" if timed_out else "stopped"))
-
         ses_size = os.path.getsize(ses_path) if ses_exists else 0
-        passes_completed = tracker.passes
-        initial_unrouted = tracker.initial_unrouted
-        final_unrouted = tracker.last_unrouted
 
-        # Determine status
-        if timed_out:
-            status = "TIMEOUT"
-            err_msg = f"Routing engine exceeded timeout budget of {timeout_sec:.1f}s"
-            success = False
-        elif ses_exists and ses_size > 0 and proc.returncode != 0 and (final_unrouted or 0) > 0:
-            status = "TIMEOUT_PARTIAL"
-            err_msg = f"Engine stopped at its job_timeout with {final_unrouted} unrouted; partial SES kept"
-            success = True
-        elif stagnated:
-            status = "STAGNATED"
-            err_msg = (f"No new best unrouted count for {stagnation_patience} passes "
-                       f"(best {tracker.best_unrouted} at pass {tracker.best_pass}, last {final_unrouted})")
-            # If SES exists and has routed content, it is a partial success
-            success = ses_exists and ses_size > 0
-        elif proc.returncode != 0:
-            status = "CRASHED"
-            err_msg = f"Engine process exited with non-zero code {proc.returncode}"
-            success = False
-        elif not ses_exists or ses_size == 0:
-            status = "NO_SES"
-            err_msg = "Engine finished but did not generate a valid non-empty SES file"
-            success = False
-        else:
-            status = "SUCCESS"
-            err_msg = None
-            success = True
+        status, err_msg, success = self.classify_outcome(
+            timed_out, stagnated, proc.returncode, ses_exists, ses_size, tracker.last_unrouted, timeout_sec,
+            stagnation_patience, tracker.best_unrouted, tracker.best_pass)
 
-        # Write log file to working dir
-        log_path = os.path.join(wd, "freerouting.log")
         try:
-            with open(log_path, "w", encoding="utf-8") as f:
+            with open(os.path.join(wd, "freerouting.log"), "w", encoding="utf-8") as f:
                 f.write("\n".join(stdout_lines + stderr_lines))
-        except Exception:
+        except OSError:
             pass
 
         return EngineExecutionResult(
-            success=success,
-            status=status,
-            engine_name="Freerouting",
-            engine_version=engine_ver,
-            engine_path=engine_path,
-            command=cmd,
-            duration_sec=dur,
-            returncode=proc.returncode or 0,
-            passes_completed=passes_completed,
-            initial_unrouted=initial_unrouted,
-            final_unrouted=final_unrouted,
-            ses_generated=ses_exists,
-            ses_path=ses_path if ses_exists else None,
-            ses_size_bytes=ses_size,
-            stdout_summary="\n".join(stdout_lines[:50]),
-            stderr_summary="\n".join(stderr_lines[:50]),
-            error_message=err_msg,
-            best_unrouted=tracker.best_unrouted,
-            best_pass=tracker.best_pass,
-            pass_history=list(tracker.history),
-            restores_seen=tracker.restores,
+            success=success, status=status, engine_name="Freerouting", engine_version=engine_ver,
+            engine_path=engine_path, command=cmd, duration_sec=dur, returncode=proc.returncode or 0,
+            passes_completed=tracker.passes, initial_unrouted=tracker.initial_unrouted,
+            final_unrouted=tracker.last_unrouted, ses_generated=ses_exists,
+            ses_path=ses_path if ses_exists else None, ses_size_bytes=ses_size,
+            stdout_summary="\n".join(stdout_lines[:50]), stderr_summary="\n".join(stderr_lines[:50]),
+            error_message=err_msg, best_unrouted=tracker.best_unrouted, best_pass=tracker.best_pass,
+            pass_history=list(tracker.history), restores_seen=tracker.restores,
             engine_config=cfg.get("router", {}),
         )
 
@@ -753,7 +744,14 @@ class RoutingEngineOrchestrator:
                 break
         if os.path.exists(best_ses):
             _shutil.copyfile(best_ses, ses_path)
-        dur = round(time.time() - t0, 2)
+        return self._chunked_result(ses_path, history, best_unrouted, last, round(time.time() - t0, 2),
+                                    {"chunk_passes": chunk_passes, "max_chunks": max_chunks,
+                                     "plateau_chunks": plateau_chunks, "budget_sec": budget_sec})
+
+    @staticmethod
+    def _chunked_result(ses_path: str, history: List[Dict[str, Any]], best_unrouted: Optional[int],
+                        last: Optional[EngineExecutionResult], dur: float, cfg: Dict[str, Any]) -> EngineExecutionResult:
+        """Assemble the aggregate result of a chunked run (pure; the SES has already been copied into place)."""
         ok = os.path.exists(ses_path) and os.path.getsize(ses_path) > 0
         status = ("SUCCESS" if ok and best_unrouted == 0 else
                   "PLATEAU_PARTIAL" if ok else
@@ -780,7 +778,6 @@ class RoutingEngineOrchestrator:
             best_pass=None,
             pass_history=[p for h in history for p in h["pass_history"]],
             restores_seen=sum(getattr(x, "restores_seen", 0) for x in [last] if x),
-            engine_config={"chunk_passes": chunk_passes, "max_chunks": max_chunks, "plateau_chunks": plateau_chunks,
-                           "budget_sec": budget_sec, "chunks": [{k: v for k, v in h.items() if k != "pass_history"} for h in history]},
+            engine_config={**cfg, "chunks": [{k: v for k, v in h.items() if k != "pass_history"} for h in history]},
         )
 
