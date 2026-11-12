@@ -18,6 +18,7 @@ This index is the single source of truth for conditional skill resolution in DES
 
 | Skill Name | Path | Authoritative Pipeline | Triggers / Keywords | Mission Type |
 | :--- | :--- | :--- | :--- | :--- |
+| **domain-intelligence** | `.agents/skills/domain-intelligence/SKILL.md` | M0 | `requirements`, `classify`, `archetype`, `what kind of board`, `which rules apply`, `new project` | Scout / Ship |
 | **ship-task-intake** | `.agents/skills/ship-task-intake/SKILL.md` | M0 | `ship task`, `deliverable`, `build`, `implement`, `modify`, `create` | Ship Task |
 | **scout-task-intake** | `.agents/skills/scout-task-intake/SKILL.md` | M0 | `scout`, `investigate`, `audit`, `query`, `explain`, `inspect` | Scout Task |
 | **schematic-engineering** | `.agents/skills/schematic-engineering/SKILL.md` | M1 | `schematic`, `netlist`, `symbol`, `pinout`, `connectivity`, `port` | Ship / Scout |

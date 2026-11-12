@@ -71,6 +71,7 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
 - **Block Workflow Loop (docs/03_BLOCK_WORKFLOW.md):**
   `spec (blocks/NN_ID.json)` -> `resolve.py` -> `pins.py` -> `qa[]` -> `lint.py` -> `build.py` -> `verify.py` -> accepted.
 - **Retry Ceiling:** If `verify.py` fails: clear block, fix spec, rebuild. Maximum 2 attempts, then stop and report to the Captain.
+- **Understand the hardware before designing it (DDIS):** classify every request first (`python tools/desk.py domains classify "<requirements>"` or the `classify_requirements` tool), load the archetype and overlays, retrieve the rules (`domains rules <archetype>`), list missing information and ask, then compile the profile (`domains validate requirements.json --project projects/<P>`). Never treat a board as a generic digital board, never apply RF rules to power electronics or low-voltage clearances to mains, and never report an ADVISORY/UNSUPPORTED rule as enforced. State the domain, archetype, overlays and enforced rules in every design report. Skill: `.agents/skills/domain-intelligence/SKILL.md`.
 
 ---
 

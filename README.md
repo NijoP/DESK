@@ -455,6 +455,7 @@ python desk.py rework report projects/WATCH
 
 | Area | Document |
 |---|---|
+| **Domain Intelligence (100 archetypes, rule engine)** | [`docs/domain_intelligence/NEW_USER_GUIDE.md`](docs/domain_intelligence/NEW_USER_GUIDE.md), [`TAXONOMY_REFERENCE.md`](docs/domain_intelligence/TAXONOMY_REFERENCE.md), [`RULE_ENGINE_ARCHITECTURE.md`](docs/domain_intelligence/RULE_ENGINE_ARCHITECTURE.md) |
 | **Routing Intelligence V2** | [`docs/ROUTING_INTELLIGENCE_V2.md`](docs/ROUTING_INTELLIGENCE_V2.md) |
 | **Dense PCB Intelligence** | [`docs/engineering/DENSE_PCB_INTELLIGENCE.md`](docs/engineering/DENSE_PCB_INTELLIGENCE.md) |
 | **Congestion Optimisation** | [`docs/engineering/CONGESTION_OPTIMISATION.md`](docs/engineering/CONGESTION_OPTIMISATION.md) |
