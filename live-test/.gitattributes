@@ -1,0 +1,5 @@
+# Output and design files must never get line-ending conversion
+*.pdf  binary
+*.zip  binary
+*.epro binary
+*.png  binary
