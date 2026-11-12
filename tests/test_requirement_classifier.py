@@ -40,6 +40,22 @@ class ExtractionTests(unittest.TestCase):
         self.assertEqual(f["max_ambient_c"], 85.0)
         self.assertEqual(f["environment"], "outdoor")
 
+    def test_a_voltage_beside_a_current_is_never_read_as_a_current(self):
+        # Regression: the range separator ".." was an unescaped regex, so "24 V, 2 A" parsed as a 24..2 A range.
+        cases = {"24 V, 2 A": (2.0, [24.0]), "5 V 3 A buck": (3.0, [5.0]), "5V/3A USB-C PD sink": (3.0, [5.0]),
+                 "12 V 1.5 A input, 5 V 3 A output": (3.0, [5.0, 12.0]),
+                 "12 V input, 5 V 3 A synchronous buck converter module, 500 kHz switching": (3.0, [5.0, 12.0])}
+        for text, (amps, volts) in cases.items():
+            f = extract_requirements(text).features
+            self.assertEqual(f["current_a"], amps, text)
+            self.assertEqual(f["voltages_v"], volts, text)
+
+    def test_ranges_with_one_unit_still_parse(self):
+        for text, key, want in (("4.5-5.5 V input", "voltages_v", [4.5, 5.5]), ("9–36 V input", "voltages_v", [9.0, 36.0]),
+                                ("2 to 3 A load", "current_a", 3.0), ("3..5 A load", "current_a", 5.0),
+                                ("100 mA to 2 A load", "current_a", 2.0)):
+            self.assertEqual(extract_requirements(text).features[key], want, text)
+
     def test_structured_fields_override_text(self):
         r = extract_requirements({"text": "12 V board", "input_voltage_v": 48.0, "protocols": ["rs485"], "voltage_rails": {"VIN": 48.0}})
         self.assertEqual(r.features["input_voltage_v"], 48.0)

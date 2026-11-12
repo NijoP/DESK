@@ -10,6 +10,7 @@ import re
 import shutil
 import tempfile
 import unittest
+from unittest import mock
 import urllib.error
 import urllib.request
 from contextlib import redirect_stdout
@@ -135,6 +136,8 @@ class FakeWeft:
             return 0, "/home/u/.desk-weft/requirement_to_profile\n", ""
         if "validate" in text:
             return 0, json.dumps({"diagnostics": []}), ""
+        if " run " in " " + text + " " and "--check" in argv:
+            return 0, json.dumps({"ok": True}) + "\n", ""
         if " run " in " " + text + " ":
             return 0, json.dumps({"phase": "build", "detail": "compiling"}) + "\n" + json.dumps({"phase": "started", "detail": {"runId": self.run_id, "projectId": "p"}}) + "\n", ""
         if " runs " in " " + text + " ":
@@ -195,6 +198,31 @@ class RuntimeTests(unittest.TestCase):
         self.assertIn('projectId={"value": "DEMO"}', argv)
         shutil.rmtree(os.path.dirname(os.path.dirname(staged)), ignore_errors=True)
 
+    def test_run_check_hands_the_same_starts_as_the_run_and_starts_nothing(self):
+        fake = FakeWeft()
+        staged = staging.stage("requirement_to_profile", build_dir=tempfile.mkdtemp(prefix="desk_weft_stage_"))
+        inputs = {"projectId": "DEMO", "requirements": "5 V"}
+        r = fake.runtime().check_run(staged, "requirement_to_profile", inputs)
+        self.assertTrue(r["ok"])
+        check = [c[0] for c in fake.calls if "--check" in c[0]][-1]
+        self.assertNotIn("--detach", check)
+        fake.runtime().run(staged, "requirement_to_profile", inputs)
+        run = [c[0] for c in fake.calls if "--detach" in c[0]][-1]
+        starts = lambda argv: [argv[i + 1] for i, x in enumerate(argv) if x == "--from"]
+        self.assertEqual(starts(check), starts(run))
+        shutil.rmtree(os.path.dirname(os.path.dirname(staged)), ignore_errors=True)
+
+    def test_run_flags_are_upstream_runflags_json(self):
+        flags = rt.run_flags({"service": "http://h", "requirements": 'say "hi"'}, durable=True)
+        self.assertEqual(flags, {"from": ['service={"value": "http://h"}', 'requirements={"value": "say \\"hi\\""}'], "durable": True})
+        self.assertEqual(rt.flag_args(flags), ["--from", flags["from"][0], "--from", flags["from"][1], "--durable"])
+        self.assertNotIn("durable", rt.run_flags({}, durable=False))
+
+    def test_an_unreadable_check_answer_is_a_refusal(self):
+        self.assertFalse(rt._check_result("weft-cli", 1, "", "boom")["ok"])
+        self.assertFalse(rt._check_result("weft-cli", 0, '{"phase": "build"}', "")["ok"])
+        self.assertTrue(rt._check_result("weft-cli", 0, '{"ok": true}', "")["ok"])
+
     def test_run_without_a_run_id_is_a_failure(self):
         fake = FakeWeft(run_id=None)
         staged = staging.stage("requirement_to_profile", build_dir=tempfile.mkdtemp(prefix="desk_weft_stage_"))
@@ -242,6 +270,98 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(doc["deskTrace"][0]["runId"], "run-9")
         self.assertIsNone(doc["weft"])
         shutil.rmtree(root, ignore_errors=True)
+
+
+class FakeDispatcher:
+    """Weft's signal doors (GET /signal-token/signals, POST /signal/<link>[/skip]) on a loopback port."""
+
+    def __init__(self, signals, bearer="sig-secret"):
+        import http.server
+        import threading
+        outer = self
+        self.signals, self.bearer, self.posts = signals, bearer, []
+
+        class H(http.server.BaseHTTPRequestHandler):
+            def log_message(self, *args):
+                pass
+
+            def _send(self, code, doc):
+                body = json.dumps(doc).encode()
+                self.send_response(code)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def do_GET(self):
+                if self.path != "/signal-token/signals":
+                    return self._send(404, {})
+                if self.headers.get("Authorization") != f"Bearer {outer.bearer}":
+                    return self._send(401, {"error": "token"})
+                self._send(200, outer.signals)
+
+            def do_POST(self):
+                n = int(self.headers.get("Content-Length") or 0)
+                body = json.loads(self.rfile.read(n) or b"null") if n else None
+                outer.posts.append((self.path, body))
+                known = {f"/signal/{s['token']}" for s in outer.signals} | {f"/signal/{s['token']}/skip" for s in outer.signals}
+                self._send(200 if self.path in known else 404, {})
+
+        self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+        self.url = f"http://127.0.0.1:{self.server.server_address[1]}"
+        threading.Thread(target=self.server.serve_forever, daemon=True).start()
+
+    def close(self):
+        self.server.shutdown()
+        self.server.server_close()
+
+
+class SignalTests(unittest.TestCase):
+    SIGNALS = [{"token": "link-1", "nodeId": "approve.review", "kind": "form", "runId": "r1"},
+               {"token": "link-2", "nodeId": "bom.approval.review", "kind": "form", "runId": "r2"},
+               {"token": "link-3", "nodeId": "schematicApproval.review", "kind": "form", "runId": "r2"}]
+
+    def setUp(self):
+        self.d = FakeDispatcher(self.SIGNALS)
+        self.addCleanup(self.d.close)
+
+    def cli(self, *argv, token="sig-secret"):
+        out = io.StringIO()
+        env = {k: v for k, v in os.environ.items() if k != cli.SIGNAL_TOKEN_ENV}
+        if token is not None:
+            env[cli.SIGNAL_TOKEN_ENV] = token
+        with mock.patch.dict(os.environ, env, clear=True), redirect_stdout(out):
+            code = cli.main(list(argv) + ["--dispatcher", self.d.url], runtime=FakeWeft(installed=None).runtime())
+        return code, out.getvalue()
+
+    def test_approve_posts_the_decision_to_that_nodes_link_only(self):
+        code, text = self.cli("answer", "approve.review", "approve")
+        self.assertEqual(code, 0, text)
+        self.assertEqual(self.d.posts, [("/signal/link-1", {"decision": "approve"})])
+
+    def test_reject_and_skip(self):
+        self.assertEqual(self.cli("answer", "bom.approval.review", "reject")[0], 0)
+        self.assertEqual(self.cli("answer", "schematicApproval.review", "skip")[0], 0)
+        self.assertEqual(self.d.posts, [("/signal/link-2", {"decision": "reject"}), ("/signal/link-3/skip", None)])
+
+    def test_an_ambiguous_or_unknown_node_answers_nothing(self):
+        self.assertEqual(self.cli("answer", "review", "approve")[0], 1)
+        self.assertEqual(self.cli("answer", "nosuch.review", "approve")[0], 1)
+        self.assertEqual(self.d.posts, [])
+
+    def test_only_a_named_decision_is_accepted(self):
+        self.assertEqual(self.cli("answer", "approve.review", "yes")[0], 2)
+        self.assertEqual(self.d.posts, [])
+
+    def test_the_signal_token_comes_from_the_environment_and_is_never_printed(self):
+        code, text = self.cli("signals", "--json", token=None)
+        self.assertEqual(code, 2)
+        code, text = self.cli("signals", "--json")
+        self.assertEqual(code, 0)
+        self.assertEqual([s["nodeId"] for s in json.loads(text)["signals"]], [s["nodeId"] for s in self.SIGNALS])
+        for secret in ("sig-secret", "link-1", "link-2", "link-3"):
+            self.assertNotIn(secret, text)
+        self.assertEqual(self.cli("signals", token="wrong")[0], 1)
 
 
 class WorkflowTests(unittest.TestCase):
@@ -293,6 +413,22 @@ class WorkflowTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(os.path.join(staged, rel)), rel)
         shutil.rmtree(build, ignore_errors=True)
 
+    def test_restaging_keeps_what_weft_fetched_and_built_and_replaces_desk_files(self):
+        build = tempfile.mkdtemp(prefix="desk_weft_restage_")
+        staged = staging.stage("requirement_to_profile", build_dir=build)
+        for rel in ("nodes/base_catalog/basic/text/metadata.json", ".weft/target/cache.bin"):
+            os.makedirs(os.path.dirname(os.path.join(staged, rel)), exist_ok=True)
+            with open(os.path.join(staged, rel), "w") as f:
+                f.write("kept")
+        with open(os.path.join(staged, "src", "main.weft"), "w") as f:
+            f.write("stale")
+        staged = staging.stage("requirement_to_profile", build_dir=build)
+        for rel in ("nodes/base_catalog/basic/text/metadata.json", ".weft/target/cache.bin"):
+            self.assertTrue(os.path.isfile(os.path.join(staged, rel)), rel)
+        with open(os.path.join(staged, "src", "main.weft"), encoding="utf-8") as f:
+            self.assertNotEqual(f.read(), "stale")
+        shutil.rmtree(build, ignore_errors=True)
+
     def test_workflows_compile_under_the_weft_compiler(self):
         runtime = rt.WeftRuntime()
         if not runtime.available() and rt.harness() is None:
@@ -301,6 +437,56 @@ class WorkflowTests(unittest.TestCase):
             r = cli.validate_workflow(wf, runtime)
             self.assertTrue(r["ok"], r["errors"])
             self.assertEqual(r["warnings"], [], wf)
+
+    def test_every_run_input_is_a_text_node_whose_value_port_upstream_declares(self):
+        # weft run --from <node>={"value": ...} hands the node's `value` INPUT port. Upstream's admission check does
+        # not refuse an unknown port name, so the port is checked against upstream's catalog metadata here.
+        inputs = cli._run_inputs("http://h", "projects/DEMO", "r", "ev")
+        for wf, names in (("requirement_to_profile", ["service", "projectId", "requirements"]),
+                          ("hardware_design", ["service", "projectId", "requirements", "evidenceRef"])):
+            main = self.sources(wf)["main.weft"]
+            for name in names:
+                self.assertIn(name, inputs)
+                self.assertRegex(main, rf"(?m)^{name} = Text \{{ value: ", f"{wf}: {name}")
+        h = rt.harness()
+        if h is None:
+            self.skipTest("no pinned Weft checkout configured (compiler harness not built)")
+        with open(os.path.join(h["checkout"], "catalog", "basic", "text", "metadata.json"), encoding="utf-8") as f:
+            meta = json.load(f)
+        self.assertEqual(meta["type"], "Text")
+        self.assertIn(("value", "String"), [(p["name"], p["type"]) for p in meta["inputs"]])
+
+    def test_every_desk_node_call_is_listed_for_the_connection_pick(self):
+        h = rt.harness()
+        if h is None:
+            self.skipTest("compiler harness not built")
+        build = tempfile.mkdtemp(prefix="desk_weft_addr_")
+        staged = staging.stage("requirement_to_profile", build_dir=build)
+        r = rt.harness_addresses(staged, h)
+        self.assertTrue(r["ok"], r["detail"])
+        self.assertTrue(all(a.endswith(".call") for a in r["addresses"]), r["addresses"])
+        for a in ("families.call", "power.call", "approve.record.call", "understand.intake.call"):
+            self.assertIn(a, r["addresses"])
+        self.assertEqual(len(r["addresses"]), len(set(r["addresses"])))
+        shutil.rmtree(build, ignore_errors=True)
+
+    def test_weft_admits_the_runs_desk_starts(self):
+        # Upstream's own admission check (run_spec::judge, what `weft run --check` and the dispatcher apply).
+        h = rt.harness()
+        if h is None:
+            self.skipTest("compiler harness not built")
+        build = tempfile.mkdtemp(prefix="desk_weft_check_")
+        for wf in ("requirement_to_profile", "hardware_design"):
+            staged = staging.stage(wf, build_dir=build)
+            inputs = cli._run_inputs("http://127.0.0.1:14500", "projects/DEMO", "5 V 1 A buck", "board" if wf == "hardware_design" else None)
+            r = rt.harness_check_run(staged, h, rt.run_flags(inputs, durable=True))
+            self.assertTrue(r["ok"], r.get("refusal"))
+            for place in ("run", "tag", "service", "projectId", "requirements"):
+                self.assertIn(place, r["runs"], f"{wf}: {place} is outside the run")
+            bad = rt.harness_check_run(staged, h, {"from": ['noSuchStart={"value": "x"}']})
+            self.assertFalse(bad["ok"])
+            self.assertIn("noSuchStart", bad["refusal"])
+        shutil.rmtree(build, ignore_errors=True)
 
     def test_weft_compiler_rejects_a_mistyped_wire_into_a_desk_node(self):
         h = rt.harness()

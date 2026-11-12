@@ -9,7 +9,7 @@ Requirements in, verified and manufacturable boards out, with the physics done b
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-stdlib%20only-success.svg)](desk/)
-[![Tests](https://img.shields.io/badge/tests-689-informational.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-713-informational.svg)](tests/)
 [![ECAD](https://img.shields.io/badge/ecad-EasyEDA%20Pro-orange.svg)](https://pro.easyeda.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -128,7 +128,7 @@ python desk.py weft validate               # compile-check the workflows with th
 python desk.py weft run hardware_design --project projects/MY_BOARD --requirements requirements.json
 ```
 
-Weft is not bundled. It is pinned to an upstream commit, needs Docker, and on Windows runs inside WSL2. Without it the engines and every other tool work as before; `weft run` refuses to start and there is no fallback orchestrator. **Status: the workflows compile under the real Weft compiler and the DESK side is tested, but no workflow has been run by a Weft runtime yet.** See [`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md).
+Weft is not bundled. It is pinned to an upstream commit, needs Docker, and on Windows runs inside WSL2. Without it the engines and every other tool work as before; `weft run` refuses to start and there is no fallback orchestrator. **Status: the workflows compile under the real Weft compiler and the DESK side is tested, but no workflow has been run by a Weft runtime yet.** Live runs are deferred to a separate Linux machine; the scripted procedure is [`docs/weft/05_LINUX_VALIDATION.md`](docs/weft/05_LINUX_VALIDATION.md). See [`docs/weft/04_STATUS.md`](docs/weft/04_STATUS.md).
 
 ---
 
@@ -215,7 +215,7 @@ DESK's first timed end-to-end run against a live EasyEDA Pro project. Full recor
 
 ## Verification status
 
-The test suite was last run on 2026-11-12: 689 tests, 0 failures, 5 skips (3 live-only, 2 need the optional shapely package). Four tests are environment-dependent: `test_orchestrator` 07/10/11 fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell, and `test_routing_orchestrator` engine discovery needs a Freerouting jar (`library/tools` or `FREEROUTING_JAR`) and Java 25.
+The test suite was last run on 2026-11-12: 713 tests, 0 failures, 3 skips (one needs a free EasyEDA bridge port, one Node and Backpass, one a git-ignored WATCH routing fixture; the 2 shapely tests ran because shapely is installed there). Four tests are environment-dependent: `test_orchestrator` 07/10/11 fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell, and `test_routing_orchestrator` engine discovery needs a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` there does not).
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -266,7 +266,7 @@ The test suite was last run on 2026-11-12: 689 tests, 0 failures, 5 skips (3 liv
 | EasyEDA Pro, LCSC, JLCPCB | [`docs/ecosystem/02_EASYEDA_PRO_INTEGRATION.md`](docs/ecosystem/02_EASYEDA_PRO_INTEGRATION.md), [`docs/ecosystem/LCSC_INTEGRATION_ARCHITECTURE.md`](docs/ecosystem/LCSC_INTEGRATION_ARCHITECTURE.md), [`docs/ecosystem/JLCPCB_MANUFACTURING_ARCHITECTURE.md`](docs/ecosystem/JLCPCB_MANUFACTURING_ARCHITECTURE.md) |
 | Rework mode for existing boards | [`docs/rework/01_REWORK_MODE_OVERVIEW.md`](docs/rework/01_REWORK_MODE_OVERVIEW.md) |
 | Context engine and learning | [`docs/07_CONTEXT_ENGINE.md`](docs/07_CONTEXT_ENGINE.md), [`docs/08_LEARNING_ENGINE.md`](docs/08_LEARNING_ENGINE.md) |
-| Weft orchestration | [`docs/weft/01_ARCHITECTURE.md`](docs/weft/01_ARCHITECTURE.md), [`02_INSTALL.md`](docs/weft/02_INSTALL.md), [`03_LICENCE.md`](docs/weft/03_LICENCE.md), [`04_STATUS.md`](docs/weft/04_STATUS.md) |
+| Weft orchestration | [`docs/weft/01_ARCHITECTURE.md`](docs/weft/01_ARCHITECTURE.md), [`02_INSTALL.md`](docs/weft/02_INSTALL.md), [`03_LICENCE.md`](docs/weft/03_LICENCE.md), [`04_STATUS.md`](docs/weft/04_STATUS.md), [`05_LINUX_VALIDATION.md`](docs/weft/05_LINUX_VALIDATION.md) |
 | Mission Control dashboard | [`docs/local-dashboard.md`](docs/local-dashboard.md) |
 | Live test status and checklist | [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md), [`docs/LIVE_INTEGRATION_CHECKLIST.md`](docs/LIVE_INTEGRATION_CHECKLIST.md) |
 | Agent operating manual | [`AGENTS.md`](AGENTS.md) |
