@@ -18,3 +18,4 @@ library/api_signatures.json
 *.db-shm
 library/tools/jdk*/
 library/tools/*.zip
+.desk_weft/
