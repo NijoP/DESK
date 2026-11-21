@@ -4,6 +4,11 @@ DESK learns from **what actually happened**: agent sessions (Claude Code, Codex,
 plus DESK's own execution evidence (tool telemetry, op journal, ledger). It finds recurring mistakes, token waste,
 unnecessary calls, slow or failing workflows, and proposes improvements — which a human accepts or rejects.
 
+**One gate for the agent-memory surface.** `AGENTS.md`, `CLAUDE.md` and `.agents/skills/` are edited from transcripts
+only through `backpass apply` (AGENTS.md section L). This engine produces *evidence and tasks* for that surface: accepting
+an AGENTS.md-targeted proposal writes `.desk_learn/tasks/<id>.md` and never edits AGENTS.md or CLAUDE.md
+(`CLAUDE.md` stays the `@AGENTS.md` pointer). The memory budget is read from `.backpassrc.json` `budgetTokens`.
+
 ```
 python tools/learn.py setup      # once: clone Backpass at the pinned commit (library/tools/BACKPASS_PIN)
 python tools/learn.py run        # collect -> detect -> corroborate -> propose -> report   (read-only, ~2 s)
@@ -38,11 +43,12 @@ Backpass officially supports macOS/Linux; on this Windows machine all 8 adapters
 4. **Propose** — a gap becomes a proposal only with ≥ 2 distinct sessions (floor enforced in code; config cannot lower it),
    or DESK log evidence for tool-level signals. Ranked by measured tokens and severity. A rejected proposal is not shown
    again until it gains new sessions (then flagged `reproposed_after_reject`).
-5. **Human gate / apply** — `accept` requires `--reviewer`. Only two surfaces can be edited, each inside a marked section:
-   `AGENTS.md` (+ mirrored `CLAUDE.md`) “Learned rules (human-approved)” and `docs/06` “Learned gotchas”. One line per
-   accept, with `<!-- learn:<id> sessions=N -->` provenance; AGENTS.md budget enforced; the full test suite runs and the
-   edit is **reverted** if it fails. Everything else (tool interfaces, context, workflows, routing) becomes a task file
-   in `.desk_learn/tasks/`. **Protected** engineering surfaces (`desk/spec.py`, `erc.py`, `calc.py`, `netcheck.py`,
+5. **Human gate / apply** — `accept` requires `--reviewer`. Only one surface can be edited, inside a marked section:
+   `docs/06` “Learned gotchas (human-approved)”. One line per accept, with `<!-- learn:<id> sessions=N -->` provenance;
+   the full test suite runs and the edit is **reverted** if it fails. Everything else becomes a task file in
+   `.desk_learn/tasks/`: tool interfaces, context, workflows, routing, and every AGENTS.md instruction proposal. An
+   AGENTS.md task carries the suggested line, the measured AGENTS.md size, the `.backpassrc.json` budget and the
+   `CLAUDE.md` pointer state, and says the edit lands via `backpass apply` (or a reviewed hand-made commit). **Protected** engineering surfaces (`desk/spec.py`, `erc.py`, `calc.py`, `netcheck.py`,
    `release.py`, `draw.py`, `tools/verify.py`, `tools/release.py`, `docs/02`) are never edited by this engine; accepting
    such a proposal needs `--engineering-review NAME` and still only creates a task.
 6. **Report / bench** — `.desk_learn/report.md` (proposals, measured waste, model-routing evidence table — report only).
@@ -65,5 +71,7 @@ Backpass redaction is applied before anything is stored; quotes are ≤ 240 char
 
 ## Tests
 `tests/test_learn.py`: detectors (incl. false-positive guards), era provenance, corroboration floor, idempotent
-re-analysis, rejection memory, accept-in-section + mirror, budget refusal, regression **revert**, protected refusal,
-and a real Backpass Pi-adapter integration test (parse, filter, redact).
+re-analysis, rejection memory, AGENTS.md accept → task with `AGENTS.md`/`CLAUDE.md` byte-identical (real pointer
+fixture), gotcha accept-in-section, regression **revert** (pointer unchanged), memory files refused by `apply_rule`,
+budget read from `.backpassrc.json`, protected refusal, a scan that no `desk/`, `tools/` or `devtools/` code opens
+`AGENTS.md`/`CLAUDE.md` for writing, and a real Backpass Pi-adapter integration test (parse, filter, redact).

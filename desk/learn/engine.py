@@ -8,11 +8,15 @@ Different from Backpass by design:
     logs (telemetry, ledger, op journal). Every finding carries verbatim, redacted quotes with session+event provenance.
   * Targets are DESK surfaces: agent instructions, context engine, tool interfaces, workflows, model routing.
   * Engineering rules (lint/ERC/calc/release gates/style) are PROTECTED: proposals against them become review tasks,
-    never edits. Only two text surfaces can be edited on accept, both inside marked sections, and every accept runs
-    the regression tests and reverts on failure.
+    never edits. Only one text surface (docs/06 gotchas) can be edited on accept, inside a marked section, and every
+    accept runs the regression tests and reverts on failure.
+  * The agent-memory surface (AGENTS.md, CLAUDE.md, .agents/skills/) has ONE writer: `backpass apply`. An accepted
+    proposal that targets AGENTS.md becomes a task file for a human; this module never writes a memory file.
 State (local, git-ignored): .desk_learn/{corpus.jsonl,known.json,gaps.json,decisions.jsonl,report.md,tasks/}
 """
 import collections, hashlib, json, os, re, subprocess, sys, time
+
+from desk.errors import ApprovalRequired, ConfigError, DeskError, UsageError
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 STATE = os.path.join(ROOT, ".desk_learn")
@@ -21,13 +25,38 @@ DEFAULTS = {
     "large_output_tokens": 4000,     # a single tool result above this is a waste candidate
     "retry_threshold": 3,            # same failing command head N times in one session
     "min_sessions": 2,               # corroboration floor (cannot be lowered below 2 for instruction edits)
-    "instruction_budget_tokens": 2600,  # AGENTS.md always-loaded budget
+    "instruction_budget_tokens": None,  # read from .backpassrc.json budgetTokens (one source of truth), see cfg()
     "backpass_dir": os.path.join(ROOT, "library", "tools", "backpass"),
 }
 PROTECTED = ("desk/spec.py", "desk/erc.py", "desk/calc.py", "desk/netcheck.py", "desk/release.py", "desk/draw.py",
              "docs/02_SCHEMATIC_STYLE.md", "tools/release.py", "tools/verify.py")
-EDITABLE = {"AGENTS.md": "## Learned rules (human-approved)", "docs/06_EASYEDA_API.md": "## Learned gotchas (human-approved)"}
+EDITABLE = {"docs/06_EASYEDA_API.md": "## Learned gotchas (human-approved)"}
+# Agent-memory files: written only by `backpass apply` (AGENTS.md section L). Proposals against them become tasks.
+MEMORY_FILES = ("AGENTS.md", "CLAUDE.md")
+BACKPASS_DEFAULT_BUDGET = 5000  # Backpass 0.1.44 default budgetTokens, used only when .backpassrc.json has none
 TOK = 4
+
+
+def backpass_budget(root=None):
+    """budgetTokens from <root>/.backpassrc.json, the single source of the memory-surface budget."""
+    f = os.path.join(root or ROOT, ".backpassrc.json")
+    if not os.path.exists(f): return BACKPASS_DEFAULT_BUDGET
+    try:
+        with open(f, encoding="utf-8") as h: v = json.load(h).get("budgetTokens", BACKPASS_DEFAULT_BUDGET)
+    except (OSError, ValueError, AttributeError) as e:
+        raise ConfigError(f".backpassrc.json is unreadable: {e}") from e
+    if not isinstance(v, int) or isinstance(v, bool) or v <= 0:
+        raise ConfigError(f".backpassrc.json budgetTokens must be a positive integer, got {v!r}")
+    return v
+
+
+def claude_pointer(root=None):
+    """(ok, detail): CLAUDE.md must stay a pointer that imports AGENTS.md (`@AGENTS.md` line), never a copy."""
+    f = os.path.join(root or ROOT, "CLAUDE.md")
+    if not os.path.exists(f): return True, "no CLAUDE.md"
+    with open(f, encoding="utf-8") as h: lines = [l.strip() for l in h]
+    if "@AGENTS.md" in lines: return True, "CLAUDE.md pointer to AGENTS.md"
+    return False, "CLAUDE.md does not import AGENTS.md (no `@AGENTS.md` line): it has diverged from the pointer form"
 
 
 def cfg():
@@ -36,6 +65,7 @@ def cfg():
     if os.path.exists(f):
         with open(f, encoding="utf-8") as h: c.update(json.load(h))
     c["min_sessions"] = max(2, int(c["min_sessions"]))
+    c["instruction_budget_tokens"] = backpass_budget()  # never overridden locally: Backpass owns the budget
     return c
 
 
@@ -61,14 +91,14 @@ def collect(c=None):
     c = c or cfg()
     bp = c["backpass_dir"]
     if not os.path.exists(os.path.join(bp, "src", "discovery", "index.js")):
-        raise SystemExit(f"Backpass not found at {bp}. Run: python tools/learn.py setup")
+        raise ConfigError(f"Backpass not found at {bp}. Run: python tools/learn.py setup")
     os.makedirs(STATE, exist_ok=True)
     known_f, corpus_f, raw = os.path.join(STATE, "known.json"), os.path.join(STATE, "corpus.jsonl"), os.path.join(STATE, "raw.jsonl")
     if not os.path.exists(known_f): _wj(known_f, {})
     t0 = time.time()
     p = subprocess.run(["node", os.path.join(ROOT, "desk", "learn", "collect.mjs"), bp, raw, json.dumps(c["roots"]),
                         str(c["since_days"]), known_f], capture_output=True, text=True, encoding="utf-8")
-    if p.returncode != 0: raise SystemExit("collector failed: " + p.stderr[-800:])
+    if p.returncode != 0: raise DeskError("collector failed: " + p.stderr[-800:])
     stats = json.loads(p.stdout.strip().splitlines()[-1])
     corpus = {s["key"]: s for s in _jsonl(corpus_f)}
     new = _jsonl(raw)
@@ -292,7 +322,7 @@ def _template(sig, g):
                        "Agent rule: after 2 identical failures stop and run the diagnostic (ctx.py block / tool --help) instead of retrying."),
         "eda_api_failure": ("api-map", f"EasyEDA call `{rest}` failed in real sessions.",
                             f"Gotcha: `{rest}` failed live; check library/api_map.json + api_verified.json before use."),
-        "rule_violation": ("instruction", "Models wrote their own EasyEDA drawing JavaScript (AGENTS.md 'Never' rule 1).",
+        "rule_violation": ("instruction", "Models wrote their own EasyEDA drawing JavaScript (AGENTS.md section G, 'No Custom Drawing Code').",
                            "Reinforce: 'All schematic drawing goes through `python tools/build.py`; never call eda.sch_Primitive*.create yourself.'"),
         "reference_read": ("context", f"Agents read the reference file `{rest}` whole ({tok} tokens across {g['n_sessions']} sessions).",
                            f"For EasyEDA API questions run `python tools/ctx.py api <method|module>`; never read `{rest}` whole."),
@@ -355,14 +385,14 @@ def routing(summary):
 # ----------------------------------------------------------------------------- 5. human gate + verified apply
 def decide(pid, decision, reason="", reviewer="", engineering_review=None):
     props = {p["id"]: p for p in _rj(os.path.join(STATE, "proposals.json"), [])}
-    if pid not in props: raise SystemExit(f"unknown proposal {pid} (run: python tools/learn.py run)")
+    if pid not in props: raise UsageError(f"unknown proposal {pid} (run: python tools/learn.py run)")
     p = props[pid]
     result = {"applied": False}
     if decision == "accept":
         if p["protected"] and not engineering_review:
-            raise SystemExit("STOP: proposal touches a PROTECTED engineering surface; requires --engineering-review \"<name>\" "
+            raise ApprovalRequired("STOP: proposal touches a PROTECTED engineering surface; requires --engineering-review \"<name>\" "
                              "and is only ever turned into a task, never an automatic edit.")
-        if p.get("edit_file") and p.get("rule") and not p["protected"]:
+        if p.get("edit_file") in EDITABLE and p.get("rule") and not p["protected"]:
             result = apply_rule(p)
         else:
             result = write_task(p)
@@ -374,13 +404,30 @@ def decide(pid, decision, reason="", reviewer="", engineering_review=None):
     return {**rec, "diff": result.get("diff")}
 
 
+def _memory_note(p):
+    """For a proposal against the agent-memory surface: how it lands (backpass apply) and the measured budget state."""
+    if p.get("edit_file") not in MEMORY_FILES: return ""
+    agents = os.path.join(ROOT, "AGENTS.md")
+    now = _tokens(agents) if os.path.exists(agents) else 0
+    ok, detail = claude_pointer()
+    return (f"## Agent-memory surface\n\nTarget `{p['edit_file']}`. Suggested line: \"{p.get('rule') or p['change']}\"\n\n"
+            "This tool never edits AGENTS.md or CLAUDE.md. Transcript-derived memory edits land only through Backpass: "
+            "run `backpass`, then review each edit in `backpass apply` (AGENTS.md section L). Use this task as evidence "
+            "for that review, or make the change by hand in a reviewed commit.\n\n"
+            f"AGENTS.md now: about {now} tokens (chars/4). Backpass budget: {backpass_budget()} tokens "
+            "(.backpassrc.json `budgetTokens`; Backpass counts AGENTS.md plus always-loaded skill descriptions, "
+            "see `backpass status`).\n\n"
+            f"CLAUDE.md: {detail}{'' if ok else ' -- restore the pointer before any memory edit'}.\n\n")
+
+
 def write_task(p):
     d = os.path.join(STATE, "tasks"); os.makedirs(d, exist_ok=True)
     f = os.path.join(d, f"{p['id']}.md")
     with open(f, "w", encoding="utf-8") as h:
         h.write(f"# Learning task {p['id']} — {p['kind']} ({p['target']})\n\n{p['why']}\n\n**Proposed change:** {p['change']}\n\n"
                 f"Files: {', '.join(p['files']) or '-'}{'  **PROTECTED: engineering review + regression tests required**' if p['protected'] else ''}\n\n"
-                f"Measured: {p['measured_tokens']} tokens, {p['occurrences']} occurrences, {p['n_sessions']} sessions\n\n## Evidence\n")
+                f"Measured: {p['measured_tokens']} tokens, {p['occurrences']} occurrences, {p['n_sessions']} sessions\n\n"
+                f"{_memory_note(p)}## Evidence\n")
         for e in p["evidence"]: h.write(f"- `{e['session']}` ({e['model']}) event {e['event']}: \"{e['quote']}\"\n")
         h.write("\nAcceptance: implement, add/adjust a test, `python -m unittest discover -s tests` green, then re-run `python tools/learn.py run` "
                 "and confirm the signal drops.\n")
@@ -392,8 +439,13 @@ def _tokens(path):
 
 
 def apply_rule(p, run_tests=True):
-    """Append one rule line inside the editable section, with provenance; budget-checked; tests or revert."""
-    rel = p["edit_file"]; path = os.path.join(ROOT, rel); header = EDITABLE[rel]
+    """Append one rule line inside the editable section, with provenance; tests or revert.
+    Agent-memory files are refused: their only writer is `backpass apply`."""
+    rel = p["edit_file"]
+    if rel in MEMORY_FILES or rel not in EDITABLE:
+        raise UsageError(f"learn.py does not edit {rel}: agent-memory edits land only via `backpass apply`; "
+                         f"editable here: {', '.join(EDITABLE)}")
+    path = os.path.join(ROOT, rel); header = EDITABLE[rel]
     with open(path, encoding="utf-8") as f: orig = f.read()
     line = f"- {p['rule']} <!-- learn:{p['id']} sessions={p['n_sessions']} -->"
     if f"learn:{p['id']}" in orig: return {"applied": False, "note": "already present"}
@@ -401,21 +453,13 @@ def apply_rule(p, run_tests=True):
     i = text.index(header) + len(header)
     j = text.find("\n## ", i); j = len(text) if j < 0 else j
     new = text[:j].rstrip() + "\n" + line + "\n" + text[j:]
-    if rel == "AGENTS.md" and len(new) // TOK > cfg()["instruction_budget_tokens"]:
-        raise SystemExit(f"STOP: AGENTS.md would be {len(new) // TOK} tokens > budget {cfg()['instruction_budget_tokens']}. "
-                         "Remove or extract a rule first (zero-sum at budget).")
     with open(path, "w", encoding="utf-8") as f: f.write(new)
-    mirror = os.path.join(ROOT, "CLAUDE.md") if rel == "AGENTS.md" else None
-    if mirror: 
-        with open(mirror, "w", encoding="utf-8") as f: f.write(new)
     if run_tests:
         t = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", os.path.join(ROOT, "tests")], cwd=ROOT,
                            capture_output=True, text=True, env={**os.environ, "DESK_TELEMETRY": "0"})
         if t.returncode != 0:
             with open(path, "w", encoding="utf-8") as f: f.write(orig)
-            if mirror:
-                with open(mirror, "w", encoding="utf-8") as f: f.write(orig)
-            raise SystemExit("REVERTED: regression tests failed after applying the rule:\n" + t.stderr[-1500:])
+            raise DeskError("REVERTED: regression tests failed after applying the rule:\n" + t.stderr[-1500:])
     return {"applied": True, "file": rel, "diff": "+ " + line}
 
 

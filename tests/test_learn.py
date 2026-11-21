@@ -1,17 +1,22 @@
 """Learning Engine tests: detectors, corroboration, idempotence, era provenance, rejection memory, human gate,
-protected surfaces, budget, regression revert, and a real Backpass-adapter integration test (skipped if node/backpass
+protected surfaces, the single agent-memory writer (backpass apply), budget source, regression revert, and a real Backpass-adapter integration test (skipped if node/backpass
 are missing). Offline. Run: python -m unittest discover -s tests -v"""
-import json, os, shutil, subprocess, sys, tempfile, unittest
+import json, os, re, shutil, subprocess, sys, tempfile, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 from desk.learn import engine as L  # noqa: E402
+from desk.errors import ApprovalRequired, ConfigError, DeskError, UsageError  # noqa: E402
 
 BIG = "x" * 20000
 
 
 def _r(p):
     with open(p, encoding="utf-8") as f: return f.read()
+
+
+def _rb(p):
+    with open(p, "rb") as f: return f.read()
 
 
 def tool(i, name, inp, res="", status="completed"):
@@ -109,15 +114,25 @@ class TestCorroboration(Base):
         self.assertTrue(again and again[0]["reproposed_after_reject"])
 
 
+POINTER = "# DESK Instructions for Claude Code\n\n<!-- Canonical instructions maintained in AGENTS.md and optimized via Backpass -->\n@AGENTS.md\n"
+GOTCHAS = "docs/06_EASYEDA_API.md"
+
+
 class TestHumanGate(Base):
-    def make_root(self, failing_test=False):
-        r = os.path.join(self.tmp, "repo"); os.makedirs(os.path.join(r, "tests"))
-        with open(os.path.join(r, "AGENTS.md"), "w") as f: f.write("# AGENTS\n\n## Never\n1. x\n")
-        with open(os.path.join(r, "CLAUDE.md"), "w") as f: f.write("# AGENTS\n")
+    def make_root(self, failing_test=False, claude=POINTER, budget=None):
+        r = os.path.join(self.tmp, "repo"); os.makedirs(os.path.join(r, "tests")); os.makedirs(os.path.join(r, "docs"))
+        with open(os.path.join(r, "AGENTS.md"), "w", newline="") as f: f.write("# AGENTS\n\n## Never\n1. x\n")
+        with open(os.path.join(r, "CLAUDE.md"), "w", newline="") as f: f.write(claude)
+        with open(os.path.join(r, GOTCHAS), "w", newline="") as f: f.write("# API\n\n## Calls\nx\n")
+        if budget is not None:
+            with open(os.path.join(r, ".backpassrc.json"), "w") as f: json.dump({"budgetTokens": budget}, f)
         with open(os.path.join(r, "tests", "test_ok.py"), "w") as f:
             f.write("import unittest\nclass T(unittest.TestCase):\n    def test(self): self.assertTrue(" + ("False" if failing_test else "True") + ")\n")
         L.ROOT = r
         return r
+
+    def snapshot(self, r):
+        return {n: _rb(os.path.join(r, n)) for n in ("AGENTS.md", "CLAUDE.md", GOTCHAS)}
 
     def prop(self, **kw):
         p = {"id": "Ptest01", "sig": "s", "kind": "reference_read", "n_sessions": 2, "occurrences": 2, "measured_tokens": 10,
@@ -127,40 +142,106 @@ class TestHumanGate(Base):
         with open(os.path.join(L.STATE, "proposals.json"), "w") as f: json.dump([p], f)
         return p
 
-    def test_accept_appends_only_inside_section_with_provenance_and_mirrors(self):
-        r = self.make_root(); self.prop()
+    def test_agents_target_accept_writes_task_and_leaves_memory_byte_identical(self):
+        r = self.make_root(budget=4321); self.prop(); before = self.snapshot(r)
+        res = L.decide("Ptest01", "accept", reviewer="tester")
+        self.assertFalse(res["applied"])
+        self.assertTrue(res["task"].replace(os.sep, "/").endswith(".desk_learn/tasks/Ptest01.md"))
+        self.assertEqual(self.snapshot(r), before)
+        task = _r(os.path.join(L.STATE, "tasks", "Ptest01.md"))
+        self.assertIn("backpass apply", task)
+        self.assertIn("Use tools/ctx.py api.", task)
+        self.assertIn("Backpass budget: 4321 tokens", task)
+        self.assertIn("CLAUDE.md pointer to AGENTS.md", task)
+
+    def test_gotcha_accept_appends_inside_section_and_leaves_claude_pointer(self):
+        r = self.make_root(); self.prop(edit_file=GOTCHAS, rule="eda.x fails live.", target="api-map", kind="eda_api_failure")
+        before = self.snapshot(r)
         res = L.decide("Ptest01", "accept", reviewer="tester")
         self.assertTrue(res["applied"])
-        t = _r(os.path.join(r, "AGENTS.md"))
-        self.assertIn("## Learned rules (human-approved)\n", t)
-        self.assertIn("- Use tools/ctx.py api. <!-- learn:Ptest01 sessions=2 -->", t)
-        self.assertTrue(t.startswith("# AGENTS\n\n## Never\n1. x\n"))
-        self.assertEqual(t, _r(os.path.join(r, "CLAUDE.md")))
+        t = _r(os.path.join(r, GOTCHAS))
+        self.assertIn("## Learned gotchas (human-approved)\n", t)
+        self.assertIn("- eda.x fails live. <!-- learn:Ptest01 sessions=2 -->", t)
+        self.assertTrue(t.startswith("# API\n\n## Calls\nx\n"))
+        after = self.snapshot(r)
+        self.assertEqual((after["AGENTS.md"], after["CLAUDE.md"]), (before["AGENTS.md"], before["CLAUDE.md"]))
 
-    def test_regression_failure_reverts(self):
-        r = self.make_root(failing_test=True); self.prop()
-        with self.assertRaises(SystemExit):
+    def test_regression_failure_reverts_and_leaves_claude_pointer(self):
+        r = self.make_root(failing_test=True); self.prop(edit_file=GOTCHAS, rule="eda.x fails live.", target="api-map")
+        before = self.snapshot(r)
+        with self.assertRaises(DeskError) as cm:
             L.decide("Ptest01", "accept", reviewer="tester")
-        self.assertEqual(_r(os.path.join(r, "AGENTS.md")), "# AGENTS\n\n## Never\n1. x\n")
+        self.assertIn("REVERTED", str(cm.exception))
+        self.assertEqual(self.snapshot(r), before)
         self.assertFalse(os.path.exists(os.path.join(L.STATE, "decisions.jsonl")))
+
+    def test_apply_rule_refuses_memory_files(self):
+        r = self.make_root(); before = self.snapshot(r)
+        for target in ("AGENTS.md", "CLAUDE.md"):
+            with self.assertRaises(UsageError) as cm:
+                L.apply_rule(self.prop(edit_file=target), run_tests=False)
+            self.assertIn("backpass apply", str(cm.exception))
+        self.assertEqual(self.snapshot(r), before)
+
+    def test_diverged_claude_md_is_named_in_the_task(self):
+        r = self.make_root(claude="# AGENTS\n\n## Never\n1. x\n"); self.prop(); before = self.snapshot(r)
+        L.decide("Ptest01", "accept", reviewer="tester")
+        self.assertIn("diverged from the pointer form", _r(os.path.join(L.STATE, "tasks", "Ptest01.md")))
+        self.assertEqual(self.snapshot(r), before)
+
+    def test_budget_read_from_backpassrc(self):
+        self.make_root(budget=4321)
+        with open(os.path.join(L.STATE, "config.json"), "w") as f: json.dump({"instruction_budget_tokens": 99}, f)
+        self.assertEqual(L.cfg()["instruction_budget_tokens"], 4321)   # .backpassrc.json is the only source
+        os.remove(os.path.join(L.ROOT, ".backpassrc.json"))
+        self.assertEqual(L.cfg()["instruction_budget_tokens"], L.BACKPASS_DEFAULT_BUDGET)
+        with open(os.path.join(L.ROOT, ".backpassrc.json"), "w") as f: json.dump({"budgetTokens": "big"}, f)
+        with self.assertRaises(ConfigError):
+            L.cfg()
+
+    def test_repo_budget_matches_backpassrc(self):
+        with open(os.path.join(ROOT, ".backpassrc.json"), encoding="utf-8") as f:
+            self.assertEqual(L.backpass_budget(ROOT), json.load(f)["budgetTokens"])
 
     def test_protected_requires_engineering_review_and_never_edits(self):
         r = self.make_root(); self.prop(protected=True, files=["desk/spec.py"])
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ApprovalRequired):
             L.decide("Ptest01", "accept", reviewer="tester")
         res = L.decide("Ptest01", "accept", reviewer="tester", engineering_review="lead")
         self.assertFalse(res["applied"]); self.assertIn("task", res)
         self.assertNotIn("learn:", _r(os.path.join(r, "AGENTS.md")))
 
-    def test_budget_enforced(self):
-        self.make_root(); self.prop(rule="r" * 20000)
-        with self.assertRaises(SystemExit) as cm:
-            L.decide("Ptest01", "accept", reviewer="tester")
-        self.assertIn("budget", str(cm.exception))
+    def test_unknown_proposal_is_a_usage_error(self):
+        self.make_root(); self.prop()
+        with self.assertRaises(UsageError):
+            L.decide("Pnope", "accept", reviewer="tester")
 
     def test_protected_list_covers_engineering_rules(self):
         for f in ("desk/spec.py", "desk/erc.py", "desk/calc.py", "desk/release.py", "tools/verify.py", "docs/02_SCHEMATIC_STYLE.md"):
             self.assertIn(f, L.PROTECTED)
+
+
+class TestSingleMemoryWriter(unittest.TestCase):
+    """AGENTS.md section L: transcript-derived memory edits land only via `backpass apply`. No DESK module may open
+    AGENTS.md or CLAUDE.md for writing, and the learn engine's editable surfaces exclude them."""
+    WRITE_RX = re.compile(r"""(open\([^)]*['"][wax+]+['"]|write_text\(|write_bytes\(|os\.replace\(|shutil\.(copy|move))""")
+
+    def test_no_code_writes_memory_files(self):
+        offenders = []
+        for sub in ("desk", "tools", "devtools"):
+            for dp, _, files in os.walk(os.path.join(ROOT, sub)):
+                for fn in files:
+                    if not fn.endswith((".py", ".mjs", ".js")): continue
+                    path = os.path.join(dp, fn)
+                    with open(path, encoding="utf-8", errors="replace") as f:
+                        for n, line in enumerate(f, 1):
+                            if ("AGENTS.md" in line or "CLAUDE.md" in line) and self.WRITE_RX.search(line):
+                                offenders.append(f"{os.path.relpath(path, ROOT)}:{n}: {line.strip()[:100]}")
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+    def test_editable_surfaces_exclude_memory_files(self):
+        self.assertFalse(set(L.EDITABLE) & set(L.MEMORY_FILES))
+        self.assertEqual(set(L.MEMORY_FILES), {"AGENTS.md", "CLAUDE.md"})
 
 
 @unittest.skipUnless(shutil.which("node") and os.path.exists(os.path.join(L.DEFAULTS["backpass_dir"], "src", "redact.js")),
