@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="1480 -3220 1380 720" width="1380" height="720">
+<rect x="1480" y="-3220" width="1380" height="720" fill="#FFFFFF"/>
+<rect x="1500" y="-3200" width="1340" height="680" fill="none" stroke="#1F3A68" stroke-width="1"/>
+<text x="1520" y="-3155" font-size="12" fill="#1F3A68" font-weight="bold" font-family="sans-serif">SYNTHETIC MCU</text>
+<rect x="2510" y="-2780" width="40" height="20" fill="none" stroke="#555555" stroke-width="1"/>
+<text x="2510" y="-2783" font-size="6" fill="#1F3A68" font-family="sans-serif">C4</text>
+<rect x="1710" y="-2650" width="40" height="20" fill="none" stroke="#555555" stroke-width="1"/>
+<text x="1710" y="-2653" font-size="6" fill="#1F3A68" font-family="sans-serif">C5</text>
+<rect x="2110" y="-2910" width="40" height="20" fill="none" stroke="#555555" stroke-width="1"/>
+<text x="2110" y="-2913" font-size="6" fill="#1F3A68" font-family="sans-serif">D1</text>
+<rect x="1710" y="-2910" width="40" height="20" fill="none" stroke="#555555" stroke-width="1"/>
+<text x="1710" y="-2913" font-size="6" fill="#1F3A68" font-family="sans-serif">R6</text>
+<rect x="1710" y="-2780" width="40" height="20" fill="none" stroke="#555555" stroke-width="1"/>
+<text x="1710" y="-2783" font-size="6" fill="#1F3A68" font-family="sans-serif">R7</text>
+<rect x="2110" y="-2780" width="40" height="20" fill="none" stroke="#555555" stroke-width="1"/>
+<text x="2110" y="-2783" font-size="6" fill="#1F3A68" font-family="sans-serif">R8</text>
+<rect x="2510" y="-2910" width="40" height="20" fill="none" stroke="#555555" stroke-width="1"/>
+<text x="2510" y="-2913" font-size="6" fill="#1F3A68" font-family="sans-serif">SW1</text>
+<rect x="1780" y="-3080" width="60" height="50" fill="none" stroke="#555555" stroke-width="1"/>
+<text x="1780" y="-3083" font-size="6" fill="#1F3A68" font-family="sans-serif">U2</text>
+<line x1="1600" y1="-2640" x2="1710" y2="-2640" stroke="#008000" stroke-width="1.5"/>
+<line x1="1600" y1="-2900" x2="1710" y2="-2900" stroke="#008000" stroke-width="1.5"/>
+<line x1="1670" y1="-3070" x2="1780" y2="-3070" stroke="#008000" stroke-width="1.5"/>
+<line x1="1750" y1="-2770" x2="1860" y2="-2770" stroke="#008000" stroke-width="1.5"/>
+<line x1="1550" y1="-2770" x2="1550" y2="-3090" stroke="#008000" stroke-width="1.5"/>
+<line x1="1550" y1="-2770" x2="1710" y2="-2770" stroke="#008000" stroke-width="1.5"/>
+<line x1="1550" y1="-3090" x2="1850" y2="-3090" stroke="#008000" stroke-width="1.5"/>
+<line x1="1840" y1="-3070" x2="1850" y2="-3070" stroke="#008000" stroke-width="1.5"/>
+<line x1="1850" y1="-3070" x2="1850" y2="-3090" stroke="#008000" stroke-width="1.5"/>
+<line x1="1850" y1="-3070" x2="2180" y2="-3070" stroke="#008000" stroke-width="1.5"/>
+<line x1="2180" y1="-2900" x2="2180" y2="-3070" stroke="#008000" stroke-width="1.5"/>
+<line x1="2180" y1="-2900" x2="2510" y2="-2900" stroke="#008000" stroke-width="1.5"/>
+<line x1="1610" y1="-3060" x2="1780" y2="-3060" stroke="#008000" stroke-width="1.5"/>
+<line x1="1750" y1="-2640" x2="1860" y2="-2640" stroke="#008000" stroke-width="1.5"/>
+<line x1="2550" y1="-2770" x2="2660" y2="-2770" stroke="#008000" stroke-width="1.5"/>
+<line x1="2550" y1="-2900" x2="2660" y2="-2900" stroke="#008000" stroke-width="1.5"/>
+<line x1="1750" y1="-2900" x2="2110" y2="-2900" stroke="#008000" stroke-width="1.5"/>
+<line x1="1770" y1="-3020" x2="1770" y2="-3040" stroke="#008000" stroke-width="1.5"/>
+<line x1="1770" y1="-3020" x2="2160" y2="-3020" stroke="#008000" stroke-width="1.5"/>
+<line x1="1770" y1="-3040" x2="1780" y2="-3040" stroke="#008000" stroke-width="1.5"/>
+<line x1="2150" y1="-2900" x2="2160" y2="-2900" stroke="#008000" stroke-width="1.5"/>
+<line x1="2160" y1="-2900" x2="2160" y2="-3020" stroke="#008000" stroke-width="1.5"/>
+<line x1="1670" y1="-3050" x2="1780" y2="-3050" stroke="#008000" stroke-width="1.5"/>
+<line x1="1840" y1="-3060" x2="2010" y2="-3060" stroke="#008000" stroke-width="1.5"/>
+<line x1="2150" y1="-2770" x2="2510" y2="-2770" stroke="#008000" stroke-width="1.5"/>
+<line x1="1840" y1="-3050" x2="2170" y2="-3050" stroke="#008000" stroke-width="1.5"/>
+<line x1="2100" y1="-2770" x2="2100" y2="-2880" stroke="#008000" stroke-width="1.5"/>
+<line x1="2100" y1="-2770" x2="2110" y2="-2770" stroke="#008000" stroke-width="1.5"/>
+<line x1="2100" y1="-2880" x2="2170" y2="-2880" stroke="#008000" stroke-width="1.5"/>
+<line x1="2170" y1="-2880" x2="2170" y2="-3050" stroke="#008000" stroke-width="1.5"/>
+<circle cx="1850" cy="-3070" r="3" fill="#008000"/>
+<text x="1578" y="-2640" font-size="5" fill="#1F4FBF" font-family="monospace">+3V3</text>
+<text x="1578" y="-2900" font-size="5" fill="#1F4FBF" font-family="monospace">+3V3</text>
+<text x="1648" y="-3070" font-size="5" fill="#1F4FBF" font-family="monospace">+3V3</text>
+<text x="1860" y="-2770" font-size="5" fill="#1F4FBF" font-family="monospace">+3V3</text>
+<text x="1593.5" y="-3060" font-size="5" fill="#000000" font-family="monospace">GND</text>
+<text x="1860" y="-2640" font-size="5" fill="#000000" font-family="monospace">GND</text>
+<text x="2660" y="-2770" font-size="5" fill="#000000" font-family="monospace">GND</text>
+<text x="2660" y="-2900" font-size="5" fill="#000000" font-family="monospace">GND</text>
+<text x="1648" y="-3050" font-size="5" fill="#1F4FBF" font-family="monospace">LINK</text>
+<text x="2010" y="-3060" font-size="5" fill="#1F4FBF" font-family="monospace">SIG_OUT</text>
+</svg>
