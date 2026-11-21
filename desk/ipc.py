@@ -18,7 +18,9 @@ Provenance
       A5 external, component leads, uncoated      A6 external, component leads, with coating
       A7 external, component leads, conformal coat
 * Creepage: IEC 60664-1 Table F.4 (functional insulation, printed wiring material,
-  pollution degree 1 and 2, material groups I, II, IIIa/IIIb), in mm.
+  pollution degree 1 and 2, material groups I, II, IIIa/IIIb), in mm. The values are stored, with per-value
+  provenance, in the insulation dataset desk/insulation/data/ (desk.insulation, the insulation coordination
+  engine); clearance per IEC 60664-1 is computed there too, separately from creepage.
 * Via ampacity: IPC-2221 formula applied to the plated-wall cross-section
       A_via = pi * (drill + plating) * plating      (mil^2), external k.
 
@@ -108,39 +110,43 @@ def clearance_mil(voltage_v: float, condition: str = "B2") -> float:
 # compliance claim: `verified_against_standard` stays False and every output carries CREEPAGE_BASIS.
 CREEPAGE_BASIS = ("PROVISIONAL / UNVERIFIED: conservative IEC 60664-1 Table F.4 material-group column as transcribed "
                   "(PD2 below 50 V uses the 50 V row); not an IEC 60664-1 compliance statement")
-_CREEPAGE_V: List[float] = [10, 12.5, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250, 320, 400, 500, 630, 800, 1000]
-_CREEPAGE_PD2_V: List[float] = [50, 63, 80, 100, 125, 160, 200, 250, 320, 400, 500, 630, 800, 1000]
-_CREEPAGE_MM: Dict[str, List[float]] = {
-    # pollution degree 1, any material group (rows _CREEPAGE_V)
-    "PD1": [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.040, 0.063, 0.100, 0.160, 0.250, 0.400, 0.560, 0.750, 1.0, 1.3, 1.8, 2.4, 3.2],
-    # pollution degree 2 by material group (rows _CREEPAGE_PD2_V; the mixed-in 0.04 mm printed-wiring rows were removed)
-    "PD2-I":   [0.60, 0.63, 0.67, 0.71, 0.75, 0.80, 1.00, 1.25, 1.60, 2.0, 2.5, 3.2, 4.0, 5.0],
-    "PD2-II":  [0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.40, 1.80, 2.20, 2.8, 3.6, 4.5, 5.6, 7.1],
-    "PD2-III": [1.20, 1.25, 1.30, 1.40, 1.50, 1.60, 2.00, 2.50, 3.20, 4.0, 5.0, 6.3, 8.0, 10.0],
-}
+# The values live in the versioned insulation dataset (desk/insulation/data/iec60664-1_2020_a1_2025.provisional.json),
+# each with provenance; this module reads the SHIPPED dataset only, so the router rule never moves when an owner
+# dataset is configured. The names below are kept for existing callers and mirror the dataset columns.
+def _shipped_creepage_columns():
+    from desk.insulation import tables as _T
+    cols = _T.default_dataset().table("creepage").columns
+    return {name: (list(c.rows), [cell.value for cell in c.cells]) for name, c in cols.items()}
+
+
+_COLS = _shipped_creepage_columns()
+_CREEPAGE_V: List[float] = _COLS["PD1"][0]
+_CREEPAGE_PD2_V: List[float] = _COLS["PD2-III"][0]
+_CREEPAGE_MM: Dict[str, List[float]] = {name: vals for name, (_rows, vals) in _COLS.items()}
+del _COLS
 
 
 def creepage_mm(voltage_v: float, pollution_degree: int = 2, material_group: str = "III") -> float:
     """Minimum creepage (mm), IEC 60664-1 Table F.4 as transcribed: PROVISIONAL / UNVERIFIED (see CREEPAGE_BASIS).
     Voltage is rounded up to the next table row (below the first row: the first row); above 1000 V the caller must
-    consult the standard."""
+    consult the standard. The lookup is desk.insulation.creepage_value_mm on the shipped dataset; for the full
+    insulation-coordination result (status, references, missing inputs) use desk.insulation.evaluate_creepage."""
+    from desk.insulation import engine as _E
     v = abs(float(voltage_v))
     if v > 1000.0:
         raise ValueError("creepage above 1000 V RMS is outside the implemented table; consult IEC 60664-1")
     if pollution_degree == 1:
-        key, rows = "PD1", _CREEPAGE_V
+        mg = "I"                       # the PD1 column applies to every material group
     elif pollution_degree == 2:
         mg = material_group.upper().rstrip("AB")
         if mg not in ("I", "II", "III"):
             raise ValueError("material_group must be I, II, IIIa or IIIb")
-        key, rows = f"PD2-{mg}", _CREEPAGE_PD2_V
     else:
         raise ValueError("pollution degree 3 and 4 are not implemented; consult IEC 60664-1 Table F.4")
-    table = _CREEPAGE_MM[key]
-    for row_v, mm in zip(rows, table):
-        if v <= row_v:
-            return mm
-    return table[-1]
+    value = _E.creepage_value_mm(v, pollution_degree, mg, "basic")
+    if value is None:
+        raise ValueError(f"no creepage value in the shipped dataset for {v:g} V, PD{pollution_degree}, group {mg}")
+    return value
 
 
 def creepage_mil(voltage_v: float, pollution_degree: int = 2, material_group: str = "III") -> float:

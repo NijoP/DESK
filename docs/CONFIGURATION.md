@@ -20,6 +20,7 @@ Generated from `desk/config.py` SCHEMA (`python desk.py config schema`). Precede
 | `DESK_MOCK_SUPPLIERS` | bool | 0 | credentials | 1 = supplier providers answer from offline fixtures. |
 | `DESK_MOCK_MANUFACTURING` | bool | 0 | credentials | 1 = JLCPCB client answers from offline fixtures. |
 | `DESK_DOMAIN_LIBRARY` | path |  | knowledge | Alternative library/pcb_domains root. |
+| `DESK_INSULATION_DATASET` | path |  | knowledge | Insulation-coordination dataset (desk/insulation, IEC 60664-1 tables with per-value provenance) used instead of the shipped provisional one; never changes an existing router rule. |
 | `DESK_JAVA` | path |  | routing | Java executable for Freerouting (else library/tools/jdk*/bin, else PATH). |
 | `FREEROUTING_JAR` | path |  | routing | Explicit Freerouting JAR. |
 | `FREEROUTING_BIN` | path |  | routing | Explicit native Freerouting executable. |

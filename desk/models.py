@@ -212,6 +212,10 @@ class RoutingPlan:
     # Every heuristic the generator had to fall back on (name-based current, fabricator-minimum
     # clearance without voltage data). Empty when a complete DesignProfile drove every number.
     assumptions: List[str] = field(default_factory=list)
+    # desk.insulation assessment (dict) of every declared insulation barrier: separate clearance and creepage results,
+    # each VERIFIED-AGAINST-TABLE / PROVISIONAL / UNVERIFIED. Informational: it never changes a net constraint and is
+    # not a compliance statement (engineering review is required before safety sign-off).
+    insulation: List[Dict[str, Any]] = field(default_factory=list)
 
 @dataclass
 class RoutingAttempt:

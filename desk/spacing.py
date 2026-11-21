@@ -24,17 +24,28 @@ A profile may switch to FUNCTIONAL only through `spacing_policy` in design_profi
 recorded in the ledger (AGENTS.md section A: clearance rule changes need sign-off). Whatever the policy, a rule that
 exceeds the pin-field gap of its own pads is reported as an `EngineeringDecision` (BLOCKING) instead of being lowered.
 
+Insulation coordination (desk/insulation): barrier creepage is looked up through the insulation engine on the shipped
+dataset (same values as before). `assess_barrier` gives the full IEC 60664-1:2020+A1:2025 result for a barrier: a
+ClearanceResult and a CreepageResult kept apart, each with status (VERIFIED-AGAINST-TABLE / PROVISIONAL / UNVERIFIED),
+references and missing inputs. Only inputs the profile actually declared are passed: a barrier field filled in by the
+legacy defaults below is treated as undeclared there, so it yields UNVERIFIED, never a silent default.
+
 Zero external dependencies.
 """
 from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field, asdict
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+from desk import insulation as INS
 from desk import ipc
 
 MIL = ipc.MIL_PER_MM
+
+# Barrier keys passed straight to the insulation engine when declared (desk.insulation.InsulationInputs).
+INSULATION_INPUT_KEYS = ("rated_impulse_voltage_v", "overvoltage_category", "mains_voltage_v", "cti", "altitude_m",
+                         "coating", "environment")
 
 
 class SpacingPolicy(str, enum.Enum):
@@ -52,6 +63,10 @@ class InsulationBarrier:
     insulation: str = "basic"          # functional | basic | reinforced
     pollution_degree: int = 2
     material_group: str = "III"
+    # Keys the profile actually declared for this barrier (the fields above hold legacy defaults otherwise), and the
+    # declared insulation-engine inputs (INSULATION_INPUT_KEYS). Neither changes the router rule.
+    declared: Tuple[str, ...] = ()
+    extra_inputs: Tuple[Tuple[str, Any], ...] = ()
 
     def separates(self, net1: str, net2: str) -> bool:
         a, b = set(self.nets_a), set(self.nets_b)
@@ -74,6 +89,7 @@ class SpacingRequirement:
     material_group: str = "III"
     decision_ref: Optional[str] = None     # ledger id of the decision that set this rule (rule provenance)
     calc_ref: Optional[str] = None         # the qa / calc entry the value comes from
+    insulation: Optional[Dict[str, Any]] = None   # desk.insulation assessment of the separating barrier, if any
 
     @property
     def router_rule_mm(self) -> float:
@@ -100,7 +116,7 @@ class SpacingRequirement:
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
-        for k in ("decision_ref", "calc_ref"):     # omitted when unset: existing outputs stay byte-identical
+        for k in ("decision_ref", "calc_ref", "insulation"):   # omitted when unset: existing outputs stay byte-identical
             if d.get(k) is None:
                 d.pop(k, None)
         d["policy"] = self.policy.value
@@ -133,25 +149,62 @@ def functional_clearance_mm(voltage_v: float, condition: str = "B2") -> float:
 
 
 def creepage_for_barrier(barrier: InsulationBarrier) -> float:
+    """Creepage the router enforces across a barrier (legacy-default inputs, shipped dataset). Reinforced takes the
+    dataset's reinforced-creepage rule (x2, as before); any other insulation value takes the basic column. Raises the
+    same ValueError as ipc.creepage_mm where the dataset has no value."""
+    reinforced = barrier.insulation == "reinforced"
+    value = INS.creepage_value_mm(barrier.working_voltage_v, barrier.pollution_degree, barrier.material_group,
+                                  "reinforced" if reinforced else "basic")
+    if value is not None:
+        return value
     base = ipc.creepage_mm(barrier.working_voltage_v, barrier.pollution_degree, barrier.material_group)
-    return base * 2.0 if barrier.insulation == "reinforced" else base
+    return base * 2.0 if reinforced else base
+
+
+def barrier_inputs(barrier: InsulationBarrier, environment: Optional[Dict[str, Any]] = None) -> "INS.InsulationInputs":
+    """The insulation-engine inputs for a barrier: the profile's insulation_environment, overridden by what the
+    barrier itself declared. Legacy defaults of InsulationBarrier are not inputs (they would be silent defaults)."""
+    d: Dict[str, Any] = {k: v for k, v in dict(environment or {}).items()}
+    declared = set(barrier.declared)
+    if "working_voltage_v" in declared:
+        d["working_voltage_v"] = barrier.working_voltage_v
+    if "insulation" in declared:
+        d["insulation_type"] = barrier.insulation
+    if "pollution_degree" in declared:
+        d["pollution_degree"] = barrier.pollution_degree
+    if "material_group" in declared:
+        d["material_group"] = barrier.material_group
+    d.update(dict(barrier.extra_inputs))
+    return INS.InsulationInputs.from_dict(d)
+
+
+def assess_barrier(barrier: InsulationBarrier, environment: Optional[Dict[str, Any]] = None,
+                   dataset: Optional["INS.Dataset"] = None) -> "INS.InsulationAssessment":
+    """IEC 60664-1 insulation coordination across a declared barrier: separate clearance and creepage results with
+    status. Not a compliance statement (see desk.insulation.signoff)."""
+    return INS.assess(barrier_inputs(barrier, environment), dataset, label=barrier.name)
 
 
 def requirement(net1: str, net2: str, v1: float, v2: float, condition: str, fab_min_mm: float,
                 policy: SpacingPolicy, barriers: Sequence[InsulationBarrier] = (),
                 pin_field_mm: Optional[float] = None, pollution_degree: int = 2,
-                material_group: str = "III") -> SpacingRequirement:
+                material_group: str = "III", environment: Optional[Dict[str, Any]] = None) -> SpacingRequirement:
     v = abs(float(v1) - float(v2))
     creep: Optional[float] = None
     bname: Optional[str] = None
+    chosen: Optional[InsulationBarrier] = None
     for b in barriers:
         if b.separates(net1, net2):
             c = creepage_for_barrier(b)
             if creep is None or c > creep:
-                creep, bname = c, b.name
+                creep, bname, chosen = c, b.name, b
+    insulation = None
+    if chosen is not None and environment is not None:
+        insulation = assess_barrier(chosen, environment).to_dict()
     return SpacingRequirement(net1=net1, net2=net2, voltage_v=v, functional_clearance_mm=functional_clearance_mm(v, condition),
                               creepage_mm=creep, fabricator_min_mm=float(fab_min_mm), policy=policy, barrier=bname,
-                              pin_field_mm=pin_field_mm, pollution_degree=pollution_degree, material_group=material_group)
+                              pin_field_mm=pin_field_mm, pollution_degree=pollution_degree, material_group=material_group,
+                              insulation=insulation)
 
 
 def parse_policy(value: Any) -> SpacingPolicy:
@@ -170,7 +223,10 @@ def parse_barriers(raw: Any) -> List[InsulationBarrier]:
                                      working_voltage_v=float(b.get("working_voltage_v", 0.0)),
                                      insulation=str(b.get("insulation", "basic")),
                                      pollution_degree=int(b.get("pollution_degree", 2)),
-                                     material_group=str(b.get("material_group", "III"))))
+                                     material_group=str(b.get("material_group", "III")),
+                                     declared=tuple(k for k in ("working_voltage_v", "insulation", "pollution_degree",
+                                                                "material_group") if b.get(k) is not None),
+                                     extra_inputs=tuple((k, b[k]) for k in INSULATION_INPUT_KEYS if b.get(k) is not None)))
     return out
 
 
