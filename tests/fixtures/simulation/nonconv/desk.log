@@ -1,0 +1,29 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: * desk synthetic nonconvergent
+
+DESK_BEGIN tran1
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+in                                           0
+out                                          0
+l1#branch                                    0
+v1#branch                                    0
+
+doAnalyses: TRAN:  Timestep too small; time = 1e-14, timestep = 5.15345e-31: trouble with node "l1#branch"
+
+
+tran simulation(s) aborted
+ASCII raw file "tran1.raw"
+DESK_END tran1
+DESK_DONE
+ngspice-42 done

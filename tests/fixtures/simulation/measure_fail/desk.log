@@ -1,0 +1,30 @@
+
+Note: No compatibility mode selected!
+
+
+Circuit: * desk synthetic measure fail
+
+DESK_BEGIN tran1
+Doing analysis at TEMP = 27.000000 and TNOM = 27.000000
+
+Using SPARSE 1.3 as Direct Linear Solver
+
+Initial Transient Solution
+--------------------------
+
+Node                                   Voltage
+----                                   -------
+in                                           1
+out                                          1
+v1#branch                                    0
+
+
+No. of Data Rows : 59
+ASCII raw file "tran1.raw"
+
+Error: measure  t_cross  when(WHEN) : out of interval
+ meas tran t_cross when v(out)=5 failed!
+
+DESK_END tran1
+DESK_DONE
+ngspice-42 done

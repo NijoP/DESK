@@ -107,15 +107,26 @@ class TraceWidthManager:
         target_width_mil: float,
         escape_width_mil: float = 10.0,
         fine_pitch_pads: Optional[List[Tuple[float, float, float]]] = None,  # (x, y, radius)
-        obstacles: Optional[List[Tuple[float, float, float, float, int]]] = None,  # (x1, y1, x2, y2, layer)
+        obstacles: Optional[List[Tuple[float, ...]]] = None,  # (x1, y1, x2, y2, layer[, width[, clearance]])
         min_clearance_mil: float = 4.02,
-        escape_radius_mil: float = 35.0
+        escape_radius_mil: float = 35.0,
+        default_obstacle_width_mil: Optional[float] = None,
     ) -> WidthWideningPlan:
         """Evaluates every track segment of a power net, identifying trunk segments
         that can safely widen to target_width_mil without violating clearance.
+
+        Obstacles are other-net copper: a track (x1, y1, x2, y2, layer, width) or a pad/via given as a zero-length
+        segment whose width is its enclosing diameter. The copper gap is the centreline distance minus BOTH
+        half-widths, so the widened segment needs centreline distance >= target/2 + obstacle_width/2 + clearance
+        (E-3: the old test compared the centreline distance with only the width increase and approved 0 mil gaps).
+        An obstacle's optional 7th field is its own net's clearance; the larger of it and `min_clearance_mil`
+        applies. Obstacles without a width are taken as `default_obstacle_width_mil` (default: escape_width_mil,
+        the widest track the router is given for non-widened nets).
         """
+        from desk.routing.padgeom import segment_segment_distance
         fine_pitch_pads = fine_pitch_pads or []
         obstacles = obstacles or []
+        default_ow = float(escape_width_mil if default_obstacle_width_mil is None else default_obstacle_width_mil)
 
         candidates: List[WideningCandidate] = []
         widened_count = 0
@@ -159,34 +170,28 @@ class TraceWidthManager:
                 escape_count += 1
                 continue
 
-            # Check clearance for proposed target_width_mil
-            # Proposed half-width increase:
-            delta_half = (target_width_mil - w_cur) / 2.0
-            required_clear_envelope = delta_half + min_clearance_mil
-
-            min_dist_to_obstacle = float("inf")
-            for ox1, oy1, ox2, oy2, olay in obstacles:
-                if olay != layer:
+            # Clearance for the proposed target width: the room each obstacle leaves for the widened half-width.
+            half_room = float("inf")       # largest half-width this segment may take
+            edge = float("inf")            # nearest other-net copper edge from this centreline
+            for ob in obstacles:
+                ox1, oy1, ox2, oy2, olay = ob[:5]
+                if int(olay) != layer:
                     continue
+                ow = float(ob[5]) if len(ob) > 5 and ob[5] is not None else default_ow
+                oclr = max(min_clearance_mil, float(ob[6])) if len(ob) > 6 and ob[6] is not None else min_clearance_mil
+                reach = target_width_mil / 2.0 + ow / 2.0 + oclr
                 # Bounding box test
-                if (max(x1, x2) + required_clear_envelope < min(ox1, ox2) or
-                    max(ox1, ox2) + required_clear_envelope < min(x1, x2) or
-                    max(y1, y2) + required_clear_envelope < min(oy1, oy2) or
-                    max(oy1, oy2) + required_clear_envelope < min(y1, y2)):
+                if (max(x1, x2) + reach < min(ox1, ox2) or
+                    max(ox1, ox2) + reach < min(x1, x2) or
+                    max(y1, y2) + reach < min(oy1, oy2) or
+                    max(oy1, oy2) + reach < min(y1, y2)):
                     continue
+                d = segment_segment_distance((x1, y1), (x2, y2), (ox1, oy1), (ox2, oy2))
+                half_room = min(half_room, d - ow / 2.0 - oclr)
+                edge = min(edge, d - ow / 2.0)
 
-                # Detailed segment distance
-                from desk.routing.connectivity import _dist_point_to_segment
-                d_a, _, _ = _dist_point_to_segment(x1, y1, ox1, oy1, ox2, oy2)
-                d_b, _, _ = _dist_point_to_segment(x2, y2, ox1, oy1, ox2, oy2)
-                d_c, _, _ = _dist_point_to_segment(ox1, oy1, x1, y1, x2, y2)
-                d_d, _, _ = _dist_point_to_segment(ox2, oy2, x1, y1, x2, y2)
-                min_obs_d = min(d_a, d_b, d_c, d_d)
-                if min_obs_d < min_dist_to_obstacle:
-                    min_dist_to_obstacle = min_obs_d
-
-            # Decision: can it widen fully, partially, or not at all?
-            if min_dist_to_obstacle >= required_clear_envelope:
+            max_safe_w = 2.0 * half_room
+            if max_safe_w >= target_width_mil:
                 # Fully approved
                 candidates.append(WideningCandidate(
                     segment_id=seg_id,
@@ -199,14 +204,12 @@ class TraceWidthManager:
                     approved_width_mil=target_width_mil,
                     is_widened=True,
                     is_escape_neckdown=False,
-                    min_observed_clearance_mil=round(min_dist_to_obstacle, 2)
+                    min_observed_clearance_mil=round(edge - target_width_mil / 2.0, 2)
                 ))
                 widened_count += 1
             else:
-                # Calculate maximum safe width without violating min_clearance_mil
-                available_space = min_dist_to_obstacle - min_clearance_mil
-                safe_w = max(w_cur, w_cur + 2 * max(0.0, available_space))
-                safe_w = round(min(target_width_mil, safe_w), 1)
+                # Largest width that keeps every gap (rounded DOWN to 0.1 mil so rounding never eats the clearance)
+                safe_w = math.floor(min(target_width_mil, max_safe_w) * 10.0 + 1e-9) / 10.0
 
                 if safe_w > w_cur:
                     candidates.append(WideningCandidate(
@@ -221,10 +224,14 @@ class TraceWidthManager:
                         is_widened=True,
                         is_escape_neckdown=False,
                         restriction_reason=f"Partial widening: constrained to {safe_w} mil by adjacent copper",
-                        min_observed_clearance_mil=round(min_dist_to_obstacle, 2)
+                        min_observed_clearance_mil=round(edge - safe_w / 2.0, 2)
                     ))
                     widened_count += 1
                 else:
+                    gap_now = edge - w_cur / 2.0
+                    reason = f"Clearance boundary: adjacent copper leaves {max(0.0, max_safe_w):.2f} mil of width"
+                    if half_room < w_cur / 2.0 - 1e-6:
+                        reason += f" (routed gap already {gap_now:.2f} mil, below the clearance rule)"
                     candidates.append(WideningCandidate(
                         segment_id=seg_id,
                         net=net_name,
@@ -236,8 +243,8 @@ class TraceWidthManager:
                         approved_width_mil=w_cur,
                         is_widened=False,
                         is_escape_neckdown=False,
-                        restriction_reason=f"Clearance boundary: obstacle within {min_dist_to_obstacle:.2f} mil",
-                        min_observed_clearance_mil=round(min_dist_to_obstacle, 2)
+                        restriction_reason=reason,
+                        min_observed_clearance_mil=round(gap_now, 2)
                     ))
                     constrained_count += 1
 
@@ -257,3 +264,84 @@ class TraceWidthManager:
             candidates=candidates,
             safety_summary=summary
         )
+
+
+def plan_board_widening(
+    widen_targets: Dict[str, float],
+    lines: List[Dict[str, Any]],
+    vias: Optional[List[Dict[str, Any]]] = None,
+    pcb_dump: Optional[Dict[str, Any]] = None,
+    net_clearances_mil: Optional[Dict[str, float]] = None,
+    fab_min_clearance_mil: float = 4.02,
+    escape_width_mil: float = 10.0,
+    fine_pitch_pads: Optional[List[Tuple[float, float, float]]] = None,
+    escape_radius_mil: float = 35.0,
+) -> Dict[str, WidthWideningPlan]:
+    """Widening plans for every target net against ALL other-net copper (E-3).
+
+    Obstacles of net N: every other net's track at its readback width (or at the width already approved for an
+    earlier widened net, so two power trunks are never widened into each other), every other-net via at its
+    diameter and every other-net pad from the PCB dump as its enclosing circle. The clearance for a pair is the
+    larger of the two nets' routing rules (never below the fabricator minimum), not a literal."""
+    rules = dict(net_clearances_mil or {})
+
+    def rule(net: str) -> float:
+        return max(fab_min_clearance_mil, float(rules.get(net, fab_min_clearance_mil)))
+
+    widths: Dict[str, float] = {}
+    for i, l in enumerate(lines):
+        widths[str(l.get("id", f"line_{i}"))] = float(l.get("width", escape_width_mil) or escape_width_mil)
+
+    pad_obs: List[Tuple[str, float, float, float, Optional[int]]] = []   # (net, x, y, diameter, layer or None=all)
+    if pcb_dump:
+        from desk.routing.padgeom import pad_shape
+        for comp in pcb_dump.values():
+            if not isinstance(comp, dict):
+                continue
+            for p in comp.get("pads", []):
+                g = pad_shape(comp, p)
+                lay = p.get("layer", comp.get("layer", 1))
+                pad_obs.append(((p.get("net") or "").strip(), g.cx, g.cy, 2.0 * g.bounding_radius,
+                                None if lay in (11, 12) else int(lay)))
+
+    plans: Dict[str, WidthWideningPlan] = {}
+    for net, target in widen_targets.items():
+        own = [l for l in lines if l.get("net") == net]
+        layers = {int(l.get("layer", 1)) for l in own}
+        obstacles: List[Tuple[float, ...]] = []
+        for i, l in enumerate(lines):
+            if l.get("net") == net:
+                continue
+            obstacles.append((float(l["start_x"]), float(l["start_y"]), float(l["end_x"]), float(l["end_y"]),
+                              int(l.get("layer", 1)), widths[str(l.get("id", f"line_{i}"))], rule(l.get("net") or "")))
+        for v in vias or []:
+            if v.get("net") == net:
+                continue
+            d = float(v.get("diameter", v.get("size", 24.0)) or 24.0)
+            for lay in layers:
+                obstacles.append((float(v["x"]), float(v["y"]), float(v["x"]), float(v["y"]), lay, d, rule(v.get("net") or "")))
+        for pnet, x, y, d, lay in pad_obs:
+            if pnet == net:
+                continue
+            for olay in ([lay] if lay is not None else sorted(layers)):
+                obstacles.append((x, y, x, y, olay, d, rule(pnet)))
+        plan = TraceWidthManager.plan_power_widening(
+            net_name=net, segments=own, target_width_mil=target, escape_width_mil=escape_width_mil,
+            fine_pitch_pads=fine_pitch_pads, obstacles=obstacles, min_clearance_mil=rule(net),
+            escape_radius_mil=escape_radius_mil)
+        for c in plan.candidates:
+            if c.is_widened:
+                widths[c.segment_id] = c.approved_width_mil
+        plans[net] = plan
+    return plans
+
+
+def widening_shortfall(plans: Dict[str, WidthWideningPlan]) -> Dict[str, int]:
+    """Segments per net left below the target width by clearance (escape neckdowns are intentional, not counted)."""
+    out: Dict[str, int] = {}
+    for net, plan in plans.items():
+        n = sum(1 for c in plan.candidates
+                if not c.is_escape_neckdown and c.approved_width_mil + 1e-6 < c.target_width_mil)
+        if n:
+            out[net] = n
+    return out

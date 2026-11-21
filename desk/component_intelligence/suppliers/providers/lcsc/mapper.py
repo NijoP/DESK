@@ -72,7 +72,13 @@ class LcscDataMapper:
             unit_price=base_unit_price,
             price_breaks=price_breaks,
             moq=item.minPacketNumber,
-            last_checked_ts=time.time(),
+            # When the item was read; fixtures carry their own read time but source "fixture", so
+            # the inventory classifier still reports them as STOCK_UNKNOWN.
+            last_checked_ts=item.fetched_at or time.time(),
+            availability_source=item.source,
+            stock_known=item.stock_known,
+            lifecycle=item.productCycle,
+            backorder=item.isPreSale,
             raw_payload={
                 "productCode": item.productCode,
                 "productModel": item.productModel,
@@ -80,5 +86,8 @@ class LcscDataMapper:
                 "catalogName": item.catalogName,
                 "packageDetail": item.packageDetail,
                 "stockNumber": item.stockNumber,
+                "productCycle": item.productCycle,
+                "isPreSale": item.isPreSale,
+                "source": item.source,
             },
         )

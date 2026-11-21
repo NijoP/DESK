@@ -178,9 +178,11 @@ class TraceWidthCalculator:
             elif re.search(r"3V3|5V|VCC|VDD", net_u):
                 current_A = 1.0
             else:
-                current_A = 0.2
-
-        if current_A <= 0.3:
+                # Undeclared signal net: no current to size, the minimum width applies.
+                return min_signal_width_mil
+        # A declared current is always sized by the formula, the minimum is only a floor: 0.3 A on 0.5 oz inner
+        # copper needs ~11.7 mil (E-6; previously every current <= 0.3 A got the minimum).
+        if current_A <= 0.0:
             return min_signal_width_mil
 
         from desk import ipc
@@ -319,9 +321,10 @@ class DSNTuningEngine:
                 fine_pitch_clearance_mil=fine_pitch_clearance_mil
             )
             return tree.serialize()
-        except Exception:
-            # Fall back to legacy regex tuner if AST parsing fails on partial/synthetic fragments
-            pass
+        except Exception as e:
+            # Fall back to legacy regex tuner if AST parsing fails on partial/synthetic fragments. The fallback
+            # must prove it applied every per-net clearance (checked below); it never drops one silently (E-4).
+            ast_error = f"{type(e).__name__}: {e}"
 
         # 0. Deduplicate consecutive duplicate coordinates in padstack polygons
         def clean_poly(m):
@@ -362,9 +365,12 @@ class DSNTuningEngine:
         content = re.sub(r"\(grid\s+via\s+[\d\.]+\)", "(grid via 1.25)", content)
 
         # 3. Inject calculated net class widths and clearances (eliminates hardcoded 12.0 mil default!)
+        applied: Set[str] = set()
+
         def power_repl(m):
-            cname = m.group(1).strip("'")
+            cname = m.group(1).strip("'\"")
             c_upper = cname.upper()
+            applied.add(c_upper)
 
             # Check if specific width is provided
             if c_upper in net_widths:
@@ -380,7 +386,15 @@ class DSNTuningEngine:
             rule_sub = f"(rule\n        (width {w})\n        (clearance {clr}))"
             return re.sub(r"\(rule\s*\(width\s+[\d\.]+\)\s*\(clearance\s+[\d\.]+\)\s*\)", rule_sub, m.group(0))
 
-        return CLASS_BLOCK_RX.sub(power_repl, content)
+        content = CLASS_BLOCK_RX.sub(power_repl, content)
+        lost = sorted(n for n, clr in net_clearances.items() if clr > fine_pitch_clearance_mil and n not in applied)
+        if lost:
+            from desk.routing.dsn import DSNInvariantViolationError
+            raise DSNInvariantViolationError(
+                f"DSN tuning cannot apply the per-net clearance of {', '.join(lost)}: the DSN did not parse "
+                f"({ast_error}) and the fallback tuner found no matching class. Routing with the default "
+                f"{fine_pitch_clearance_mil:g} mil clearance would drop these rules; fix the DSN export.")
+        return content
 
 
 class RoutingPlanGenerator:
@@ -488,7 +502,10 @@ class RoutingPlanGenerator:
                 profile=net_profile
             )
 
-            if net_profile and hasattr(net_profile, "derive_clearance_mil"):
+            if net_profile and hasattr(net_profile, "worst_case_clearance_mil"):
+                # Worst pair over every other net on the board, not net-to-GND only (E-2).
+                clearance, _, _ = net_profile.worst_case_clearance_mil(net_name, net_graph.nets)
+            elif net_profile and hasattr(net_profile, "derive_clearance_mil"):
                 clearance = net_profile.derive_clearance_mil(net_name, "GND")
             else:
                 # No voltage data for this net: the only defensible spacing is the fabricator minimum,
@@ -511,12 +528,19 @@ class RoutingPlanGenerator:
                 priority_tier=tier
             )
 
+        # Insulation coordination across the declared barriers (desk/insulation): reported, never applied here; the
+        # pairwise clearance above stays the router rule.
+        insulation: List[Dict[str, Any]] = []
+        if profile is not None and hasattr(profile, "insulation_assessments"):
+            insulation = [a.to_dict() for a in profile.insulation_assessments()]
+
         return RoutingPlan(
             board_stackup=stackup,
             stage_nets=stages,
             net_constraints=constraints,
             blocking_issues=blocking_issues,
             assumptions=assumptions,
+            insulation=insulation,
         )
 
 

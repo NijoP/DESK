@@ -216,9 +216,12 @@ class QualityGateEvaluator:
         evidence_revision: Optional[str] = None,
         profile_hash: Optional[str] = None,
         evidence_profile_hash: Optional[str] = None,
-        require_profile: bool = False,
+        require_profile: bool = True,
         evidence_map: Optional[Dict[str, VerificationEvidence]] = None,
     ) -> QualityReport:
+        """Fail-closed (report F-5): with no DesignProfile the stackup, electrical and manufacturing gates are UNKNOWN
+        (`require_profile=True` is the default; `False` keeps the old "default accepted" PASS for callers that ask for
+        it explicitly), and an `evidence_map` entry recorded for another board revision or profile is STALE."""
         hard = HardAcceptanceGates()
         failures = []
         recommendations = []
@@ -235,7 +238,19 @@ class QualityGateEvaluator:
         if profile and evidence_profile_hash and profile.profile_hash and profile.profile_hash != evidence_profile_hash:
             is_profile_stale = True
 
-        evidence_map = evidence_map or {}
+        # Supplied evidence counts only for the board revision and profile it was recorded against (report F-5):
+        # evidence from another revision/profile becomes a STALE copy (the caller's record is not modified).
+        evidence_map = dict(evidence_map or {})
+        check_prof_hash = profile_hash or (profile.profile_hash if profile else None)
+        for gate_name, ev in list(evidence_map.items()):
+            if not ev.is_valid_for(board_revision, check_prof_hash):
+                evidence_map[gate_name] = VerificationEvidence(
+                    evidence_id=ev.evidence_id, timestamp=ev.timestamp, pcb_revision_hash=ev.pcb_revision_hash,
+                    profile_hash=ev.profile_hash, tool_and_version=ev.tool_and_version, status="STALE",
+                    details=(f"Evidence {ev.evidence_id} for {gate_name} was recorded against board "
+                             f"{ev.pcb_revision_hash or '?'} / profile {ev.profile_hash or '?'}, not the current "
+                             f"board {board_revision or '?'} / profile {check_prof_hash or '?'}."),
+                    violations_count=ev.violations_count, metadata=dict(ev.metadata))
 
         # -------------------------------------------------------------
         # Gate 1 & 3: DRC Evidence Check (zero_shorts, zero_clearance_violations)

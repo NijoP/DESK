@@ -28,7 +28,7 @@ import time
 from dataclasses import dataclass, field, asdict
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
-from desk.routing.connectivity import pad_xy, pad_size_mil
+from desk.routing.padgeom import PadShape, pad_gap, pad_shape
 from desk import spacing as SP
 
 MIL = 39.37007874
@@ -97,9 +97,10 @@ class _Pad:
     net: str
     x: float
     y: float
-    w: float
+    w: float           # board-frame extent (after the pad rotation)
     h: float
     side: str          # "T" | "B" | "TH"
+    geom: Optional[PadShape] = None   # real outline (rotated rect / stadium / circle)
 
 
 def _pads(dump: Dict[str, Any], origin_mm: Tuple[float, float]) -> List[_Pad]:
@@ -109,16 +110,20 @@ def _pads(dump: Dict[str, Any], origin_mm: Tuple[float, float]) -> List[_Pad]:
             continue
         side = "T" if int(comp.get("layer", 1)) == 1 else "B"
         for p in comp.get("pads", []):
-            ax, ay = pad_xy(comp, p)
-            w, h = pad_size_mil(p)
+            # Pad rotation is applied (E-9 / rotation audit): an 80x20 pad turned 90 degrees covers 20 x 80 mil.
+            g = pad_shape(comp, p)
+            w, h = g.extent()
             th = p.get("layer") in (11, 12) or bool(p.get("hole"))
             out.append(_Pad(f"{ref}.{p.get('num', '')}", ref, str(p.get("num", "")), (p.get("net") or "").strip(),
-                            ax, ay, float(w), float(h), "TH" if th else side))
+                            g.cx, g.cy, float(w), float(h), "TH" if th else side, g))
     return out
 
 
 def rect_gap_mil(a: _Pad, b: _Pad) -> float:
-    """Copper gap between two axis-aligned rectangular pads (0 when they overlap)."""
+    """Copper gap between two pads (0 when they overlap): exact outlines when both carry a geometry, otherwise
+    axis-aligned rectangles of their board-frame extents."""
+    if a.geom is not None and b.geom is not None:
+        return pad_gap(a.geom, b.geom)
     gx = abs(a.x - b.x) - (a.w + b.w) / 2.0
     gy = abs(a.y - b.y) - (a.h + b.h) / 2.0
     if gx > 0 and gy > 0:
@@ -190,17 +195,23 @@ def evaluate(dump: Dict[str, Any], net_rules_mil: Dict[str, float], fab_min_mil:
             blocked.append(PadFeasibility(p.pad_id, p.ref, p.num, p.net, "BLOCKED_BY_STACKUP", rule, None,
                                           detail=f"layer {stack[side_layer - 1]} is a plane; no signal layer on this side"))
             continue
-        best: Optional[Tuple[float, _Pad]] = None
+        # Every neighbour in range is checked, not only the nearest one: a package-internal conflict must not be
+        # hidden by a closer pad of another part (E-9). The worst conflict wins: fabricator-minimum violations
+        # before rule violations, the pad's own package before a neighbouring part, then the smallest gap.
+        best: Optional[Tuple[Tuple[int, int, float], float, _Pad]] = None
         for q in neighbours(p):
             if abs(q.x - p.x) > scan_radius_mil or abs(q.y - p.y) > scan_radius_mil:
                 continue
             g = rect_gap_mil(p, q)
-            if best is None or g < best[0]:
-                best = (g, q)
+            if g >= rule - 1e-6:
+                continue
+            key = (0 if g < fab_min_mil - 1e-6 else 1, 0 if q.ref == p.ref else 1, g)
+            if best is None or key < best[0]:
+                best = (key, g, q)
         if best is None:
             counts["LEGAL_AND_ROUTABLE"] += 1
             continue
-        gap, q = best
+        _, gap, q = best
         same = q.ref == p.ref
         if gap < fab_min_mil - 1e-6:
             cls = "BLOCKED_BY_PACKAGE_GEOMETRY" if same else "ROUTABLE_WITH_PLACEMENT_CHANGE"

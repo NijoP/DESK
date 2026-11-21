@@ -1,0 +1,15 @@
+* DESK SYNTHETIC MODEL ERROR
+R1 in a 1000
+D1 a 0 DBAD
+V1 in 0 DC 5
+.model DBAD DIODEX(IS=1e-14)
+.control
+set filetype=ascii
+echo DESK_BEGIN op1
+op
+write op1.raw
+echo DESK_END op1
+echo DESK_DONE
+quit
+.endc
+.end

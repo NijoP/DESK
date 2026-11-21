@@ -1,0 +1,10 @@
+{
+ "note": "Synthetic circuit whose model card names an unknown device type: the engine rejects it.",
+ "block": {"id": "SYN_ME", "title": "SYNTHETIC MODEL ERROR", "parts": [
+   {"ref": "R1", "mpn": "SYNTHETIC-R", "value": "1k", "pins": {"1": "IN", "2": "A"}},
+   {"ref": "D1", "mpn": "SYNTHETIC-D", "pins": {"1": "A", "2": "GND"}}]},
+ "models": {"DBAD": {"kind": "D", "card": ".model DBAD DIODEX(IS=1e-14)", "source": {"type": "generic", "reference": "broken on purpose"}}},
+ "sim": {"parts": {"D1": {"element": "D", "model": "DBAD", "terminals": {"A": "1", "K": "2"}}},
+  "sources": [{"name": "V1", "kind": "V", "pos": "IN", "neg": "GND", "dc": 5}],
+  "analyses": [{"type": "op"}]}
+}

@@ -12,19 +12,27 @@ Generated from `desk/config.py` SCHEMA (`python desk.py config schema`). Precede
 | `DESK_ALLOW_UNBOUND_WINDOW` | bool | 0 | safety | 1 lets a mutating bridge call run without a verified window binding (it then hits the ACTIVE window). Default 0 refuses (KF-20261112-008, UPS_1000 F-001). |
 | `DESK_RELIABILITY_AUTORECOVER` | bool | 1 | safety | 0 turns the self-healing supervisor's AUTO recoveries into proposals only. |
 | `DESK_FR_CHUNK_SAFETY` | float | 0.6 | routing | Fraction of a routing chunk's time window the adaptive planner fills with measured pass time (0.3-0.9). |
-| `DESK_MUTATION_POLICY` | enum | record | safety | record: journal whether a human approval accompanied each live mutation; require: refuse non-idempotent mutations without one. |
+| `DESK_MUTATION_POLICY` | enum | record | safety | record: journal whether a human approval accompanied each live mutation; require: refuse non-idempotent mutations without one. Any other value (a typo such as `required`) fails closed to require. |
 | `DESK_CREDENTIAL_STORE` | enum |  | credentials | Force a vault backend instead of the platform default. |
 | `NVIDIA_API_KEY` | secret |  | credentials | NVIDIA NIM key (or store it with desk.py auth configure). |
+| `OPENAI_API_KEY` | secret |  | credentials | OpenAI key for the openai provider (desk.py models). |
+| `XAI_API_KEY` | secret |  | credentials | xAI key for the xai (Grok) provider. |
+| `ANTHROPIC_API_KEY` | secret |  | credentials | Anthropic key for the anthropic provider. |
+| `GEMINI_API_KEY` | secret |  | credentials | Google Gemini API key for the gemini provider. |
 | `LCSC_CLIENT_ID` | str |  | credentials | LCSC API client id (live supplier calls). |
 | `LCSC_CLIENT_SECRET` | secret |  | credentials | LCSC API client secret. |
 | `DESK_MOCK_SUPPLIERS` | bool | 0 | credentials | 1 = supplier providers answer from offline fixtures. |
 | `DESK_MOCK_MANUFACTURING` | bool | 0 | credentials | 1 = JLCPCB client answers from offline fixtures. |
 | `DESK_DOMAIN_LIBRARY` | path |  | knowledge | Alternative library/pcb_domains root. |
+| `DESK_INSULATION_DATASET` | path |  | knowledge | Insulation-coordination dataset (desk/insulation, IEC 60664-1 tables with per-value provenance) used instead of the shipped provisional one; never changes an existing router rule. |
 | `DESK_JAVA` | path |  | routing | Java executable for Freerouting (else library/tools/jdk*/bin, else PATH). |
 | `FREEROUTING_JAR` | path |  | routing | Explicit Freerouting JAR. |
 | `FREEROUTING_BIN` | path |  | routing | Explicit native Freerouting executable. |
 | `DESK_FR_STAGNATION_FLAG` | bool | 0 | routing | 1 = pass --router.autorouter.stagnation_pass_limit (rejected by Freerouting 2.5.0). |
 | `DESK_DOCTOR_CACHE_TTL_S` | int | 86400 | routing | Seconds the doctor caches Java/Freerouting/Node probes. |
+| `DESK_NGSPICE` | path |  | simulation | ngspice executable (else ngspice / ngspice_con on PATH). |
+| `DESK_SIM_TIMEOUT_S` | float | 60 | simulation | Wall-clock limit for one simulation run; the process is killed after it. |
+| `DESK_SIM_MAX_OUTPUT_MB` | float | 64 | simulation | Largest result file a simulation run may produce before it is refused. |
 | `DESK_AGENT_MODEL` | str | nvidia/nemotron-3-ultra-550b-a55b | models | Model for desk.py agent. |
 | `DESK_HTTP_BASE_URL` | str | https://integrate.api.nvidia.com/v1 | models | OpenAI-compatible endpoint. |
 | `DESK_HTTP_API_KEY_ENV` | str | NVIDIA_API_KEY | models | Name of the variable holding the endpoint key. |
@@ -37,6 +45,9 @@ Generated from `desk/config.py` SCHEMA (`python desk.py config schema`). Precede
 | `DESK_FRONTIER_PROVIDER` | str |  | models | Provider for L4 (default: first of DESK_PROVIDER_ORDER). |
 | `DESK_FRONTIER_MODEL` | str |  | models | Model id for L4 on that provider. |
 | `DESK_L[1-4]_MODEL_(AGY|PI|NVIDIA)` | str |  | models | Model per tier and provider. |
+| `DESK_MODEL_CATALOG_FILE` | path |  | models | JSON file of extra providers and model capability/price descriptors (desk/orchestrator/providers/catalog.py). |
+| `DESK_MODEL_POLICY_FILE` | path |  | models | JSON file overriding the task-class -> model-tier allocation policy (providers/allocation.py). |
+| `DESK_(NVIDIA|OPENAI|XAI|OLLAMA|LLAMACPP|VLLM|ANTHROPIC|GEMINI)_BASE_URL` | str |  | models | Base URL override for one provider preset (e.g. a remote Ollama host). |
 | `DESK_L[1-4]_TIMEOUT` | float |  | models | Per-tier timeout in seconds (defaults 30/90/180/300). |
 | `DESK_L[1-4]_THINKING` | enum |  | models | Per-tier thinking level. |
 | `DESK_CONFIG_FILE` | path |  | project | User config file (default ~/.desk/config.json). |

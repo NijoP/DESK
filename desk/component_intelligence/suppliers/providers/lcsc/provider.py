@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from desk.component_intelligence.suppliers.base import SupplierProvider
 from desk.component_intelligence.suppliers.capabilities import SupplierCapabilities
+from desk.component_intelligence.suppliers.evidence import EvidenceStore, EvidenceSupplierProvider
 from desk.component_intelligence.suppliers.models import SupplierOffer
 from desk.component_intelligence.suppliers.providers.lcsc.client import LcscApiClient
 from desk.component_intelligence.suppliers.providers.lcsc.mapper import LcscDataMapper
@@ -21,6 +22,7 @@ class LcscSupplierProvider(SupplierProvider):
         self,
         client: Optional[LcscApiClient] = None,
         capabilities: Optional[SupplierCapabilities] = None,
+        evidence: Optional[EvidenceStore] = None,
     ) -> None:
         caps = capabilities or SupplierCapabilities(
             search=True,
@@ -34,6 +36,8 @@ class LcscSupplierProvider(SupplierProvider):
         )
         super().__init__(supplier_id="lcsc", name="LCSC Electronics", capabilities=caps)
         self.client = client or LcscApiClient()
+        # Browser-agent evidence for LCSC pages (keyless MPN discovery); served next to client data.
+        self._evidence = EvidenceSupplierProvider("lcsc", self.name, evidence) if evidence is not None else None
 
     def search_components(
         self,
@@ -57,6 +61,8 @@ class LcscSupplierProvider(SupplierProvider):
         item = self.client.get_product_detail(supplier_part_number)
         if item:
             return LcscDataMapper.to_supplier_offer(item)
+        if self._evidence is not None:
+            return self._evidence.get_component(supplier_part_number)
         return None
 
     def get_offers(self, mpn: str) -> List[SupplierOffer]:
@@ -64,4 +70,11 @@ class LcscSupplierProvider(SupplierProvider):
         results = self.search_components(mpn, limit=10)
         clean_mpn = mpn.strip().upper()
         exact_matches = [o for o in results if o.mpn.strip().upper() == clean_mpn]
-        return exact_matches if exact_matches else results
+        found = exact_matches if exact_matches else results
+        if self._evidence is not None:
+            seen = {o.sku.upper() for o in found}
+            found = found + [o for o in self._evidence.get_offers(mpn) if o.sku.upper() not in seen]
+        return found
+
+    def get_alternative_offers(self, mpn: str) -> List[SupplierOffer]:
+        return self._evidence.get_alternative_offers(mpn) if self._evidence is not None else []

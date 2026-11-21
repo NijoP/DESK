@@ -9,7 +9,7 @@ Requirements in, verified and manufacturable boards out, with the physics done b
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-stdlib%20only-success.svg)](desk/)
-[![Tests](https://img.shields.io/badge/tests-713-informational.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-850-informational.svg)](tests/)
 [![ECAD](https://img.shields.io/badge/ecad-EasyEDA%20Pro-orange.svg)](https://pro.easyeda.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -98,7 +98,7 @@ Classification is deterministic (keyword and feature scoring). Ambiguity between
 
 **Freerouting.** Boards go out as DSN and come back as SES. DESK runs the engine headless, tracks passes, detects stagnation, plans selective rip-ups and re-verifies connectivity from the returned geometry. A pre-flight gate checks plane nets, outline closure and pads in keep-outs before the engine starts.
 
-**LCSC and JLCPCB.** Parametric search, MPN and C-number resolution, lifecycle (EOL/NRND) and stock, alternatives, PCBA BOM and CPL export, basic/extended part classification and an order guard. Live calls are implemented; automated tests use an offline fixture catalogue.
+**Sourcing: Robu, LCSC and JLCPCB.** DESK holds no supplier credentials, so every path uses publicly visible data. `python tools/bom.py projects/<P> --sourcing [--qty N] [--allow-backorder] [--live-lcsc]` selects each BOM line in stock first, with Robu and LCSC preferred, and backorders only when the client flag is given. It checks alternatives for package/footprint and electrical equivalence, reads the JLCPCB parts-library class for assembly, and writes `SOURCING_REPORT.md` and `sourcing_report.json`. Every line in those files records its supplier, source URL, verification time and one of seven inventory states (IN_STOCK_CONFIRMED, LOW_STOCK, OUT_OF_STOCK, BACKORDERED, DISCONTINUED, STOCK_UNKNOWN, PRICE_UNAVAILABLE). Unverified, fixture or stale data is always STOCK_UNKNOWN, and the report says so. LCSC's keyless product-detail read by C-number (`--live-lcsc`) is shaped after one manual HTTP probe of the public endpoint on 2026-11-21, when LCSC's public MPN search route answered 404. Robu (Cloudflare browser challenge) and the JLCPCB parts library (robots.txt disallows `/api`) are not fetched by DESK: a browser-capable agent records what their public pages show in an evidence file that goes through the same validation and classifier. See [`docs/00b_COMPONENT_SELECTION.md`](docs/00b_COMPONENT_SELECTION.md#sourcing-in-stock-first-roadmap-i-5). PCBA BOM and CPL export and the order guard are unchanged. Live JLCPCB quoting and ordering are not verified. All of this is software-tested with fixtures; not validated on a live design.
 
 ---
 
@@ -243,7 +243,7 @@ An earlier run under the same requirements is kept in
 
 ## Verification status
 
-The test suite was last run on 2026-11-12: 717 tests, 0 failures (9 skips). Environment-dependent tests skip when their prerequisite is absent: a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` does not), the private project-one fixture, `shapely`, a free EasyEDA bridge port, Node with Backpass, and the git-ignored WATCH routing fixture. `test_orchestrator` 07/10/11 still fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell. CI runs the suite on Linux, Windows and macOS.
+The suite has 850 tests (`unittest` discovery count, 2026-11-21). The last full local run, on 2026-11-21 at `main` `5ad8492` before the "truth first" fixes, ran 811 tests with 0 failures (14 skips); the tests added since then are verified by the GitHub CI matrix on each pull request. Environment-dependent tests skip when their prerequisite is absent: a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` does not), the private project-one fixture, `shapely`, a free EasyEDA bridge port, Node with Backpass, and the git-ignored WATCH routing fixture. `test_orchestrator` 07/10/11 still fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell. CI runs the suite on Linux, Windows and macOS.
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -252,7 +252,7 @@ The test suite was last run on 2026-11-12: 717 tests, 0 failures (9 skips). Envi
 | Routing intelligence, DSN/SES, connectivity, recovery | Offline tested | 11 `tests/test_routing_*.py` files |
 | Power distribution, copper planes, return paths | Offline tested | `tests/test_power_distribution.py`, `tests/test_copper_*.py` |
 | Placement, DRC, ERC, quality gates | Offline tested | `tests/test_placement.py`, `tests/test_quality_fail_closed.py` |
-| Component intelligence, BOM, JLCPCB | Offline tested with fixture catalogue | `tests/test_ci_*.py`, `tests/test_jlcpcb_integration.py` |
+| Component intelligence, BOM, JLCPCB, in-stock-first sourcing | Software-tested with fixtures; not validated on a live design. Robu/JLCPCB evidence path not yet exercised with real supplier pages | `tests/test_ci_*.py`, `tests/test_jlcpcb_integration.py`, `tests/test_sourcing_i5.py` |
 | EasyEDA Pro read-back | Live verified (read-only sessions) | [`docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md`](docs/product_assessment/LIVE_EASYEDA_OBSERVATION_01.md) |
 | NVIDIA NIM tool-calling agent | Live verified against the NIM endpoint, 2026-11-12 | `desk/orchestrator/agent_loop.py` |
 | EasyEDA Pro live mutation (placement, copper, routing write-back) | **Exercised live in two timed ESP32-S3 benchmarks**: blocks built, 40 parts placed, rounded outline, SES imported, API-only GND fills and stitching written, silkscreen moved, all read back. Metrics in [`live-test/`](live-test/README.md). Other paths are still not live verified. | [`live-test/`](live-test/README.md), [`docs/product_assessment/LIVE_TEST_STATUS.md`](docs/product_assessment/LIVE_TEST_STATUS.md) |
@@ -272,12 +272,10 @@ The test suite was last run on 2026-11-12: 717 tests, 0 failures (9 skips). Envi
 - No switching-loop area minimisation and no RF-specific ground-plane synthesis yet. Those rules are ADVISORY in the domain library.
 - Junction-temperature and component-rating rules are UNSUPPORTED: DESK lists them, it cannot evaluate them.
 - JLCPCB constraints are a static declaration; there is no live DFM or quoting API call.
-- Developed and tested on Windows 11. GitHub CI on `main` at `b168be9` (run 43181657514, 2026-11-12) passes on **5 of 8**
-  jobs:
-  - Passing: Ubuntu with Python 3.11 and 3.12, Windows with 3.11 and 3.12, macOS with 3.12.
-  - Python 3.9 on Ubuntu 22.04 and Windows: 4 errors in `test_ci_storage`, because that Python's SQLite has no
-    `unixepoch`.
-  - macOS with Python 3.11: 1 failure in `test_bridge_port_discovery`.
+- Developed and tested on Windows 11. GitHub CI on `main` at `5ad8492` (run 43238664294, 2026-11-13) passes all
+  **8 of 8** jobs (Ubuntu, Windows and macOS across the Python matrix). Earlier `main` runs were not all green: run
+  43219591735 failed only on `windows-latest / py3.12`, so treat that job as intermittent until it has a longer
+  green record.
   - Weft runs are not part of CI (see the Weft section).
 - Weft workflows have not been executed by a Weft runtime: durable waits, approval pauses and recovery are unproven, and 22 of the 32 DESK nodes are declared but fail closed until their engine adapter is written.
 - Two timed end-to-end benchmarks exist ([`live-test/`](live-test/README.md)):

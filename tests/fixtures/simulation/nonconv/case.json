@@ -1,0 +1,12 @@
+{
+ "note": "Synthetic pathological circuit that makes the transient abort (timestep too small).",
+ "block": {"id": "SYN_NC", "title": "SYNTHETIC NONCONVERGENT", "parts": [
+   {"ref": "D1", "mpn": "SYNTHETIC-D", "pins": {"1": "IN", "2": "OUT"}},
+   {"ref": "C1", "mpn": "SYNTHETIC-C", "value": "1f", "pins": {"1": "OUT", "2": "GND"}},
+   {"ref": "L1", "mpn": "SYNTHETIC-L", "value": "1e-15", "pins": {"1": "OUT", "2": "GND"}}]},
+ "models": {"DX": {"kind": "D", "card": ".model DX D(IS=1e-30 N=0.01 RS=0)", "source": {"type": "generic", "reference": "pathological"}}},
+ "sim": {"parts": {"D1": {"element": "D", "model": "DX", "terminals": {"A": "1", "K": "2"}}},
+  "sources": [{"name": "V1", "kind": "V", "pos": "IN", "neg": "GND", "pulse": [0, 1e6, 0, 1e-12, 1e-12, 1e-9, 2e-9]}],
+  "options": {"itl4": 3, "reltol": 1e-9},
+  "analyses": [{"type": "tran", "step": 1e-12, "stop": 1e-8}]}
+}

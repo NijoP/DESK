@@ -1,0 +1,44 @@
+{
+ "_note": "SYNTHETIC fixture for tests/test_schematic_wiring.py - invented parts, uuids and nets; not a real design.",
+ "library": {
+  "SYN-LDO-5": {"libraryUuid": "lib-syn", "uuid": "dev-syn-ldo", "name": "SYN-LDO-5"},
+  "SYN-MCU-8": {"libraryUuid": "lib-syn", "uuid": "dev-syn-mcu", "name": "SYN-MCU-8"},
+  "SYN-R": {"libraryUuid": "lib-syn", "uuid": "dev-syn-r", "name": "SYN-R"},
+  "SYN-C": {"libraryUuid": "lib-syn", "uuid": "dev-syn-c", "name": "SYN-C"},
+  "SYN-LED": {"libraryUuid": "lib-syn", "uuid": "dev-syn-led", "name": "SYN-LED"},
+  "SYN-SW": {"libraryUuid": "lib-syn", "uuid": "dev-syn-sw", "name": "SYN-SW"}
+ },
+ "pin_counts": {"SYN-LDO-5": 5, "SYN-MCU-8": 8, "SYN-R": 2, "SYN-C": 2, "SYN-LED": 2, "SYN-SW": 2},
+ "blocks": [
+  {
+   "id": "01_SYN_REG",
+   "title": "SYNTHETIC REGULATOR",
+   "ports": ["EN", "VIN_5V", "+3V3", "GND", "LINK"],
+   "parts": [
+    {"ref": "U1", "mpn": "SYN-LDO-5", "kind": "ic", "pins": {"1": "VIN_5V", "2": "GND", "3": "EN", "4": "FB", "5": "+3V3"}},
+    {"ref": "C1", "mpn": "SYN-C", "kind": "passive", "pins": {"1": "VIN_5V", "2": "GND"}},
+    {"ref": "R1", "mpn": "SYN-R", "kind": "passive", "pins": {"1": "+3V3", "2": "FB"}},
+    {"ref": "R2", "mpn": "SYN-R", "kind": "passive", "pins": {"1": "FB", "2": "GND"}},
+    {"ref": "R3", "mpn": "SYN-R", "kind": "passive", "pins": {"1": "EN", "2": "EN_RC"}},
+    {"ref": "C3", "mpn": "SYN-C", "kind": "passive", "pins": {"1": "EN_RC", "2": "GND"}},
+    {"ref": "R5", "mpn": "SYN-R", "kind": "passive", "pins": {"1": "EN_RC", "2": "LINK"}},
+    {"ref": "C2", "mpn": "SYN-C", "kind": "passive", "pins": {"1": "+3V3", "2": "GND"}}
+   ]
+  },
+  {
+   "id": "02_SYN_MCU",
+   "title": "SYNTHETIC MCU",
+   "ports": ["LINK", "SIG_OUT", "+3V3", "GND"],
+   "parts": [
+    {"ref": "U2", "mpn": "SYN-MCU-8", "kind": "ic", "pins": {"1": "+3V3", "2": "GND", "3": "LINK", "4": "LED_K", "5": "BTN", "6": "SIG_OUT", "7": "XO"}, "nc": ["8"]},
+    {"ref": "R6", "mpn": "SYN-R", "kind": "passive", "pins": {"1": "+3V3", "2": "LED_A"}},
+    {"ref": "D1", "mpn": "SYN-LED", "kind": "passive", "pins": {"1": "LED_A", "2": "LED_K"}},
+    {"ref": "SW1", "mpn": "SYN-SW", "kind": "passive", "pins": {"1": "BTN", "2": "GND"}},
+    {"ref": "R7", "mpn": "SYN-R", "kind": "passive", "pins": {"1": "BTN", "2": "+3V3"}},
+    {"ref": "R8", "mpn": "SYN-R", "kind": "passive", "pins": {"1": "XO", "2": "XI"}},
+    {"ref": "C4", "mpn": "SYN-C", "kind": "passive", "pins": {"1": "XI", "2": "GND"}},
+    {"ref": "C5", "mpn": "SYN-C", "kind": "passive", "pins": {"1": "+3V3", "2": "GND"}}
+   ]
+  }
+ ]
+}

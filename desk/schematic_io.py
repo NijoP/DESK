@@ -108,6 +108,58 @@ def wiring_js(plan: Dict[str, Any], label_size: int = 7) -> str:
     return "\n".join(stmts) + f"\nreturn {{wired:{len(plan['wires'])}}};"
 
 
+# ----------------------------------------------------------------------------- UNVERIFIED-LIVE adapter
+# The ONE place DESK emits the EasyEDA calls the `subsystem` wiring style and multi-sheet projects need that are not
+# VERIFIED in desk/reliability/api_registry.py. Everything here is software-tested with fixtures only; it has not been
+# validated on a live design. A live probe on a disposable project must confirm each entry before it is trusted.
+UNVERIFIED_LIVE = {
+    "wire_network": ("eda.sch_PrimitiveWire.create([x1,y1,x2,y2], net) once per segment of a multi-segment, "
+                     "branching net: that segments meeting at shared end points (including T-junctions) form ONE net "
+                     "named `net` in the EasyEDA netlist has not been observed on a live sheet"),
+    "wire_style": ("colouring wires / net labels by modify(id, {color}) and junction dots by "
+                   "eda.sch_PrimitiveCircle.create(x, y, r, color, fill, width): no signature in the API reference; "
+                   "each call is isolated in try/catch and only affects appearance"),
+    "create_sheet": ("eda.dmt_Schematic.createSchematicPage: listed by the live API, no signature in the reference, "
+                     "never exercised by DESK; pages are created by hand and their uuid pasted into project.json"),
+}
+
+
+def subsystem_draw_js(plan: Dict[str, Any], style: Dict[str, Any]) -> str:
+    """Phase 2 of the `subsystem` style (desk/draw.py): draw a desk.schematic_router plan with the appearance of
+    `style` (desk.draw.SUBSYSTEM_STYLE): wire segments, net labels (created exactly as desk/draw.py BLOCK_JS does),
+    junction dots, then the subsystem frame and title.
+
+    Connectivity calls come first and are never wrapped: a failure stops the script (fail closed). The appearance
+    calls (wire / label colour, junction dots) are UNVERIFIED-LIVE (UNVERIFIED_LIVE['wire_style']) and each runs in
+    its own try/catch; refusals are counted in `style_failed` and can never change a connection."""
+    ground = re.compile(r"^(GND|AGND|DGND|PGND|.*_GND)$")
+    data = {"w": [[s["a"][0], s["a"][1], s["b"][0], s["b"][1], s["net"]] for s in plan["segments"]],
+            "l": [[l["at"][0], l["at"][1], l["rotation"], l["net"],
+                   style["ground_color"] if ground.match(l["net"]) else style["label_color"]] for l in plan["labels"]],
+            "j": [[j["at"][0], j["at"][1]] for j in plan.get("junctions", [])] if style.get("junction_dots") else [],
+            "f": plan["frame"], "t": plan["title"]}
+    keep = {k: style[k] for k in ("frame_color", "frame_line_width", "title_color", "title_size", "title_bold",
+                                  "label_size", "wire_color", "junction_color", "junction_radius")}
+    return ("const S=" + json.dumps(keep) + "; const P=" + json.dumps(data) + "; let SF=0;\n"
+            "for(const s of P.w){const w=await eda.sch_PrimitiveWire.create([s[0],s[1],s[2],s[3]],s[4]);\n"
+            " try{await eda.sch_PrimitiveWire.modify(w.getState_PrimitiveId(),{color:S.wire_color});}catch(e){SF++;}}\n"
+            "for(const l of P.l){const L=await eda.sch_PrimitiveAttribute.createNetLabel(l[0],l[1],l[3]);\n"
+            " try{await eda.sch_PrimitiveAttribute.modify(L.getState_PrimitiveId(),{rotation:l[2],fontSize:S.label_size});}catch(e){}\n"
+            " try{await eda.sch_PrimitiveAttribute.modify(L.getState_PrimitiveId(),{color:l[4]});}catch(e){SF++;}}\n"
+            "for(const j of P.j){try{await eda.sch_PrimitiveCircle.create(j[0],j[1],S.junction_radius,S.junction_color,S.junction_color,1);}catch(e){SF++;}}\n"
+            "const F=P.f; await eda.sch_PrimitiveRectangle.create(F[0],F[1],F[2],F[3],0,0,S.frame_color,null,S.frame_line_width,null,null);\n"
+            "await eda.sch_PrimitiveText.create(F[0]+20,F[1]-45,P.t,0,S.title_color,null,S.title_size,S.title_bold,false,false);\n"
+            "return {wires:P.w.length,labels:P.l.length,junctions:P.j.length,style_failed:SF,W:F[2],H:F[3]};")
+
+
+def create_sheet_js(title: str) -> str:
+    """Multi-page creation. UNVERIFIED-LIVE (see UNVERIFIED_LIVE['create_sheet']): the call signature is unknown,
+    so DESK refuses to guess one. Create the page in EasyEDA and record its uuid in project.json 'sheets'."""
+    raise NotImplementedError(
+        f"creating schematic page '{title}' is UNVERIFIED-LIVE ({UNVERIFIED_LIVE['create_sheet']}); "
+        "create it by hand and paste its uuid into project.json 'sheets'")
+
+
 # ----------------------------------------------------------------------------- live helpers
 def read_schematic(project_path: str, window_id: Optional[str] = None, save: bool = True) -> Dict[str, Any]:
     """Read-only: components, pins with absolute coordinates, nets. Writes state/sch_dump.json when save."""

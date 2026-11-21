@@ -64,17 +64,25 @@ SCHEMA: List[Setting] = [
             "Fraction of a routing chunk's time window the adaptive planner fills with measured pass time (0.3-0.9)."),
     Setting("DESK_MUTATION_POLICY", ENUM, "record", "safety",
             "record: journal whether a human approval accompanied each live mutation; "
-            "require: refuse non-idempotent mutations without one.", choices=("record", "require")),
+            "require: refuse non-idempotent mutations without one; any other value fails closed to require.",
+            choices=("record", "require")),
     # -- credentials ------------------------------------------------------------------------
     Setting("DESK_CREDENTIAL_STORE", ENUM, None, "credentials",
             "Force a vault backend instead of the platform default.", choices=("windows", "keychain", "file")),
     Setting("NVIDIA_API_KEY", SECRET, None, "credentials", "NVIDIA NIM key (or store it with desk.py auth configure)."),
+    Setting("OPENAI_API_KEY", SECRET, None, "credentials", "OpenAI key for the openai provider (desk.py models)."),
+    Setting("XAI_API_KEY", SECRET, None, "credentials", "xAI key for the xai (Grok) provider."),
+    Setting("ANTHROPIC_API_KEY", SECRET, None, "credentials", "Anthropic key for the anthropic provider."),
+    Setting("GEMINI_API_KEY", SECRET, None, "credentials", "Google Gemini API key for the gemini provider."),
     Setting("LCSC_CLIENT_ID", STR, None, "credentials", "LCSC API client id (live supplier calls)."),
     Setting("LCSC_CLIENT_SECRET", SECRET, None, "credentials", "LCSC API client secret."),
     Setting("DESK_MOCK_SUPPLIERS", BOOL, "0", "credentials", "1 = supplier providers answer from offline fixtures."),
     Setting("DESK_MOCK_MANUFACTURING", BOOL, "0", "credentials", "1 = JLCPCB client answers from offline fixtures."),
     # -- knowledge ---------------------------------------------------------------------------
     Setting("DESK_DOMAIN_LIBRARY", PATH, None, "knowledge", "Alternative library/pcb_domains root."),
+    Setting("DESK_INSULATION_DATASET", PATH, None, "knowledge",
+            "Insulation-coordination dataset (desk/insulation, IEC 60664-1 tables with per-value provenance) used "
+            "instead of the shipped provisional one; never changes an existing router rule."),
     # -- routing engine ------------------------------------------------------------------------
     Setting("DESK_JAVA", PATH, None, "routing", "Java executable for Freerouting (else library/tools/jdk*/bin, else PATH)."),
     Setting("FREEROUTING_JAR", PATH, None, "routing", "Explicit Freerouting JAR."),
@@ -82,6 +90,10 @@ SCHEMA: List[Setting] = [
     Setting("DESK_FR_STAGNATION_FLAG", BOOL, "0", "routing",
             "1 = pass --router.autorouter.stagnation_pass_limit (rejected by Freerouting 2.5.0)."),
     Setting("DESK_DOCTOR_CACHE_TTL_S", INT, "86400", "routing", "Seconds the doctor caches Java/Freerouting/Node probes."),
+    # -- simulation (optional plugin) -------------------------------------------------------------
+    Setting("DESK_NGSPICE", PATH, None, "simulation", "ngspice executable (else ngspice / ngspice_con on PATH)."),
+    Setting("DESK_SIM_TIMEOUT_S", FLOAT, "60", "simulation", "Wall-clock limit for one simulation run; the process is killed after it."),
+    Setting("DESK_SIM_MAX_OUTPUT_MB", FLOAT, "64", "simulation", "Largest result file a simulation run may produce before it is refused."),
     # -- models -----------------------------------------------------------------------------
     Setting("DESK_AGENT_MODEL", STR, "nvidia/nemotron-3-ultra-550b-a55b", "models", "Model for desk.py agent."),
     Setting("DESK_HTTP_BASE_URL", STR, "https://integrate.api.nvidia.com/v1", "models", "OpenAI-compatible endpoint."),
@@ -95,6 +107,12 @@ SCHEMA: List[Setting] = [
     Setting("DESK_FRONTIER_PROVIDER", STR, None, "models", "Provider for L4 (default: first of DESK_PROVIDER_ORDER)."),
     Setting("DESK_FRONTIER_MODEL", STR, None, "models", "Model id for L4 on that provider."),
     Setting(r"DESK_L[1-4]_MODEL_(AGY|PI|NVIDIA)", STR, None, "models", "Model per tier and provider.", pattern=True),
+    Setting("DESK_MODEL_CATALOG_FILE", PATH, None, "models",
+            "JSON file of extra providers and model capability/price descriptors (desk/orchestrator/providers/catalog.py)."),
+    Setting("DESK_MODEL_POLICY_FILE", PATH, None, "models",
+            "JSON file overriding the task-class -> model-tier allocation policy (providers/allocation.py)."),
+    Setting(r"DESK_(NVIDIA|OPENAI|XAI|OLLAMA|LLAMACPP|VLLM|ANTHROPIC|GEMINI)_BASE_URL", STR, None, "models",
+            "Base URL override for one provider preset (e.g. a remote Ollama host).", pattern=True),
     Setting(r"DESK_L[1-4]_TIMEOUT", FLOAT, None, "models", "Per-tier timeout in seconds (defaults 30/90/180/300).", pattern=True),
     Setting(r"DESK_L[1-4]_THINKING", ENUM, None, "models", "Per-tier thinking level.", pattern=True,
             choices=("off", "low", "medium", "high")),

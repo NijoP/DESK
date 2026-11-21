@@ -142,6 +142,10 @@ D `PARTIAL`, E `EXECUTED_STALE_READBACK`, F `FALSE_SUCCESS`, G `UNSUPPORTED`, H 
 * Attempts per failure are bounded (default 3); the same action is not repeated for a failure while the evidence
   signature is unchanged; a recovery that failed for a signature is not proposed again without new evidence
   (`RECOVERY_OUTCOMES.jsonl`). `DESK_RELIABILITY_AUTORECOVER=0` turns AUTO into proposals.
+* The attempt budget is persisted: `Supervisor` rebuilds `RecoveryPolicy` from `state/reliability/recoveries.jsonl`
+  when it is constructed, and a failure with the same signature in a later process inherits the attempts made since that
+  signature's last verified recovery. This used to reset with every process. The engineering recovery engine built on top of this
+  layer is described in `ENGINEERING_RECOVERY.md`.
 
 ## 9. Learning
 

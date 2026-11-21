@@ -1,0 +1,15 @@
+Title: * desk synthetic divider
+Date: Sat Nov 21 17:22:33  2026
+Plotname: Operating Point
+Flags: real
+No. Variables: 3
+No. Points: 1
+Variables:
+	0	v(vin)	voltage
+	1	i(vin)	current
+	2	v(vout)	voltage
+Values:
+ 0	1.000000000000000e+01
+	-5.000000000000000e-04
+	5.000000000000000e+00
+

@@ -14,6 +14,17 @@ from desk.component_intelligence.procurement.engine import ProcurementBOMReport
 from desk.manufacturing.jlcpcb.pcba_catalog import JLCPCBPCBACatalog
 
 
+def _is_lcsc(item: Any) -> bool:
+    """True when the line was sourced from LCSC (by supplier id, or by its display name)."""
+    if isinstance(item, dict):
+        sid = item.get("supplier_id") or ""
+        name = item.get("supplier") or item.get("selected_supplier", "")
+    else:
+        sid = getattr(item, "supplier_id", "") or ""
+        name = getattr(item, "selected_supplier", "") or ""
+    return sid.lower() == "lcsc" or name.lower() == "lcsc" or name.lower().startswith("lcsc ")
+
+
 def export_jlcpcb_bom(report: Any, file_path: str) -> None:
     """Exports BOM formatted for JLCPCB SMT Assembly upload."""
     line_items = report.get("line_items", []) if isinstance(report, dict) else getattr(report, "line_items", [])
@@ -23,7 +34,7 @@ def export_jlcpcb_bom(report: Any, file_path: str) -> None:
         for item in line_items:
             if isinstance(item, dict):
                 selected_supp = item.get("supplier") or item.get("selected_supplier", "")
-                lcsc_sku = item.get("sku") or item.get("selected_sku", "") if selected_supp.lower() == "lcsc" else ""
+                lcsc_sku = (item.get("sku") or item.get("selected_sku", "")) if _is_lcsc(item) else ""
                 comment = item.get("mpn", "")
                 des = item.get("designators", "")
                 if isinstance(des, list):
@@ -32,7 +43,7 @@ def export_jlcpcb_bom(report: Any, file_path: str) -> None:
                     designators = str(des).replace(" ", ",")
                 footprint = item.get("package", "")
             else:
-                lcsc_sku = item.selected_sku if item.selected_supplier.lower() == "lcsc" else ""
+                lcsc_sku = item.selected_sku if _is_lcsc(item) else ""
                 comment = item.mpn
                 designators = ",".join(sorted(item.designators))
                 footprint = item.package
@@ -73,13 +84,13 @@ def export_lcsc_bom(report: Any, file_path: str) -> None:
         for idx, item in enumerate(line_items, start=1):
             if isinstance(item, dict):
                 selected_supp = item.get("supplier") or item.get("selected_supplier", "")
-                lcsc_pn = item.get("sku") or item.get("selected_sku", "") if selected_supp.lower() == "lcsc" else ""
+                lcsc_pn = (item.get("sku") or item.get("selected_sku", "")) if _is_lcsc(item) else ""
                 qty = item.get("quantity") or item.get("required_quantity", 1)
                 mpn = item.get("mpn", "")
                 des = item.get("designators", "")
                 refs = " ".join(sorted(des)) if isinstance(des, list) else str(des)
             else:
-                lcsc_pn = item.selected_sku if item.selected_supplier.lower() == "lcsc" else ""
+                lcsc_pn = item.selected_sku if _is_lcsc(item) else ""
                 qty = item.required_quantity
                 mpn = item.mpn
                 refs = " ".join(sorted(item.designators))

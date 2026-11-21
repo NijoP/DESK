@@ -66,6 +66,12 @@ class BridgeMutationTimeout(BridgeError):
     possibly_mutated = True
 
 
+class BridgeMutationOutcomeUnknown(BridgeMutationTimeout):
+    """The connection broke after a mutating script was sent (reset, remote disconnect, broken response): the gateway
+    may already have executed it, so it is never resent (report F-11). A subclass of BridgeMutationTimeout so every
+    caller that journals a timed-out mutation as dirty treats this the same way."""
+
+
 class WriteLockHeld(DeskError):
     """Another live writer holds projects/<P>/state/write.lock."""
 
@@ -109,3 +115,8 @@ class EngineeringDecisionRequired(DeskError):
 
 class DesignProfileInvalid(DeskError):
     """design_profile.json could not be loaded (unknown key, bad type); names the offending field."""
+
+
+class InsulationDataInvalid(DeskError):
+    """An insulation-coordination dataset or engineering sign-off record (desk/insulation) is malformed: a wrong schema,
+    a table whose rows and values do not line up, a value without provenance, or a VERIFIED value without a verifier."""

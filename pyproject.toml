@@ -37,3 +37,6 @@ version = { attr = "desk._version.__version__" }
 [tool.setuptools.packages.find]
 include = ["desk*"]
 exclude = ["tests*", "tools*", "projects*", "docs*"]
+
+[tool.setuptools.package-data]
+"desk.insulation" = ["data/*.json"]
