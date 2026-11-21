@@ -38,11 +38,44 @@ PATH_TRAVERSAL_RE = re.compile(r"(\.\./|\.\.\\|\x00|[a-zA-Z]:[\\/])")
 TOKEN_HEADER = "X-DESK-Token"
 STATE_CHANGING_GET_PATHS = {"/api/project/select", "/api/v1/project/select", "/api/sync", "/api/v1/sync"}
 
+# Low-spec bounds (report 5.5, roadmap I-10). Every connection gets a socket timeout so a stalled client cannot pin a
+# handler thread; live SSE streams (one thread each for their whole life) are capped; request bodies are capped.
+SOCKET_TIMEOUT_S = 30.0
+MAX_SSE_CLIENTS = 8
+SSE_HEARTBEAT_S = 10.0
+MAX_BODY_BYTES = 1024 * 1024
+MAX_QUERY_LIMIT = 5000
+
+
+class BadRequest(ValueError):
+    """A client error answered with HTTP 400 (or the given status) instead of dropping the connection."""
+
+    def __init__(self, message: str, status: int = 400) -> None:
+        super().__init__(message)
+        self.status = status
+
+
+def query_limit(query: Dict[str, List[str]], default: int, name: str = "limit") -> int:
+    """`?limit=` as an int clamped to 1..MAX_QUERY_LIMIT. A non-integer raises BadRequest (it used to raise an
+    uncaught ValueError and drop the connection); 0 or a negative value used to return the whole list or drop
+    entries, because the projection slices with [-limit:]."""
+    if name not in query:
+        return default
+    raw = (query.get(name) or [""])[0]
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        raise BadRequest(f"?{name}= must be an integer, got {raw!r}")
+    return max(1, min(MAX_QUERY_LIMIT, value))
+
 
 class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
     """HTTP request handler implementing localhost security and the REST/SSE monitoring API."""
 
     server_version = f"DESK-MissionControl/{SERVER_VERSION}"
+    # socketserver.StreamRequestHandler applies this with settimeout() on every accepted connection: a client that
+    # stops sending its request, or stops reading an SSE stream, frees its thread after this many seconds.
+    timeout = SOCKET_TIMEOUT_S
 
     def log_message(self, format: str, *args: Any) -> None:
         """Suppress standard HTTP server request noise from stderr."""
@@ -137,8 +170,11 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
                 self._send_json(403, {"error": f"Access forbidden: missing or wrong {TOKEN_HEADER} header"})
                 return
             try:
-                length = int(self.headers.get("Content-Length", 0))
-                body = self.rfile.read(length)
+                body = self._read_body()
+            except BadRequest as e:
+                self._send_json(e.status, {"error": str(e)})
+                return
+            try:
                 data = json.loads(body.decode("utf-8")) if body else {}
                 event_bus = get_event_bus()
                 ev = event_bus.emit(
@@ -158,6 +194,22 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
                 self._send_json(400, {"error": f"Invalid telemetry payload: {str(e)}"})
         else:
             self.send_error(405, "Method Not Allowed: Mission Control is strictly read-only")
+
+    def _read_body(self) -> bytes:
+        """The request body per Content-Length. A missing header is an empty body; a non-integer or negative value is
+        a 400 (a negative length used to block the handler in rfile.read); more than MAX_BODY_BYTES is a 413."""
+        raw = self.headers.get("Content-Length")
+        if raw is None or raw.strip() == "":
+            return b""
+        try:
+            length = int(raw.strip())
+        except ValueError:
+            raise BadRequest(f"Invalid Content-Length header: {raw!r}")
+        if length < 0:
+            raise BadRequest(f"Invalid Content-Length header: {raw!r}")
+        if length > MAX_BODY_BYTES:
+            raise BadRequest(f"Request body too large: {length} bytes (limit {MAX_BODY_BYTES})", status=413)
+        return self.rfile.read(length) if length else b""
 
     def do_PUT(self) -> None:
         """Rejects state-mutating requests."""
@@ -188,7 +240,13 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
             self._send_json(403, {"error": f"Access forbidden: {path} changes state and needs the {TOKEN_HEADER} header"})
             return
 
-        # Route matching
+        try:
+            self._route_get(path, query)
+        except BadRequest as e:
+            self._send_json(e.status, {"error": str(e)})
+
+    def _route_get(self, path: str, query: Dict[str, List[str]]) -> None:
+        """GET route table. Handlers raise BadRequest for malformed query values."""
         if path in {"", "/"}:
             self._handle_dashboard()
         elif path in {"/api/status", "/api/v1/status"}:
@@ -204,12 +262,12 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         elif path in {"/api/events", "/api/v1/events"}:
             self._handle_events(query)
         elif path in {"/api/timeline", "/api/v1/timeline"}:
-            limit = int(query.get("limit", [100])[0]) if "limit" in query else 100
+            limit = query_limit(query, 100)
             self._send_json(200, get_execution_projection().get_timeline(limit=limit))
         elif path in {"/api/logs", "/api/v1/logs"}:
             level = query.get("level", [None])[0]
             search = query.get("search", [None])[0]
-            limit = int(query.get("limit", [200])[0]) if "limit" in query else 200
+            limit = query_limit(query, 200)
             self._send_json(200, get_execution_projection().get_logs(level=level, search=search, limit=limit))
         elif path in {"/api/events/live", "/api/v1/events/stream"}:
             self._handle_sse_stream(query)
@@ -419,12 +477,12 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         if subroute == "":
             self._send_json(200, projection.get_summary())
         elif subroute == "events":
-            limit = int(query.get("limit", [100])[0]) if "limit" in query else 100
+            limit = query_limit(query, 100)
             self._send_json(200, projection.get_timeline(limit=limit))
         elif subroute == "logs":
             level = query.get("level", [None])[0]
             search = query.get("search", [None])[0]
-            limit = int(query.get("limit", [200])[0]) if "limit" in query else 200
+            limit = query_limit(query, 200)
             self._send_json(200, projection.get_logs(level=level, search=search, limit=limit))
         elif subroute == "artifacts":
             # Collect checkpoints from stages
@@ -521,7 +579,29 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
             self._send_json(500, {"error": str(e)})
 
     def _handle_sse_stream(self, query: Dict[str, List[str]]) -> None:
-        """Streams real-time execution events via Server-Sent Events (SSE)."""
+        """Streams real-time execution events via Server-Sent Events (SSE).
+
+        Each stream holds one handler thread for its whole life, so streams take a slot from the server's bounded
+        pool (DeskServer max_sse_clients); when the pool is empty the client gets 503 + Retry-After (EventSource
+        reconnects by itself) instead of another thread. A client that stops reading is dropped by the socket timeout
+        on the next heartbeat write."""
+        slots = getattr(self.server, "sse_slots", None)
+        if slots is not None and not slots.acquire(blocking=False):
+            encoded = json.dumps({"error": "Too many live event streams; retry shortly"}).encode("utf-8")
+            self.send_response(503)
+            self._send_security_headers("application/json; charset=utf-8")
+            self.send_header("Retry-After", "5")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.write(encoded)
+            return
+        try:
+            self._stream_events(query)
+        finally:
+            if slots is not None:
+                slots.release()
+
+    def _stream_events(self, query: Dict[str, List[str]]) -> None:
         last_id = self.headers.get("Last-Event-ID") or (query.get("last_event_id", [None])[0])
         event_bus = get_event_bus()
 
@@ -553,7 +633,7 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
             # 2. Main event loop with periodic keepalive heartbeats
             while True:
                 try:
-                    ev = event_queue.get(timeout=10.0)
+                    ev = event_queue.get(timeout=SSE_HEARTBEAT_S)
                     data = json.dumps(ev.to_dict())
                     msg = f"id: {ev.event_id}\nevent: message\ndata: {data}\n\n"
                     self.wfile.write(msg.encode("utf-8"))
@@ -584,8 +664,9 @@ class DeskThreadingHTTPServer(http.server.ThreadingHTTPServer):
 class DeskServer:
     """Multi-threaded HTTP monitoring server manager."""
 
-    def __init__(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT) -> None:
+    def __init__(self, host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, max_sse_clients: int = MAX_SSE_CLIENTS) -> None:
         self.host = host
+        self.max_sse_clients = max(1, int(max_sse_clients))
         self.requested_port = port
         self.actual_port = port
         self.server: Optional[http.server.ThreadingHTTPServer] = None
@@ -637,6 +718,7 @@ class DeskServer:
             raise RuntimeError(f"Failed to bind to any port in range {self.requested_port}..{current_port}")
 
         server_instance.desk_token = self.token
+        server_instance.sse_slots = threading.BoundedSemaphore(self.max_sse_clients)
         self.server = server_instance
         self._is_running = True
 

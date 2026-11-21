@@ -10,6 +10,8 @@ import sys, os, json
 from _common import ex, guard, load_project, check
 
 proj = sys.argv[1]; P = load_project(proj)
+from desk.reliability.mutation import cli_approve
+APPROVAL = None if "--dry" in sys.argv else cli_approve(proj, "pcb_rules", P["pcb_uuid"])   # policy check before any bridge call
 R = json.load(open(os.path.join(proj, "pcb_rules.json")))
 G = guard(P["pcb_uuid"])
 have = set(check(ex(G + 'return await eda.pcb_Net.getAllNetsName();', window_id=P.get("window_id"))) or [])
@@ -18,6 +20,9 @@ want = {n for v in R.get("net_classes", {}).values() for n in v} | {n for v in R
 missing = sorted(want - have)
 if missing: raise SystemExit(f"STOP: nets not on PCB: {missing} (update PCB from schematic first)")
 if "--dry" in sys.argv: print(json.dumps(R, indent=1)); sys.exit(0)
+from desk.reliability.mutation import MutationSpec, run_live, report
+
+W = P.get("window_id")
 js = G + '''const R=%s; const out={nc:[],dp:[],el:[]};
 const exNC=(await eda.pcb_Drc.getAllNetClasses()||[]).map(c=>c.name||c.netClassName);
 for(const [n,nets] of Object.entries(R.net_classes||{})){ if(exNC.includes(n)) await eda.pcb_Drc.deleteNetClass(n); out.nc.push([n,await eda.pcb_Drc.createNetClass(n,nets,null)]); }
@@ -25,12 +30,26 @@ const exDP=await eda.pcb_Drc.getAllDifferentialPairs(); const dpn=(Array.isArray
 for(const [n,[p,m]] of Object.entries(R.diff_pairs||{})){ if(dpn.includes(n)) await eda.pcb_Drc.deleteDifferentialPair(n); out.dp.push([n,await eda.pcb_Drc.createDifferentialPair(n,p,m)]); }
 const exEL=(await eda.pcb_Drc.getAllEqualLengthNetGroups()||[]).map(g=>g.name);
 for(const [n,nets] of Object.entries(R.equal_length||{})){ if(exEL.includes(n)) await eda.pcb_Drc.deleteEqualLengthNetGroup(n); out.el.push([n,await eda.pcb_Drc.createEqualLengthNetGroup(n,nets,null)]); }
-out.readback={nc:await eda.pcb_Drc.getAllNetClasses(), dp:await eda.pcb_Drc.getAllDifferentialPairs(), el:await eda.pcb_Drc.getAllEqualLengthNetGroups()};
 return out;''' % json.dumps(R)
-r = check(ex(js, timeout=120, window_id=P.get("window_id")))
-bad = [x for k in ("nc", "dp", "el") for x in r[k] if x[1] is not True]
-print(json.dumps({k: r[k] for k in ("nc", "dp", "el")}))
-rb = json.dumps(r["readback"])
-notback = [n for n in list(R.get("net_classes", {})) + list(R.get("diff_pairs", {})) + list(R.get("equal_length", {})) if f'"{n}"' not in rb]
-print("APPLIED + READ BACK" if not bad and not notback else f"FAIL: calls {bad}, not read back {notback}")
-sys.exit(0 if not bad and not notback else 1)
+# Independent readback (separate script): the names of the net classes, differential pairs and equal-length groups.
+READ_JS = G + '''const L=x=>(Array.isArray(x)?x:Object.values(x||{}));
+return {net_classes:L(await eda.pcb_Drc.getAllNetClasses()).map(c=>c.name||c.netClassName),
+ diff_pairs:L(await eda.pcb_Drc.getAllDifferentialPairs()).map(d=>d.name||d.differentialPairName),
+ equal_length:L(await eda.pcb_Drc.getAllEqualLengthNetGroups()).map(g=>g.name)};'''
+expected = {k: sorted(R.get(k, {})) for k in ("net_classes", "diff_pairs", "equal_length") if R.get(k)}
+if not expected: print("nothing to apply: pcb_rules.json lists no net class, differential pair or group"); sys.exit(0)
+spec = MutationSpec(op="pcb_rules", target=P["pcb_uuid"], document_uuid=P["pcb_uuid"], verifier="names_present",
+                    expected=expected, methods=["eda.pcb_Drc.deleteNetClass", "eda.pcb_Drc.createNetClass",
+                                                "eda.pcb_Drc.deleteDifferentialPair", "eda.pcb_Drc.createDifferentialPair",
+                                                "eda.pcb_Drc.deleteEqualLengthNetGroup", "eda.pcb_Drc.createEqualLengthNetGroup"],
+                    approval=APPROVAL, readback_attempts=1, readback_interval_s=1.0)
+calls = {}
+def _execute():
+    calls.update(check(ex(js, timeout=120, window_id=W)) or {})
+    return calls
+res = run_live(proj, P, lambda c: check(ex(c, window_id=W)), spec, _execute, lambda: check(ex(READ_JS, timeout=120, window_id=W)) or {})
+bad = [x for k in ("nc", "dp", "el") for x in calls.get(k, []) if x[1] is not True]
+print(json.dumps({k: calls.get(k, []) for k in ("nc", "dp", "el")}))
+rc = report(res)
+print("APPLIED + READ BACK" if not bad and rc == 0 else f"FAIL: calls {bad}, readback verified {res.verified}")
+sys.exit(0 if not bad and rc == 0 else 1)

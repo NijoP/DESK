@@ -20,9 +20,11 @@ dry = "--dry" in args
 link = "--no-link" not in args
 force = set(args[args.index("--force-pads") + 1].split(",")) if "--force-pads" in args else set()   # e.g. R2.2,C8.2 (DRC-reported opens)
 VD, VH, TW = 0.6, 0.3, 0.25   # via pad / drill / track width (mm)
+P = load_project(proj); W = P.get("window_id"); G = guard(P["pcb_uuid"])
+from desk.reliability.mutation import cli_approve
+APPROVAL = None if dry else cli_approve(proj, "stitch_orphans", f"{P['pcb_uuid']}:{net}")   # policy check before any bridge call
 from shapely.geometry import Point, LineString, box, Polygon
 from shapely.ops import unary_union, polylabel
-P = load_project(proj); W = P.get("window_id"); G = guard(P["pcb_uuid"])
 plan = json.load(open(os.path.join(proj, "placement.json"), encoding="utf-8"))
 bw, bh = plan["board_mm"]; board = [(0, 0), (bw, 0), (bw, bh), (0, bh)]
 kos = [k["rect_mm"] for k in plan.get("keepouts", []) + plan.get("copper_keepouts", []) if "rect_mm" in k]
@@ -96,10 +98,32 @@ for p in pads:
             new_tracks.append((2, best.x, best.y, tgt[0], tgt[1], f'{p["ref"]}.{p["num"]}:link'))
 print("new vias", len(new_vias), "new tracks", len(new_tracks), [t[5] for t in new_tracks])
 if not dry and new_vias:
-    ids = check(ex(G + 'const o=[]; for(const [x,y] of %s){ const v=await eda.pcb_PrimitiveVia.create(%s,x,y,%.3f,%.3f); o.push(v?v.getState_PrimitiveId():null);} return o;'
-                   % (json.dumps([[x * MIL, y * MIL] for x, y in new_vias]), json.dumps(net), VH * MIL, VD * MIL), window_id=W, timeout=300))
-    tids = check(ex(G + 'const o=[]; for(const [l,x1,y1,x2,y2] of %s){ const t=await eda.pcb_PrimitiveLine.create(%s,l,x1,y1,x2,y2,%.3f); o.push(t?t.getState_PrimitiveId():null);} await eda.pcb_Document.save(); return o;'
-                    % (json.dumps([[l, a * MIL, b * MIL, c * MIL, d * MIL] for l, a, b, c, d, _ in new_tracks]), json.dumps(net), TW * MIL), window_id=W, timeout=300))
+    # Live mutation: approval policy + writer lock + journal (desk/ops.write_op), then an independent readback of the
+    # via and track primitive ids: every planned via and track must exist (desk/reliability verifier "ids_present").
+    from desk.reliability.mutation import MutationSpec, run_live, report
+    made = {"ids": [], "tids": []}
+    expected = {"ids": [], "planned": len(new_vias) + len(new_tracks)}
+
+    def _execute():
+        made["ids"] = check(ex(G + 'const o=[]; for(const [x,y] of %s){ const v=await eda.pcb_PrimitiveVia.create(%s,x,y,%.3f,%.3f); o.push(v?v.getState_PrimitiveId():null);} return o;'
+                               % (json.dumps([[x * MIL, y * MIL] for x, y in new_vias]), json.dumps(net), VH * MIL, VD * MIL), window_id=W, timeout=300)) or []
+        expected["ids"].extend(made["ids"])
+        made["tids"] = check(ex(G + 'const o=[]; for(const [l,x1,y1,x2,y2] of %s){ const t=await eda.pcb_PrimitiveLine.create(%s,l,x1,y1,x2,y2,%.3f); o.push(t?t.getState_PrimitiveId():null);} await eda.pcb_Document.save(); return o;'
+                                % (json.dumps([[l, a * MIL, b * MIL, c * MIL, d * MIL] for l, a, b, c, d, _ in new_tracks]), json.dumps(net), TW * MIL), window_id=W, timeout=300)) or []
+        expected["ids"].extend(made["tids"])
+        return made
+
+    def _readback():
+        return check(ex(G + 'return (await eda.pcb_PrimitiveVia.getAll()||[]).map(v=>v.primitiveId).concat((await eda.pcb_PrimitiveLine.getAll()||[]).map(l=>l.primitiveId));',
+                        window_id=W, timeout=120)) or []
+
+    spec = MutationSpec(op="stitch_orphans", target=f"{P['pcb_uuid']}:{net}", document_uuid=P["pcb_uuid"], verifier="ids_present",
+                        expected=expected, methods=["eda.pcb_PrimitiveVia.create", "eda.pcb_PrimitiveLine.create",
+                                                    "eda.pcb_PrimitiveVia.getAll", "eda.pcb_PrimitiveLine.getAll", "eda.pcb_Document.save"],
+                        approval=APPROVAL,
+                        readback_attempts=1, readback_interval_s=1.0)
+    res = run_live(proj, P, lambda js: check(ex(js, window_id=W)), spec, _execute, _readback)
     rec = os.path.join(proj, "state", "orphan_stitch.json")
-    json.dump({"vias_mm": new_vias, "tracks": new_tracks, "via_ids": ids, "track_ids": tids}, open(rec, "w"), indent=1)
-    print("created vias", sum(1 for i in ids if i), "tracks", sum(1 for i in tids if i))
+    json.dump({"vias_mm": new_vias, "tracks": new_tracks, "via_ids": made["ids"], "track_ids": made["tids"]}, open(rec, "w"), indent=1)
+    print("created vias", sum(1 for i in made["ids"] if i), "tracks", sum(1 for i in made["tids"] if i))
+    sys.exit(report(res))

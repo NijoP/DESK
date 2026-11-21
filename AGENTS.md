@@ -91,11 +91,13 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
   binding (project uuid via `tools/rebind.py projects/<P>`, `project.json window_id` or `EDA_WINDOW_ID`); unbound
   mutations are refused (`DESK_ALLOW_UNBOUND_WINDOW=1` is the operator's explicit override). Window ids rotate on every
   gateway reconnect: never retry a write on an old id; the bridge rebinds by project uuid when exactly one window
-  matches. Live mutations that must prove their effect go through `desk.reliability.mutation.MutationContract` with a
-  verification contract from `desk.reliability.api_registry` (a `true` return is not completion: `importChanges`
-  and `clearRouting` are DIALOG, `delete` can leave survivors). Failures are handled by
-  `desk.reliability.supervisor.Supervisor` (evidence -> deterministic diagnosis -> policy-gated recovery ->
-  independent verification -> incident); a failure is healed only when `record.healed` is True.
+  matches. `tools/copper_fill.py`, `pcb_rules.py`, `stitch_orphans.py` and `pcb_place.py` run their live mutation
+  through `desk.reliability.mutation.run_live` (`MutationContract` + a verification contract from
+  `desk.reliability.api_registry`) and exit 0 only when the readback proves it (a `true` return is not completion:
+  `importChanges` and `clearRouting` are DIALOG, `delete` can leave survivors); `build`, `wire` and the SES import
+  still use plain `write_op` without a contract. `desk.reliability.supervisor.Supervisor` (evidence -> diagnosis ->
+  policy-gated recovery -> verification -> incident) has no production caller yet; a failure is healed only when
+  `record.healed` is True. Rework execution is SIMULATED (in-memory snapshot), never VERIFIED.
 - **Spacing decisions:** `desk/spacing.py` keeps clearance, creepage and the fabricator minimum apart; the routing
   feasibility gate blocks a rule the package geometry cannot meet and records an engineering decision. Never lower a
   spacing value to make routing succeed; `spacing_policy: FUNCTIONAL` is a Captain decision logged in the ledger.
@@ -108,7 +110,7 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
 
 ## H. Performance Requirements
 
-- **Sub-10ms Pipeline:** Core placement and routing evaluations must execute under 10ms.
+- **Sub-10ms Pipeline:** Each core placement and routing evaluation runs under 10 ms on a WATCH-sized board (about 40 parts). The whole offline pipeline takes 11–13 ms, and placement validation exceeds 10 ms from about 160 parts (CI-measured, `docs/performance/BENCHMARK_REPORT.md`).
 - **Bounded Concurrency:** Socket discoveries and file inspections must observe strict timeouts and bounded threads.
 - **Empirical Benchmarks:** Do not report estimated benchmarks as measured benchmarks; always record real execution times.
 
