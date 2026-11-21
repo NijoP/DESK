@@ -16,7 +16,25 @@ from desk.component_intelligence.identity.models import (
     LifecycleStatus,
 )
 from desk.component_intelligence.storage.database import DatabaseManager
-from desk.component_intelligence.suppliers.models import PriceBreak, SupplierOffer
+from desk.component_intelligence.suppliers.models import SOURCE_UNVERIFIED, PriceBreak, SupplierOffer
+
+# Offer availability provenance is kept inside raw_payload_json under this key, so it survives a
+# round trip through SQLite without a schema migration. Rows written before it existed read back as
+# "unverified", which the inventory classifier reports as STOCK_UNKNOWN.
+_AVAIL_KEY = "_desk_availability"
+
+
+def _availability_from_payload(raw_json: Any) -> Dict[str, Any]:
+    try:
+        meta = (json.loads(raw_json or "{}") or {}).get(_AVAIL_KEY) or {}
+    except (TypeError, ValueError, AttributeError):
+        meta = {}
+    return {
+        "availability_source": str(meta.get("availability_source") or SOURCE_UNVERIFIED),
+        "stock_known": bool(meta.get("stock_known", True)),
+        "lifecycle": str(meta.get("lifecycle") or ""),
+        "backorder": bool(meta.get("backorder", False)),
+    }
 
 
 class ComponentRepository:
@@ -160,7 +178,12 @@ class ComponentRepository:
                     offer.moq,
                     offer.lead_time_days,
                     offer.last_checked_ts,
-                    json.dumps(offer.raw_payload),
+                    json.dumps(dict(offer.raw_payload, **{_AVAIL_KEY: {
+                        "availability_source": offer.availability_source,
+                        "stock_known": offer.stock_known,
+                        "lifecycle": offer.lifecycle,
+                        "backorder": offer.backorder,
+                    }})),
                 ),
             )
 
@@ -208,6 +231,7 @@ class ComponentRepository:
                         moq=r["moq"],
                         lead_time_days=r["lead_time_days"],
                         last_checked_ts=r["last_checked_ts"],
+                        **_availability_from_payload(r["raw_payload_json"]),
                     )
                 )
         return offers

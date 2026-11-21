@@ -12,6 +12,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from desk.component_intelligence.procurement.inventory import classify_offer
 from desk.component_intelligence.suppliers.models import SupplierOffer
 from desk.component_intelligence.suppliers.registry import SupplierRegistry
 
@@ -33,6 +34,8 @@ class ProcurementLineItem:
     in_stock: bool = True
     verification_state: str = "PROVISIONAL"
     warnings: List[str] = field(default_factory=list)
+    supplier_id: str = ""          # e.g. "lcsc" (selected_supplier holds the display name)
+    inventory_state: str = ""      # procurement.inventory.InventoryState value
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -48,6 +51,8 @@ class ProcurementLineItem:
             "extended_price": round(self.extended_price, 2),
             "currency": self.currency,
             "in_stock": self.in_stock,
+            "supplier_id": self.supplier_id,
+            "inventory_state": self.inventory_state,
             "warnings": "; ".join(self.warnings),
         }
 
@@ -86,7 +91,7 @@ class ProcurementBOMReport:
                     f"{line.unit_price:.4f}",
                     f"{line.extended_price:.2f}",
                     line.currency,
-                    "IN STOCK" if line.in_stock else "SHORTAGE",
+                    line.inventory_state or ("IN STOCK" if line.in_stock else "SHORTAGE"),
                     "; ".join(line.warnings),
                 ])
 
@@ -157,12 +162,15 @@ class ProcurementEngine:
                         extended_price=0.0,
                         in_stock=False,
                         warnings=line_warnings,
+                        inventory_state="STOCK_UNKNOWN",
                     )
                 )
                 continue
 
-            # Optimize price and stock availability
-            in_stock_offers = [o for o in offers if o.stock >= total_required]
+            # Optimize price and stock availability. "In stock" means verified, current stock
+            # (procurement.inventory): fixture or unverified offers never count as in stock.
+            assessed = {id(o): classify_offer(o, total_required) for o in offers}
+            in_stock_offers = [o for o in offers if assessed[id(o)].in_stock]
             candidate_pool = in_stock_offers if in_stock_offers else offers
 
             # Pick lowest unit price for required volume
@@ -171,12 +179,15 @@ class ProcurementEngine:
             extended = unit_price * total_required
             total_cost += extended
 
-            is_in_stock = best_offer.stock >= total_required
+            best_assessment = assessed[id(best_offer)]
+            is_in_stock = best_assessment.in_stock
             if not is_in_stock:
                 shortages += 1
                 line_warnings.append(
-                    f"Stock shortage at {best_offer.supplier_name}: available {best_offer.stock}, need {total_required}"
+                    f"Not verified in stock at {best_offer.supplier_name} "
+                    f"({best_assessment.state.value}); need {total_required}"
                 )
+                line_warnings.extend(best_assessment.limitations)
 
             line_items.append(
                 ProcurementLineItem(
@@ -193,6 +204,8 @@ class ProcurementEngine:
                     currency=best_offer.currency,
                     in_stock=is_in_stock,
                     warnings=line_warnings,
+                    supplier_id=best_offer.supplier_id,
+                    inventory_state=best_assessment.state.value,
                 )
             )
 

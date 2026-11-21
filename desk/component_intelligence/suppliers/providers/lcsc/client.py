@@ -6,6 +6,19 @@ Features:
 - Bounded retries with exponential backoff
 - Credential redaction in logs
 - Offline fixture fallback for deterministic testing and air-gapped environments
+
+Keyless public route (probed 2026-11-21, no account, one request each):
+- ``GET {base_url}/detail?productCode=C8545`` answers ``{"code": 200, "result": {...}}`` with
+  productCode, productModel, brandNameEn, encapStandard, stockNumber, productPriceList (usdPrice),
+  productCycle, isPreSale and pdfUrl. ``get_product_detail`` reads that shape.
+- ``POST {base_url}/search`` answers ``{"code": 404, "msg": "The static resource is unavailable..."}``:
+  there is no keyless MPN search. Without credentials, ``search_products`` resolves only LCSC
+  C-numbers; MPN discovery comes from browser-agent evidence (``suppliers.evidence``).
+- www.lcsc.com/robots.txt does not restrict product pages or this host; DESK still spaces requests
+  by ``min_interval_s`` and caches each detail read for the life of the client.
+
+Every item records where it came from (``source``: "fixture" or "live_api") and when
+(``fetched_at``), so fixture data can never be reported as verified stock.
 """
 
 from __future__ import annotations
@@ -13,6 +26,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -125,6 +139,7 @@ class LcscApiClient:
         read_timeout_s: float = 10.0,
         max_retries: int = 3,
         use_offline_fixtures: Optional[bool] = None,
+        min_interval_s: float = 1.0,
     ) -> None:
         from desk import config as deskcfg
         self.client_id = client_id or deskcfg.get("LCSC_CLIENT_ID")
@@ -133,6 +148,10 @@ class LcscApiClient:
         self.conn_timeout = connection_timeout_s
         self.read_timeout = read_timeout_s
         self.max_retries = max_retries
+        self.min_interval_s = min_interval_s
+        self._last_request_at = 0.0
+        self._detail_cache: Dict[str, Optional[LcscProductItem]] = {}
+        self.limitations: List[str] = []
 
         # Automatically use offline fixtures if credentials are missing
         if use_offline_fixtures is not None:
@@ -145,11 +164,22 @@ class LcscApiClient:
         if self.use_offline_fixtures:
             return self._search_fixtures(query, limit=limit)
 
+        q = query.strip().upper()
+        if re.fullmatch(r"C\d+", q):
+            item = self.get_product_detail(q)
+            return [item] if item else []
+        if not self.has_credentials:
+            msg = (f"LCSC keyless access has no MPN search (the public search route answers 404); "
+                   f"'{query}' needs an LCSC C-number or browser-agent evidence.")
+            if msg not in self.limitations:
+                self.limitations.append(msg)
+            return []
+
         url = f"{self.base_url}/search"
         payload = {"searchKey": query, "pageSize": limit}
         data = self._request("POST", url, body=payload)
         items = data.get("resultList", [])
-        return [LcscProductItem.from_dict(item) for item in items]
+        return [self._stamp(LcscProductItem.from_dict(item), "live_api") for item in items]
 
     def get_product_detail(self, product_code: str) -> Optional[LcscProductItem]:
         """Retrieves single product details by LCSC product code (e.g., C11702)."""
@@ -157,18 +187,48 @@ class LcscApiClient:
         if self.use_offline_fixtures:
             for item in OFFLINE_FIXTURE_CATALOG:
                 if item["productCode"].upper() == clean_code:
-                    return LcscProductItem.from_dict(item)
+                    return self._stamp(LcscProductItem.from_dict(item), "fixture")
             return None
+        if clean_code in self._detail_cache:
+            return self._detail_cache[clean_code]
 
         url = f"{self.base_url}/detail?productCode={urllib.parse.quote(clean_code)}"
         try:
             data = self._request("GET", url)
-            if data and "productCode" in data:
-                return LcscProductItem.from_dict(data)
-            return None
         except Exception as e:
             logger.warning("Failed to fetch LCSC detail for %s: %s", clean_code, e)
+            self.limitations.append(f"LCSC {clean_code}: detail read failed ({e}); stock not verified.")
             return None
+        item = None
+        record = self.unwrap_detail(data)
+        if record is not None:
+            item = self._stamp(LcscProductItem.from_dict(record), "live_api")
+        else:
+            self.limitations.append(f"LCSC {clean_code}: no product record in the detail response.")
+        self._detail_cache[clean_code] = item
+        return item
+
+    @property
+    def has_credentials(self) -> bool:
+        return bool(self.client_id and self.client_secret)
+
+    @staticmethod
+    def unwrap_detail(data: Any) -> Optional[Dict[str, Any]]:
+        """Return the product record from a detail response (wrapped ``result`` or bare)."""
+        if not isinstance(data, dict):
+            return None
+        if "productCode" in data:
+            return data
+        inner = data.get("result")
+        if isinstance(inner, dict) and inner.get("productCode"):
+            return inner
+        return None
+
+    @staticmethod
+    def _stamp(item: LcscProductItem, source: str) -> LcscProductItem:
+        item.source = source
+        item.fetched_at = time.time()
+        return item
 
     def _search_fixtures(self, query: str, limit: int = 20) -> List[LcscProductItem]:
         """Performs case-insensitive substring search across offline fixtures."""
@@ -181,7 +241,7 @@ class LcscApiClient:
             brand = raw.get("brandNameEn", "").upper()
 
             if q_upper in code or q_upper in model or q_upper in desc or q_upper in brand:
-                matches.append(LcscProductItem.from_dict(raw))
+                matches.append(self._stamp(LcscProductItem.from_dict(raw), "fixture"))
                 if len(matches) >= limit:
                     break
         return matches
@@ -200,6 +260,10 @@ class LcscApiClient:
         encoded_data = json.dumps(body).encode("utf-8") if body else None
 
         for attempt in range(1, self.max_retries + 1):
+            wait = self.min_interval_s - (time.time() - self._last_request_at)
+            if wait > 0:
+                time.sleep(wait)
+            self._last_request_at = time.time()
             req = urllib.request.Request(url, data=encoded_data, headers=headers, method=method)
             try:
                 with urllib.request.urlopen(req, timeout=self.read_timeout) as resp:
