@@ -101,12 +101,21 @@ class SessionRegistry:
                 s.connect_ex(("127.0.0.1", p))
                 sockets.append((p, s))
 
-            r, w, x = select.select([], [s for _, s in sockets], [], timeout)
-            for p, s in sockets:
-                if s in w:
+            # Keep selecting until the deadline: refused connects to closed ports complete first (macOS reports them
+            # writable at once), so a single select() returned before the live port's connect finished.
+            deadline = time.monotonic() + timeout
+            pending = dict((s, p) for p, s in sockets)
+            while pending:
+                left = deadline - time.monotonic()
+                if left <= 0:
+                    break
+                _, w, _ = select.select([], list(pending), [], left)
+                if not w:
+                    break
+                for s in sorted(w, key=lambda k: pending[k]):
+                    p = pending.pop(s)
                     try:
-                        err = s.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR)
-                        if err == 0:
+                        if s.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR) == 0:
                             return p
                     except OSError:
                         pass
