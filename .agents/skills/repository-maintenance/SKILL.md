@@ -40,6 +40,7 @@ Maintains repository health, validates test suite integrity, enforces Git hygien
 ## Required Engineering Constraints
 - Zero Failing Tests: Never commit code when tests fail.
 - Non-Destructive Memory Updates: Never automatically apply Backpass memory edits without human review (`backpass apply --no-ui`).
+- One Memory Writer: transcript-derived edits to `AGENTS.md`, `CLAUDE.md` and `.agents/skills/` land only via `backpass apply`. `python tools/learn.py` produces evidence and task files (`.desk_learn/tasks/`), never memory edits.
 - Git Discipline: Do not commit untracked cache directories (`.backpass/`, `__pycache__/`, `*.db`).
 
 ## Recommended Workflow
@@ -62,5 +63,6 @@ Maintains repository health, validates test suite integrity, enforces Git hygien
 - Clean repository working copy with 100% passing test suite and optimized, budgeted agent instructions.
 
 ## Documentation References
-- [Backpass Architecture](file:///docs/development_memory/01_BACKPASS_ARCHITECTURE.md)
-- [Daily Development Workflow](file:///docs/development_memory/07_DAILY_WORKFLOW.md)
+- [Backpass Architecture](../../../docs/development_memory/01_BACKPASS_ARCHITECTURE.md)
+- [Daily Development Workflow](../../../docs/development_memory/07_DAILY_WORKFLOW.md)
+- [Learning Engine](../../../docs/08_LEARNING_ENGINE.md)

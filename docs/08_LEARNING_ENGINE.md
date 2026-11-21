@@ -4,6 +4,11 @@ DESK learns from **what actually happened**: agent sessions (Claude Code, Codex,
 plus DESK's own execution evidence (tool telemetry, op journal, ledger). It finds recurring mistakes, token waste,
 unnecessary calls, slow or failing workflows, and proposes improvements — which a human accepts or rejects.
 
+**One gate for the agent-memory surface.** `AGENTS.md`, `CLAUDE.md` and `.agents/skills/` are edited from transcripts
+only through `backpass apply` (AGENTS.md section L). This engine produces *evidence and tasks* for that surface: accepting
+an AGENTS.md-targeted proposal writes `.desk_learn/tasks/<id>.md` and never edits AGENTS.md or CLAUDE.md
+(`CLAUDE.md` stays the `@AGENTS.md` pointer). The memory budget is read from `.backpassrc.json` `budgetTokens`.
+
 ```
 python tools/learn.py setup      # once: clone Backpass at the pinned commit (library/tools/BACKPASS_PIN)
 python tools/learn.py run        # collect -> detect -> corroborate -> propose -> report   (read-only, ~2 s)
@@ -15,11 +20,13 @@ python tools/learn.py bench      # replay measured waste against the current DES
 ## Relationship to Backpass (MIT, © Kun Chen)
 | Backpass capability | DESK use |
 |---|---|
-| 8 harness adapters (transcript discovery + parsing, incl. SQLite stores) | **reused as-is** through `desk/learn/collect.mjs`; DESK has no transcript parser of its own |
+| 8 harness adapters (transcript discovery + parsing, incl. SQLite stores) | **reused as-is** through `devtools/learn/collect.mjs`; DESK has no transcript parser of its own |
 | secret redaction (`redact.js`) | **reused** on every text/input/result before it is stored |
 | evidence-only claims, ≥ 2 distinct sessions, persistent gap ledger, remembered rejections, token budget, human gate, one writer | **same principles, re-implemented** for DESK targets (small, deterministic) |
 | model-driven distill / synthesis via `acpx` | **not used**: DESK detection is deterministic, no model calls, so transcripts never leave the machine and results are reproducible |
 Backpass is cloned (not vendored) to `library/tools/backpass` at a pinned commit; its MIT license travels with it.
+The loader is development-time only: it lives in `devtools/learn/`, outside the `desk` product package, and a test
+(`tests/test_learn.py` `TestDevelopmentBoundary`) fails if any `desk/` file mentions Backpass or `devtools`.
 Backpass officially supports macOS/Linux; on this Windows machine all 8 adapters ran without error (verified).
 
 ## Pipeline
@@ -27,7 +34,7 @@ Backpass officially supports macOS/Linux; on this Windows machine all 8 adapters
    (default: the DESK repo) or any tool call uses DESK tools / the EasyEDA bridge. Incremental: `known.json` stores
    mtime+size per session; unchanged sessions are skipped. Results keep head+tail (errors are at the tail); sizes are
    measured before truncation.
-2. **Detect** (deterministic, `desk/learn/engine.py: detect`) — per tool call:
+2. **Detect** (deterministic, `devtools/learn/engine.py: detect`) — per tool call:
    `large_output` (≥ 4000 tokens), `reference_read` (whole API reference/skill docs), `repeated_call` (identical call,
    identical result), `failure` (error status, or error text at the tail of *command* output — file contents never count),
    `retry_loop` (≥ 3 failures of the same command), `eda_api_failure`, `context_bypass` (whole DESK docs/specs read),
@@ -38,11 +45,12 @@ Backpass officially supports macOS/Linux; on this Windows machine all 8 adapters
 4. **Propose** — a gap becomes a proposal only with ≥ 2 distinct sessions (floor enforced in code; config cannot lower it),
    or DESK log evidence for tool-level signals. Ranked by measured tokens and severity. A rejected proposal is not shown
    again until it gains new sessions (then flagged `reproposed_after_reject`).
-5. **Human gate / apply** — `accept` requires `--reviewer`. Only two surfaces can be edited, each inside a marked section:
-   `AGENTS.md` (+ mirrored `CLAUDE.md`) “Learned rules (human-approved)” and `docs/06` “Learned gotchas”. One line per
-   accept, with `<!-- learn:<id> sessions=N -->` provenance; AGENTS.md budget enforced; the full test suite runs and the
-   edit is **reverted** if it fails. Everything else (tool interfaces, context, workflows, routing) becomes a task file
-   in `.desk_learn/tasks/`. **Protected** engineering surfaces (`desk/spec.py`, `erc.py`, `calc.py`, `netcheck.py`,
+5. **Human gate / apply** — `accept` requires `--reviewer`. Only one surface can be edited, inside a marked section:
+   `docs/06` “Learned gotchas (human-approved)”. One line per accept, with `<!-- learn:<id> sessions=N -->` provenance;
+   the full test suite runs and the edit is **reverted** if it fails. Everything else becomes a task file in
+   `.desk_learn/tasks/`: tool interfaces, context, workflows, routing, and every AGENTS.md instruction proposal. An
+   AGENTS.md task carries the suggested line, the measured AGENTS.md size, the `.backpassrc.json` budget and the
+   `CLAUDE.md` pointer state, and says the edit lands via `backpass apply` (or a reviewed hand-made commit). **Protected** engineering surfaces (`desk/spec.py`, `erc.py`, `calc.py`, `netcheck.py`,
    `release.py`, `draw.py`, `tools/verify.py`, `tools/release.py`, `docs/02`) are never edited by this engine; accepting
    such a proposal needs `--engineering-review NAME` and still only creates a task.
 6. **Report / bench** — `.desk_learn/report.md` (proposals, measured waste, model-routing evidence table — report only).
@@ -65,5 +73,12 @@ Backpass redaction is applied before anything is stored; quotes are ≤ 240 char
 
 ## Tests
 `tests/test_learn.py`: detectors (incl. false-positive guards), era provenance, corroboration floor, idempotent
-re-analysis, rejection memory, accept-in-section + mirror, budget refusal, regression **revert**, protected refusal,
-and a real Backpass Pi-adapter integration test (parse, filter, redact).
+re-analysis, rejection memory, AGENTS.md accept → task with `AGENTS.md`/`CLAUDE.md` byte-identical (real pointer
+fixture), gotcha accept-in-section, regression **revert** (pointer unchanged), memory files refused by `apply_rule`,
+budget read from `.backpassrc.json`, protected refusal, a scan that no `desk/`, `tools/` or `devtools/` code opens
+`AGENTS.md`/`CLAUDE.md` for writing, and a real Backpass Pi-adapter integration test (parse, filter, redact).
+The real-Backpass tests (`TestBackpassAdapter`, `TestBackpassPinContract`: pin is a 40-hex SHA, the clone is at the
+pin, and the clone still exports the `ADAPTERS`/`redact` interface `collect.mjs` uses) skip locally without Node and
+the clone. CI's Linux legs install Node 22, fetch Backpass at `library/tools/BACKPASS_PIN` and set
+`DESK_REQUIRE_BACKPASS=1`, which turns that skip into a failure; a pin bump that breaks the interface fails CI.
+Windows and macOS legs still skip them.

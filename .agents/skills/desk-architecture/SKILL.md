@@ -45,7 +45,7 @@ Teaches agents how DESK structures its deterministic engineering engines, runtim
 ## Recommended Workflow
 1. Query Context Engine: `python tools/ctx.py projects/<P> brief`.
 2. Inspect target block or subsystem dependencies.
-3. Validate architecture decisions against existing records in `projects/<P>/LEDGER.md`.
+3. Validate architecture decisions against existing records in `projects/<P>/LEDGER.jsonl`.
 4. Implement changes within the appropriate pipeline boundary (`M1` through `M6`).
 5. Record architectural decisions: `python tools/ledger.py projects/<P> add decision "<what + why>"`.
 

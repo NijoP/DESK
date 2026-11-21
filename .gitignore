@@ -12,6 +12,7 @@ projects/*/exports/
 library/tools/backpass/
 library/tools/*.jar
 .desk_learn/
+.backpass/
 library/api_signatures.json
 *.db
 *.db-wal

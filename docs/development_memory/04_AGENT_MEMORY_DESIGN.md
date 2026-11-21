@@ -11,7 +11,7 @@ To maximize agent comprehension while strictly containing context costs, DESK es
 ```
 +-------------------------------------------------------------------------+
 | Level 1: Canonical Always-Loaded Rules (AGENTS.md)                      |
-| ~1,500 - 2,000 tokens. Read on every turn by every agent.               |
+| ~3,000 tokens (2026-11-21). Read on every turn by every agent.          |
 | Contains: Partnership protocol, gates R & B, core invariant checklist. |
 +-------------------------------------------------------------------------+
                                      │ (overflows when procedure > 200 tok)
@@ -31,7 +31,7 @@ To maximize agent comprehension while strictly containing context costs, DESK es
                                      │ (records historical decisions)
                                      ▼
 +-------------------------------------------------------------------------+
-| Level 4: Project Decision Ledgers (projects/<P>/LEDGER.md)              |
+| Level 4: Project Decision Ledgers (projects/<P>/LEDGER.jsonl)           |
 | Per-board durable audit trail.                                          |
 | Contains: Confirmed part specs, client confirmations, formula derivations|
 +-------------------------------------------------------------------------+
@@ -41,16 +41,31 @@ To maximize agent comprehension while strictly containing context costs, DESK es
 
 ## 2. Token Budget Dynamics
 
-Backpass enforces a **5,000 token always-loaded budget** across the repository:
+Backpass enforces the always-loaded budget across the repository:
+
+- **Budget:** 5,000 tokens (`.backpassrc.json` `budgetTokens`). `tools/learn.py` reads the same value; `tests/test_learn.py` checks this line against the file.
 
 $$\text{Always-Loaded Tokens} = \text{Tokens}(\text{AGENTS.md}) + \sum_{s \in \text{Skills}} \text{Tokens}(s.\text{description})$$
 
-### Budget Status in DESK (Verified):
-- `AGENTS.md`: ~1,792 tokens (including core checklist and constraints).
-- `CLAUDE.md`: 0 tokens (resolved as pointer).
-- 15 Skill Descriptions: ~389 tokens (~25 tokens/skill).
-- **Total Surface:** **~2,181 / 5,000 tokens** ($43.6\%$ utilized).
-- **Headroom:** ~2,819 tokens available for evidence-backed additions.
+### Budget Status in DESK (measured 2026-11-21 with `backpass status`)
+- `AGENTS.md` + 28 skill descriptions: **3,760 / 5,000 tokens** (75%), 59 instructions.
+  The skill descriptions account for 746 always-loaded tokens, so AGENTS.md is about 3,014.
+- `CLAUDE.md`: 0 tokens (resolved as pointer to AGENTS.md).
+- Skill bodies: 16,332 tokens, loaded only on trigger.
+- **Headroom:** about 1,240 tokens for evidence-backed additions.
+- Cross-surface overlap (report-only): AG-030 restates the `component-intelligence` skill body (similarity 0.73).
+
+```
+$ backpass status        # 2026-11-21, Linux, scratch clone of this branch (read-only, no model calls)
+BUDGET (always-loaded)
+  AGENTS.md + skill descriptions [########################........] 3,760 / 5,000 tok · 59 instructions
+  CLAUDE.md      pointer to AGENTS.md
+  overflow: 28 skill(s) in .agents/skills · 16,332 tok on trigger, 746 tok always loaded
+CROSS-SURFACE (report-only)
+  AG-030 restates component-intelligence body · 24 tok · similarity 0.73 · body loads on trigger; weigh placement
+PROPOSAL
+  none yet - run `backpass`
+```
 
 ---
 

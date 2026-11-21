@@ -44,7 +44,7 @@ The canonical project-level configuration resides at `.backpassrc.json` in the D
 | `skillsDir` | String | `".agents/skills"` | Directory where extracted skills are created and updated. |
 | `minGapEvidence` | Number | `2` | Corroboration floor: an issue must occur in $\ge 2$ distinct sessions before an instruction edit is proposed. |
 | `maxTranscripts` | Number | `100` | Maximum transcripts analyzed per run. Uses recency-weighted sampling if session count exceeds this cap. |
-| `discovery.harnesses` | Array | `["claude", "opencode", "codex", "pi"]` | Specific coding-agent harnesses to discover. Omits unneeded remote adapters. |
+| `discovery.harnesses` | Array | `["claude", "codex", "pi", "opencode", "grok", "cursor", "hermes"]` | Coding-agent harnesses to discover. DESK lists all seven (the Backpass default set). |
 | `discovery.since` | String | `"30d"` | Time window for transcript collection. Accepts `12h`, `7d`, `30d`, or `all`. |
 | `discovery.minUserTurns` | Number | `2` | Disregards trivial single-prompt sessions that lack iterative development evidence. |
 | `jobs` | Number | `4` | Concurrency for Tier 1 parallel transcript loss analysis calls. |
@@ -84,6 +84,7 @@ DESK/
 
 ### Exclusion Mechanism:
 - **Local Git Exclude (`.git/info/exclude`):**  
-  Backpass automatically registers `.backpass/` upon running `backpass init`. This file is local to the checkout and never pushed.
+  Backpass registers `.backpass/` in `.git/info/exclude` when it first runs in a checkout. In a git worktree that file is
+  the main clone's, shared by every worktree of it. It is never pushed.
 - **Repository Gitignore (`.gitignore`):**  
-  `.backpass/` is also explicitly declared in `.gitignore` for defense-in-depth, ensuring that no developer or CI pipeline inadvertently commits local transcript cache data.
+  `.backpass/` is also declared in `.gitignore` (added 2026-11-21; `tests/test_learn.py` checks it) for defense-in-depth, ensuring that no developer or CI pipeline inadvertently commits local transcript cache data.

@@ -28,7 +28,7 @@ In DESK, you operate as the **First Mate** aboard an advanced electronics engine
 - `desk/`: Deterministic Python engineering engines (`profile.py`, `router.py`, `copper.py`, `quality.py`, `adapters/`).
 - `tools/`: CLI utilities for context management, linting, building, verification, and ledgers.
 - `library/`: Canonical component models, pin definitions (`library/pins/`), and footprints.
-- `projects/`: Active hardware projects containing `REQUIREMENTS.md`, `BLOCK_PLAN.md`, `blocks/`, and `LEDGER.md`.
+- `projects/`: Active hardware projects containing `REQUIREMENTS.md`, `BLOCK_PLAN.md`, `blocks/`, and `LEDGER.jsonl`.
 - `docs/`: In-depth architecture specifications (M1–M6 mental models, context engine, API guides).
 - `.agents/skills/`: Specialized procedural engineering skills (loaded on trigger).
 - `.backpassrc.json`: Agent memory optimization configuration.
