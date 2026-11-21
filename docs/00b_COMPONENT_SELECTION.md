@@ -90,6 +90,8 @@ Each part in `blocks/NN_ID.json` carries: `mpn`, `lcsc`, `value`, `rating` (e.g.
 
 `python tools/bom.py projects/<P> --sourcing --qty <boards>` writes `SOURCING_REPORT.md` and
 `sourcing_report.json`. It exits 0 when the verdict is VERIFIED and 2 when it is INCOMPLETE.
+Status: software-tested with fixtures; not validated on a live design. A VERIFIED verdict refers to
+the supplier availability evidence only, not to the hardware.
 
 - **Workflow:** know the part's electrical requirement (`value`, `rating`, optional `specs`). Search
   Robu and LCSC first, then the JLCPCB parts library for assembly. Check the MPN, datasheet,
