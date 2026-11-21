@@ -64,11 +64,134 @@ def find_block(project, key):
     raise SystemExit(f"block '{key}' not found in {project}/blocks")
 
 
+# ------------------------------------------------------------------ wiring policy, net classes, sheets (docs/02)
+WIRING_POLICIES = ("subsystem", "labels")
+LEGACY_WIRING = "labels"            # a project.json without "wiring" keeps today's style: never rewritten silently
+NEW_PROJECT_WIRING = "subsystem"    # templates/project/project.json, so every new project is physically wired
+NET_CLASSES = ("power", "port", "cross", "local", "single")
+
+
+def load_project_json(project):
+    f = os.path.join(project, "project.json")
+    if not os.path.exists(f): return {}
+    with open(f, encoding="utf-8") as fh: return json.load(fh)
+
+
+def wiring_policy(project_json, block=None):
+    """The wiring style for one block: block 'wiring' (a client requirement for that block) > project.json 'wiring'
+    > 'labels' (legacy). An unknown value is an error, never a silent default."""
+    for src, val in (("block", (block or {}).get("wiring")), ("project.json", (project_json or {}).get("wiring"))):
+        if val is not None:
+            if val not in WIRING_POLICIES:
+                raise ValueError(f"{src} wiring '{val}' is not one of {WIRING_POLICIES}")
+            return val
+    return LEGACY_WIRING
+
+
+def is_power(net, rails=()):
+    return bool(POWER_RE.match(net)) or net in set(rails or ())
+
+
+def classify_nets(block, blocks=(), rails=()):
+    """{net: class} for every net of `block`, from the spec alone:
+    power  - rail / ground (POWER_RE or project.json 'rails'): labels / power-symbol style on every pin
+    port   - declared in the block's 'ports': wired inside the block + one interface label
+    cross  - also used by another block but not declared a port: wired + one label
+    local  - >= 2 pins, only in this block: physical wires, no label needed
+    single - one pin, not a port (lint reports it)"""
+    ports = set(block.get("ports", []))
+    elsewhere = set()
+    for b in blocks:
+        if b.get("id") == block.get("id"): continue
+        for p in b.get("parts", []): elsewhere.update(p.get("pins", {}).values())
+    count = collections.Counter(net for p in block.get("parts", []) for net in p.get("pins", {}).values())
+    out = {}
+    for net in sorted(count):
+        if is_power(net, rails): out[net] = "power"
+        elif net in ports: out[net] = "port"
+        elif net in elsewhere: out[net] = "cross"
+        elif count[net] >= 2: out[net] = "local"
+        else: out[net] = "single"
+    return out
+
+
+def sheet_of(project_json, block_id):
+    """The sheet record ({id, title, uuid?, blocks}) that holds `block_id`, or None for a single-sheet project."""
+    for s in (project_json or {}).get("sheets", []) or []:
+        if block_id in s.get("blocks", []): return s
+    return None
+
+
+def sheet_uuid_for(project_json, block_ids):
+    """The schematic page uuid the given blocks are drawn on. Single-sheet projects: project.json 'sheet_uuid'.
+    Multi-sheet: the blocks' sheet 'uuid'; blocks on different sheets, or a sheet with no uuid yet, are an error
+    (DESK does not create pages: eda.dmt_Schematic.createSchematicPage is UNVERIFIED-LIVE)."""
+    if not (project_json or {}).get("sheets"):
+        return project_json["sheet_uuid"]
+    block_ids = list(block_ids)
+    missing = sorted(b for b in block_ids if sheet_of(project_json, b) is None)
+    if missing:
+        raise ValueError(f"block(s) {missing} are on no sheet in project.json 'sheets'")
+    sheets = sorted({sheet_of(project_json, b)["id"] for b in block_ids})
+    if len(sheets) != 1:
+        raise ValueError(f"blocks {sorted(block_ids)} are on different sheets {sheets}: run one sheet at a time")
+    s = sheet_of(project_json, block_ids[0])
+    if not s.get("uuid"):
+        raise ValueError(f"sheet '{s['id']}' has no 'uuid': create the page in EasyEDA, then paste its uuid "
+                         "(automatic page creation is UNVERIFIED-LIVE)")
+    return s["uuid"]
+
+
+def cross_sheet_ports(project_json, blocks, rails=()):
+    """{net: [sheet ids]} for every non-power net used on two or more sheets: the hierarchical / cross-sheet ports."""
+    seen = collections.defaultdict(set)
+    for b in blocks:
+        s = sheet_of(project_json, b.get("id"))
+        if s is None: continue
+        for p in b.get("parts", []):
+            for net in p.get("pins", {}).values():
+                if not is_power(net, rails): seen[net].add(s["id"])
+    return {n: sorted(v) for n, v in sorted(seen.items()) if len(v) > 1}
+
+
+def lint_project_model(project_json, blocks):
+    """Errors / warnings for the wiring policy and the multi-sheet model of project.json (docs/02)."""
+    E, W = [], []
+    for src, obj in [("project.json", project_json)] + [(b.get("_file", b.get("id")), b) for b in blocks]:
+        v = (obj or {}).get("wiring")
+        if v is not None and v not in WIRING_POLICIES:
+            E.append(f"{src}: wiring '{v}' is not one of {list(WIRING_POLICIES)}")
+    sheets = (project_json or {}).get("sheets") or []
+    if sheets:
+        ids = {b.get("id") for b in blocks}
+        where = collections.defaultdict(list)
+        for s in sheets:
+            if not s.get("id"): E.append(f"project.json sheets: a sheet has no 'id': {s}")
+            for bid in s.get("blocks", []):
+                where[bid].append(s.get("id"))
+                if bid not in ids: E.append(f"sheet {s.get('id')}: block '{bid}' has no spec in blocks/")
+        for bid, ss in sorted(where.items()):
+            if len(ss) > 1: E.append(f"block {bid} is on more than one sheet: {ss}")
+        for bid in sorted(i for i in ids if i not in where):
+            E.append(f"block {bid} is on no sheet (project.json 'sheets' must list every block once)")
+        for net, on in cross_sheet_ports(project_json, blocks, project_json.get("rails", [])).items():
+            for b in blocks:
+                uses = any(net in p.get("pins", {}).values() for p in b.get("parts", []))
+                if uses and net not in b.get("ports", []):
+                    E.append(f"{b.get('id')}: net {net} crosses sheets {on} but is not in the block's 'ports'")
+    return E, W
+
+
 def lint(project, only=None, final=False):
     """Return (errors, warnings). final=True also requires every net to have >=2 pins project-wide."""
     E, W = [], []
     lib = load_library()
     blocks = load_blocks(project)
+    try:
+        pe, pw = lint_project_model(load_project_json(project), blocks)
+    except (OSError, ValueError) as e:
+        pe, pw = [f"project.json: {e}"], []
+    E += pe; W += pw
     refs = collections.Counter()
     net_pins = collections.defaultdict(list)        # project-wide
     for b in blocks:
