@@ -1,0 +1,66 @@
+{
+  "schema": "desk.insulation.dataset/1",
+  "dataset_id": "DESK-IEC60664-1-PROVISIONAL-2026-11-21",
+  "standard": {
+    "id": "IEC 60664-1",
+    "edition": "Edition 3.0 (2020)",
+    "amendments": ["Amendment 1 (2025)"],
+    "label": "IEC 60664-1:2020+A1:2025"
+  },
+  "notes": [
+    "PROVISIONAL dataset shipped with DESK. DESK does not hold the licensed IEC 60664-1 text.",
+    "It contains only values that already existed in the DESK repository (desk/ipc.py, desk/spacing.py at commit a4171b7). None was added from memory.",
+    "Every value is marked PROVISIONAL with its source. Tables the repository did not hold (clearance, rated impulse voltage, altitude correction, CTI to material group) are absent, so the engine returns UNVERIFIED for them.",
+    "The owner replaces or extends this file with values transcribed from the purchased standard and marks each one VERIFIED with verified_by. Point DESK at the new file with DESK_INSULATION_DATASET or load_dataset(path). No code change is needed."
+  ],
+  "tables": {
+    "creepage": {
+      "reference": "IEC 60664-1 creepage-distance table for functional, basic and supplementary insulation; numbered Table F.4 in the repository transcription. Confirm the table number and every value against the 2020+A1:2025 text.",
+      "quantity": "creepage",
+      "voltage_basis": "working voltage, V RMS",
+      "lookup": "next row at or above the working voltage; below the first row the first row (over-states, never under-states); above the last row no value",
+      "default_provenance": {
+        "status": "PROVISIONAL",
+        "source": "desk/ipc.py _CREEPAGE_MM transcription 'as commonly published' (commit a4171b7); PD2 uses the conservative material-group column only (owner decision E-1, 2026-11-21)",
+        "verified_by": null
+      },
+      "columns": {
+        "PD1": {
+          "pollution_degree": 1,
+          "material_groups": ["I", "II", "IIIa", "IIIb"],
+          "rows_v": [10, 12.5, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250, 320, 400, 500, 630, 800, 1000],
+          "values_mm": [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.040, 0.063, 0.100, 0.160, 0.250, 0.400, 0.560, 0.750, 1.0, 1.3, 1.8, 2.4, 3.2]
+        },
+        "PD2-I": {
+          "pollution_degree": 2,
+          "material_groups": ["I"],
+          "rows_v": [50, 63, 80, 100, 125, 160, 200, 250, 320, 400, 500, 630, 800, 1000],
+          "values_mm": [0.60, 0.63, 0.67, 0.71, 0.75, 0.80, 1.00, 1.25, 1.60, 2.0, 2.5, 3.2, 4.0, 5.0]
+        },
+        "PD2-II": {
+          "pollution_degree": 2,
+          "material_groups": ["II"],
+          "rows_v": [50, 63, 80, 100, 125, 160, 200, 250, 320, 400, 500, 630, 800, 1000],
+          "values_mm": [0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.40, 1.80, 2.20, 2.8, 3.6, 4.5, 5.6, 7.1]
+        },
+        "PD2-III": {
+          "pollution_degree": 2,
+          "material_groups": ["IIIa", "IIIb"],
+          "rows_v": [50, 63, 80, 100, 125, 160, 200, 250, 320, 400, 500, 630, 800, 1000],
+          "values_mm": [1.20, 1.25, 1.30, 1.40, 1.50, 1.60, 2.00, 2.50, 3.20, 4.0, 5.0, 6.3, 8.0, 10.0]
+        }
+      }
+    }
+  },
+  "rules": {
+    "creepage_reinforced_factor": {
+      "value": 2.0,
+      "reference": "Reinforced-insulation creepage as twice the basic value, as already applied by desk/spacing.py creepage_for_barrier. Confirm the clause against the 2020+A1:2025 text.",
+      "provenance": {
+        "status": "PROVISIONAL",
+        "source": "desk/spacing.py creepage_for_barrier (commit a4171b7)",
+        "verified_by": null
+      }
+    }
+  }
+}

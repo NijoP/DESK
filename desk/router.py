@@ -528,12 +528,19 @@ class RoutingPlanGenerator:
                 priority_tier=tier
             )
 
+        # Insulation coordination across the declared barriers (desk/insulation): reported, never applied here; the
+        # pairwise clearance above stays the router rule.
+        insulation: List[Dict[str, Any]] = []
+        if profile is not None and hasattr(profile, "insulation_assessments"):
+            insulation = [a.to_dict() for a in profile.insulation_assessments()]
+
         return RoutingPlan(
             board_stackup=stackup,
             stage_nets=stages,
             net_constraints=constraints,
             blocking_issues=blocking_issues,
             assumptions=assumptions,
+            insulation=insulation,
         )
 
 

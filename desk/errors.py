@@ -115,3 +115,8 @@ class EngineeringDecisionRequired(DeskError):
 
 class DesignProfileInvalid(DeskError):
     """design_profile.json could not be loaded (unknown key, bad type); names the offending field."""
+
+
+class InsulationDataInvalid(DeskError):
+    """An insulation-coordination dataset or engineering sign-off record (desk/insulation) is malformed: a wrong schema,
+    a table whose rows and values do not line up, a value without provenance, or a VERIFIED value without a verifier."""

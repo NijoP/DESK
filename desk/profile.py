@@ -156,6 +156,12 @@ class DesignProfile:
     # insulation_barriers. Switching to FUNCTIONAL is a Captain decision recorded in the ledger (AGENTS.md A).
     spacing_policy: str = "CREEPAGE_AS_CLEARANCE"
     insulation_barriers: List[Dict[str, Any]] = field(default_factory=list)
+    # Insulation-coordination environment (desk/insulation, IEC 60664-1:2020+A1:2025 where applicable): declared
+    # inputs shared by every barrier, e.g. {"pollution_degree": 2, "material_group": "IIIb", "altitude_m": 2000,
+    # "coating": "none", "overvoltage_category": "II", "mains_voltage_v": 230}. Only declared keys are used; an
+    # undeclared input makes the insulation result UNVERIFIED. It never changes the router rule. Omitted from
+    # to_dict() while empty, so the hash of an existing profile is unchanged.
+    insulation_environment: Dict[str, Any] = field(default_factory=dict)
     # Domain Intelligence (desk/domain_intelligence): archetype/overlay ids, resolved rule ids and compile status.
     # Optional and informational; engines never read numbers from it. Empty for profiles made before DDIS.
     domain_profile: Dict[str, Any] = field(default_factory=dict)
@@ -362,10 +368,12 @@ class DesignProfile:
         return round(final_width, 1)
 
     def spacing_requirement(self, net1: str, net2: str, allow_unknown_voltage: bool = False,
-                            pin_field_mm: Optional[float] = None):
+                            pin_field_mm: Optional[float] = None, insulation: bool = True):
         """The separated spacing quantities for a net pair (desk.spacing.SpacingRequirement): functional clearance,
         creepage across a declared barrier (or None), fabricator minimum and the policy that turns them into the
-        router rule. Raises ValueError for an undeclared high-voltage net (fail-closed, H-01)."""
+        router rule. When a barrier separates the nets and `insulation` is set, `.insulation` holds its
+        desk.insulation assessment (separate clearance / creepage results with status; not a compliance claim).
+        Raises ValueError for an undeclared high-voltage net (fail-closed, H-01)."""
         from desk import spacing as SP
         volts = []
         for net in (net1, net2):
@@ -380,7 +388,17 @@ class DesignProfile:
         return SP.requirement(net1, net2, volts[0], volts[1], self.clearance_condition,
                               self.manufacturing.min_clearance_mil / SP.MIL, SP.parse_policy(self.spacing_policy),
                               SP.parse_barriers(self.insulation_barriers), pin_field_mm=pin_field_mm,
-                              pollution_degree=self.pollution_degree, material_group=self.material_group)
+                              pollution_degree=self.pollution_degree, material_group=self.material_group,
+                              environment=self.insulation_environment if insulation else None)
+
+    def insulation_assessments(self, dataset=None) -> List[Any]:
+        """desk.insulation.InsulationAssessment for every declared insulation barrier, in declaration order: a
+        ClearanceResult and a CreepageResult kept apart, each VERIFIED-AGAINST-TABLE, PROVISIONAL or UNVERIFIED.
+        Inputs come only from insulation_environment and the barrier's own declared keys. None of them is a
+        compliance statement; engineering review is required before safety sign-off."""
+        from desk import spacing as SP
+        return [SP.assess_barrier(b, self.insulation_environment, dataset)
+                for b in SP.parse_barriers(self.insulation_barriers)]
 
     def derive_clearance_mil(self, net1: str, net2: str, allow_unknown_voltage: bool = False) -> float:
         """Electrical spacing between two nets as the router rule under the profile's spacing_policy.
@@ -392,7 +410,7 @@ class DesignProfile:
 
         Raises ValueError when either net looks high-voltage but has no declared voltage, unless
         `allow_unknown_voltage` is set (roadmap H-01, fail-closed)."""
-        return self.spacing_requirement(net1, net2, allow_unknown_voltage).router_rule_mil
+        return self.spacing_requirement(net1, net2, allow_unknown_voltage, insulation=False).router_rule_mil
 
     def worst_case_clearance_mil(self, net: str, partners, reference: str = "GND") -> Tuple[float, str, List[str]]:
         """Router rule for `net` against every partner net it can sit next to: (rule_mil, worst_partner, skipped).
@@ -489,6 +507,7 @@ class DesignProfile:
             "spacing_policy": self.spacing_policy,
             "insulation_barriers": self.insulation_barriers,
             "domain_profile": self.domain_profile,
+            **({"insulation_environment": self.insulation_environment} if self.insulation_environment else {}),
             "created_at": self.created_at,
             "profile_hash": self.profile_hash,
         }

@@ -80,6 +80,9 @@ SCHEMA: List[Setting] = [
     Setting("DESK_MOCK_MANUFACTURING", BOOL, "0", "credentials", "1 = JLCPCB client answers from offline fixtures."),
     # -- knowledge ---------------------------------------------------------------------------
     Setting("DESK_DOMAIN_LIBRARY", PATH, None, "knowledge", "Alternative library/pcb_domains root."),
+    Setting("DESK_INSULATION_DATASET", PATH, None, "knowledge",
+            "Insulation-coordination dataset (desk/insulation, IEC 60664-1 tables with per-value provenance) used "
+            "instead of the shipped provisional one; never changes an existing router rule."),
     # -- routing engine ------------------------------------------------------------------------
     Setting("DESK_JAVA", PATH, None, "routing", "Java executable for Freerouting (else library/tools/jdk*/bin, else PATH)."),
     Setting("FREEROUTING_JAR", PATH, None, "routing", "Explicit Freerouting JAR."),
