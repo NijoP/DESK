@@ -11,6 +11,8 @@ REFUSE    bypass a quality gate, weaken a safety rule automatically, mutate anot
 
 Attempt limits: at most `max_attempts` recoveries per failure, and the same action is not proposed twice for the same
 failure while the evidence signature is unchanged (UPS_1000: six engine runs with the same configuration).
+The budget is persisted: `rebuild` folds state/reliability/recoveries.jsonl, and a failure with the same signature in a
+later process inherits the attempts made since that signature's last verified recovery.
 DESK_RELIABILITY_AUTORECOVER=0 demotes every AUTO action to APPROVAL (proposal only).
 
 Zero external dependencies.
@@ -69,6 +71,11 @@ class RecoveryPolicy:
     autorecover: Optional[bool] = None            # None -> read DESK_RELIABILITY_AUTORECOVER
     attempts: Dict[str, int] = field(default_factory=dict)           # failure_id -> executed attempts
     seen: Dict[str, set] = field(default_factory=dict)               # failure_id -> {(kind, evidence_signature)}
+    # Persisted budget (rebuilt from state/reliability/recoveries.jsonl): the same failure signature observed again
+    # in a new process inherits the attempts made since its last verified recovery.
+    sig_attempts: Dict[str, int] = field(default_factory=dict)       # failure signature -> executed attempts
+    sig_seen: Dict[str, set] = field(default_factory=dict)           # failure signature -> {(kind, evidence_signature)}
+    fid_sig: Dict[str, str] = field(default_factory=dict)            # failure_id -> failure signature
 
     def _auto(self) -> bool:
         if self.autorecover is not None:
@@ -103,6 +110,68 @@ class RecoveryPolicy:
     def record_attempt(self, failure_id: str, action: RecoveryAction, evidence_signature: str) -> None:
         self.attempts[failure_id] = self.attempts.get(failure_id, 0) + 1
         self.seen.setdefault(failure_id, set()).add((action.kind, evidence_signature))
+        sig = self.fid_sig.get(failure_id)
+        if sig:
+            self.sig_attempts[sig] = self.sig_attempts.get(sig, 0) + 1
+            self.sig_seen.setdefault(sig, set()).add((action.kind, evidence_signature))
+
+    # ---- persistence (study report section 4.4 bug 8) -----------------------------------------------------
+    def rebuild(self, entries: Iterable[Dict[str, object]]) -> "RecoveryPolicy":
+        """Fold recoveries.jsonl entries (oldest first) into the attempt budget. Only executed outcomes count.
+        A verified SUCCESS resets the budget of that failure signature (a healed failure may recur later)."""
+        for e in entries:
+            if not isinstance(e, dict):
+                continue
+            fid = str(e.get("failure_id") or "")
+            out = e.get("outcome") if isinstance(e.get("outcome"), dict) else {}
+            act = e.get("action") if isinstance(e.get("action"), dict) else {}
+            fsig = str(e.get("failure_signature") or "")
+            if fid and fsig:
+                self.fid_sig[fid] = fsig
+            if not fid or not out.get("executed"):
+                continue
+            kind = str(act.get("kind") or "")
+            esig = e.get("evidence_signature")
+            self.attempts[fid] = self.attempts.get(fid, 0) + 1
+            if esig is not None:
+                self.seen.setdefault(fid, set()).add((kind, str(esig)))
+            if fsig:
+                if out.get("result") == "SUCCESS" and out.get("verified"):
+                    self.reset_signature(fsig)
+                else:
+                    self.sig_attempts[fsig] = self.sig_attempts.get(fsig, 0) + 1
+                    if esig is not None:
+                        self.sig_seen.setdefault(fsig, set()).add((kind, str(esig)))
+        return self
+
+    def rebuild_from_file(self, path: str) -> "RecoveryPolicy":
+        """Rebuild from a recoveries.jsonl path; a missing file is an empty budget, unreadable lines are skipped."""
+        import json
+        import os
+        if not os.path.exists(path):
+            return self
+        rows = []
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    rows.append(json.loads(line))
+                except ValueError:
+                    continue
+        return self.rebuild(rows)
+
+    def adopt(self, failure_id: str, failure_signature: str) -> None:
+        """Bind a newly observed failure to its signature's persisted attempt count. Tried (action, evidence) pairs
+        stay keyed by failure_id; across failure ids RecoveryOutcomes already refuses kinds that failed before."""
+        if not failure_signature:
+            return
+        self.fid_sig[failure_id] = failure_signature
+        inherited = self.sig_attempts.get(failure_signature, 0)
+        if inherited > self.attempts.get(failure_id, 0):
+            self.attempts[failure_id] = inherited
+
+    def reset_signature(self, failure_signature: str) -> None:
+        self.sig_attempts.pop(failure_signature, None)
+        self.sig_seen.pop(failure_signature, None)
 
     def remaining(self, failure_id: str) -> int:
         return max(0, self.max_attempts - self.attempts.get(failure_id, 0))

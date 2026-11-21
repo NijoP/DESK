@@ -65,6 +65,8 @@ def add(project, type_, text, block=None, source=None, spec_hash=None, refs=None
         raise SystemExit(f"ledger type must be one of {TYPES}")
     if type_ in ("decision", "fact", "assumption") and not source:
         raise SystemExit(f"a ledger '{type_}' needs --source (datasheet page, client mail, calculation, ...)")
+    if type_ == "correction":
+        _require_refs(project, refs, "a ledger 'correction' needs --refs naming the corrected entry id(s)")
     n_entries = _count_entries(project)
     e = {"id": f"L-{n_entries + 1:04d}", "ts": datetime.datetime.now().isoformat(timespec="seconds"),
          "type": type_, "text": text}
@@ -85,8 +87,25 @@ def add(project, type_, text, block=None, source=None, spec_hash=None, refs=None
     return e
 
 
+def _ids(v):
+    return [v] if isinstance(v, str) else list(v or [])
+
+
+def _require_refs(project, refs, msg):
+    """A correction / supersession must point at entries that exist (decision history, study report section 7.3)."""
+    from desk.errors import UsageError
+    want = [r for r in _ids(refs) if r]
+    if not want:
+        raise UsageError(msg)
+    known = {e.get("id") for e in read(project)}
+    missing = [r for r in want if r not in known]
+    if missing:
+        raise UsageError(f"unknown ledger id(s) {missing}: refs/supersedes must name existing entries")
+
+
 def superseded(entries):
-    return {r for e in entries if e["type"] == "correction" for r in ([e["refs"]] if isinstance(e.get("refs"), str) else e.get("refs") or [])}
+    return ({r for e in entries if e["type"] == "correction" for r in _ids(e.get("refs"))}
+            | {r for e in entries if e.get("supersedes") for r in _ids(e.get("supersedes"))})
 
 
 def verification_state(entries, block_id, current_hash):
@@ -99,8 +118,12 @@ def verification_state(entries, block_id, current_hash):
 
 def add_decision_record(project, decision, source, model_id=None, model_version=None,
                         req_ids=None, alternatives=None, reasoning=None, board_rev=None,
-                        verification_result="UNVERIFIED", spec_hash=None, profile_hash=None):
-    """Structured decision memory record per Master Directive Section 10."""
+                        verification_result="UNVERIFIED", spec_hash=None, profile_hash=None,
+                        block=None, supersedes=None, refs=None):
+    """Structured decision memory record per Master Directive Section 10. `supersedes` names the earlier decision(s)
+    this one replaces; it must exist (decision history walk: tools/ledger.py history)."""
+    if supersedes:
+        _require_refs(project, supersedes, "supersedes must name the replaced decision id(s)")
     n_entries = _count_entries(project)
     e = {
         "id": f"L-{n_entries + 1:04d}",
@@ -116,7 +139,10 @@ def add_decision_record(project, decision, source, model_id=None, model_version=
         "board_rev": board_rev,
         "verification_result": verification_result,
         "spec_hash": spec_hash,
-        "profile_hash": profile_hash
+        "profile_hash": profile_hash,
+        "block": block,
+        "supersedes": supersedes or None,
+        "refs": refs or None,
     }
     e = {k: v for k, v in e.items() if v is not None}
     p = path(project)

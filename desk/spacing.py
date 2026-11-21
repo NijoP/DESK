@@ -72,6 +72,8 @@ class SpacingRequirement:
     table_verified: bool = ipc.verified_against_standard
     pollution_degree: int = 2
     material_group: str = "III"
+    decision_ref: Optional[str] = None     # ledger id of the decision that set this rule (rule provenance)
+    calc_ref: Optional[str] = None         # the qa / calc entry the value comes from
 
     @property
     def router_rule_mm(self) -> float:
@@ -98,6 +100,9 @@ class SpacingRequirement:
 
     def to_dict(self) -> Dict[str, Any]:
         d = asdict(self)
+        for k in ("decision_ref", "calc_ref"):     # omitted when unset: existing outputs stay byte-identical
+            if d.get(k) is None:
+                d.pop(k, None)
         d["policy"] = self.policy.value
         d["router_rule_mm"] = round(self.router_rule_mm, 4)
         d["router_rule_mil"] = self.router_rule_mil
