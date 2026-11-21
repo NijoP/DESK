@@ -164,6 +164,17 @@ class DesignProfile:
 
     # Net names that imply a hazardous or undeclared high voltage. Such nets must appear in voltage_rails.
     HV_NET_PATTERN = r"(HV|MAINS|AC_|_AC\b|^L\d*$|^N\d*$|LINE|NEUTRAL|230V|240V|110V|120V|400V|VBULK|VDC_?BUS|HVDC)"
+    # Net names that carry power: a current must be declared for them (E-6 added voltage-bearing, battery-pack and
+    # signed names; "+48V", "24V", "VPACK" and "BAT+" previously fell through to a 0.2 A signal estimate).
+    POWER_NET_PATTERN = (r"(VCC|VDD|VBAT|BAT|PACK|CELL|VBUS|VSYS|VIN|VOUT|VDRV|VMOT|VPP|PWR|MOTOR|COIL|HEATER"
+                         r"|\dV|^[+-])")
+    # A voltage written in the net name: "+48V", "24V", "VIN 12V", "3V3" (= 3.3 V), "-15V".
+    NAME_VOLTAGE_PATTERN = r"(?<![0-9.])([+-]?)(\d+(?:\.\d+)?)V(\d*)(?![A-Z0-9])"
+    # Battery-pack names whose voltage cannot be guessed (one cell or a 48 V stack).
+    PACK_NET_PATTERN = r"(PACK|BAT\+|BATT?_?P(OS)?\b|CELLS)"
+    # IPC-2221B Table 6-1: every condition has one spacing up to 15 V, so a voltage guess at or below 15 V cannot
+    # change the rule; above it the rule depends on the voltage and an undeclared value is UNKNOWN (fail closed).
+    ESTIMATE_LIMIT_V = 15.0
 
     def __post_init__(self):
         if not self.stackup:
@@ -215,9 +226,10 @@ class DesignProfile:
             if net in nc.nets:
                 return nc.max_current_A, CurrentConfidence.VERIFIED
 
-        # 3. Known power / battery / motor net names without explicit limit -> UNKNOWN
+        # 3. Known power / battery / motor net names without explicit limit -> UNKNOWN. Any name carrying a voltage
+        # (+48V, 24V, 3V3, "VIN 12V"), a battery/pack name (BAT+, VPACK) or a leading sign is a rail (E-6).
         net_u = net.upper()
-        is_power_pattern = bool(re.search(r"(VCC|VDD|VBAT|VBUS|VSYS|VIN|VOUT|VDRV|VMOT|VPP|12V|5V|3V3|PWR|MOTOR|COIL|HEATER)", net_u))
+        is_power_pattern = bool(re.search(self.POWER_NET_PATTERN, net_u))
         if is_power_pattern:
             return 0.0, CurrentConfidence.UNKNOWN
 
@@ -243,16 +255,33 @@ class DesignProfile:
             return 1.0
         return curr
 
+    @classmethod
+    def name_voltage(cls, net: str) -> Optional[float]:
+        """The voltage a net name states ("+48V" -> 48, "3V3" -> 3.3, "-15V" -> -15), or None."""
+        m = re.search(cls.NAME_VOLTAGE_PATTERN, net.upper())
+        if not m:
+            return None
+        sign, whole, frac = m.groups()
+        v = float(f"{whole}.{frac}") if frac and "." not in whole else float(whole)
+        return -v if sign == "-" else v
+
     def get_net_voltage_status(self, net: str) -> Tuple[Optional[float], str]:
         """(voltage, confidence). GND-like nets are 0 V VERIFIED; declared rails VERIFIED;
-        nets matching HV_NET_PATTERN without a declaration are UNKNOWN; others ESTIMATED 3.3 V."""
+        nets matching HV_NET_PATTERN without a declaration are UNKNOWN; so are battery-pack names and names that
+        state a voltage above ESTIMATE_LIMIT_V (E-6). A name stating a lower voltage is ESTIMATED at that voltage;
+        others ESTIMATED 3.3 V."""
         if net in self.voltage_rails:
             return float(self.voltage_rails[net]), CurrentConfidence.VERIFIED
         net_u = net.upper()
         if re.search(r"^(GND|AGND|DGND|PGND|VSS|0V)", net_u):
             return 0.0, CurrentConfidence.VERIFIED
-        if re.search(self.HV_NET_PATTERN, net_u):
+        if re.search(self.HV_NET_PATTERN, net_u) or re.search(self.PACK_NET_PATTERN, net_u):
             return None, CurrentConfidence.UNKNOWN
+        named = self.name_voltage(net)
+        if named is not None:
+            if abs(named) > self.ESTIMATE_LIMIT_V:
+                return None, CurrentConfidence.UNKNOWN
+            return named, CurrentConfidence.ESTIMATED
         return 3.3, CurrentConfidence.ESTIMATED
 
     def validate_electrical_inputs(self, nets: List[str]) -> List[str]:
@@ -265,8 +294,17 @@ class DesignProfile:
                 issues.append(f"{net}: power rail without a declared current; add current_limits_A['{net}']")
             _, v_conf = self.get_net_voltage_status(net)
             if v_conf == CurrentConfidence.UNKNOWN:
-                issues.append(f"{net}: high-voltage net without a declared voltage; add voltage_rails['{net}']")
+                issues.append(f"{net}: high-voltage, battery-pack or >{self.ESTIMATE_LIMIT_V:g} V net without a declared "
+                              f"voltage; add voltage_rails['{net}']")
         return issues
+
+    def _copper_layers(self) -> List[LayerStackup]:
+        return sorted((l for l in self.stackup if l.layer_type != "dielectric"), key=lambda l: l.index)
+
+    def is_inner_layer(self, layer_idx: int) -> bool:
+        """True when the copper layer is neither the first nor the last of the stack."""
+        idx = [l.index for l in self._copper_layers()]
+        return len(idx) > 2 and layer_idx in idx and layer_idx not in (idx[0], idx[-1])
 
     def derive_trace_width_mil(self, net: str, is_inner: bool = False, layer_idx: Optional[int] = None) -> float:
         """Calculate trace width (IPC-2221 power law; see routing/width.py) from profile current, copper weight and temp rise."""
@@ -289,19 +327,26 @@ class DesignProfile:
                     layer = l
                     break
 
+        # Inner vs external is the layer's position in the stack (first and last copper layers are external), not
+        # its name or type: "In1.Cu" typed "signal" was sized with the external constant (E-6).
         if layer is not None:
-            is_inner = (layer.layer_type in ("inner", "plane") or "inner" in layer.name.lower())
+            is_inner = self.is_inner_layer(layer.index)
             cu_oz = layer.copper_thickness_oz
         else:
             if is_inner:
-                inner_layers = [l for l in self.stackup if l.layer_type in ("inner", "plane") or "inner" in l.name.lower()]
+                inner_layers = [l for l in self._copper_layers() if self.is_inner_layer(l.index)]
                 cu_oz = inner_layers[0].copper_thickness_oz if inner_layers else 0.5
             else:
-                cu_oz = self.stackup[0].copper_thickness_oz if self.stackup else 1.0
+                copper = self._copper_layers()
+                cu_oz = copper[0].copper_thickness_oz if copper else 1.0
 
+        # Every declared current is sized by the formula; the fabricator minimum is a floor, not a substitute.
+        # A 0.3 A net on 0.5 oz inner copper needs ~11.7 mil, not the 5 mil minimum it used to get (E-6).
+        # (The 0.2 A ESTIMATED figure of an undeclared signal net is not a current and keeps the minimum.)
         from desk import ipc
         delta_T = max(1.0, self.thermal.max_temperature_rise_c)
-        if current_A > 0.3:
+        estimated = self.get_net_current_status(net)[1] == CurrentConfidence.ESTIMATED
+        if current_A > 0.0 and not estimated:
             ipc_width = ipc.trace_width_mil(current_A, is_inner=is_inner, copper_oz=max(0.1, cu_oz),
                                             temp_rise_c=delta_T)
         else:
@@ -348,6 +393,40 @@ class DesignProfile:
         Raises ValueError when either net looks high-voltage but has no declared voltage, unless
         `allow_unknown_voltage` is set (roadmap H-01, fail-closed)."""
         return self.spacing_requirement(net1, net2, allow_unknown_voltage).router_rule_mil
+
+    def worst_case_clearance_mil(self, net: str, partners, reference: str = "GND") -> Tuple[float, str, List[str]]:
+        """Router rule for `net` against every partner net it can sit next to: (rule_mil, worst_partner, skipped).
+
+        A DSN class clearance applies to every neighbour, so it must be the worst pair, not net-to-GND (E-2):
+        VP = +170 V and VN = -170 V each get the 170 V rule against GND but need the 340 V rule against each other.
+        The rule never drops below the net-to-`reference` rule used before. Partners whose voltage is UNKNOWN are
+        returned in `skipped` (they are already blocking issues of validate_electrical_inputs). Spacing depends on
+        the partner only through its voltage and the declared insulation barriers, so one partner per voltage plus
+        every barrier member is evaluated."""
+        barrier_nets: Set[str] = set()
+        for b in self.insulation_barriers or []:
+            if isinstance(b, dict):
+                barrier_nets.update(b.get("nets_a", []) or [])
+                barrier_nets.update(b.get("nets_b", []) or [])
+        by_voltage: Dict[float, str] = {}
+        named: List[str] = []
+        skipped: List[str] = []
+        for p in partners:
+            if p == net:
+                continue
+            v, conf = self.get_net_voltage_status(p)
+            if conf == CurrentConfidence.UNKNOWN:
+                skipped.append(p)
+            elif p in barrier_nets:
+                named.append(p)
+            else:
+                by_voltage.setdefault(float(v), p)
+        best_rule, best_partner = self.derive_clearance_mil(net, reference), reference
+        for p in sorted(by_voltage.values()) + sorted(named):
+            rule = self.derive_clearance_mil(net, p)
+            if rule > best_rule + 1e-9:
+                best_rule, best_partner = rule, p
+        return best_rule, best_partner, sorted(skipped)
 
     def _legacy_derive_clearance_mil(self, net1: str, net2: str, allow_unknown_voltage: bool = False) -> float:
         """The pre-spacing-model computation, kept for the equivalence test (tests/test_reliability_spacing.py)."""
