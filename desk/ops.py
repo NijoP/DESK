@@ -57,8 +57,18 @@ def get_process_start_time(pid: int) -> Optional[float]:
         except Exception:
             return None
     if os.path.isdir("/proc"):
+        # Field 22 of /proc/<pid>/stat is the start time in clock ticks after boot; boot time is `btime` in /proc/stat.
+        # The /proc/<pid> directory timestamp is when the dentry was first instantiated (often the first time anyone
+        # looked), not the process start: it ran seconds late and made a live holder look "PID recycled" (report F-10).
         try:
-            return os.stat(f"/proc/{pid}").st_ctime
+            with open(f"/proc/{pid}/stat", "rb") as h:
+                stat = h.read().decode("ascii", "replace")
+            fields = stat[stat.rindex(")") + 2:].split()    # after "pid (comm) ": field 3 onwards
+            start_ticks = int(fields[22 - 3])
+            with open("/proc/stat", "rb") as h:
+                btime = next(int(l.split()[1]) for l in h.read().decode("ascii", "replace").splitlines()
+                             if l.startswith("btime "))
+            return btime + start_ticks / float(os.sysconf("SC_CLK_TCK"))
         except Exception:
             return None
     # macOS / BSD have no procfs: `ps -o etimes=` reports elapsed seconds since the process started.
@@ -170,9 +180,11 @@ class MutationPolicy:
 
     @staticmethod
     def mode() -> str:
+        """Unset or empty -> record. An unrecognised value (a typo such as `required`) fails closed to `require`
+        (report F-8): the operator asked for some policy, and silently recording would refuse nothing."""
         from desk import config as deskcfg
-        m = (deskcfg.get("DESK_MUTATION_POLICY") or MutationPolicy.RECORD).lower()
-        return m if m in (MutationPolicy.RECORD, MutationPolicy.REQUIRE) else MutationPolicy.RECORD
+        m = str(deskcfg.get("DESK_MUTATION_POLICY") or MutationPolicy.RECORD).strip().lower() or MutationPolicy.RECORD
+        return m if m in (MutationPolicy.RECORD, MutationPolicy.REQUIRE) else MutationPolicy.REQUIRE
 
     @staticmethod
     def registry_side_effect(op: str) -> Optional[bool]:
@@ -211,6 +223,65 @@ def release_atomic_lock(lock_path: str, lock_id: str, pid: int) -> bool:
 
 
 LOCK_WRITE_GRACE_SEC = 2.0  # a lock file younger than this with no readable record is being written, not stale
+PID_START_TOLERANCE_SEC = 2.0  # recorded vs observed holder start time; `ps -o etimes` (macOS/BSD) is whole seconds
+RECLAIM_GUARD_TTL_SEC = 10.0  # a reclaim guard older than this was left by a crashed reclaimer
+
+
+def _read_raw(path: str) -> Optional[bytes]:
+    try:
+        with open(path, "rb") as h:
+            return h.read()
+    except OSError:
+        return None
+
+
+def _reclaim_stale_lock(lock_path: str, judged: bytes) -> None:
+    """Remove the lock file only if it still holds exactly the record that was judged stale (report F-9).
+
+    The old code `os.replace`d whatever sat at `lock_path`: a fresh lock taken by another writer between the
+    staleness judgement and the replace was deleted, and both writers went on. Here reclaimers serialise on a
+    short-lived O_EXCL guard file, re-read the lock under it, move it aside, and put it back if the moved record is
+    not the stale one. A writer that creates a fresh lock never needs the guard (plain O_EXCL on lock_path)."""
+    guard = lock_path + ".reclaim"
+    try:
+        gfd = os.open(guard, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        try:
+            if time.time() - os.path.getmtime(guard) > RECLAIM_GUARD_TTL_SEC:
+                os.remove(guard)
+        except OSError:
+            pass
+        time.sleep(0.05)
+        return
+    except OSError:
+        return
+    try:
+        os.close(gfd)
+        if _read_raw(lock_path) != judged:
+            return                                     # gone, or somebody else's lock now: re-evaluate it
+        moved = f"{lock_path}.reclaim_{uuid.uuid4().hex[:6]}"
+        try:
+            os.replace(lock_path, moved)
+        except OSError:
+            return
+        if _read_raw(moved) == judged:
+            with contextlib.suppress(OSError):
+                os.remove(moved)
+            return
+        # A fresh lock landed between the re-read and the move: restore it without clobbering a newer one.
+        try:
+            os.link(moved, lock_path)
+        except (AttributeError, NotImplementedError):
+            if not os.path.exists(lock_path):
+                with contextlib.suppress(OSError):
+                    os.replace(moved, lock_path)
+        except OSError:
+            pass
+        with contextlib.suppress(OSError):
+            os.remove(moved)
+    finally:
+        with contextlib.suppress(OSError):
+            os.remove(guard)
 
 
 def acquire_atomic_lock(lock_path: str, rec: Dict[str, Any], force_unlock: bool = False, ttl: int = LOCK_TTL):
@@ -231,12 +302,16 @@ def acquire_atomic_lock(lock_path: str, rec: Dict[str, Any], force_unlock: bool 
         except FileExistsError:
             info: Dict[str, Any] = {}
             readable = False
+            raw = _read_raw(lock_path)
+            if raw is None:
+                continue  # vanished between our open and read: retry the O_EXCL create
             try:
-                with open(lock_path, "r", encoding="utf-8") as h:
-                    info = json.load(h)
+                info = json.loads(raw.decode("utf-8"))
                 readable = isinstance(info, dict) and "pid" in info
             except Exception:
                 readable = False
+            if not isinstance(info, dict):
+                info = {}
 
             if not readable and not force_unlock:
                 try:
@@ -255,20 +330,15 @@ def acquire_atomic_lock(lock_path: str, rec: Dict[str, Any], force_unlock: bool 
             pid_alive = is_process_alive(holder_pid) if holder_pid else False
             if pid_alive and holder_start_time is not None:
                 actual_start_time = get_process_start_time(holder_pid)
-                if actual_start_time and actual_start_time > (info.get("ts", 0) + 1.0):
-                    # PID recycling detected: process died and PID was reassigned
+                # PID recycling: the live process with that PID started at a different time than the one that took
+                # the lock. Both values come from get_process_start_time, so they agree for the same process.
+                if actual_start_time and abs(actual_start_time - float(holder_start_time)) > PID_START_TOLERANCE_SEC:
                     pid_alive = False
 
             is_stale = (elapsed >= ttl) or (not pid_alive)
 
             if force_unlock or is_stale:
-                reclaim_tmp = f"{lock_path}.reclaim_{uuid.uuid4().hex[:6]}"
-                try:
-                    os.replace(lock_path, reclaim_tmp)
-                    with contextlib.suppress(FileNotFoundError):
-                        os.remove(reclaim_tmp)
-                except (FileNotFoundError, OSError):
-                    pass
+                _reclaim_stale_lock(lock_path, raw)
                 continue
             else:
                 raise WriteLockHeld(

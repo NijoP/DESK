@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional
 from desk.auth.broker import get_credential_broker
 from desk.component_intelligence.suppliers.base import SupplierProvider
 from desk.component_intelligence.suppliers.capabilities import SupplierCapabilities
-from desk.component_intelligence.suppliers.models import SupplierOffer, PriceBreak
+from desk.component_intelligence.suppliers.models import SOURCE_FIXTURE, SupplierOffer, PriceBreak
 
 
 class MouserSupplierProvider(SupplierProvider):
@@ -69,6 +69,8 @@ class MouserSupplierProvider(SupplierProvider):
             unit_price=base_price,
             price_breaks=breaks,
             product_url=f"https://www.mouser.com/ProductDetail/{item.get('sku', '')}",
+            # Mouser has no live client yet: every offer comes from OFFLINE_CATALOG.
+            availability_source=SOURCE_FIXTURE,
         )
 
     def search_components(

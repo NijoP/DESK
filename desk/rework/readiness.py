@@ -61,17 +61,19 @@ class ManufacturingReadinessEngine:
         critical_nets: Optional[List[str]] = None,
         issues_count: int = 0,
         resolved_count: int = 0,
-        discontinuities_count: Optional[int] = 0,
+        discontinuities_count: Optional[int] = None,
     ) -> ReadinessAssessment:
+        """Missing DRC, connectivity or plane-continuity evidence stays missing (None -> UNKNOWN gate, NOT_READY); it is
+        never defaulted to "empty = clean" (report F-5)."""
         norm_path = os.path.abspath(project_path)
         proj_id = os.path.basename(norm_path)
         final_rev = snapshot.fingerprint
 
         # Run authoritative QualityGateEvaluator
         q_report: QualityReport = QualityGateEvaluator.evaluate(
-            drc_violations=drc_violations or [],
-            unconnected_nets=unconnected_nets or [],
-            critical_nets=critical_nets or [],
+            drc_violations=drc_violations,
+            unconnected_nets=unconnected_nets,
+            critical_nets=critical_nets,
             profile=profile,
             discontinuities_count=discontinuities_count,
             board_revision=final_rev,

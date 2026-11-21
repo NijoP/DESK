@@ -23,6 +23,7 @@ if hasattr(sys.stdout, "buffer"):
 # catch them still exits with the message, while library callers can catch the precise type.
 from desk.errors import (  # noqa: E402
     BridgeError, BridgeUnreachable, BridgeDocumentMismatch, BridgeScriptError, BridgeMutationTimeout, ProjectError,
+    BridgeMutationOutcomeUnknown,
 )
 
 
@@ -361,9 +362,11 @@ def rebind_session(session: BridgeSession, reason: str) -> str:
     return ps.window_id or ""
 
 
+# create*/delete*/modify* by prefix (createNetClass, deleteDifferentialPair, modifyPcbName ...) and every
+# setState_*: the exact-name list missed real mutators and let them past the unbound-window refusal (report F-12).
 _MUTATING_RX = __import__("re").compile(
-    r"\.(create|delete|modify|importChanges|importAutoRouteSesFile|setNetlist|clearRouting|rebuildCopperRegion|"
-    r"createPanel|overwrite[A-Za-z]*|modifyPcbName|save)\s*\(")
+    r"\.(?:(?:create|delete|modify)[A-Za-z0-9_]*|importChanges|importAutoRouteSesFile|setNetlist|clearRouting|"
+    r"rebuildCopperRegion|overwrite[A-Za-z]*|save|setState_[A-Za-z0-9_]+)\s*\(")
 
 
 def looks_mutating(code: str) -> bool:
@@ -382,6 +385,11 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
     * "window no longer connected" means the script did NOT run: the session is rebound by project uuid
       (exactly one match, else IdentityUnverified) and the call is sent once more to the new id;
     * a timeout on a mutating script is never repeated (BridgeMutationTimeout, journalled dirty);
+    * nor is a mutating script resent after any other transport error that may have followed delivery (connection
+      reset, remote disconnect): only a refused connection proves the gateway never saw it (report F-11,
+      BridgeMutationOutcomeUnknown, also journalled dirty);
+    * a rebind or window re-resolve resends without consuming a retry, and the call always ends in a result or a
+      typed error, never a silent None (report F-13);
     * the gateway port has a circuit breaker so a dead gateway fails fast after three attempts.
     """
     from desk.profiler import TelemetryCollector
@@ -404,8 +412,10 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
     breaker = BreakerRegistry.get(f"gateway:{port}", failure_threshold=3, recovery_timeout_s=20.0)
     breaker.check()
     rebound_once = False
+    resolved_once = False
+    attempt = 0
 
-    for attempt in range(retries + 1):
+    while True:
         payload = {"code": code}
         if target_window:
             payload["windowId"] = target_window
@@ -463,22 +473,36 @@ def ex(code: str, timeout: int = 280, retries: int = 1, window_id: Optional[str]
                 SessionRegistry.invalidate_session(project_path)
                 raise BridgeMutationTimeout(f"Mutation timeout: operation may have partially succeeded. "
                                             f"Inspect PCB state before retrying. ({e})")
+            if mutating and not _never_delivered(e):
+                SessionRegistry.invalidate_session(project_path)
+                raise BridgeMutationOutcomeUnknown(
+                    f"Mutation outcome unknown: the connection broke after the script was sent ({type(e).__name__}: {e}); "
+                    f"the gateway may already have executed it, so it is not resent. Inspect the board before retrying.")
 
-            # Auto-resolve window if lost
-            if session.pcb_uuid or session.sheet_uuid or session.project_uuid:
+            # Auto-resolve window if lost (once; the resend does not consume a retry)
+            if not resolved_once and (session.pcb_uuid or session.sheet_uuid or session.project_uuid):
                 resolved = _find_window_for_project(port, tuple(u for u in (session.pcb_uuid, session.sheet_uuid) if u),
                                                     project_uuid=session.project_uuid)
                 if resolved and resolved != target_window:
+                    resolved_once = True
                     target_window = resolved
                     session.window_id = resolved
                     continue
 
-            if attempt == retries:
+            if attempt >= retries:
                 SessionRegistry.invalidate_session(project_path)
                 raise BridgeUnreachable(f"Bridge not reachable on port {port}: {e}\n"
                                         "-> Is EasyEDA Pro open with the API Gateway connected? (see docs/06_EASYEDA_API.md)",
                                         port=port)
+            attempt += 1
             time.sleep(1)
+
+
+def _never_delivered(e: BaseException) -> bool:
+    """True only when the transport error proves the request never reached the gateway (connection refused, name
+    resolution failure). Anything else (reset, remote disconnect, broken pipe mid-request) may follow delivery."""
+    reason = getattr(e, "reason", None) if isinstance(e, urllib.error.URLError) else e
+    return isinstance(reason, (ConnectionRefusedError, socket.gaierror))
 
 def check(res: Any) -> Any:
     """Raises BridgeScriptError (a SystemExit) if EasyEDA JS returned an error dictionary."""

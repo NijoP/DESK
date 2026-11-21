@@ -8,12 +8,13 @@ from desk.profile import DesignProfile, LayerStackup, ManufacturerProfile
 class TestQualityAndMfgVerification(unittest.TestCase):
 
     def test_01_all_clean_approved(self):
-        # 0 violations, 0 unconnected nets, 0 discontinuities -> APPROVED
+        # 0 violations, 0 unconnected nets, 0 discontinuities and a valid profile -> APPROVED
         report = QualityGateEvaluator.evaluate(
             drc_violations=[],
             unconnected_nets=[],
             critical_nets=["USB_DP", "USB_DN"],
             routability_score=0.95,
+            profile=DesignProfile(project_id="CLEAN"),
             discontinuities_count=0
         )
         self.assertTrue(report.hard_gates_passed)

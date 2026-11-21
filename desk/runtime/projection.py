@@ -584,13 +584,30 @@ class ExecutionProjection:
 
             else:
                 # No active OS process running
+                # M3 passes only on the connectivity readback verdict recorded in routing_attempt.json. The file is
+                # written on every attempt (failed imports included) and an SES file proves nothing about the board,
+                # so neither existence counts (report F-4; AGENTS.md "ROUTING VERDICT: FULL comes from the
+                # connectivity readback only"). A record without a verdict leaves the stage as it is.
                 route_attempt = os.path.join(proj_dir, "state", "route", "routing_attempt.json")
-                ses_file = os.path.join(proj_dir, "state", "route", "desk_route.ses")
                 st_route = self.stages[STAGE_PCB_ROUTING]
-                if (os.path.exists(route_attempt) or (os.path.exists(ses_file) and os.path.getsize(ses_file) > 0)) and st_route.status != "COMPLETED":
+                attempt_rec: Dict[str, Any] = {}
+                if os.path.exists(route_attempt):
+                    try:
+                        with open(route_attempt, encoding="utf-8") as f:
+                            loaded = json.load(f)
+                        attempt_rec = loaded if isinstance(loaded, dict) else {}
+                    except (OSError, ValueError):
+                        attempt_rec = {}
+                verdict = attempt_rec.get("routing_verdict")
+                nets_txt = f"{attempt_rec.get('fully_connected_nets', '?')}/{attempt_rec.get('total_nets', '?')} nets"
+                if verdict == "FULL" and st_route.status != "COMPLETED":
                     st_route.status = "COMPLETED"
                     st_route.progress = 100.0
-                    st_route.output_summary = "M3 passed: PCB tracks routed and imported into EasyEDA Pro."
+                    st_route.output_summary = f"M3 passed: connectivity readback FULL ({nets_txt} physically connected)."
+                    changed = True
+                elif verdict == "PARTIAL" and st_route.status not in {"RUNNING", "FAILED"}:
+                    st_route.status = "FAILED"
+                    st_route.output_summary = f"M3 not passed: connectivity readback PARTIAL ({nets_txt})."
                     changed = True
 
                 if self.engineering_results.get("copper_zones_processed", 0) > 0:

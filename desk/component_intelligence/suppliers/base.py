@@ -48,11 +48,24 @@ class SupplierProvider(abc.ABC):
         """Retrieves all commercial offers for an exact Manufacturer Part Number."""
         pass
 
+    def get_alternative_offers(self, mpn: str) -> List[SupplierOffer]:
+        """Offers this supplier proposes as alternatives to ``mpn`` (default: none).
+
+        Candidates only: the sourcing selector still checks package/footprint and electrical
+        equivalence before any of them can replace the designed part.
+        """
+        return []
+
     def get_availability(self, supplier_part_number: str) -> Tuple[int, bool]:
-        """Retrieves current stock quantity and in-stock boolean flag."""
+        """Retrieves current stock quantity and in-stock boolean flag.
+
+        The flag is True only for a verified, current, positive stock figure (see
+        procurement.inventory.classify_offer); fixture or unverified stock reports False.
+        """
         offer = self.get_component(supplier_part_number)
         if offer:
-            return offer.stock, offer.stock > 0
+            from desk.component_intelligence.procurement.inventory import classify_offer
+            return offer.stock, classify_offer(offer, 1).in_stock
         return 0, False
 
     def get_pricing(self, supplier_part_number: str, quantity: int = 1) -> Optional[float]:

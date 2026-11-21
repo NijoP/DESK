@@ -61,9 +61,19 @@ class ApprovalRecords(unittest.TestCase):
         self.assertIn(("approval", "build"), kinds)
         self.assertIn(("end", "build"), kinds)
 
-    def test_unknown_policy_value_falls_back_to_record(self):
-        with mock.patch.dict(os.environ, {"DESK_MUTATION_POLICY": "whatever"}):
+    def test_unknown_policy_value_fails_closed_to_require(self):
+        # Report F-8: a typo ("required") used to become "record" silently and refused nothing.
+        for typo in ("whatever", "required", "REQUIRED "):
+            with mock.patch.dict(os.environ, {"DESK_MUTATION_POLICY": typo}):
+                self.assertEqual(ops.MutationPolicy.mode(), "require", typo)
+        with mock.patch.dict(os.environ, {"DESK_MUTATION_POLICY": "Record"}):
             self.assertEqual(ops.MutationPolicy.mode(), "record")
+
+    def test_typo_policy_refuses_unapproved_mutation(self):
+        with mock.patch.dict(os.environ, {"DESK_MUTATION_POLICY": "required"}):
+            with self.assertRaises(ApprovalRequired):
+                with ops.write_op(self.p, "build", "TYPO_BLOCK"):
+                    pass
 
     def test_registry_side_effect_is_recorded_for_known_operations(self):
         self.assertTrue(ops.MutationPolicy.registry_side_effect("create_copper_zone"))

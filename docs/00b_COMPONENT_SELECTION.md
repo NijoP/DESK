@@ -86,6 +86,38 @@ Each part in `blocks/NN_ID.json` carries: `mpn`, `lcsc`, `value`, `rating` (e.g.
 `package`, `role` (what it serves, "at pin N"), and the `qa` entries prove the numbers.
 `python tools/bom.py projects/<P>` then builds the BOM and flags any passive missing value/rating/package.
 
+## Sourcing, in stock first (roadmap I-5)
+
+`python tools/bom.py projects/<P> --sourcing --qty <boards>` writes `SOURCING_REPORT.md` and
+`sourcing_report.json`. It exits 0 when the verdict is VERIFIED and 2 when it is INCOMPLETE.
+Status: software-tested with fixtures; not validated on a live design. A VERIFIED verdict refers to
+the supplier availability evidence only, not to the hardware.
+
+- **Workflow:** know the part's electrical requirement (`value`, `rating`, optional `specs`). Search
+  Robu and LCSC first, then the JLCPCB parts library for assembly. Check the MPN, datasheet,
+  package and footprint, and the stock and price as shown. List `alternatives` (MPNs) on the part
+  when the preferred one may be unavailable.
+- **Evidence:** DESK has no supplier keys. LCSC detail by C-number can be read keylessly
+  (`--live-lcsc`). Robu (Cloudflare challenge) and JLCPCB (`/api` disallowed by robots.txt) are
+  read by a browser-capable agent into `projects/<P>/sourcing/evidence/*.json`; the format is in
+  `desk/component_intelligence/suppliers/evidence.py`. Each record needs `source_url` (https, on
+  the supplier's domain) and `verified_at` (ISO 8601 with a timezone). Stock and price are recorded
+  exactly as shown, or `null`. Invalid records are rejected and listed in the report.
+- **States** (`procurement/inventory.py`): IN_STOCK_CONFIRMED, LOW_STOCK (under 2x the build
+  quantity), OUT_OF_STOCK, BACKORDERED, DISCONTINUED, STOCK_UNKNOWN, PRICE_UNAVAILABLE. Fixture,
+  seed or unlabelled data, a missing stock figure and a snapshot older than 7 days are all
+  STOCK_UNKNOWN, never in stock.
+- **Ranking** (`procurement/selection.py`): designed MPN before alternatives, then in stock at a
+  preferred supplier (`--preferred robu,lcsc`), then in stock elsewhere, then backorder (only with
+  `--allow-backorder`). Ties break on lifecycle, then price in USD (`--fx INR=<rate>` makes INR
+  comparable), then lead time, supplier and SKU.
+- **Alternatives** (`procurement/equivalence.py`) replace a part only when package/footprint
+  (pin count, pitch, body size) and every electrical requirement are COMPATIBLE. Missing data is
+  UNVERIFIED and never passes.
+- **Acceptance (I-5):** 0 backordered selections without the flag. Every line is either in stock
+  or carries a compatible alternative with a reason, and every selected line carries its supplier,
+  source URL and timestamp. VERIFIED additionally needs every line in stock and priced.
+
 ## Exit criteria (gate B) — only then start schematic blocks
 
 - [ ] `BOM_SELECTION.md` has a comparison matrix and a one-line reason for every IC, connector, module, sensor.

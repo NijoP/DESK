@@ -12,7 +12,7 @@ Generated from `desk/config.py` SCHEMA (`python desk.py config schema`). Precede
 | `DESK_ALLOW_UNBOUND_WINDOW` | bool | 0 | safety | 1 lets a mutating bridge call run without a verified window binding (it then hits the ACTIVE window). Default 0 refuses (KF-20261112-008, UPS_1000 F-001). |
 | `DESK_RELIABILITY_AUTORECOVER` | bool | 1 | safety | 0 turns the self-healing supervisor's AUTO recoveries into proposals only. |
 | `DESK_FR_CHUNK_SAFETY` | float | 0.6 | routing | Fraction of a routing chunk's time window the adaptive planner fills with measured pass time (0.3-0.9). |
-| `DESK_MUTATION_POLICY` | enum | record | safety | record: journal whether a human approval accompanied each live mutation; require: refuse non-idempotent mutations without one. |
+| `DESK_MUTATION_POLICY` | enum | record | safety | record: journal whether a human approval accompanied each live mutation; require: refuse non-idempotent mutations without one. Any other value (a typo such as `required`) fails closed to require. |
 | `DESK_CREDENTIAL_STORE` | enum |  | credentials | Force a vault backend instead of the platform default. |
 | `NVIDIA_API_KEY` | secret |  | credentials | NVIDIA NIM key (or store it with desk.py auth configure). |
 | `LCSC_CLIENT_ID` | str |  | credentials | LCSC API client id (live supplier calls). |

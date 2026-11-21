@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import unittest
 
+from desk.profile import DesignProfile
 from desk.snapshot import IndexedPCBSnapshot
 from desk.rework import (
     ReworkSessionLifecycle,
@@ -137,6 +138,9 @@ class TestReworkEndToEnd(unittest.TestCase):
             snapshot=snap,
             issues_count=0,
             resolved_count=0,
+            profile=DesignProfile(project_id="FIXTURE_BOARD"),
+            drc_violations=[],
+            unconnected_nets=[],
             discontinuities_count=0,
         )
         self.assertIn(assessment.outcome, (ReadinessOutcome.READY_FOR_MANUFACTURING, ReadinessOutcome.CONDITIONALLY_READY))

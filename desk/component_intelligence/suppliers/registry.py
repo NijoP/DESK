@@ -89,3 +89,13 @@ class SupplierRegistry:
                 logger.warning("Error querying offers from '%s' for MPN '%s': %s", p.supplier_id, mpn, e)
 
         return all_offers
+
+    def get_alternative_offers_for_mpn(self, mpn: str) -> List[SupplierOffer]:
+        """Queries all enabled suppliers for offers proposed as alternatives to ``mpn``."""
+        all_offers: List[SupplierOffer] = []
+        for p in self.list_providers(enabled_only=True):
+            try:
+                all_offers.extend(p.get_alternative_offers(mpn))
+            except Exception as e:
+                logger.warning("Error querying alternatives from '%s' for MPN '%s': %s", p.supplier_id, mpn, e)
+        return all_offers

@@ -123,6 +123,7 @@ class TestSpecificationAndVerification(unittest.TestCase):
             mpn="0402WGF1001TCE",
             stock=5000,
             unit_price=0.003,
+            availability_source="live_api",
             last_checked_ts=time.time(),
         )
         ev_pass = ComponentVerificationEngine.verify_v4_procurement(offer, required_quantity=100)
@@ -142,10 +143,17 @@ class TestSpecificationAndVerification(unittest.TestCase):
             mpn="0402WGF1001TCE",
             stock=5000,
             unit_price=0.003,
+            availability_source="live_api",
             last_checked_ts=time.time() - (10 * 86400),  # 10 days old
         )
         ev_stale = ComponentVerificationEngine.verify_v4_procurement(stale_offer, required_quantity=100)
         self.assertEqual(ev_stale.state, VerificationState.STALE)
+
+        # Fixture / unlabelled stock is never verified stock -> UNKNOWN, not PASS
+        offer.availability_source = "fixture"
+        ev_fixture = ComponentVerificationEngine.verify_v4_procurement(offer, required_quantity=100)
+        self.assertEqual(ev_fixture.state, VerificationState.UNKNOWN)
+        self.assertTrue(any("not verified" in v for v in ev_fixture.violations))
 
 
 if __name__ == "__main__":

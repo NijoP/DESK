@@ -66,6 +66,12 @@ class BridgeMutationTimeout(BridgeError):
     possibly_mutated = True
 
 
+class BridgeMutationOutcomeUnknown(BridgeMutationTimeout):
+    """The connection broke after a mutating script was sent (reset, remote disconnect, broken response): the gateway
+    may already have executed it, so it is never resent (report F-11). A subclass of BridgeMutationTimeout so every
+    caller that journals a timed-out mutation as dirty treats this the same way."""
+
+
 class WriteLockHeld(DeskError):
     """Another live writer holds projects/<P>/state/write.lock."""
 

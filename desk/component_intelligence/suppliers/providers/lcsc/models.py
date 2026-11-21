@@ -34,16 +34,29 @@ class LcscProductItem:
     productDescEn: str = ""       # English description
     productWeight: float = 0.0
     isRoHS: bool = True
+    # -- availability provenance (I-5) --------------------------------------------------
+    productCycle: str = ""        # lifecycle as LCSC shows it ("normal" on active parts)
+    isPreSale: bool = False       # LCSC pre-sale: orderable before stock arrives -> backorder
+    stock_known: bool = True      # False when the payload carried no stock figure
+    source: str = "unverified"    # "fixture" or "live_api", set by LcscApiClient
+    fetched_at: float = 0.0       # epoch seconds of the read (0 = unknown)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "LcscProductItem":
         tiers = []
         raw_prices = data.get("productPriceList") or data.get("prices") or []
+        default_curr = str(data.get("currencyType") or "USD")
         for p in raw_prices:
             ladder = int(p.get("ladder", p.get("qty", 1)))
-            price = float(p.get("productPrice", p.get("price", 0.0)))
-            curr = str(p.get("currency", "USD"))
+            # The public detail JSON (2026-11) gives productPrice as a string and usdPrice as a number.
+            raw_price = p.get("usdPrice", p.get("productPrice", p.get("price", 0.0)))
+            try:
+                price = float(raw_price)
+            except (TypeError, ValueError):
+                price = 0.0
+            curr = "USD" if "usdPrice" in p else str(p.get("currency", default_curr))
             tiers.append(LcscPriceTier(ladder=ladder, productPrice=price, currency=curr))
+        stock_raw = data.get("stockNumber", data.get("stock"))
 
         return cls(
             productCode=str(data.get("productCode", data.get("lcsc_id", ""))),
@@ -51,13 +64,16 @@ class LcscProductItem:
             brandNameEn=str(data.get("brandNameEn", data.get("manufacturer", "Generic"))),
             catalogName=str(data.get("catalogName", "")),
             parentCatalogName=str(data.get("parentCatalogName", "")),
-            packageDetail=str(data.get("packageDetail", data.get("package", ""))),
-            stockNumber=int(data.get("stockNumber", data.get("stock", 0))),
+            packageDetail=str(data.get("packageDetail") or data.get("encapStandard") or data.get("package") or ""),
+            stockNumber=int(stock_raw) if stock_raw is not None else 0,
             productPriceList=tiers,
             productUnit=str(data.get("productUnit", "piece")),
             minPacketNumber=int(data.get("minPacketNumber", data.get("moq", 1))),
             pdfUrl=data.get("pdfUrl") or data.get("datasheet"),
             productDescEn=str(data.get("productDescEn", data.get("description", ""))),
             productWeight=float(data.get("productWeight", 0.0)),
-            isRoHS=bool(data.get("isRoHS", True)),
+            isRoHS=bool(data.get("isRoHS", data.get("isEnvironment", True))),
+            productCycle=str(data.get("productCycle") or ""),
+            isPreSale=bool(data.get("isPreSale", False)),
+            stock_known=stock_raw is not None,
         )
