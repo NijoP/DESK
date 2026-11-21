@@ -1,0 +1,26 @@
+{
+ "note": "Synthetic test circuit (not a real project): open-loop buck stage, 12 V in, D = 0.42, 100 kHz, 5 ohm load. Generic UNVERIFIED models.",
+ "block": {"id": "SYN_BUCK", "title": "SYNTHETIC BUCK STAGE", "ports": ["VIN", "VOUT", "G"],
+  "parts": [
+   {"ref": "Q1", "mpn": "SYNTHETIC-NMOS", "pins": {"1": "G", "2": "SW", "3": "VIN"}},
+   {"ref": "D1", "mpn": "SYNTHETIC-SCHOTTKY", "pins": {"1": "SW", "2": "GND"}},
+   {"ref": "L1", "mpn": "SYNTHETIC-L", "value": "22uH", "pins": {"1": "SW", "2": "VOUT"}},
+   {"ref": "C1", "mpn": "SYNTHETIC-C", "value": "22uF", "pins": {"1": "VOUT", "2": "GND"}},
+   {"ref": "R1", "mpn": "SYNTHETIC-R", "value": "5", "pins": {"1": "VOUT", "2": "GND"}}
+  ]},
+ "models": {
+   "NSW": {"kind": "NMOS", "card": ".model NSW NMOS(LEVEL=1 VTO=2 KP=10)", "source": {"type": "generic", "reference": "hand-written test model"}},
+   "DSCH": {"kind": "D", "card": ".model DSCH D(IS=1e-6 N=1.05 RS=0.02 CJO=100p)", "source": {"type": "generic", "reference": "hand-written test model"}}
+ },
+ "sim": {"title": "synthetic buck stage",
+  "parts": {"Q1": {"element": "M", "model": "NSW", "terminals": {"D": "3", "G": "1", "S": "2"}},
+            "D1": {"element": "D", "model": "DSCH", "terminals": {"A": "2", "K": "1"}}},
+  "sources": [{"name": "VIN", "kind": "V", "pos": "VIN", "neg": "GND", "dc": 12},
+              {"name": "VG", "kind": "V", "pos": "G", "neg": "SW", "pulse": [0, 10, 0, 1e-8, 1e-8, 4.2e-6, 1e-5]}],
+  "analyses": [{"type": "tran", "step": 5e-7, "stop": 0.0004, "maxstep": 5e-8, "uic": true, "linearize": true}],
+  "measures": [{"name": "vout_avg", "analysis": "tran", "expr": "AVG v({VOUT}) FROM=350u TO=400u"},
+               {"name": "vout_pp", "analysis": "tran", "expr": "PP v({VOUT}) FROM=350u TO=400u"}],
+  "save": ["v({SW})", "v({VOUT})"]},
+ "expect": [{"quantity": "vout_avg", "min": 4.3, "max": 5.1, "unit": "V", "source": "D*Vin - drops = 0.42*12 = 5.04 V ideal"},
+            {"quantity": "vout_pp", "max": 0.3, "unit": "V", "source": "dIL/(8 f C) = 0.078 V ideal ripple plus the unsettled LC ring of a 400 us synthetic run"}]
+}

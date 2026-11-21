@@ -90,6 +90,10 @@ SCHEMA: List[Setting] = [
     Setting("DESK_FR_STAGNATION_FLAG", BOOL, "0", "routing",
             "1 = pass --router.autorouter.stagnation_pass_limit (rejected by Freerouting 2.5.0)."),
     Setting("DESK_DOCTOR_CACHE_TTL_S", INT, "86400", "routing", "Seconds the doctor caches Java/Freerouting/Node probes."),
+    # -- simulation (optional plugin) -------------------------------------------------------------
+    Setting("DESK_NGSPICE", PATH, None, "simulation", "ngspice executable (else ngspice / ngspice_con on PATH)."),
+    Setting("DESK_SIM_TIMEOUT_S", FLOAT, "60", "simulation", "Wall-clock limit for one simulation run; the process is killed after it."),
+    Setting("DESK_SIM_MAX_OUTPUT_MB", FLOAT, "64", "simulation", "Largest result file a simulation run may produce before it is refused."),
     # -- models -----------------------------------------------------------------------------
     Setting("DESK_AGENT_MODEL", STR, "nvidia/nemotron-3-ultra-550b-a55b", "models", "Model for desk.py agent."),
     Setting("DESK_HTTP_BASE_URL", STR, "https://integrate.api.nvidia.com/v1", "models", "OpenAI-compatible endpoint."),

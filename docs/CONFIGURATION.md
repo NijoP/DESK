@@ -30,6 +30,9 @@ Generated from `desk/config.py` SCHEMA (`python desk.py config schema`). Precede
 | `FREEROUTING_BIN` | path |  | routing | Explicit native Freerouting executable. |
 | `DESK_FR_STAGNATION_FLAG` | bool | 0 | routing | 1 = pass --router.autorouter.stagnation_pass_limit (rejected by Freerouting 2.5.0). |
 | `DESK_DOCTOR_CACHE_TTL_S` | int | 86400 | routing | Seconds the doctor caches Java/Freerouting/Node probes. |
+| `DESK_NGSPICE` | path |  | simulation | ngspice executable (else ngspice / ngspice_con on PATH). |
+| `DESK_SIM_TIMEOUT_S` | float | 60 | simulation | Wall-clock limit for one simulation run; the process is killed after it. |
+| `DESK_SIM_MAX_OUTPUT_MB` | float | 64 | simulation | Largest result file a simulation run may produce before it is refused. |
 | `DESK_AGENT_MODEL` | str | nvidia/nemotron-3-ultra-550b-a55b | models | Model for desk.py agent. |
 | `DESK_HTTP_BASE_URL` | str | https://integrate.api.nvidia.com/v1 | models | OpenAI-compatible endpoint. |
 | `DESK_HTTP_API_KEY_ENV` | str | NVIDIA_API_KEY | models | Name of the variable holding the endpoint key. |

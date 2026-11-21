@@ -1,0 +1,17 @@
+* DESK SYNTHETIC NONCONVERGENT
+D1 in out DX
+C1 out 0 1
+L1 out 0 1e-15
+V1 in 0 PULSE(0 1000000 0 1e-12 1e-12 1e-09 2e-09)
+.options itl4=3 reltol=1e-09
+.model DX D(IS=1e-30 N=0.01 RS=0)
+.control
+set filetype=ascii
+echo DESK_BEGIN tran1
+tran 1e-12 1e-08
+write tran1.raw
+echo DESK_END tran1
+echo DESK_DONE
+quit
+.endc
+.end

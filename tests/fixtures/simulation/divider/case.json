@@ -1,0 +1,15 @@
+{
+ "note": "Synthetic test circuit (not a real project): 10 V into a 10k/10k divider.",
+ "block": {"id": "SYN_DIV", "title": "SYNTHETIC DIVIDER", "ports": ["VIN", "VOUT"],
+  "parts": [
+   {"ref": "R1", "mpn": "SYNTHETIC-R", "value": "10k", "pins": {"1": "VIN", "2": "VOUT"}},
+   {"ref": "R2", "mpn": "SYNTHETIC-R", "value": "10k", "pins": {"1": "VOUT", "2": "GND"}},
+   {"ref": "J1", "mpn": "SYNTHETIC-PAD", "pins": {"1": "VIN"}}
+  ],
+  "qa": [{"item": "Vout", "expr": "10*R2/(R1+R2)", "unit": "V", "min": 4.9, "max": 5.1,
+          "source": "divider formula", "sim": "op1:v({VOUT})", "sim_tolerance": 0.01}]},
+ "sim": {"title": "synthetic divider", "parts": {"J1": {"exclude": "input pad, no electrical model"}},
+  "sources": [{"name": "VIN", "kind": "V", "pos": "VIN", "neg": "GND", "dc": 10}],
+  "analyses": [{"type": "op"}]},
+ "expect": [{"quantity": "op1:v({VOUT})", "min": 4.9, "max": 5.1, "unit": "V", "source": "10 V * 10k/(10k+10k)"}]
+}

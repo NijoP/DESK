@@ -1,0 +1,11 @@
+{
+ "note": "Synthetic RC whose output never reaches the measured level: the measure fails.",
+ "block": {"id": "SYN_MF", "title": "SYNTHETIC MEASURE FAIL", "parts": [
+   {"ref": "R1", "mpn": "SYNTHETIC-R", "value": "1k", "pins": {"1": "IN", "2": "OUT"}},
+   {"ref": "C1", "mpn": "SYNTHETIC-C", "value": "1u", "pins": {"1": "OUT", "2": "GND"}}]},
+ "sim": {"sources": [{"name": "V1", "kind": "V", "pos": "IN", "neg": "GND", "dc": 1}],
+  "analyses": [{"type": "tran", "step": 1e-4, "stop": 1e-3, "linearize": true}],
+  "measures": [{"name": "t_cross", "analysis": "tran", "expr": "WHEN v({OUT})=5"}],
+  "save": ["v({OUT})"]},
+ "expect": [{"quantity": "t_cross", "max": 1e-3, "unit": "s", "source": "synthetic"}]
+}

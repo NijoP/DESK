@@ -1,0 +1,13 @@
+
+Note: No compatibility mode selected!
+
+warning, model type mismatch in line
+    d1 a 0 dbad
+
+Circuit: * desk synthetic model error
+
+Error on line 3 or its substitute:
+  d1 a 0 dbad
+could not find a valid modelname
+    Simulation interrupted due to error!
+
