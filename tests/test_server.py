@@ -271,5 +271,119 @@ class TestEngineeringIntegrity(unittest.TestCase):
         self.assertNotEqual(res["final_acceptance_state"], "ACCEPTED")
 
 
+class TestServerLowSpecHardening(unittest.TestCase):
+    """Report 5.5 / roadmap I-10: socket timeouts, bounded SSE threads, bad Content-Length and ?limit= handling."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.server = DeskServer(host="127.0.0.1", port=_free_port(), max_sse_clients=1)
+        cls.url, cls.port = cls.server.start(background=True)
+        time.sleep(0.1)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.stop()
+
+    def _fetch(self, path: str):
+        req = urllib.request.Request(f"{self.url}{path}")
+        try:
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                return resp.status, resp.read(), dict(resp.headers)
+        except urllib.error.HTTPError as e:
+            return e.code, e.read(), dict(e.headers)
+
+    def _raw(self, request: bytes, timeout: float = 3.0) -> bytes:
+        with socket.create_connection(("127.0.0.1", self.port), timeout=timeout) as s:
+            s.sendall(request)
+            chunks = []
+            while True:
+                try:
+                    data = s.recv(65536)
+                except (socket.timeout, ConnectionResetError):
+                    break
+                if not data:
+                    break
+                chunks.append(data)
+            return b"".join(chunks)
+
+    def _post(self, content_length: str, body: bytes = b"") -> bytes:
+        head = (f"POST /api/events HTTP/1.1\r\nHost: 127.0.0.1:{self.port}\r\nX-DESK-Token: {self.server.token}\r\n"
+                f"Content-Type: application/json\r\nContent-Length: {content_length}\r\nConnection: close\r\n\r\n")
+        return self._raw(head.encode("ascii") + body)
+
+    def test_non_integer_limit_is_400_not_a_dropped_connection(self):
+        for path in ("/api/timeline?limit=x", "/api/logs?limit=abc", "/api/v1/executions/current/events?limit=1.5",
+                     "/api/v1/executions/current/logs?limit=%20"):
+            code, body, _ = self._fetch(path)
+            self.assertEqual(code, 400, path)
+            self.assertIn("limit", json.loads(body.decode("utf-8"))["error"])
+        self.assertEqual(self._fetch("/api/v1/health")[0], 200)
+
+    def test_zero_and_negative_limit_are_clamped_to_one(self):
+        proj = get_execution_projection()
+        for i in range(3):
+            proj._record_log_entry("INFO", "test", "", f"hardening log {i}")
+        for value in ("0", "-5"):
+            code, body, _ = self._fetch(f"/api/logs?limit={value}")
+            self.assertEqual(code, 200)
+            self.assertLessEqual(len(json.loads(body.decode("utf-8"))), 1)
+        self.assertEqual(self._fetch("/api/logs?limit=999999")[0], 200)
+
+    def test_negative_or_garbage_content_length_is_400_and_does_not_block(self):
+        from desk.runtime.server import MAX_BODY_BYTES
+        t0 = time.perf_counter()
+        resp = self._post("-5")
+        self.assertIn(b" 400 ", resp.split(b"\r\n", 1)[0], resp[:80])
+        self.assertLess(time.perf_counter() - t0, 2.5)
+        self.assertIn(b" 400 ", self._post("abc").split(b"\r\n", 1)[0])
+        self.assertIn(b" 413 ", self._post(str(MAX_BODY_BYTES + 1)).split(b"\r\n", 1)[0])
+        self.assertIn(b" 200 ", self._post("2", b"{}").split(b"\r\n", 1)[0])
+
+    def test_sse_streams_are_bounded_and_slots_are_released(self):
+        from unittest import mock
+        import desk.runtime.server as server_mod
+        stream = f"{self.url}/api/v1/events/stream"
+        with mock.patch.object(server_mod, "SSE_HEARTBEAT_S", 0.2):
+            first = urllib.request.urlopen(urllib.request.Request(stream), timeout=5.0)
+            try:
+                self.assertEqual(first.status, 200)
+                code, _, headers = self._fetch("/api/v1/events/stream")
+                self.assertEqual(code, 503)
+                self.assertEqual(headers.get("Retry-After"), "5")
+                self.assertEqual(self._fetch("/api/v1/health")[0], 200)   # ordinary requests are not capped
+            finally:
+                first.close()
+            # The slot comes back once the server notices the disconnect (a heartbeat write fails).
+            deadline = time.time() + 8.0
+            reopened = None
+            while time.time() < deadline and reopened is None:
+                try:
+                    reopened = urllib.request.urlopen(urllib.request.Request(stream), timeout=5.0)
+                except urllib.error.HTTPError as e:
+                    self.assertEqual(e.code, 503)
+                    time.sleep(0.2)
+            self.assertIsNotNone(reopened, "SSE slot was never released after the client disconnected")
+            self.assertEqual(reopened.status, 200)
+            reopened.close()
+
+    def test_idle_connection_is_closed_by_the_socket_timeout(self):
+        from desk.runtime.server import DeskRequestHandler, SOCKET_TIMEOUT_S
+        self.assertEqual(DeskRequestHandler.timeout, SOCKET_TIMEOUT_S)
+        original = DeskRequestHandler.timeout
+        DeskRequestHandler.timeout = 0.3
+        try:
+            with socket.create_connection(("127.0.0.1", self.port), timeout=5.0) as s:
+                s.sendall(b"GET /api/v1/health HTTP/1.1\r\n")   # never finish the request
+                t0 = time.perf_counter()
+                try:
+                    data = s.recv(1024)
+                except ConnectionResetError:
+                    data = b""
+                self.assertEqual(data, b"")
+                self.assertLess(time.perf_counter() - t0, 4.0)
+        finally:
+            DeskRequestHandler.timeout = original
+
+
 if __name__ == "__main__":
     unittest.main()

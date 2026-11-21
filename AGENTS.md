@@ -110,7 +110,7 @@ python tools/ctx.py projects/<P> delta          # Follow-up session: only what c
 
 ## H. Performance Requirements
 
-- **Sub-10ms Pipeline:** Core placement and routing evaluations must execute under 10ms.
+- **Sub-10ms Pipeline:** Each core placement and routing evaluation runs under 10 ms on a WATCH-sized board (about 40 parts). The whole offline pipeline takes 11–13 ms, and placement validation exceeds 10 ms from about 160 parts (CI-measured, `docs/performance/BENCHMARK_REPORT.md`).
 - **Bounded Concurrency:** Socket discoveries and file inspections must observe strict timeouts and bounded threads.
 - **Empirical Benchmarks:** Do not report estimated benchmarks as measured benchmarks; always record real execution times.
 

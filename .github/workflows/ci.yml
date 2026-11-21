@@ -39,3 +39,36 @@ jobs:
         run: python -X importtime -c "import desk.routing, desk.rework" 2>&1 | tail -n 3
       - name: Library consistency (domain intelligence)
         run: python tools/desk.py domains check
+
+  perf:
+    # Informational, never gating (roadmap I-10): per-stage wall time and peak memory of the core engines on the
+    # checked-in synthetic fixture, recorded on all three OSes and uploaded as an artifact. Software-only; no ECAD.
+    name: perf (informational) / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      DESK_TELEMETRY: "0"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Offline profile, synthetic board at x1 / x4 / x16
+        shell: bash
+        run: >
+          python tools/profile_perf.py --offline --scale 1,4,16 --repeat 7 --timeout 1200
+          --out "perf-${{ runner.os }}.json" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload measurements
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-${{ runner.os }}
+          path: perf-${{ runner.os }}.json
+          if-no-files-found: warn
