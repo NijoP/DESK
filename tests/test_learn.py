@@ -274,9 +274,69 @@ class TestSingleMemoryWriter(unittest.TestCase):
         self.assertEqual(set(L.MEMORY_FILES), {"AGENTS.md", "CLAUDE.md"})
 
 
-@unittest.skipUnless(shutil.which("node") and os.path.exists(os.path.join(L.DEFAULTS["backpass_dir"], "src", "redact.js")),
-                     "node or Backpass missing (python tools/learn.py setup)")
+BACKPASS_DIR = L.DEFAULTS["backpass_dir"]
+PIN_FILE = os.path.join(ROOT, "library", "tools", "BACKPASS_PIN")
+# CI sets DESK_REQUIRE_BACKPASS=1 on the Linux leg (after setup-node and the pinned clone): there a missing
+# prerequisite is a failure, not a silent skip. Everywhere else the real-Backpass tests skip without node + clone.
+REQUIRE_BACKPASS = os.environ.get("DESK_REQUIRE_BACKPASS") == "1"
+
+
+def _need_backpass(tc):
+    if shutil.which("node") and os.path.exists(os.path.join(BACKPASS_DIR, "src", "redact.js")): return
+    if REQUIRE_BACKPASS: tc.fail(f"DESK_REQUIRE_BACKPASS=1 but node or the pinned clone at {BACKPASS_DIR} is missing")
+    tc.skipTest("node or Backpass missing (python tools/learn.py setup)")
+
+
+def _pin():
+    with open(PIN_FILE, encoding="utf-8") as f: return f.read().strip()
+
+
+# The interface devtools/learn/collect.mjs uses from Backpass internals (not a public API: package.json has no
+# "exports"; the pin is what protects it). A pin bump that breaks any of this fails here.
+CONTRACT_JS = r"""
+import path from "node:path"; import { pathToFileURL } from "node:url";
+const bp = process.argv[1], problems = [];
+const imp = (p) => import(pathToFileURL(path.join(bp, "src", p)).href);
+const { ADAPTERS } = await imp("discovery/index.js");
+const { redact } = await imp("redact.js");
+if (typeof redact !== "function") problems.push("redact.js: redact is not a function");
+else if (redact("token ghp_" + "A".repeat(36)).includes("ghp_" + "A".repeat(36))) problems.push("redact.js: GitHub token not redacted");
+if (!ADAPTERS || typeof ADAPTERS !== "object" || !Object.keys(ADAPTERS).length) problems.push("discovery/index.js: ADAPTERS missing or empty");
+for (const [n, a] of Object.entries(ADAPTERS || {})) {
+  if (typeof a.read !== "function") problems.push(n + ": read() missing");
+  if (!a.sqliteBacked && typeof a.enumerate !== "function") problems.push(n + ": enumerate() missing");
+  if (a.sqliteBacked && typeof a.enumerate !== "function" && typeof a.discover !== "function") problems.push(n + ": enumerate()/discover() missing");
+  if (typeof a.discover !== "function" && typeof a.classify !== "function") problems.push(n + ": classify() missing");
+  if (a.createScanContext !== undefined && typeof a.createScanContext !== "function") problems.push(n + ": createScanContext is not a function");
+}
+console.log(JSON.stringify({ adapters: Object.keys(ADAPTERS || {}), problems }));
+"""
+
+
+class TestBackpassPinContract(unittest.TestCase):
+    def test_pin_is_a_full_commit_sha(self):
+        self.assertRegex(_pin(), r"^[0-9a-f]{40}$")
+
+    def test_clone_is_checked_out_at_the_pin(self):
+        _need_backpass(self)
+        head = subprocess.run(["git", "-C", BACKPASS_DIR, "rev-parse", "HEAD"], capture_output=True, text=True)
+        self.assertEqual(head.returncode, 0, head.stderr)
+        self.assertEqual(head.stdout.strip(), _pin())
+
+    def test_pinned_clone_exports_the_adapter_interface_collect_uses(self):
+        _need_backpass(self)
+        p = subprocess.run(["node", "--input-type=module", "-e", CONTRACT_JS, BACKPASS_DIR], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        r = json.loads(p.stdout.strip().splitlines()[-1])
+        self.assertEqual(r["problems"], [])
+        self.assertIn("pi", r["adapters"])                   # the adapter the integration test below drives
+
+
 class TestBackpassAdapter(Base):
+    def setUp(self):
+        _need_backpass(self)
+        super().setUp()
+
     def test_pi_store_parsed_filtered_and_redacted(self):
         home = os.path.join(self.tmp, "home"); store = os.path.join(home, ".pi", "agent", "sessions", "--x--")
         os.makedirs(store)

@@ -77,3 +77,8 @@ re-analysis, rejection memory, AGENTS.md accept → task with `AGENTS.md`/`CLAUD
 fixture), gotcha accept-in-section, regression **revert** (pointer unchanged), memory files refused by `apply_rule`,
 budget read from `.backpassrc.json`, protected refusal, a scan that no `desk/`, `tools/` or `devtools/` code opens
 `AGENTS.md`/`CLAUDE.md` for writing, and a real Backpass Pi-adapter integration test (parse, filter, redact).
+The real-Backpass tests (`TestBackpassAdapter`, `TestBackpassPinContract`: pin is a 40-hex SHA, the clone is at the
+pin, and the clone still exports the `ADAPTERS`/`redact` interface `collect.mjs` uses) skip locally without Node and
+the clone. CI's Linux legs install Node 22, fetch Backpass at `library/tools/BACKPASS_PIN` and set
+`DESK_REQUIRE_BACKPASS=1`, which turns that skip into a failure; a pin bump that breaks the interface fails CI.
+Windows and macOS legs still skip them.

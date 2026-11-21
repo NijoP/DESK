@@ -32,8 +32,32 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
           desk --version
+      # Real-Backpass adapter + pin contract tests (tests/test_learn.py) on the Linux legs. Dev-time only: Backpass
+      # is never a DESK runtime dependency (AGENTS.md section B). DESK_REQUIRE_BACKPASS=1 turns a skip into a failure.
+      - name: Node 22 for the Backpass adapter test (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Pinned Backpass clone at library/tools/BACKPASS_PIN (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          pin="$(tr -d '[:space:]' < library/tools/BACKPASS_PIN)"
+          git init -q library/tools/backpass
+          git -C library/tools/backpass fetch -q --depth 1 https://github.com/kunchenguid/backpass "$pin"
+          git -C library/tools/backpass checkout -q FETCH_HEAD
+          test "$(git -C library/tools/backpass rev-parse HEAD)" = "$pin"
+          node --version
       - name: Unit and fixture tests (no network, no ECAD, no Java needed)
+        env:
+          DESK_REQUIRE_BACKPASS: ${{ runner.os == 'Linux' && '1' || '' }}
         run: python -m unittest discover -s tests -p "test_*.py"
+      - name: Backpass adapter and pin contract tests, verbose (Linux)
+        if: runner.os == 'Linux'
+        env:
+          DESK_REQUIRE_BACKPASS: "1"
+        run: python -m unittest -v tests.test_learn.TestBackpassAdapter tests.test_learn.TestBackpassPinContract
       - name: Import cost of the lazy facades (informational)
         continue-on-error: true
         run: python -X importtime -c "import desk.routing, desk.rework" 2>&1 | tail -n 3
