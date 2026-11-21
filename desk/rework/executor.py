@@ -1,8 +1,13 @@
 """
-DESK Rework Mode Controlled Mutation Executor & Readback Verification Engine.
-Executes approved surgical repairs under the single-writer lock (desk/ops.py),
-enforces pre-mutation checkpoints, and mandates physical readback verification.
-Zero external dependencies.
+DESK Rework Mode repair executor: SIMULATION ONLY.
+
+Approved repairs are applied to the in-memory `IndexedPCBSnapshot`, never to the live board. The "readback" below
+reads that same snapshot back, so it proves only that the simulated edit is self-consistent. The result status is
+therefore SIMULATED (or FAILED / BLOCKED), never VERIFIED: VERIFIED is reserved for a live readback of the board
+(report F-3). `verification_passed` stays False for every result here because no board readback was performed.
+
+The simulation still runs under the single-writer lock (desk/ops.py, classified VALIDATION: no board write) so it
+cannot interleave with a live writer, and the approval used is journalled. Zero external dependencies.
 """
 
 from __future__ import annotations
@@ -13,7 +18,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
-from desk.ops import write_op, OP_NON_IDEMPOTENT_MUTATION
+from desk.ops import write_op, OP_VALIDATION
 from desk.runtime.checkpoints import CheckpointManager
 from desk.snapshot import IndexedPCBSnapshot
 from desk.rework.connection import ProjectBinding, ECADConnectionManager, ProjectMismatchError
@@ -25,7 +30,7 @@ class RepairExecutionResult:
     repair_id: str
     issue_id: str
     action_type: str
-    status: str  # "VERIFIED", "FAILED", "BLOCKED", "REJECTED"
+    status: str  # "SIMULATED", "FAILED", "BLOCKED", "REJECTED" - never "VERIFIED" (no live readback, report F-3)
     duration_ms: float
     timestamp: float
     before_fingerprint: str
@@ -35,6 +40,9 @@ class RepairExecutionResult:
     verification_details: str
     checkpoint_id: Optional[str] = None
     error_message: Optional[str] = None
+    simulated: bool = True               # the repair touched the in-memory snapshot only, never the board
+    simulation_passed: bool = False      # the simulated edit read back consistently from the snapshot
+    live_readback: bool = False          # no board readback exists for this executor
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -49,7 +57,7 @@ class ReadbackVerificationError(RuntimeError):
 
 
 class RepairExecutor:
-    """Safely executes authorized surgical repairs against PCB state with mandatory readback."""
+    """Simulates authorized surgical repairs on the in-memory PCB snapshot (no board mutation, no live readback)."""
 
     @classmethod
     def execute_surgical_repair(
@@ -117,13 +125,13 @@ class RepairExecutor:
 
         # 4. Atomic Single-Writer Mutation
         from desk.ops import record_approval
-        approval_id = record_approval(norm_path, "rework_repair", repair.repair_id, granted_by=approval_token.granted_by,
+        approval_id = record_approval(norm_path, "rework_simulate", repair.repair_id, granted_by=approval_token.granted_by,
                                       how=f"rework approve {approval_token.token}", token=approval_token.token)
         with write_op(
             project=norm_path,
-            op="rework_repair",
+            op="rework_simulate",
             target=repair.repair_id,
-            classification=OP_NON_IDEMPOTENT_MUTATION,
+            classification=OP_VALIDATION,
             approval=approval_id,
         ):
             try:
@@ -138,7 +146,7 @@ class RepairExecutor:
                     actual_pad = snapshot.pad_lookup.get((ref, pad_num))
                     readback_info = {"ref": ref, "pad": pad_num, "net": actual_pad.get("net") if actual_pad else None}
                     verification_ok = (actual_pad is not None and actual_pad.get("net") == new_net)
-                    verification_msg = f"Pad {ref}.{pad_num} net readback verified as '{new_net}'"
+                    verification_msg = f"Pad {ref}.{pad_num} net reads back as '{new_net}' in the snapshot"
 
                 elif repair.action_type == "NUDGE_COMPONENT":
                     ref = repair.affected_objects.get("ref", "")
@@ -157,7 +165,7 @@ class RepairExecutor:
                         updated_c = snapshot.ref_to_comp.get(ref, {})
                         readback_info = {"ref": ref, "x": updated_c.get("x"), "y": updated_c.get("y")}
                         verification_ok = (updated_c.get("x") == new_x and updated_c.get("y") == new_y)
-                        verification_msg = f"Component {ref} repositioned to ({new_x}, {new_y}) and verified"
+                        verification_msg = f"Component {ref} repositioned to ({new_x}, {new_y}) in the snapshot"
                     else:
                         verification_ok = False
                         verification_msg = f"Component {ref} not found in snapshot"
@@ -184,7 +192,7 @@ class RepairExecutor:
                         matching_tracks = [t for t in snapshot.tracks if t.get("net") == net]
                         readback_info = {"net": net, "tracks_count": len(matching_tracks), "track": new_track}
                         verification_ok = len(matching_tracks) > 0
-                        verification_msg = f"Net '{net}' routed with track segment and verified"
+                        verification_msg = f"Net '{net}' routed with a track segment in the snapshot"
                     else:
                         verification_ok = False
                         verification_msg = f"Net '{net}' has fewer than 2 endpoints"
@@ -198,20 +206,23 @@ class RepairExecutor:
                             readback_info = {"track_id": t.get("id"), "width": t.get("width")}
                             break
                     snapshot._compute_all_revisions()
-                    verification_ok = True
-                    verification_msg = f"Power track widened to {new_w} mil and verified"
+                    # Read the snapshot back: a track must have matched and now carry the new width.
+                    verification_ok = bool(readback_info) and readback_info.get("width") == new_w
+                    verification_msg = (f"Power track widened to {new_w} mil in the snapshot" if verification_ok
+                                        else f"No track matched {t_id or repair.affected_objects.get('net')!r}; nothing widened")
 
                 elif repair.action_type == "REPOUR_COPPER_ZONE":
                     z_id = repair.affected_objects.get("zone_id", "Z1")
                     snapshot.update_zone({"id": z_id, "layer": 1, "net": "GND", "unpoured": False, "stale": False})
-                    readback_info = {"zone_id": z_id, "stale": False}
-                    verification_ok = True
-                    verification_msg = f"Copper zone {z_id} repoured and verified clean"
+                    z = next((q for q in snapshot.zones if q.get("id") == z_id), None)
+                    readback_info = {"zone_id": z_id, "stale": z.get("stale") if z else None}
+                    verification_ok = z is not None and z.get("stale") is False and z.get("unpoured") is False
+                    verification_msg = f"Copper zone {z_id} marked repoured in the snapshot (no copper was computed)"
 
                 else:
-                    # Default surgical pass
-                    verification_ok = True
-                    verification_msg = f"Repair {repair.action_type} executed and verified"
+                    # An action type this executor does not implement is a failure, never a default pass (report F-3).
+                    verification_ok = False
+                    verification_msg = f"Unsupported repair action type {repair.action_type!r}; nothing was applied"
 
             except Exception as e:
                 verification_ok = False
@@ -225,16 +236,17 @@ class RepairExecutor:
             repair_id=repair.repair_id,
             issue_id=repair.issue_id,
             action_type=repair.action_type,
-            status="VERIFIED" if verification_ok else "FAILED",
+            status="SIMULATED" if verification_ok else "FAILED",
             duration_ms=round(duration_ms, 2),
             timestamp=time.time(),
             before_fingerprint=before_fp,
             after_fingerprint=after_fp,
             readback_data=readback_info,
-            verification_passed=verification_ok,
-            verification_details=verification_msg,
+            verification_passed=False,
+            verification_details=f"SIMULATED (in-memory snapshot only, board not changed, no live readback): {verification_msg}",
             checkpoint_id=chk_id,
             error_message=error_msg,
+            simulation_passed=verification_ok,
         )
 
         # 5. Append Record to repair_history.jsonl
