@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 from desk.component_intelligence.identity.models import CanonicalComponent
 from desk.component_intelligence.identity.resolver import ComponentIdentityResolver
 from desk.component_intelligence.specifications.engine import ComponentSpecification
-from desk.component_intelligence.suppliers.models import SupplierOffer
+from desk.component_intelligence.suppliers.models import VERIFIED_SOURCES, SupplierOffer
 
 
 class VerificationLevel(str, enum.Enum):
@@ -210,6 +210,22 @@ class ComponentVerificationEngine:
             "unit_price": offer.unit_price,
             "age_days": round(age_days, 1),
         }
+
+        props["availability_source"] = offer.availability_source
+        props["stock_known"] = offer.stock_known
+
+        # Fail closed on unverified availability: fixture, seed or unlabelled stock is not stock.
+        if offer.availability_source not in VERIFIED_SOURCES or not offer.stock_known:
+            reason = ("no stock figure was shown" if offer.availability_source in VERIFIED_SOURCES
+                      else f"availability source '{offer.availability_source}' is not a live supplier "
+                           f"read or browser-agent evidence")
+            return VerificationEvidence(
+                level=VerificationLevel.V4_PROCUREMENT,
+                state=VerificationState.UNKNOWN,
+                checked_properties=props,
+                violations=[f"Stock at {offer.supplier_name} is not verified: {reason}."],
+                source="supplier_registry",
+            )
 
         # Check stock shortage
         if offer.stock < required_quantity:

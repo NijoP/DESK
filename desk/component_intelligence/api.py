@@ -17,7 +17,7 @@ from desk.component_intelligence.procurement.engine import ProcurementBOMReport,
 from desk.component_intelligence.specifications.engine import ComponentSpecification
 from desk.component_intelligence.storage.database import DatabaseManager
 from desk.component_intelligence.storage.repository import ComponentRepository
-from desk.component_intelligence.suppliers.models import SupplierOffer
+from desk.component_intelligence.suppliers.models import SOURCE_SEED, SupplierOffer
 from desk.component_intelligence.suppliers.providers.lcsc.provider import LcscSupplierProvider
 from desk.component_intelligence.suppliers.providers.mouser.provider import MouserSupplierProvider
 from desk.component_intelligence.suppliers.registry import SupplierRegistry
@@ -243,7 +243,8 @@ def migrate_seed_devices(max_items: Optional[int] = None) -> int:
         )
         repo.upsert_component(canon)
 
-        # If LCSC code present, register a local seed offer
+        # If LCSC code present, register a local seed offer. It records identity only: the seed
+        # file holds no stock or price, so none is invented (stock unknown, price unavailable).
         if lcsc:
             offer = SupplierOffer(
                 supplier_id="lcsc",
@@ -253,8 +254,10 @@ def migrate_seed_devices(max_items: Optional[int] = None) -> int:
                 manufacturer_name=canon.normalized_manufacturer,
                 mpn=mpn,
                 package=fp,
-                stock=1000,
-                unit_price=0.01,
+                stock=0,
+                unit_price=0.0,
+                availability_source=SOURCE_SEED,
+                stock_known=False,
             )
             repo.upsert_supplier_offer(offer)
         count += 1
