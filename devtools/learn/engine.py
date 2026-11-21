@@ -448,19 +448,23 @@ def apply_rule(p, run_tests=True):
         raise UsageError(f"learn.py does not edit {rel}: agent-memory edits land only via `backpass apply`; "
                          f"editable here: {', '.join(EDITABLE)}")
     path = os.path.join(ROOT, rel); header = EDITABLE[rel]
-    with open(path, encoding="utf-8") as f: orig = f.read()
+    # newline="" keeps the file's own line endings: the revert restores the exact bytes, and an edit does not
+    # convert an LF file to CRLF on Windows.
+    with open(path, encoding="utf-8", newline="") as f: orig = f.read()
+    nl = "\r\n" if "\r\n" in orig else "\n"
     line = f"- {p['rule']} <!-- learn:{p['id']} sessions={p['n_sessions']} -->"
     if f"learn:{p['id']}" in orig: return {"applied": False, "note": "already present"}
-    text = orig if header in orig else orig.rstrip() + f"\n\n{header}\nEach line was accepted by a human from >= 2 sessions of evidence (tools/learn.py).\n"
+    base = orig.replace("\r\n", "\n")
+    text = base if header in base else base.rstrip() + f"\n\n{header}\nEach line was accepted by a human from >= 2 sessions of evidence (tools/learn.py).\n"
     i = text.index(header) + len(header)
     j = text.find("\n## ", i); j = len(text) if j < 0 else j
-    new = text[:j].rstrip() + "\n" + line + "\n" + text[j:]
-    with open(path, "w", encoding="utf-8") as f: f.write(new)
+    new = (text[:j].rstrip() + "\n" + line + "\n" + text[j:]).replace("\n", nl)
+    with open(path, "w", encoding="utf-8", newline="") as f: f.write(new)
     if run_tests:
         t = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", os.path.join(ROOT, "tests")], cwd=ROOT,
                            capture_output=True, text=True, env={**os.environ, "DESK_TELEMETRY": "0"})
         if t.returncode != 0:
-            with open(path, "w", encoding="utf-8") as f: f.write(orig)
+            with open(path, "w", encoding="utf-8", newline="") as f: f.write(orig)
             raise DeskError("REVERTED: regression tests failed after applying the rule:\n" + t.stderr[-1500:])
     return {"applied": True, "file": rel, "diff": "+ " + line}
 

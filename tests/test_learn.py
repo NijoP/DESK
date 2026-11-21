@@ -166,6 +166,15 @@ class TestHumanGate(Base):
         after = self.snapshot(r)
         self.assertEqual((after["AGENTS.md"], after["CLAUDE.md"]), (before["AGENTS.md"], before["CLAUDE.md"]))
 
+    def test_gotcha_accept_keeps_the_file_line_endings(self):
+        r = self.make_root(); self.prop(edit_file=GOTCHAS, rule="eda.x fails live.", target="api-map", kind="eda_api_failure")
+        with open(os.path.join(r, GOTCHAS), "wb") as f: f.write(b"# API\r\n\r\n## Calls\r\nx\r\n")
+        self.assertTrue(L.decide("Ptest01", "accept", reviewer="tester")["applied"])
+        b = _rb(os.path.join(r, GOTCHAS))
+        self.assertIn(b"- eda.x fails live. <!-- learn:Ptest01 sessions=2 -->\r\n", b)
+        self.assertNotIn(b"\n", b.replace(b"\r\n", b""))       # no bare LF introduced
+        self.assertTrue(b.startswith(b"# API\r\n\r\n## Calls\r\nx\r\n"))
+
     def test_regression_failure_reverts_and_leaves_claude_pointer(self):
         r = self.make_root(failing_test=True); self.prop(edit_file=GOTCHAS, rule="eda.x fails live.", target="api-map")
         before = self.snapshot(r)
