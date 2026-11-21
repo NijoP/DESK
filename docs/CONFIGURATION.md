@@ -15,6 +15,10 @@ Generated from `desk/config.py` SCHEMA (`python desk.py config schema`). Precede
 | `DESK_MUTATION_POLICY` | enum | record | safety | record: journal whether a human approval accompanied each live mutation; require: refuse non-idempotent mutations without one. Any other value (a typo such as `required`) fails closed to require. |
 | `DESK_CREDENTIAL_STORE` | enum |  | credentials | Force a vault backend instead of the platform default. |
 | `NVIDIA_API_KEY` | secret |  | credentials | NVIDIA NIM key (or store it with desk.py auth configure). |
+| `OPENAI_API_KEY` | secret |  | credentials | OpenAI key for the openai provider (desk.py models). |
+| `XAI_API_KEY` | secret |  | credentials | xAI key for the xai (Grok) provider. |
+| `ANTHROPIC_API_KEY` | secret |  | credentials | Anthropic key for the anthropic provider. |
+| `GEMINI_API_KEY` | secret |  | credentials | Google Gemini API key for the gemini provider. |
 | `LCSC_CLIENT_ID` | str |  | credentials | LCSC API client id (live supplier calls). |
 | `LCSC_CLIENT_SECRET` | secret |  | credentials | LCSC API client secret. |
 | `DESK_MOCK_SUPPLIERS` | bool | 0 | credentials | 1 = supplier providers answer from offline fixtures. |
@@ -37,6 +41,9 @@ Generated from `desk/config.py` SCHEMA (`python desk.py config schema`). Precede
 | `DESK_FRONTIER_PROVIDER` | str |  | models | Provider for L4 (default: first of DESK_PROVIDER_ORDER). |
 | `DESK_FRONTIER_MODEL` | str |  | models | Model id for L4 on that provider. |
 | `DESK_L[1-4]_MODEL_(AGY|PI|NVIDIA)` | str |  | models | Model per tier and provider. |
+| `DESK_MODEL_CATALOG_FILE` | path |  | models | JSON file of extra providers and model capability/price descriptors (desk/orchestrator/providers/catalog.py). |
+| `DESK_MODEL_POLICY_FILE` | path |  | models | JSON file overriding the task-class -> model-tier allocation policy (providers/allocation.py). |
+| `DESK_(NVIDIA|OPENAI|XAI|OLLAMA|LLAMACPP|VLLM|ANTHROPIC|GEMINI)_BASE_URL` | str |  | models | Base URL override for one provider preset (e.g. a remote Ollama host). |
 | `DESK_L[1-4]_TIMEOUT` | float |  | models | Per-tier timeout in seconds (defaults 30/90/180/300). |
 | `DESK_L[1-4]_THINKING` | enum |  | models | Per-tier thinking level. |
 | `DESK_CONFIG_FILE` | path |  | project | User config file (default ~/.desk/config.json). |

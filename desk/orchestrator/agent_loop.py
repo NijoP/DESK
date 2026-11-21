@@ -49,6 +49,8 @@ class AgentRun:
     stopped_reason: str
     trace_path: Optional[str]
     usage: Dict[str, int] = field(default_factory=dict)
+    accounting: Dict[str, Any] = field(default_factory=dict)   # providers.accounting summary (provider path only)
+    provider: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -64,11 +66,23 @@ def _redact(obj: Any) -> Any:
 def run_agent(task: str, project: Optional[str] = None, model: Optional[str] = None, adapter: Any = None,
               allow_mutation: bool = False, max_turns: int = 12, max_tool_calls_per_turn: int = 6,
               budget_sec: float = 600.0, thinking: Optional[str] = "off", window_id: Optional[str] = None,
-              extra_system: str = "") -> AgentRun:
-    from desk.orchestrator.http_adapter import OpenAICompatAdapter
-    adapter = adapter or OpenAICompatAdapter("nvidia")
+              extra_system: str = "", fallback_models: Optional[List[str]] = None) -> AgentRun:
+    """Run the tool loop. `model` is a bare NIM model id (legacy path, unchanged) or a provider
+    route "provider:model" such as "anthropic:<id>", "gemini:<id>", "ollama:<id>"; a route, or any
+    `fallback_models`, selects the provider layer (retry, fallback chain, prompt-based tools for
+    models without native tool calling, token/cost ledger in <project>/state/model_usage.jsonl)."""
     from desk import config as deskcfg
     model = model or deskcfg.get("DESK_AGENT_MODEL") or DEFAULT_MODEL
+    if adapter is None:
+        from desk.orchestrator.providers.bridge import adapter_for_model, is_provider_route
+        if is_provider_route(model) or fallback_models:
+            from desk.orchestrator.providers.accounting import UsageLedger
+            ledger = UsageLedger(os.path.join(project, "state", "model_usage.jsonl") if project else None)
+            primary = model if is_provider_route(model) else f"nvidia:{model}"
+            adapter = adapter_for_model(primary, fallback_models, ledger=ledger)
+        else:
+            from desk.orchestrator.http_adapter import OpenAICompatAdapter
+            adapter = OpenAICompatAdapter("nvidia")
     ctx = {"project": project, "allow_mutation": allow_mutation, "window_id": window_id}
     system = SYSTEM_PROMPT + (f"\nProject directory: {project}" if project else "") + (f"\n{extra_system}" if extra_system else "")
     messages: List[Dict[str, Any]] = [{"role": "system", "content": system}, {"role": "user", "content": task}]
@@ -136,5 +150,9 @@ def run_agent(task: str, project: Optional[str] = None, model: Optional[str] = N
             messages.append({"role": "user", "content": f"Only the first {max_tool_calls_per_turn} tool calls were executed; continue."})
     run = AgentRun(model=model, turns=turn if 'turn' in dir() else 0, tool_calls=n_calls, elapsed_s=round(time.time() - t0, 1),
                    final_text=final_text, final_json=final_json, stopped_reason=stopped, trace_path=trace_path, usage=usage_total)
+    ledger = getattr(adapter, "ledger", None)
+    if ledger is not None and hasattr(ledger, "summary"):
+        run.accounting = ledger.summary()
+    run.provider = getattr(adapter, "label", None) or getattr(adapter, "name", None)
     trace({"run": run.to_dict()})
     return run

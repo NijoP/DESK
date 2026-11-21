@@ -108,6 +108,8 @@ def _h_plan_wires(args, ctx):
 def _h_wire_net(args, ctx):
     if not ctx.get("allow_mutation"):
         return {"error": "mutation not allowed in this session; call plan_wires and ask the operator to approve, or rerun with --allow-mutation"}
+    if not ctx.get("project"):
+        return {"error": "mutation refused: no operator-fixed project for this session; start the agent with a project path"}
     from desk.schematic_io import wire_net
     from desk import ops
     approval = ops.record_approval(args["project"], "wire_net", args["net"], granted_by="operator",
@@ -206,6 +208,16 @@ def tool_schemas(allow_mutation: bool = False) -> List[Dict[str, Any]]:
     return [t for t in TOOLS if allow_mutation or t["function"]["name"] not in MUTATING]
 
 
+def same_project(a: Any, b: Any) -> bool:
+    """True when two project paths name the same directory (case and separators normalised)."""
+    def norm(p: Any) -> str:
+        return os.path.normcase(os.path.realpath(os.path.abspath(str(p))))
+    try:
+        return norm(a) == norm(b)
+    except (TypeError, ValueError, OSError):
+        return False
+
+
 def dispatch(name: str, arguments: Any, ctx: Dict[str, Any]) -> Dict[str, Any]:
     """Run a tool by name. Never raises: errors come back as {"error": ...} so the model can recover."""
     h = HANDLERS.get(name)
@@ -218,10 +230,19 @@ def dispatch(name: str, arguments: Any, ctx: Dict[str, Any]) -> Dict[str, Any]:
             return {"error": f"arguments are not valid JSON: {e}"}
     if not isinstance(arguments, dict):
         return {"error": "arguments must be a JSON object"}
-    if "project" in arguments and not arguments["project"]:
-        arguments["project"] = ctx.get("project")
-    if "project" not in arguments and ctx.get("project") and name != "doctor":
-        arguments["project"] = ctx["project"]
+    fixed = ctx.get("project")
+    if fixed:
+        # The operator fixed the project for this session (audit S-5): a model-supplied project that
+        # names anything else is refused, never silently honoured, so prompt injection cannot
+        # redirect a read or a write to another project.
+        given = arguments.get("project")
+        if given and not same_project(given, fixed):
+            return {"error": f"project is fixed by the operator for this session ({fixed}); "
+                             f"the model-supplied project '{str(given)[:200]}' was refused"}
+        if "project" in arguments or name != "doctor":
+            arguments["project"] = fixed
+    elif "project" in arguments and not arguments["project"]:
+        arguments["project"] = None
     try:
         return h(arguments, ctx)
     except BaseException as e:   # SystemExit from bridge helpers included
