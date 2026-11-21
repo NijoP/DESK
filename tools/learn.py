@@ -11,7 +11,7 @@ regression tests run, auto-revert on failure). All other proposals become task f
 surfaces (lint/ERC/calc/release/verify/style) can never be edited by this tool."""
 import os, sys, json, subprocess, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from desk.learn import engine as L
+from devtools.learn import engine as L
 
 a = sys.argv[1:]
 def opt(n, d=None):

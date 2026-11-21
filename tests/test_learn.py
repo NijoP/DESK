@@ -5,7 +5,7 @@ import json, os, re, shutil, subprocess, sys, tempfile, unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-from desk.learn import engine as L  # noqa: E402
+from devtools.learn import engine as L  # noqa: E402
 from desk.errors import ApprovalRequired, ConfigError, DeskError, UsageError  # noqa: E402
 
 BIG = "x" * 20000
@@ -221,6 +221,36 @@ class TestHumanGate(Base):
             self.assertIn(f, L.PROTECTED)
 
 
+class TestDevelopmentBoundary(unittest.TestCase):
+    """AGENTS.md section B: Backpass is dev-time only. No module of the `desk` product package may import the dev
+    tooling or reference Backpass (same style as tests/test_config.py's os.environ guard)."""
+    RX = re.compile(r"backpass|\bdevtools\b", re.I)
+
+    def test_desk_package_never_references_backpass_or_devtools(self):
+        offenders = []
+        for dp, _, files in os.walk(os.path.join(ROOT, "desk")):
+            for fn in files:
+                if fn.endswith((".pyc", ".pyo")): continue
+                path = os.path.join(dp, fn)
+                with open(path, encoding="utf-8", errors="replace") as f:
+                    for n, line in enumerate(f, 1):
+                        if self.RX.search(line):
+                            offenders.append(f"{os.path.relpath(path, ROOT)}:{n}: {line.strip()[:100]}")
+        self.assertEqual(offenders, [], "\n".join(offenders))
+
+    def test_loader_lives_outside_the_product_package(self):
+        self.assertFalse(os.path.exists(os.path.join(ROOT, "desk", "learn")))
+        self.assertTrue(os.path.isfile(L.COLLECTOR))
+        self.assertEqual(os.path.dirname(os.path.dirname(L.COLLECTOR)), os.path.join(ROOT, "devtools"))
+
+    def test_cli_still_imports(self):
+        p = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "learn.py"), "--no-such-command"],
+                           capture_output=True, text=True, cwd=ROOT, env={**os.environ, "DESK_TELEMETRY": "0"})
+        self.assertNotIn("Traceback", p.stderr)
+        self.assertIn("tools/learn.py setup", p.stderr)   # usage text printed, exit code non-zero
+        self.assertNotEqual(p.returncode, 0)
+
+
 class TestSingleMemoryWriter(unittest.TestCase):
     """AGENTS.md section L: transcript-derived memory edits land only via `backpass apply`. No DESK module may open
     AGENTS.md or CLAUDE.md for writing, and the learn engine's editable surfaces exclude them."""
@@ -263,7 +293,7 @@ class TestBackpassAdapter(Base):
         out, known = os.path.join(self.tmp, "o.jsonl"), os.path.join(self.tmp, "k.json")
         with open(known, "w") as f: f.write("{}")
         env = {**os.environ, "USERPROFILE": home, "HOME": home}
-        p = subprocess.run(["node", os.path.join(ROOT, "desk", "learn", "collect.mjs"), L.DEFAULTS["backpass_dir"], out,
+        p = subprocess.run(["node", L.COLLECTOR, L.DEFAULTS["backpass_dir"], out,
                             json.dumps([ROOT]), "36500", known], capture_output=True, text=True, env=env)
         self.assertEqual(p.returncode, 0, p.stderr)
         rows = [json.loads(l) for l in _r(out).splitlines() if l.strip()]

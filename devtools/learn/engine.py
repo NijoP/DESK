@@ -3,7 +3,8 @@
 Inspired by Backpass (github.com/kunchenguid/backpass, MIT): evidence-only claims, >=2 distinct sessions before an
 instruction changes, persistent corroboration ledger, remembered rejections, token budget, one writer module.
 Different from Backpass by design:
-  * Transcript parsing is NOT duplicated — Backpass's adapters are called through desk/learn/collect.mjs.
+  * Transcript parsing is NOT duplicated — Backpass's adapters are called through devtools/learn/collect.mjs.
+  * Development-time only: lives in devtools/, outside the `desk` product package (AGENTS.md section B).
   * Detection is deterministic (no model calls): signals come from tool calls, results, errors, sizes and DESK's own
     logs (telemetry, ledger, op journal). Every finding carries verbatim, redacted quotes with session+event provenance.
   * Targets are DESK surfaces: agent instructions, context engine, tool interfaces, workflows, model routing.
@@ -19,6 +20,7 @@ import collections, hashlib, json, os, re, subprocess, sys, time
 from desk.errors import ApprovalRequired, ConfigError, DeskError, UsageError
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+COLLECTOR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "collect.mjs")
 STATE = os.path.join(ROOT, ".desk_learn")
 DEFAULTS = {
     "roots": [ROOT], "since_days": 365,
@@ -96,7 +98,7 @@ def collect(c=None):
     known_f, corpus_f, raw = os.path.join(STATE, "known.json"), os.path.join(STATE, "corpus.jsonl"), os.path.join(STATE, "raw.jsonl")
     if not os.path.exists(known_f): _wj(known_f, {})
     t0 = time.time()
-    p = subprocess.run(["node", os.path.join(ROOT, "desk", "learn", "collect.mjs"), bp, raw, json.dumps(c["roots"]),
+    p = subprocess.run(["node", COLLECTOR, bp, raw, json.dumps(c["roots"]),
                         str(c["since_days"]), known_f], capture_output=True, text=True, encoding="utf-8")
     if p.returncode != 0: raise DeskError("collector failed: " + p.stderr[-800:])
     stats = json.loads(p.stdout.strip().splitlines()[-1])

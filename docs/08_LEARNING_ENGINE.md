@@ -20,11 +20,13 @@ python tools/learn.py bench      # replay measured waste against the current DES
 ## Relationship to Backpass (MIT, © Kun Chen)
 | Backpass capability | DESK use |
 |---|---|
-| 8 harness adapters (transcript discovery + parsing, incl. SQLite stores) | **reused as-is** through `desk/learn/collect.mjs`; DESK has no transcript parser of its own |
+| 8 harness adapters (transcript discovery + parsing, incl. SQLite stores) | **reused as-is** through `devtools/learn/collect.mjs`; DESK has no transcript parser of its own |
 | secret redaction (`redact.js`) | **reused** on every text/input/result before it is stored |
 | evidence-only claims, ≥ 2 distinct sessions, persistent gap ledger, remembered rejections, token budget, human gate, one writer | **same principles, re-implemented** for DESK targets (small, deterministic) |
 | model-driven distill / synthesis via `acpx` | **not used**: DESK detection is deterministic, no model calls, so transcripts never leave the machine and results are reproducible |
 Backpass is cloned (not vendored) to `library/tools/backpass` at a pinned commit; its MIT license travels with it.
+The loader is development-time only: it lives in `devtools/learn/`, outside the `desk` product package, and a test
+(`tests/test_learn.py` `TestDevelopmentBoundary`) fails if any `desk/` file mentions Backpass or `devtools`.
 Backpass officially supports macOS/Linux; on this Windows machine all 8 adapters ran without error (verified).
 
 ## Pipeline
@@ -32,7 +34,7 @@ Backpass officially supports macOS/Linux; on this Windows machine all 8 adapters
    (default: the DESK repo) or any tool call uses DESK tools / the EasyEDA bridge. Incremental: `known.json` stores
    mtime+size per session; unchanged sessions are skipped. Results keep head+tail (errors are at the tail); sizes are
    measured before truncation.
-2. **Detect** (deterministic, `desk/learn/engine.py: detect`) — per tool call:
+2. **Detect** (deterministic, `devtools/learn/engine.py: detect`) — per tool call:
    `large_output` (≥ 4000 tokens), `reference_read` (whole API reference/skill docs), `repeated_call` (identical call,
    identical result), `failure` (error status, or error text at the tail of *command* output — file contents never count),
    `retry_loop` (≥ 3 failures of the same command), `eda_api_failure`, `context_bypass` (whole DESK docs/specs read),

@@ -2,7 +2,7 @@ DESK — Copyright (c) 2026 NijoP, MIT License (see LICENSE).
 
 Third-party software used (not vendored; fetched at a pinned commit by `python tools/learn.py setup`):
 - backpass (https://github.com/kunchenguid/backpass), Copyright (c) 2026 Kun Chen, MIT License.
-  DESK calls its harness discovery adapters and redaction module from desk/learn/collect.mjs.
+  DESK calls its harness discovery adapters and redaction module from devtools/learn/collect.mjs (development-time only).
 - Freerouting (optional, https://github.com/freerouting/freerouting), GPL-3.0, run as a separate process by tools/route.py.
 - Weft (https://github.com/WeaveMindAI/weft), Copyright (c) 2026 WeaveMind, Inc., O'Saasy License Agreement (not MIT/Apache/OSI).
   Not vendored and not redistributed: DESK drives a Weft install the user sets up, at the commit pinned in

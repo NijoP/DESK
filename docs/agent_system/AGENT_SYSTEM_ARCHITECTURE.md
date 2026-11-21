@@ -26,7 +26,7 @@ One document, five sections, replacing the proposed `MULTI_AGENT_ARCHITECTURE.md
 **Existing systems and their gaps** (software assessment §4): ledger lacks confidence, author, approval, status; three "verified fact" stores overlap; `learning/` is not indexed; no decay or archival anywhere.
 
 **Rules adopted.**
-- One writer for instruction memory: the learning engine's `apply` step with human approval (already implemented in `desk/learn/engine.py`).
+- One writer for instruction memory: `backpass apply` with per-edit human approval. The dev-only learning engine (`devtools/learn/engine.py`) turns AGENTS.md proposals into task files and never edits memory files.
 - Every knowledge record carries source, timestamp, evidence, confidence, project, status, author, approval status (SW-10 extends `ledger.add`).
 - Contradicted knowledge is never rewritten: a `correction` record references the original (already supported by `ledger.refs`).
 - Gap ledger entries expire (90 days) and retire when covered; rejections are remembered and re-proposed only with strictly more evidence (learn engine already keeps rejections; expiry to add).
