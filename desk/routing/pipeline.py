@@ -422,28 +422,28 @@ def run(argv) -> int:
 
     # Phase 16: Geometry-aware power integrity trace widening with pad escape preservation (IPC-2152 compliant)
     profiler.start_phase(16, category="IPC")
+    # Widening is part of the electrical result: a failure or a clearance-limited trunk is reported and keeps the
+    # run from returning success (E-3; the old `except Exception: print(Warning)` let FULL stand on failure).
+    from desk.routing.width import plan_board_widening, widening_shortfall
+    widen_error = None
+    widen_shortfall = {}
     try:
         raw_lines = ex(G + 'return (await eda.pcb_PrimitiveLine.getAll()).map(l => ({id:l.primitiveId, net:l.net, start_x:l.startX, start_y:l.startY, end_x:l.endX, end_y:l.endY, width:l.lineWidth, layer:l.layer}));',
                        timeout=60, window_id=P.get("window_id")) or []
         raw_pads = ex(G + 'return (await eda.pcb_PrimitivePad.getAll()).map(p => ({net:p.net, x:p.x, y:p.y, size:p.width||15.0}));',
                       timeout=60, window_id=P.get("window_id")) or []
+        raw_vias = ex(G + 'return (await eda.pcb_PrimitiveVia.getAll()).map(v=>({id:v.primitiveId,net:v.net,x:v.x,y:v.y,diameter:v.diameter}));',
+                      timeout=60, window_id=P.get("window_id")) or [] if widen_targets else []
 
         widen_nets = set(widen_targets)
         fine_pitch_pads = [(p["x"], p["y"], (p.get("size", 15.0) / 2.0)) for p in raw_pads if p.get("net") not in widen_nets]
-        obstacles = [(l["start_x"], l["start_y"], l["end_x"], l["end_y"], int(l["layer"])) for l in raw_lines if l.get("net") not in widen_nets]
-
-        widen_plans = {}
-        for _net, _target in widen_targets.items():
-            widen_plans[_net] = TraceWidthManager.plan_power_widening(
-                net_name=_net,
-                segments=[l for l in raw_lines if l.get("net") == _net],
-                target_width_mil=_target,
-                escape_width_mil=ESCAPE_CAP_MIL,
-                fine_pitch_pads=fine_pitch_pads,
-                obstacles=obstacles,
-                min_clearance_mil=5.0,
-                escape_radius_mil=35.0
-            )
+        # Clearance per pair = the larger of the two nets' routing rules (desk/router.py), never a literal.
+        widen_plans = plan_board_widening(
+            widen_targets, raw_lines, vias=raw_vias, pcb_dump=dump,
+            net_clearances_mil={n: c.clearance_mil for n, c in routing_plan.net_constraints.items()},
+            fab_min_clearance_mil=_fab_min, escape_width_mil=ESCAPE_CAP_MIL,
+            fine_pitch_pads=fine_pitch_pads, escape_radius_mil=35.0)
+        widen_shortfall = widening_shortfall(widen_plans)
 
         modifications = []
         for _plan in widen_plans.values():
@@ -458,8 +458,12 @@ def run(argv) -> int:
             time.sleep(2.0)
         print("Power trace widening: " + (", ".join(
             f"{n} {p.widened_segments}/{p.total_segments} -> {widen_targets[n]:.0f} mil" for n, p in widen_plans.items()) or "no targets"))
+        for _n, _k in widen_shortfall.items():
+            print(f"POWER WIDTH SHORTFALL: {_n} has {_k} segment(s) below the {widen_targets[_n]:.1f} mil "
+                  "current-derived width (adjacent copper); move the neighbours or use a polygon/plane")
     except Exception as e:
-        print("Warning: Power trace widening deferred:", e)
+        widen_error = f"{type(e).__name__}: {e}"
+        print("POWER WIDENING FAILED:", widen_error)
 
     # Rebuild copper pours to refresh ground planes around newly routed tracks
     try:
@@ -489,18 +493,31 @@ def run(argv) -> int:
     declared_zones = [{"net": pl["net"], "layer": _layer_ids.get(str(pl["layer"]).lower().replace(" ", ""), 1),
                        "polygon": [[(x + _ox) * MIL, (y + _oy) * MIL] for x, y in pl["polygon_mm"]]}
                       for pl in plan.get("planes", []) if pl.get("polygon_mm")]
+    # The verdict counts read-back copper only. A declared plane polygon is a plan, not copper: nets that connect
+    # only through one are reported as waiting for the pour, never FULL (E-5).
     conn_result = PhysicalConnectivityVerifier.verify_board(
         pcb_dump=dump,
         tracks=readback_tracks,
         vias=readback_vias,
-        zones=declared_zones,
     )
+    plane_pending = []
     if declared_zones:
-        print(f"Connectivity evidence: {len(declared_zones)} declared plane polygon(s) treated as conductors (not poured-copper readback)")
+        planned = PhysicalConnectivityVerifier.verify_board(pcb_dump=dump, tracks=readback_tracks, vias=readback_vias,
+                                                            zones=declared_zones)
+        plane_pending = sorted(n for n, r in planned.net_reports.items()
+                               if r.is_complete and not conn_result.net_reports[n].is_complete)
+        print(f"Connectivity evidence: {len(declared_zones)} declared plane polygon(s) NOT counted as copper; "
+              f"{len(plane_pending)} net(s) connect only through them: {', '.join(plane_pending) or '-'} "
+              "(pour the planes and read the copper back)")
     print("Physical Connectivity:", conn_result.summary)
     _fully_routed = conn_result.total_nets > 0 and conn_result.fully_connected_nets == conn_result.total_nets
     print("ROUTING VERDICT:", "FULL (every populated net physically connected on readback)" if _fully_routed else
-          f"PARTIAL ({conn_result.fully_connected_nets}/{conn_result.total_nets} nets; engine status {exec_result.status} is not a routing verdict)")
+          f"PARTIAL ({conn_result.fully_connected_nets}/{conn_result.total_nets} nets; engine status {exec_result.status} is not a routing verdict"
+          + (f"; {len(plane_pending)} wait for a poured plane" if plane_pending else "") + ")")
+    _power_ok = widen_error is None and not widen_shortfall
+    if not _power_ok:
+        print("POWER WIDTH VERDICT: INCOMPLETE (" + (f"widening failed: {widen_error}" if widen_error else
+              f"shortfall on {', '.join(sorted(widen_shortfall))}") + ")")
     profiler.end_phase()
 
     # Phase 20: Final report generation and logging
@@ -520,6 +537,9 @@ def run(argv) -> int:
         # must not infer success from this file's existence (report F-4).
         "routing_verdict": "FULL" if _fully_routed else "PARTIAL",
         "completion_pct": conn_result.overall_completion_pct,
+        "plane_pending_nets": plane_pending,
+        "power_widening_error": widen_error,
+        "power_width_shortfall": widen_shortfall,
         "engine": f"{exec_result.engine_name} {exec_result.engine_version}"
     }
     with open(os.path.join(wd, "routing_attempt.json"), "w", encoding="utf-8") as f:
@@ -532,4 +552,4 @@ def run(argv) -> int:
     profiler.end_phase()
 
     print("NEXT: python tools/drc.py", proj, "--converge")
-    return 0 if _fully_routed else 3
+    return 0 if (_fully_routed and _power_ok) else 3

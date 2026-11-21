@@ -62,18 +62,36 @@ def check_pnp(text, refs):
 GERBER_NEED = {"copper top": re.compile(r"(\.gtl$|toplayer|top_layer|copper_top|-f_cu)", re.I),
                "copper bottom": re.compile(r"(\.gbl$|bottomlayer|bottom_layer|copper_bottom|-b_cu)", re.I),
                "outline": re.compile(r"(\.gko$|\.gm1$|boardoutline|board_outline|edge_cuts|outline)", re.I),
-               "drill": re.compile(r"(\.drl$|\.xln$|drill|\.txt$)", re.I),
-               "solder mask": re.compile(r"(\.gts$|\.gbs$|soldermask|solder_mask|mask)", re.I)}
+               "drill": re.compile(r"(\.drl$|\.xln$|\.exc$|\.drd$|drill)", re.I),
+               # Solder mask only: a bare "mask" also matched the paste layer ("TopPasteMaskLayer", E-10).
+               "solder mask": re.compile(r"(\.gts$|\.gbs$|soldermask|solder_mask|[-_][fb][._]mask)", re.I)}
+# Excellon drill data exported with a generic .txt name (Altium "RoundHoles.TXT") is accepted only when its
+# content starts an Excellon header (M48); any other .txt (a readme) is not a drill file (E-10).
+_TXT = re.compile(r"\.txt$", re.I)
+
+
+def _is_excellon(zf, name):
+    try:
+        with zf.open(name) as f:
+            head = f.read(512).decode("ascii", "ignore")
+    except (KeyError, OSError, zipfile.BadZipFile):
+        return False
+    return any(line.strip().upper() == "M48" for line in head.splitlines()[:20])
 
 
 def check_gerber(zip_path, layers=2):
     E = []
     try:
-        names = zipfile.ZipFile(zip_path).namelist()
+        zf = zipfile.ZipFile(zip_path)
+        names = zf.namelist()
     except zipfile.BadZipFile:
         return ["Gerber file is not a zip"], []
-    for what, rx in GERBER_NEED.items():
-        if not any(rx.search(n) for n in names): E.append(f"Gerber zip has no {what} file")
+    with zf:
+        for what, rx in GERBER_NEED.items():
+            found = any(rx.search(n) for n in names)
+            if not found and what == "drill":
+                found = any(_TXT.search(n) and _is_excellon(zf, n) for n in names)
+            if not found: E.append(f"Gerber zip has no {what} file")
     if layers > 2:
         inner = [n for n in names if re.search(r"(inner|\.g\d+$|in\d_cu|\.gp\d$)", n, re.I)]
         if len(inner) < layers - 2: E.append(f"{layers}-layer board but only {len(inner)} inner layer files")

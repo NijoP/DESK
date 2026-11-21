@@ -10,13 +10,20 @@ import ast, math, re, operator
 
 SI = {"p": 1e-12, "n": 1e-9, "u": 1e-6, "µ": 1e-6, "m": 1e-3, "k": 1e3, "K": 1e3, "M": 1e6, "G": 1e9, "R": 1, "r": 1}
 _NUM = re.compile(r"^\s*([0-9]*\.?[0-9]+)\s*([pnuµmkKMGRr]?)([0-9]*)\s*([A-Za-zΩ]*)\s*$")
+_BARE_NUM = re.compile(r"^[0-9]*\.?[0-9]+$")
+_PREFIX_UNIT = re.compile(r"^[pnuµmkKMGRr]?[A-Za-zΩ]*$")
 
 
 def parse_value(text):
-    """'4.7uF' -> 4.7e-6, '2R2' -> 2.2, '562k' -> 562000, '1M' -> 1e6, '0R' -> 0, '10' -> 10. None if not numeric."""
+    """'4.7uF' -> 4.7e-6, '2R2' -> 2.2, '562k' -> 562000, '1M' -> 1e6, '0R' -> 0, '10' -> 10. None if not numeric.
+    A prefix/unit separated by a space belongs to the number: '4.7 uF' -> 4.7e-6, '562 k' -> 562000 (E-7).
+    Later tokens are ratings, not part of the value: '10uF 25V' -> 1e-5."""
     if text is None: return None
     if isinstance(text, (int, float)): return float(text)
-    t = str(text).strip().split()[0] if str(text).strip() else ""
+    tokens = str(text).split()
+    t = tokens[0] if tokens else ""
+    if len(tokens) > 1 and _BARE_NUM.match(t) and _PREFIX_UNIT.match(tokens[1]):
+        t += tokens[1]
     m = _NUM.match(t)
     if not m: return None
     num, pre, frac, _unit = m.groups()

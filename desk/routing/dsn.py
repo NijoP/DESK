@@ -16,11 +16,32 @@ class DSNInvariantViolationError(Exception):
     pass
 
 
+_NEEDS_QUOTE = re.compile(r"[\s()\"']")
+
+
+def _atom_text(atom: str) -> str:
+    """The name an atom denotes, without its surrounding quote pair."""
+    if len(atom) >= 2 and atom[0] == atom[-1] and atom[0] in "\"'":
+        return atom[1:-1]
+    return atom
+
+
+def _unquote_atom(atom: str) -> str:
+    """Drop the quotes of a quoted atom only when the bare name is still a single DSN token."""
+    text = _atom_text(atom)
+    if text == atom:
+        return atom
+    return atom if (not text or _NEEDS_QUOTE.search(text)) else text
+
+
 class SExprParser:
     """Tokenizes and parses nested S-expressions with support for quoted strings and comments."""
 
     # Matches: '(' or ')' or quoted strings ("..." or '...') or non-whitespace atoms
+    # `(parser (string_quote "))` declares the quote character itself; that lone quote is an atom, not the start
+    # of a string (read as a string it swallowed the rest of the file into one token).
     TOKEN_REGEX = re.compile(r"""
+        (?P<STRQ>(?<![^\s(])string_quote\s+[^\s()](?=\s*\)))|
         (?P<LPAREN>\()|
         (?P<RPAREN>\))|
         (?P<DQUOTE>\"(?:[^\"]|\\\")*\")|
@@ -33,6 +54,9 @@ class SExprParser:
         tokens: List[str] = []
         for match in cls.TOKEN_REGEX.finditer(text):
             val = match.group()
+            if match.lastgroup == "STRQ":
+                tokens.extend(val.split())
+                continue
             tokens.append(val)
         return tokens
 
@@ -329,20 +353,20 @@ class DSNTree:
         net_clearances_upper = {k.upper(): v for k, v in net_clearances.items()}
 
         # Filter out empty or un-named classes first
-        cleaned_classes = []
         for item in list(network[1:]):
             if isinstance(item, list) and item and str(item[0]).lower() == "class":
-                # Clean quotes from class and member net tokens
+                # Clean quotes from class and member net tokens. A name that needs quoting (whitespace, parens or
+                # a quote character, e.g. net "VIN 12V") keeps them: unquoted it would split into two members (E-8).
                 for idx in range(1, len(item)):
                     if isinstance(item[idx], str):
-                        item[idx] = item[idx].strip("'\"")
+                        item[idx] = _unquote_atom(item[idx])
 
                 # If class has no name or empty string, drop it
-                if len(item) < 2 or not str(item[1]).strip():
+                if len(item) < 2 or not _atom_text(str(item[1])).strip():
                     network.remove(item)
                     continue
 
-                cname = str(item[1]).strip()
+                cname = _atom_text(str(item[1])).strip()
                 c_upper = cname.upper()
 
                 # Determine target width

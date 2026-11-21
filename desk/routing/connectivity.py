@@ -9,6 +9,8 @@ import math
 from typing import Dict, List, Tuple, Set, Optional, Any
 from dataclasses import dataclass, field
 
+from desk.routing.padgeom import pad_shape, point_to_pad_distance, segment_to_pad_distance
+
 
 @dataclass
 class NetConnectivityReport:
@@ -315,7 +317,10 @@ class PhysicalConnectivityVerifier:
                     "layer": pad_layer,
                     "width": pad_w,
                     "height": pad_h,
-                    "radius": max(pad_w, pad_h) / 2.0
+                    "radius": max(pad_w, pad_h) / 2.0,
+                    # Real copper outline (rect / stadium / circle, rotated): a circle of radius max(w, h)/2 made a
+                    # track that stops 35 mil short of an 80x20 mil pad count as connected (E-5).
+                    "geom": pad_shape(comp, p),
                 }
                 if net not in net_pads:
                     net_pads[net] = []
@@ -521,12 +526,15 @@ class PhysicalConnectivityVerifier:
                     if d <= touch_thresh:
                         dsu.union(via_id, s[6])
 
-        # Connect pads to track segments and vias
+        # Connect pads to track segments and vias. A pad with a "geom" (PadShape) is tested against its real
+        # outline; a bare record (x, y, radius) keeps the legacy circle model.
         for p in expected_pads:
             pid = p["id"]
             px, py = p["x"], p["y"]
             p_lay = p["layer"]
             p_rad = p["radius"]
+            geom = p.get("geom")
+            reach = geom.bounding_radius if geom is not None else p_rad
 
             # Connect pad to tracks
             for s in segments:
@@ -535,7 +543,13 @@ class PhysicalConnectivityVerifier:
                 is_layer_match = (p_lay in (11, 12)) or (p_lay == s_lay)
                 if is_layer_match:
                     d, _, _ = _dist_point_to_segment(px, py, s[0], s[1], s[2], s[3])
-                    touch_thresh = p_rad + s[4] / 2.0 + tolerance_mil
+                    if d > reach + s[4] / 2.0 + tolerance_mil:
+                        continue
+                    if geom is not None:
+                        d = segment_to_pad_distance(s[0], s[1], s[2], s[3], geom)
+                        touch_thresh = s[4] / 2.0 + tolerance_mil
+                    else:
+                        touch_thresh = p_rad + s[4] / 2.0 + tolerance_mil
                     if d <= touch_thresh:
                         dsu.union(pid, s[6])
 
@@ -545,7 +559,14 @@ class PhysicalConnectivityVerifier:
                 is_layer_match = (p_lay in (11, 12)) or _span_covers(v_start, v_end, p_lay)
                 if is_layer_match:
                     d = math.hypot(px - vx, py - vy)
-                    if d <= (p_rad + vd / 2.0 + tolerance_mil):
+                    if d > reach + vd / 2.0 + tolerance_mil:
+                        continue
+                    if geom is not None:
+                        d = point_to_pad_distance(vx, vy, geom)
+                        touch_thresh = vd / 2.0 + tolerance_mil
+                    else:
+                        touch_thresh = p_rad + vd / 2.0 + tolerance_mil
+                    if d <= touch_thresh:
                         dsu.union(pid, via_id)
 
         # Check connected components among expected pads

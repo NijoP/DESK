@@ -100,34 +100,44 @@ def clearance_mil(voltage_v: float, condition: str = "B2") -> float:
 
 
 # ----------------------------------------------------------------------------- creepage (IEC 60664-1 Table F.4)
+# PROVISIONAL, UNVERIFIED (roadmap E-1, owner decision 2026-11-21): the PD2 rows used to switch from the printed-wiring
+# column (0.04 mm up to 40 V) to the material-group column (0.60 / 0.85 / 1.20 mm from 50 V), so creepage(40 V) = 0.04
+# but creepage(41 V) = 1.2 mm. PD2 now uses the conservative material-group column ONLY. Its transcribed rows start at
+# 50 V; a lower voltage takes the 50 V row (creepage never decreases with voltage, so this over-states, never
+# under-states). No value was added or invented. These figures are a safety-oriented baseline, NOT an IEC 60664-1
+# compliance claim: `verified_against_standard` stays False and every output carries CREEPAGE_BASIS.
+CREEPAGE_BASIS = ("PROVISIONAL / UNVERIFIED: conservative IEC 60664-1 Table F.4 material-group column as transcribed "
+                  "(PD2 below 50 V uses the 50 V row); not an IEC 60664-1 compliance statement")
 _CREEPAGE_V: List[float] = [10, 12.5, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250, 320, 400, 500, 630, 800, 1000]
+_CREEPAGE_PD2_V: List[float] = [50, 63, 80, 100, 125, 160, 200, 250, 320, 400, 500, 630, 800, 1000]
 _CREEPAGE_MM: Dict[str, List[float]] = {
-    # pollution degree 1, any material group
+    # pollution degree 1, any material group (rows _CREEPAGE_V)
     "PD1": [0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.025, 0.040, 0.063, 0.100, 0.160, 0.250, 0.400, 0.560, 0.750, 1.0, 1.3, 1.8, 2.4, 3.2],
-    # pollution degree 2 by material group
-    "PD2-I":   [0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.60, 0.63, 0.67, 0.71, 0.75, 0.80, 1.00, 1.25, 1.60, 2.0, 2.5, 3.2, 4.0, 5.0],
-    "PD2-II":  [0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.40, 1.80, 2.20, 2.8, 3.6, 4.5, 5.6, 7.1],
-    "PD2-III": [0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 0.04, 1.20, 1.25, 1.30, 1.40, 1.50, 1.60, 2.00, 2.50, 3.20, 4.0, 5.0, 6.3, 8.0, 10.0],
+    # pollution degree 2 by material group (rows _CREEPAGE_PD2_V; the mixed-in 0.04 mm printed-wiring rows were removed)
+    "PD2-I":   [0.60, 0.63, 0.67, 0.71, 0.75, 0.80, 1.00, 1.25, 1.60, 2.0, 2.5, 3.2, 4.0, 5.0],
+    "PD2-II":  [0.85, 0.90, 0.95, 1.00, 1.05, 1.10, 1.40, 1.80, 2.20, 2.8, 3.6, 4.5, 5.6, 7.1],
+    "PD2-III": [1.20, 1.25, 1.30, 1.40, 1.50, 1.60, 2.00, 2.50, 3.20, 4.0, 5.0, 6.3, 8.0, 10.0],
 }
 
 
 def creepage_mm(voltage_v: float, pollution_degree: int = 2, material_group: str = "III") -> float:
-    """Minimum creepage (mm) for functional insulation on printed wiring (IEC 60664-1 Table F.4).
-    Voltage is rounded up to the next table row; above 1000 V the caller must consult the standard."""
+    """Minimum creepage (mm), IEC 60664-1 Table F.4 as transcribed: PROVISIONAL / UNVERIFIED (see CREEPAGE_BASIS).
+    Voltage is rounded up to the next table row (below the first row: the first row); above 1000 V the caller must
+    consult the standard."""
     v = abs(float(voltage_v))
     if v > 1000.0:
         raise ValueError("creepage above 1000 V RMS is outside the implemented table; consult IEC 60664-1")
     if pollution_degree == 1:
-        key = "PD1"
+        key, rows = "PD1", _CREEPAGE_V
     elif pollution_degree == 2:
         mg = material_group.upper().rstrip("AB")
         if mg not in ("I", "II", "III"):
             raise ValueError("material_group must be I, II, IIIa or IIIb")
-        key = f"PD2-{mg}"
+        key, rows = f"PD2-{mg}", _CREEPAGE_PD2_V
     else:
         raise ValueError("pollution degree 3 and 4 are not implemented; consult IEC 60664-1 Table F.4")
     table = _CREEPAGE_MM[key]
-    for row_v, mm in zip(_CREEPAGE_V, table):
+    for row_v, mm in zip(rows, table):
         if v <= row_v:
             return mm
     return table[-1]

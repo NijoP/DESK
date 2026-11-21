@@ -107,6 +107,7 @@ class SpacingRequirement:
         d["router_rule_mm"] = round(self.router_rule_mm, 4)
         d["router_rule_mil"] = self.router_rule_mil
         d["meetable_at_pins"] = self.meetable_at_pins
+        d["creepage_basis"] = ipc.CREEPAGE_BASIS
         return d
 
 

@@ -42,9 +42,10 @@ def passive(ref: str, x_mm: float, y_mm: float, net_a: str, net_b: str, size: st
     body, pw, ph = dims.get(size, dims["0402"])
     gap = body / 2.0 - pw / 2.0 + 4.0
     # Dump convention: pad dx/dy are already in the board frame (tools/pcb_dump.py stores absolute
-    # offsets), so a rotated part carries rotated offsets and rotated pad shapes.
+    # offsets) and `shape` is the pad's own size with `rot` its board-frame rotation (desk/routing/padgeom.py),
+    # so a rotated part carries rotated offsets and an unrotated shape with rot 90.
     if rot in (90, 270):
-        pads = [_pad(1, 0.0, -gap, ph, pw, net_a, layer, 90), _pad(2, 0.0, gap, ph, pw, net_b, layer, 90)]
+        pads = [_pad(1, 0.0, -gap, pw, ph, net_a, layer, 90), _pad(2, 0.0, gap, pw, ph, net_b, layer, 90)]
         bb = [-ph / 2 - 6, ph / 2 + 6, -body / 2 - 6, body / 2 + 6]
     else:
         pads = [_pad(1, -gap, 0.0, pw, ph, net_a, layer), _pad(2, gap, 0.0, pw, ph, net_b, layer)]
@@ -68,11 +69,11 @@ def qfn(ref: str, x_mm: float, y_mm: float, pins: int, pitch_mm: float, nets: Li
             off = (i - (per_side - 1) / 2.0) * pitch_mm * MIL
             net = nets[(n - 1) % len(nets)]
             if side == 0:
-                pads.append(_pad(n, -half + ph / 2, off, ph, pw, net, layer, 90))
+                pads.append(_pad(n, -half + ph / 2, off, pw, ph, net, layer, 90))
             elif side == 1:
                 pads.append(_pad(n, off, half - ph / 2, pw, ph, net, layer))
             elif side == 2:
-                pads.append(_pad(n, half - ph / 2, -off, ph, pw, net, layer, 90))
+                pads.append(_pad(n, half - ph / 2, -off, pw, ph, net, layer, 90))
             else:
                 pads.append(_pad(n, -off, -half + ph / 2, pw, ph, net, layer))
             n += 1

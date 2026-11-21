@@ -205,12 +205,9 @@ class IndexedPCBSnapshot:
 
             cx = comp.get("x", 0.0)
             cy = comp.get("y", 0.0)
-            rot_deg = comp.get("rot", 0.0) or 0.0
-            rot_rad = math.radians(rot_deg)
-            cos_a = math.cos(rot_rad)
-            sin_a = math.sin(rot_rad)
 
-            # Insert component bounding box into spatial index
+            # Insert component bounding box into spatial index. The dump bbox, like the pad offsets, is already in
+            # the board frame at the stored rotation (tools/pcb_dump.py: getPrimitivesBBox - x/y), so no rotation.
             bbox = comp.get("bbox", [-50, 50, -50, 50])
             self.spatial_index.insert(ref, cx + bbox[0], cy + bbox[2], cx + bbox[1], cy + bbox[3])
 
@@ -256,6 +253,9 @@ class IndexedPCBSnapshot:
             return
         comp = self.ref_to_comp[ref]
         old_layer = comp.get("layer", 1)
+        # The rotation delta must be taken against the rotation the stored offsets belong to, before it is
+        # overwritten (the delta was always 0, so a rotated part kept its old pad positions and bbox).
+        old_rot = float(comp.get("rot", 0.0) or 0.0)
         comp["x"] = x_mil
         comp["y"] = y_mil
         comp["rot"] = rot_deg
@@ -269,24 +269,38 @@ class IndexedPCBSnapshot:
         if ref not in self.layer_to_components[layer]:
             self.layer_to_components[layer].append(ref)
 
-        # Pad offsets are board-frame at the component's stored rotation: rotate by the delta only (QA-03).
-        rot_rad = math.radians(float(rot_deg) - float(comp.get("rot", 0.0) or 0.0))
-        cos_a = math.cos(rot_rad)
-        sin_a = math.sin(rot_rad)
+        # Pad offsets and bbox are board-frame at the component's stored rotation: rotate them by the delta only
+        # (QA-03) and store the result, so the record stays board-frame at its new rotation.
+        delta = float(rot_deg) - old_rot
+        rot_rad = math.radians(delta)
+        cos_a = round(math.cos(rot_rad), 12)
+        sin_a = round(math.sin(rot_rad), 12)
+        rotated = abs(delta) > 1e-9
 
-        # Update spatial index
         bbox = comp.get("bbox", [-50, 50, -50, 50])
+        if rotated and comp.get("bbox"):
+            corners = [(bx * cos_a - by * sin_a, bx * sin_a + by * cos_a)
+                       for bx in (bbox[0], bbox[1]) for by in (bbox[2], bbox[3])]
+            bbox = [min(c[0] for c in corners), max(c[0] for c in corners),
+                    min(c[1] for c in corners), max(c[1] for c in corners)]
+            comp["bbox"] = bbox
+        # Update spatial index
         self.spatial_index.insert(ref, x_mil + bbox[0], y_mil + bbox[2], x_mil + bbox[1], y_mil + bbox[3])
 
         for p in comp.get("pads", []):
+            dx = p.get("dx", 0.0)
+            dy = p.get("dy", 0.0)
+            if rotated:
+                dx, dy = dx * cos_a - dy * sin_a, dx * sin_a + dy * cos_a
+                p["dx"], p["dy"] = dx, dy
+                if p.get("rot") is not None:
+                    p["rot"] = (float(p.get("rot") or 0.0) + delta) % 360.0
             num = str(p.get("num", ""))
             net = p.get("net")
             if not net or net not in self.net_to_endpoints:
                 continue
-            dx = p.get("dx", 0.0)
-            dy = p.get("dy", 0.0)
-            px = x_mil + dx * cos_a - dy * sin_a
-            py = y_mil + dx * sin_a + dy * cos_a
+            px = x_mil + dx
+            py = y_mil + dy
             for ep in self.net_to_endpoints[net]:
                 if ep.ref == ref and ep.pad_num == num:
                     ep.x_mil = px
@@ -319,10 +333,6 @@ class IndexedPCBSnapshot:
 
         cx = comp.get("x", 0.0)
         cy = comp.get("y", 0.0)
-        rot_deg = comp.get("rot", 0.0) or 0.0
-        rot_rad = math.radians(rot_deg)
-        cos_a = math.cos(rot_rad)
-        sin_a = math.sin(rot_rad)
 
         bbox = comp.get("bbox", [-50, 50, -50, 50])
         self.spatial_index.insert(ref, cx + bbox[0], cy + bbox[2], cx + bbox[1], cy + bbox[3])
@@ -412,8 +422,6 @@ class IndexedPCBSnapshot:
             comp = self.ref_to_comp.get(ref, {})
             cx = comp.get("x", 0.0)
             cy = comp.get("y", 0.0)
-            rot_deg = comp.get("rot", 0.0) or 0.0
-            rot_rad = math.radians(rot_deg)
             dx = pad.get("dx", 0.0)
             dy = pad.get("dy", 0.0)
             px = cx + dx  # board-frame offsets (QA-03)
