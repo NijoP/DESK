@@ -1,0 +1,16 @@
+* DESK SYNTHETIC MEASURE FAIL
+R1 in out 1000
+C1 out 0 1e-06
+V1 in 0 DC 1
+.control
+set filetype=ascii
+echo DESK_BEGIN tran1
+tran 0.0001 0.001
+linearize v(out)
+write tran1.raw v(out)
+meas tran t_cross WHEN v(out)=5
+echo DESK_END tran1
+echo DESK_DONE
+quit
+.endc
+.end

@@ -1,0 +1,22 @@
+* DESK synthetic rc step
+R1 vin vout 1000
+C1 vout 0 1e-06
+V1 vin 0 AC 1 PULSE(0 5 0 1e-09 1e-09 0.01 0.02)
+.control
+set filetype=ascii
+echo DESK_BEGIN tran1
+tran 5e-05 0.005
+linearize v(vin) v(vout)
+write tran1.raw v(vin) v(vout)
+meas tran vout_final FIND v(vout) AT=4.9m
+meas tran t_tau WHEN v(vout)=3.1606
+echo DESK_END tran1
+echo DESK_BEGIN ac1
+ac dec 10 10 100000
+write ac1.raw v(vin) v(vout)
+meas ac f3db WHEN vdb(vout)=-3.0103
+echo DESK_END ac1
+echo DESK_DONE
+quit
+.endc
+.end

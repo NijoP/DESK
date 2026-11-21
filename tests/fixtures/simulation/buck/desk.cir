@@ -1,0 +1,23 @@
+* DESK synthetic buck stage
+MQ1 vin g sw sw NSW
+D1 0 sw DSCH
+L1 sw vout 2.2e-05
+C1 vout 0 2.2e-05
+R1 vout 0 5
+VIN vin 0 DC 12
+VG g sw PULSE(0 10 0 1e-08 1e-08 4.2e-06 1e-05)
+.model NSW NMOS(LEVEL=1 VTO=2 KP=10)
+.model DSCH D(IS=1e-6 N=1.05 RS=0.02 CJO=100p)
+.control
+set filetype=ascii
+echo DESK_BEGIN tran1
+tran 5e-07 0.0004 0 5e-08 uic
+linearize v(sw) v(vout)
+write tran1.raw v(sw) v(vout)
+meas tran vout_avg AVG v(vout) FROM=350u TO=400u
+meas tran vout_pp PP v(vout) FROM=350u TO=400u
+echo DESK_END tran1
+echo DESK_DONE
+quit
+.endc
+.end

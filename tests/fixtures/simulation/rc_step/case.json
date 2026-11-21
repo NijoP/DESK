@@ -1,0 +1,20 @@
+{
+ "note": "Synthetic test circuit (not a real project): 1k / 1uF low-pass, 5 V step, tau = 1 ms, f3dB = 159.2 Hz.",
+ "block": {"id": "SYN_RC", "title": "SYNTHETIC RC", "ports": ["VIN", "VOUT"],
+  "parts": [
+   {"ref": "R1", "mpn": "SYNTHETIC-R", "value": "1k", "pins": {"1": "VIN", "2": "VOUT"}},
+   {"ref": "C1", "mpn": "SYNTHETIC-C", "value": "1uF", "pins": {"1": "VOUT", "2": "GND"}}
+  ]},
+ "sim": {"title": "synthetic rc step",
+  "sources": [{"name": "V1", "kind": "V", "pos": "VIN", "neg": "GND", "ac": 1,
+               "pulse": [0, 5, 0, 1e-9, 1e-9, 0.01, 0.02]}],
+  "analyses": [{"type": "tran", "step": 5e-5, "stop": 0.005, "linearize": true},
+               {"type": "ac", "variation": "dec", "points": 10, "fstart": 10, "fstop": 100000}],
+  "measures": [{"name": "vout_final", "analysis": "tran", "expr": "FIND v({VOUT}) AT=4.9m"},
+               {"name": "t_tau", "analysis": "tran", "expr": "WHEN v({VOUT})=3.1606"},
+               {"name": "f3db", "analysis": "ac", "expr": "WHEN vdb({VOUT})=-3.0103"}],
+  "save": ["v({VIN})", "v({VOUT})"]},
+ "expect": [{"quantity": "vout_final", "min": 4.94, "max": 4.98, "unit": "V", "source": "5*(1-exp(-4.9)) = 4.963 V"},
+            {"quantity": "t_tau", "min": 0.00095, "max": 0.00105, "unit": "s", "source": "tau = R*C = 1 ms"},
+            {"quantity": "f3db", "min": 150, "max": 170, "unit": "Hz", "source": "1/(2*pi*R*C) = 159.2 Hz"}]
+}

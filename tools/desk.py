@@ -14,6 +14,7 @@
   python tools/desk.py config show|schema [--json]   effective configuration (env > ~/.desk/config.json > desk.config.json > default), secrets masked
   python tools/desk.py weft status|workflows|nodes|validate [<workflow>]|serve|run <workflow> --project <P> --requirements <file>|history --project <P>|resume <run-id>
                                                      Weft orchestration: typed workflows over DESK nodes; `weft` alone prints the full help (docs/weft/)
+  python tools/desk.py sim engines|netlist|run|models  optional circuit simulation (ngspice batch adapter; docs/simulation/README.md)
   python tools/desk.py task show projects/<P> <task_id> [--json]   engineering task record (desk/tasks.py)
   python tools/desk.py task list projects/<P>        tasks with execution / verification status and failure class
   python tools/desk.py recover projects/<P>          list unfinished/dirty live operations and how to resolve each
@@ -437,6 +438,10 @@ def main(argv):
     if a[0] == "weft":
         from desk.weft.cli import main as weft_main
         return weft_main(a[1:])
+
+    if a[0] == "sim":
+        from desk.simulation.cli import main as sim_main
+        return sim_main(a[1:])
 
     if a[0] == "domains":
         from desk.domain_intelligence import api as dapi

@@ -290,6 +290,20 @@ def check_project(project: Optional[str]) -> List[Check]:
     return out
 
 
+def check_ngspice() -> Check:
+    """ngspice is an optional simulation plugin: absent is a warning, never a failure."""
+    from desk.simulation import base as sim
+    eng = sim.get("ngspice")
+    exe, how = eng.executable()
+    if not exe:
+        return Check("ngspice (optional)", WARN, how,
+                     "Optional: install ngspice (or set DESK_NGSPICE) to run `desk.py sim run`; DESK core does not need it.")
+    info = _cached("ngspice", _sig(exe), lambda: eng.probe().__dict__)
+    if not info.get("available"):
+        return Check("ngspice (optional)", WARN, info.get("detail", ""), "Check the DESK_NGSPICE path / ngspice install.")
+    return Check("ngspice (optional)", OK, f"ngspice-{info.get('version')} ({exe})")
+
+
 def check_weft() -> Check:
     """Weft is the workflow runtime for orchestrated runs. Missing Weft is a warning here: the deterministic
     engines and every other tool work without it; `desk.py weft run` itself refuses to start."""
@@ -315,7 +329,7 @@ def _probes() -> List[Callable[[], Check]]:
         check_python, check_config, check_bridge, check_node, check_java, check_freerouting, check_easyeda_cli,
         lambda: check_model_cli("pi", "DESK_PI_PATH", ["pi", "pi.cmd"]),
         lambda: check_model_cli("agy", "DESK_AGY_PATH", ["agy", "agy.exe"]),
-        check_model_config, check_nvidia_key, check_weft,
+        check_model_config, check_nvidia_key, check_weft, check_ngspice,
     ]
 
 
