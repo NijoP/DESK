@@ -384,11 +384,16 @@ def main(argv):
             print(f"  Duration:     {res.duration_ms} ms")
             print(f"  Readback:     {res.readback_data}")
             print(f"  Verification: {res.verification_details}")
-            if res.verification_passed:
+            if res.verification_passed:      # a live board readback proved it (no executor provides one yet)
                 session.completed_repairs_count += 1
                 session.current_revision = res.after_fingerprint
                 session.transition_to(ReworkSessionLifecycle.VERIFICATION, f"Verified {r_id}")
                 print(f"[OK] Repair {r_id} VERIFIED and committed to repair history.")
+            elif res.status == "SIMULATED":
+                # Report F-3: the executor edits the in-memory snapshot only. Never call that VERIFIED.
+                session.transition_to(ReworkSessionLifecycle.NEEDS_REVIEW, f"Simulated {r_id}; board not changed")
+                print(f"[SIMULATED] Repair {r_id} was applied to the in-memory snapshot only. The board was NOT changed "
+                      f"and nothing was verified on it; apply the repair with a live tool and read it back.")
             else:
                 session.failed_repairs_count += 1
                 session.transition_to(ReworkSessionLifecycle.NEEDS_REVIEW, f"Verification failed on {r_id}")

@@ -72,11 +72,63 @@ def _ids_absent(before: Any, after: Any, expected: Any) -> VerificationResult:
 
 
 def _ids_present(before: Any, after: Any, expected: Any) -> VerificationResult:
+    """expected = ids, or {"ids": [...], "planned": n}. With `planned`, a create call that returned no id (None)
+    or fewer ids than planned fails: an empty id list must not verify as "every created id is present"."""
     v = VerificationResult()
-    ids = set(expected.get("ids", [])) if isinstance(expected, dict) else set(expected or [])
+    raw = list(expected.get("ids", [])) if isinstance(expected, dict) else list(expected or [])
+    if isinstance(expected, dict) and "planned" in expected:
+        got = [i for i in raw if i]
+        v.add("created_id_count", int(expected["planned"]), len(got), ok=len(got) == int(expected["planned"]),
+              note="every planned primitive must return an id")
+    ids = {i for i in raw if i}
     present = set(after or [])
     missing = sorted(ids - present)
     v.add("created_ids_present_in_readback", [], missing, ok=not missing)
+    return v
+
+
+def _ids_replaced(before: Any, after: Any, expected: Any) -> VerificationResult:
+    """Delete-then-create (copper fills): expected = {"absent": [...], "ids": [...], "planned": n};
+    after = the primitive ids read back. Old ids must be gone and every new id present."""
+    v = _ids_absent(before, after, {"ids": expected.get("absent", [])})
+    for c in _ids_present(before, after, {"ids": expected.get("ids", []), "planned": expected.get("planned", 0)}).checks:
+        v.checks.append(c)
+    return v
+
+
+def _names_present(before: Any, after: Any, expected: Any) -> VerificationResult:
+    """Rule groups (net classes, differential pairs, equal-length groups): expected = {"<kind>": [names]};
+    after = {"<kind>": [names read back]}. Names only: class MEMBERSHIP is not compared (readback shape unverified)."""
+    v = VerificationResult()
+    after = after or {}
+    for kind, names in sorted((expected or {}).items()):
+        got = set(after.get(kind) or [])
+        missing = sorted(n for n in names if n not in got)
+        v.add(f"{kind}_present_in_readback", [], missing, ok=not missing)
+    return v
+
+
+def _placements(before: Any, after: Any, expected: Any) -> VerificationResult:
+    """Component placement: expected = {"items": {primitive_id: [x, y, rot, layer]}, "tol": mil};
+    after = {primitive_id: [x, y, rot, layer]} read back."""
+    v = VerificationResult()
+    tol = float(expected.get("tol", 0.5))
+    after = after or {}
+    bad = []
+    for pid, (x, y, rot, layer) in sorted((expected.get("items") or {}).items()):
+        got = after.get(pid)
+        if not got or len(got) < 4:
+            bad.append([pid, "missing"])
+            continue
+        try:
+            dr = abs((float(got[2]) - float(rot) + 180.0) % 360.0 - 180.0)
+            ok = abs(float(got[0]) - x) <= tol and abs(float(got[1]) - y) <= tol and dr <= 0.01 and int(got[3]) == int(layer)
+        except (TypeError, ValueError):
+            ok = False
+        if not ok:
+            bad.append([pid, got])
+    v.add("placements_match_readback", [], bad[:20], ok=bool(expected.get("items")) and not bad,
+          note=f"{len(bad)} of {len(expected.get('items') or {})} components off target")
     return v
 
 
@@ -142,6 +194,9 @@ VERIFIERS: Dict[str, Callable[[Any, Any, Any], VerificationResult]] = {
     "count_increased": _count_increased,
     "ids_absent": _ids_absent,
     "ids_present": _ids_present,
+    "ids_replaced": _ids_replaced,
+    "names_present": _names_present,
+    "placements": _placements,
     "document_uuid": _document_uuid,
     "coordinates": _coordinates,
     "copper_counts": _copper_counts,

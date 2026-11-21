@@ -244,3 +244,61 @@ class MutationContract:
         if not res.verified:
             res.failure = self._failure_for(res)
         return res
+
+
+# ---------------------------------------------------------------------------------------------- live tools
+class BridgeTargetResolver:
+    """The identity step for tools that talk to EasyEDA through `desk.bridge.ex` (which binds the window itself).
+
+    `run_js(code)` executes a read-only snippet and returns its result. `verify_target` asks the window which
+    document is ACTIVE and compares it with the expected uuid; it never opens a document. A rotated window
+    propagates (BridgeWindowRotated); any other error means "not verified"."""
+
+    def __init__(self, run_js: Callable[[str], Any]):
+        self.run_js = run_js
+
+    def verify_target(self, session: ProjectSession, expected_document_uuid: str) -> bool:
+        from desk.reliability.project_isolation import ACTIVE_DOC_JS
+        try:
+            active = self.run_js(ACTIVE_DOC_JS)
+        except BridgeWindowRotated:
+            raise
+        except Exception as e:                       # noqa: BLE001 - any other failure is "identity not proven"
+            session.notes.append(f"verify_target error: {e}")
+            return False
+        session.bound_document_uuid = str(active or "")
+        return bool(active) and active == expected_document_uuid
+
+
+def cli_approve(project: str, op: str, target: str, classification: str = ops.OP_NON_IDEMPOTENT_MUTATION,
+                argv: Optional[List[str]] = None) -> Optional[str]:
+    """A live tool run by hand: record that invocation as the approval (ops.cli_approval) and check the mutation
+    policy at once, so DESK_MUTATION_POLICY=require refuses an unapproved run before any bridge call is made."""
+    aid = ops.cli_approval(project, op, target, argv=argv)
+    ops.MutationPolicy.check(project, op, target, classification, aid)
+    return aid
+
+
+def run_live(project: str, project_info: Dict[str, Any], run_js: Callable[[str], Any], spec: MutationSpec,
+             execute: Callable[[], Any], readback: Callable[[], Any],
+             precondition: Optional[Callable[[Any], Optional[str]]] = None) -> MutationResult:
+    """Run one live tool mutation through the contract: approval policy, writer lock, journal, identity, execute,
+    independent readback and the `spec.verifier` postcondition. The approval policy is checked BEFORE the first
+    readback, so DESK_MUTATION_POLICY=require refuses an unapproved mutation before the bridge is touched."""
+    from desk.reliability.project_isolation import session_from_project
+    ops.MutationPolicy.check(project, spec.op, spec.target, spec.classification, spec.approval)
+    session = session_from_project(project, project_info)
+    return MutationContract(project, session, BridgeTargetResolver(run_js)).run(spec, execute, readback, precondition)
+
+
+def report(res: MutationResult) -> int:
+    """Print the verdict of a live tool mutation and return the exit code: 0 only when the readback proved it."""
+    print(f"MUTATION {res.spec.op} {res.spec.target}: {res.state.value} "
+          f"({'VERIFIED by readback' if res.verified else 'NOT VERIFIED'}; journal op {res.journal_id or '-'})")
+    if res.verification:
+        for c in res.verification.checks:
+            if not c.ok:
+                print(f"  check {c.name}: expected {c.expected!r} actual {c.actual!r}" + (f" ({c.note})" if c.note else ""))
+    if res.error:
+        print(f"  error: {res.error[:300]}")
+    return 0 if res.verified else 1

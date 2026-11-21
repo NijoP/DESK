@@ -111,107 +111,113 @@ def main():
 
     print(f"Starting Live Disposable Integration Test on: {P.get('name')} (UUID: {pcb_uuid})")
 
-    try:
-        # Milestone 1: Connection & Document Identity
-        print("\n[1/9] Verifying Document Identity...")
-        chk_doc = f"""
-        const d = await eda.dmt_SelectControl.getCurrentDocumentInfo();
-        return {{doc: d, match: d && d.uuid === "{pcb_uuid}"}};
-        """
-        res1 = check(ex(chk_doc, window_id=window_id))
-        assert res1 and res1.get("match"), f"Active PCB {res1.get('doc')} does not match target {pcb_uuid}"
-        print(f"PASS: EasyEDA document identity confirmed ({pcb_uuid}).")
+    # Live mutation (zone create, repour, rollback delete): approval policy + writer lock + journal (desk/ops).
+    # Marked dirty from the start: a crash or failure leaves an op for `python tools/desk.py recover` to resolve.
+    from desk import ops
+    aid = ops.cli_approval(proj_dir, "live_disposable_test", pcb_uuid)
+    with ops.write_op(proj_dir, "live_disposable_test", pcb_uuid, approval=aid) as op_rec:
+        op_rec["dirty"] = True
+        try:
+            # Milestone 1: Connection & Document Identity
+            print("\n[1/9] Verifying Document Identity...")
+            chk_doc = f"""
+            const d = await eda.dmt_SelectControl.getCurrentDocumentInfo();
+            return {{doc: d, match: d && d.uuid === "{pcb_uuid}"}};
+            """
+            res1 = check(ex(chk_doc, window_id=window_id))
+            assert res1 and res1.get("match"), f"Active PCB {res1.get('doc')} does not match target {pcb_uuid}"
+            print(f"PASS: EasyEDA document identity confirmed ({pcb_uuid}).")
 
-        # Milestone 2: PCB Readback
-        print("\n[2/9] Executing Batch PCB Readback...")
-        readback_js = adapter.build_batch_readback_script(pcb_uuid)
-        res2 = check(ex(readback_js, window_id=window_id, timeout=30))
-        assert isinstance(res2, dict), "Readback payload must be a JSON dictionary"
-        data = adapter.parse_readback_payload(P.get("name", "DISPOSABLE"), pcb_uuid, res2)
-        print(f"PASS: Readback {len(data.components)} components, {len(data.tracks)} tracks, {len(data.vias)} vias.")
+            # Milestone 2: PCB Readback
+            print("\n[2/9] Executing Batch PCB Readback...")
+            readback_js = adapter.build_batch_readback_script(pcb_uuid)
+            res2 = check(ex(readback_js, window_id=window_id, timeout=30))
+            assert isinstance(res2, dict), "Readback payload must be a JSON dictionary"
+            data = adapter.parse_readback_payload(P.get("name", "DISPOSABLE"), pcb_uuid, res2)
+            print(f"PASS: Readback {len(data.components)} components, {len(data.tracks)} tracks, {len(data.vias)} vias.")
 
-        # Milestone 3: Component Placement & Readback Verification
-        print("\n[3/9] Testing Component Placement Verification...")
-        comp_js = """
-        const comps = await eda.pcb_PrimitiveComponent.getAll() || [];
-        return comps.map(c => ({
-            id: c.getState_PrimitiveId(),
-            ref: c.getState_Designator(),
-            x: c.getState_X(),
-            y: c.getState_Y()
-        }));
-        """
-        res3 = check(ex(comp_js, window_id=window_id))
-        assert isinstance(res3, list), "Component query must return a list"
-        print(f"PASS: Placed components verified via live readback ({len(res3)} components active).")
+            # Milestone 3: Component Placement & Readback Verification
+            print("\n[3/9] Testing Component Placement Verification...")
+            comp_js = """
+            const comps = await eda.pcb_PrimitiveComponent.getAll() || [];
+            return comps.map(c => ({
+                id: c.getState_PrimitiveId(),
+                ref: c.getState_Designator(),
+                x: c.getState_X(),
+                y: c.getState_Y()
+            }));
+            """
+            res3 = check(ex(comp_js, window_id=window_id))
+            assert isinstance(res3, list), "Component query must return a list"
+            print(f"PASS: Placed components verified via live readback ({len(res3)} components active).")
 
-        # Milestone 4: Ground Copper-Zone Creation
-        print("\n[4/9] Synthesizing Ground Plane Zone on Layer 2...")
-        pts_gnd = [(500.0, 500.0), (2500.0, 500.0), (2500.0, 2000.0), (500.0, 2000.0)]
-        create_gnd_js = adapter.build_create_zone_script(
-            pcb_uuid, "GND", layer=2, points_mil=pts_gnd, name="LIVE_TEST_GND", priority=1
-        )
-        res4 = check(ex(create_gnd_js, window_id=window_id, is_mutation=True))
-        gnd_id = res4.get("primitive_id") if isinstance(res4, dict) else None
-        assert gnd_id and isinstance(gnd_id, str), f"Ground zone creation failed to return primitive ID (got {res4})"
-        created_primitive_ids.append(gnd_id)
-        print(f"PASS: Created Ground Zone (ID: {gnd_id}).")
+            # Milestone 4: Ground Copper-Zone Creation
+            print("\n[4/9] Synthesizing Ground Plane Zone on Layer 2...")
+            pts_gnd = [(500.0, 500.0), (2500.0, 500.0), (2500.0, 2000.0), (500.0, 2000.0)]
+            create_gnd_js = adapter.build_create_zone_script(
+                pcb_uuid, "GND", layer=2, points_mil=pts_gnd, name="LIVE_TEST_GND", priority=1
+            )
+            res4 = check(ex(create_gnd_js, window_id=window_id, is_mutation=True))
+            gnd_id = res4.get("primitive_id") if isinstance(res4, dict) else None
+            assert gnd_id and isinstance(gnd_id, str), f"Ground zone creation failed to return primitive ID (got {res4})"
+            created_primitive_ids.append(gnd_id)
+            print(f"PASS: Created Ground Zone (ID: {gnd_id}).")
 
-        # Milestone 5: Power Polygon Creation
-        print("\n[5/9] Synthesizing Power Zone on Layer 1...")
-        pts_pwr = [(800.0, 800.0), (1800.0, 800.0), (1800.0, 1600.0), (800.0, 1600.0)]
-        create_pwr_js = adapter.build_create_zone_script(
-            pcb_uuid, "VIN", layer=1, points_mil=pts_pwr, name="LIVE_TEST_VIN", priority=2
-        )
-        res5 = check(ex(create_pwr_js, window_id=window_id, is_mutation=True))
-        pwr_id = res5.get("primitive_id") if isinstance(res5, dict) else None
-        assert pwr_id and isinstance(pwr_id, str), f"Power zone creation failed to return primitive ID (got {res5})"
-        created_primitive_ids.append(pwr_id)
-        print(f"PASS: Created Power Zone (ID: {pwr_id}).")
+            # Milestone 5: Power Polygon Creation
+            print("\n[5/9] Synthesizing Power Zone on Layer 1...")
+            pts_pwr = [(800.0, 800.0), (1800.0, 800.0), (1800.0, 1600.0), (800.0, 1600.0)]
+            create_pwr_js = adapter.build_create_zone_script(
+                pcb_uuid, "VIN", layer=1, points_mil=pts_pwr, name="LIVE_TEST_VIN", priority=2
+            )
+            res5 = check(ex(create_pwr_js, window_id=window_id, is_mutation=True))
+            pwr_id = res5.get("primitive_id") if isinstance(res5, dict) else None
+            assert pwr_id and isinstance(pwr_id, str), f"Power zone creation failed to return primitive ID (got {res5})"
+            created_primitive_ids.append(pwr_id)
+            print(f"PASS: Created Power Zone (ID: {pwr_id}).")
 
-        # Milestone 6: Copper Repour
-        print("\n[6/9] Triggering Global Copper Repour...")
-        repour_js = adapter.build_repour_all_script(pcb_uuid)
-        res6 = check(ex(repour_js, window_id=window_id, timeout=60, is_mutation=True))
-        assert isinstance(res6, dict) and res6.get("repoured_count") is not None, f"Repour response invalid: {res6}"
-        print(f"PASS: Repoured {res6.get('repoured_count')} of {res6.get('total')} zones.")
+            # Milestone 6: Copper Repour
+            print("\n[6/9] Triggering Global Copper Repour...")
+            repour_js = adapter.build_repour_all_script(pcb_uuid)
+            res6 = check(ex(repour_js, window_id=window_id, timeout=60, is_mutation=True))
+            assert isinstance(res6, dict) and res6.get("repoured_count") is not None, f"Repour response invalid: {res6}"
+            print(f"PASS: Repoured {res6.get('repoured_count')} of {res6.get('total')} zones.")
 
-        # Milestone 7: Copper Readback & Continuity
-        print("\n[7/9] Reading Back Poured Copper Regions...")
-        chk_poured_js = """
-        const p = await eda.pcb_PrimitivePoured.getAll() || [];
-        return p.map(pr => ({id: pr.getState_PrimitiveId(), net: pr.getState_Net(), layer: pr.getState_Layer()}));
-        """
-        res7 = check(ex(chk_poured_js, window_id=window_id))
-        assert isinstance(res7, list), f"Poured regions readback must return a list (got {res7})"
-        print(f"PASS: Found {len(res7)} active poured regions verified via readback.")
+            # Milestone 7: Copper Readback & Continuity
+            print("\n[7/9] Reading Back Poured Copper Regions...")
+            chk_poured_js = """
+            const p = await eda.pcb_PrimitivePoured.getAll() || [];
+            return p.map(pr => ({id: pr.getState_PrimitiveId(), net: pr.getState_Net(), layer: pr.getState_Layer()}));
+            """
+            res7 = check(ex(chk_poured_js, window_id=window_id))
+            assert isinstance(res7, list), f"Poured regions readback must return a list (got {res7})"
+            print(f"PASS: Found {len(res7)} active poured regions verified via readback.")
 
-        # Milestone 8: Live DRC Execution
-        print("\n[8/9] Executing Live DRC...")
-        drc_js = """
-        const errors = await eda.pcb_Drc.check(true, true, true) || [];
-        return errors.map(e => ({errorType: e.errorType, ruleName: e.ruleName}));
-        """
-        res8 = check(ex(drc_js, window_id=window_id, timeout=60))
-        assert isinstance(res8, list), f"DRC check must return a list of violations (got {res8})"
-        print(f"PASS: DRC executed with {len(res8)} reported items.")
+            # Milestone 8: Live DRC Execution
+            print("\n[8/9] Executing Live DRC...")
+            drc_js = """
+            const errors = await eda.pcb_Drc.check(true, true, true) || [];
+            return errors.map(e => ({errorType: e.errorType, ruleName: e.ruleName}));
+            """
+            res8 = check(ex(drc_js, window_id=window_id, timeout=60))
+            assert isinstance(res8, list), f"DRC check must return a list of violations (got {res8})"
+            print(f"PASS: DRC executed with {len(res8)} reported items.")
 
-        # Milestone 9: Manufacturing Export
-        print("\n[9/9] Testing Manufacturing Export...")
-        wd = os.path.join(proj_dir, "state", "live_export")
-        os.makedirs(wd, exist_ok=True)
-        dsn_path = fetch_file('const f=await eda.pcb_ManufactureData.getDsnFile("live_test");', wd, window_id=window_id)
-        assert os.path.isfile(dsn_path) and os.path.getsize(dsn_path) > 10, f"Exported DSN file empty or missing: {dsn_path}"
-        print(f"PASS: Exported DSN ({os.path.getsize(dsn_path)} bytes) verified on disk.")
+            # Milestone 9: Manufacturing Export
+            print("\n[9/9] Testing Manufacturing Export...")
+            wd = os.path.join(proj_dir, "state", "live_export")
+            os.makedirs(wd, exist_ok=True)
+            dsn_path = fetch_file('const f=await eda.pcb_ManufactureData.getDsnFile("live_test");', wd, window_id=window_id)
+            assert os.path.isfile(dsn_path) and os.path.getsize(dsn_path) > 10, f"Exported DSN file empty or missing: {dsn_path}"
+            print(f"PASS: Exported DSN ({os.path.getsize(dsn_path)} bytes) verified on disk.")
 
-        print("\n" + "=" * 70)
-        print("ALL 9 MILESTONES VERIFIED WITH OBJECTIVE EVIDENCE.")
-        print("=" * 70)
+            print("\n" + "=" * 70)
+            print("ALL 9 MILESTONES VERIFIED WITH OBJECTIVE EVIDENCE.")
+            print("=" * 70)
 
-    except Exception as e:
-        print(f"\n[FATAL ERROR] Milestone execution failed: {e}")
-        execute_rollback(created_primitive_ids, window_id, proj_dir, str(e))
-        sys.exit(1)
+        except Exception as e:
+            print(f"\n[FATAL ERROR] Milestone execution failed: {e}")
+            execute_rollback(created_primitive_ids, window_id, proj_dir, str(e))
+            sys.exit(1)
 
 
 if __name__ == "__main__":
