@@ -20,6 +20,8 @@ proj = args[0]
 dry = "--dry" in args
 auto = "--auto" in args
 P = load_project(proj)
+from desk.reliability.mutation import cli_approve
+APPROVAL = None if dry else cli_approve(proj, "pcb_place", P["pcb_uuid"])   # policy check before any bridge call
 dump_path = os.path.join(proj, "state", "pcb_dump.json")
 if not os.path.exists(dump_path):
     raise SystemExit(f"STOP: {dump_path} missing. Run python tools/pcb_dump.py {proj} first.")
@@ -143,9 +145,32 @@ if dry:
     print(f"Validated {len(target)} placements. Wrote {target_out_path}")
     sys.exit(0)
 
-G = guard(P["pcb_uuid"]); n = 0
-for i in range(0, len(items), 40):
-    n += check(ex(G + 'let k=0; for(const [id,x,y,r,l] of %s){ await eda.pcb_PrimitiveComponent.modify(id,{layer:l}); '
-                      'await eda.pcb_PrimitiveComponent.modify(id,{x:x,y:y,rotation:r}); k++; } return k;' % json.dumps(items[i:i + 40]),
-                  retries=2, window_id=P.get("window_id")))
-print("placed", n, "-> now: python tools/pcb_dump.py, then python tools/pcb_check.py --gate")
+# Live mutation: approval policy + writer lock + journal (desk/ops.write_op) and an independent readback of every
+# moved component (desk/reliability/mutation.py, verifier "placements"). Exit 0 only when the readback proves it.
+from desk.reliability.mutation import MutationSpec, run_live, report
+
+G = guard(P["pcb_uuid"]); W = P.get("window_id"); placed = [0]
+ids = [it[0] for it in items]
+spec = MutationSpec(op="pcb_place", target=P["pcb_uuid"], document_uuid=P["pcb_uuid"], verifier="placements",
+                    expected={"items": {it[0]: [it[1], it[2], it[3], it[4]] for it in items}, "tol": 0.5},
+                    methods=["eda.pcb_PrimitiveComponent.modify", "eda.pcb_PrimitiveComponent.get"],
+                    approval=APPROVAL, readback_attempts=1, readback_interval_s=1.0)
+
+
+def _execute():
+    for i in range(0, len(items), 40):
+        placed[0] += check(ex(G + 'let k=0; for(const [id,x,y,r,l] of %s){ await eda.pcb_PrimitiveComponent.modify(id,{layer:l}); '
+                                  'await eda.pcb_PrimitiveComponent.modify(id,{x:x,y:y,rotation:r}); k++; } return k;'
+                              % json.dumps(items[i:i + 40]), retries=2, window_id=W))
+    return placed[0]
+
+
+def _readback():
+    return check(ex(G + 'const o={}; for(const id of %s){ const c=await eda.pcb_PrimitiveComponent.get(id); '
+                        'if(c) o[id]=[c.getState_X(),c.getState_Y(),c.getState_Rotation(),c.getState_Layer()]; } return o;'
+                    % json.dumps(ids), window_id=W)) or {}
+
+
+res = run_live(proj, P, lambda js: check(ex(js, window_id=W)), spec, _execute, _readback)
+print("placed", placed[0], "-> now: python tools/pcb_dump.py, then python tools/pcb_check.py --gate")
+sys.exit(report(res))
