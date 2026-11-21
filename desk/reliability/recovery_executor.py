@@ -37,13 +37,15 @@ class RecoveryExecutor:
             if not decision.allowed:
                 o = RecoveryOutcome(action.id, executed=False, result="REFUSED", note=decision.reason)
                 outcomes.append(o)
-                self.journal({"failure_id": rec.failure_id, "action": action.to_dict(), "outcome": o.to_dict(), "ts": self.now()})
+                self.journal({"failure_id": rec.failure_id, "failure_signature": rec.signature, "evidence_signature": evidence_signature,
+                              "action": action.to_dict(), "outcome": o.to_dict(), "ts": self.now()})
                 continue
             handler = self.handlers.get(action.kind)
             if handler is None:
                 o = RecoveryOutcome(action.id, executed=False, result="SKIPPED", note=f"no handler for {action.kind}; proposal only")
                 outcomes.append(o)
-                self.journal({"failure_id": rec.failure_id, "action": action.to_dict(), "outcome": o.to_dict(), "ts": self.now()})
+                self.journal({"failure_id": rec.failure_id, "failure_signature": rec.signature, "evidence_signature": evidence_signature,
+                              "action": action.to_dict(), "outcome": o.to_dict(), "ts": self.now()})
                 continue
             policy.record_attempt(rec.failure_id, action, evidence_signature)
             approval_id = next((a for a in approvals if a), None) if action.risk == RiskClass.APPROVAL else None
@@ -52,7 +54,8 @@ class RecoveryExecutor:
             except BaseException as e:   # DeskError subclasses SystemExit: catch everything, report, continue
                 o = RecoveryOutcome(action.id, executed=True, result="FAILED", note=f"{type(e).__name__}: {e}"[:300], approval_id=approval_id)
                 outcomes.append(o)
-                self.journal({"failure_id": rec.failure_id, "action": action.to_dict(), "outcome": o.to_dict(), "ts": self.now()})
+                self.journal({"failure_id": rec.failure_id, "failure_signature": rec.signature, "evidence_signature": evidence_signature,
+                              "action": action.to_dict(), "outcome": o.to_dict(), "ts": self.now()})
                 continue
             verifier = self.verifiers.get(action.kind) or self.default_verifier
             verification: Optional[VerificationResult] = None
@@ -68,7 +71,8 @@ class RecoveryExecutor:
                                 note=str(result)[:200] if result is not None else "", approval_id=approval_id,
                                 journal_id=str(ctx.get("journal_id") or "") or None)
             outcomes.append(o)
-            self.journal({"failure_id": rec.failure_id, "action": action.to_dict(), "outcome": o.to_dict(), "ts": self.now()})
+            self.journal({"failure_id": rec.failure_id, "failure_signature": rec.signature, "evidence_signature": evidence_signature,
+                              "action": action.to_dict(), "outcome": o.to_dict(), "ts": self.now()})
             if o.result == "SUCCESS" and stop_on_success:
                 break
         return outcomes

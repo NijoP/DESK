@@ -42,6 +42,8 @@ class Supervisor:
         self.session = session
         self.collector = collector or EvidenceCollector(project_path=project_path, session=session)
         self.policy = policy or RecoveryPolicy()
+        if project_path:      # persisted budget: attempts survive the process (study report section 4.4 bug 8)
+            self.policy.rebuild_from_file(os.path.join(project_path, "state", "reliability", "recoveries.jsonl"))
         self.executor = executor or RecoveryExecutor(journal=self._journal_recovery)
         if getattr(self.executor, "journal_default", False):
             self.executor.journal = self._journal_recovery      # an injected executor still journals to the project
@@ -139,6 +141,7 @@ class Supervisor:
                ctx: Optional[Dict[str, Any]] = None, execute: bool = True, verifier: Optional[Callable[[FailureRecord, Dict[str, Any]], VerificationResult]] = None,
                **fields: Any) -> FailureRecord:
         rec = self.observe(failure, module, operation, mutating, **fields)
+        self.policy.adopt(rec.failure_id, rec.signature)
         facts = self.collector.collect(rec)
         facts.setdefault("mutating", mutating)
         self.diagnose(rec, facts)
@@ -166,6 +169,8 @@ class Supervisor:
                 else:
                     rec.verification = success.verification
                 rec.status = "VERIFIED" if rec.verification and rec.verification.passed else "RECOVERED"
+                if rec.status == "VERIFIED":
+                    self.policy.reset_signature(rec.signature)
             elif any(o.result == "REFUSED" for o in rec.outcomes) and not any(o.executed for o in rec.outcomes):
                 rec.status = "REFUSED" if not plan.requires_approval else "ESCALATED"
             else:
