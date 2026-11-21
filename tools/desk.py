@@ -17,6 +17,7 @@
   python tools/desk.py task show projects/<P> <task_id> [--json]   engineering task record (desk/tasks.py)
   python tools/desk.py task list projects/<P>        tasks with execution / verification status and failure class
   python tools/desk.py recover projects/<P>          list unfinished/dirty live operations and how to resolve each
+  python tools/desk.py recover projects/<P> --case <RC-id|list>   the ten records of an engineering recovery case
   python tools/desk.py recover projects/<P> --clear  resolve dirty builds by running tools/clear_block.py for them (live)
   python tools/desk.py recover projects/<P> --mark-resolved <op_id> --reason "checked by hand"
 """
@@ -596,6 +597,15 @@ def main(argv):
 
     if a[0] == "recover":
         proj = a[1]
+        if "--case" in a:
+            from desk import recovery_case as RCASE
+            cid = a[a.index("--case") + 1] if a.index("--case") + 1 < len(a) else ""
+            if cid in ("", "list"):
+                for c in RCASE.ids(proj):
+                    print(c, RCASE.load(proj, c)["status"])
+                return 0
+            print(RCASE.fmt(RCASE.load(proj, cid)))
+            return 0
         pend = ops.pending(proj)
         if not pend:
             print("no pending operations")
