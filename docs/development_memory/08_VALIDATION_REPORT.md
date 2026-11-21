@@ -6,6 +6,12 @@
 **ACPX Version:** `0.22.0`  
 **Target Repository:** `C:\Users\HP\OneDrive\Documents\DESK` (`git@github.com:NijoP/DESK.git`, branch `main`)
 
+> **Corrections (2026-11-21).** Row **M** was not true of the repository: `.gitignore` had no `.backpass/` entry
+> until 2026-11-21. Rows **O** and the status output below are the 2026-11-08 Windows figures; the measured figures
+> for 2026-11-21 are in section 4. No Backpass analysis (`backpass` / `backpass apply`) has been run on DESK sessions
+> yet, so no memory edit in this repository comes from Backpass. A recorded `backpass scan` with real per-harness
+> counts on a host that holds DESK sessions is still open (operator step A6, [07_DAILY_WORKFLOW.md](07_DAILY_WORKFLOW.md)).
+
 ---
 
 ## 1. Acceptance Matrix (Sections A through P)
@@ -91,3 +97,28 @@ OK
    Host discovery successfully cataloged 6 Claude sessions, 8 OpenCode sessions, and 145 Pi sessions on the machine. None of the active sessions in the past 30 days had their `cwd` rooted at `C:\Users\HP\OneDrive\Documents\DESK`. This is factually documented; no synthetic transcripts were fabricated.
 2. **First Improvement Horizon:**  
    As developers work on DESK with Claude Code or OpenCode, new sessions will be indexed under `.claude/projects/` and `.local/share/opencode/opencode.db`. Once $\ge 2$ sessions record a recurring roadblock or test failure, Backpass will generate its first empirical proposal.
+
+---
+
+## 4. Re-check on Linux (2026-11-21)
+
+Host: Linux, Node `v22`, Backpass `0.1.44` (= `library/tools/BACKPASS_PIN` `c8d60c24`). Software-only check with
+fixtures; no model calls; not validated on a live design.
+
+```
+$ backpass status        # 2026-11-21, Linux, scratch clone of this branch (read-only, no model calls)
+BUDGET (always-loaded)
+  AGENTS.md + skill descriptions [########################........] 3,760 / 5,000 tok · 59 instructions
+  CLAUDE.md      pointer to AGENTS.md
+  overflow: 28 skill(s) in .agents/skills · 16,332 tok on trigger, 746 tok always loaded
+CROSS-SURFACE (report-only)
+  AG-030 restates component-intelligence body · 24 tok · similarity 0.73 · body loads on trigger; weigh placement
+PROPOSAL
+  none yet - run `backpass`
+```
+
+- `.gitignore` now lists `.backpass/`; `tests/test_learn.py` asserts `git check-ignore .backpass/x` succeeds.
+- The real-Backpass adapter test and the pin contract test run on CI's Linux legs (`DESK_REQUIRE_BACKPASS=1`).
+- Session corpus: not recorded here. The 2026-11-21 Backpass study ran a read-only `backpass scan --since 90d` on this
+  host and found 5 DESK sessions, all same-day crew sessions; the development history from the Windows host is not on
+  it. Recording a real scan is operator step A6.

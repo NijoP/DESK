@@ -38,7 +38,7 @@ This audit provides a factual, evidence-backed evaluation of the existing reposi
 | **DSN Tuning & Freerouting Pipeline** | EasyEDA DSN boundary rectification, fine-pitch escape clearance tuning, power class track widening, Freerouting subprocess execution, and SES import. | `desk/router.py`, `tools/route.py`, `tests/test_perf_engineering.py` |
 | **DRC Closed-Loop Convergence Engine** | Live EasyEDA DRC parsing into structured violations, root-cause diagnoser, selective track rip-up, and progress-aware convergence loops. | `desk/drc_engine.py`, `tools/drc.py`, `tests/test_perf_engineering.py` |
 | **Manufacturing Release Integrity** | Cross-verification of BOM designators, Pick-and-Place centroids, Gerber layer completeness, and SHA-256 manifest generation. | `desk/release.py`, `tools/release.py`, `tests/test_core.py` |
-| **Corroborated Learning Engine** | Read-only session mining from AI transcripts via Backpass adapters; deterministic error detection; ≥2-session corroboration; human-gated proposals with regression rollbacks. | `devtools/learn/engine.py` (dev-only), `tools/learn.py`, `tests/test_learn.py` (16 tests) |
+| **Corroborated Learning Engine** | Read-only session mining from AI transcripts via Backpass adapters; deterministic error detection; ≥2-session corroboration; human-gated proposals with regression rollbacks. | `devtools/learn/engine.py` (dev-only), `tools/learn.py`, `tests/test_learn.py` (32 tests) |
 | **High-Precision Profiler & Telemetry** | Nanosecond-level wall-clock, CPU time, memory delta, and cache hit/miss tracking with 10-scenario representative benchmark suite. | `desk/profiler.py`, `desk/telemetry.py`, `tools/benchmarks.py`, `tools/profile_perf.py` |
 
 ---

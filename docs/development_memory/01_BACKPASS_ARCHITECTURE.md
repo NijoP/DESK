@@ -7,7 +7,7 @@ Backpass operates strictly as an **offline, development-time agent memory optimi
 ```mermaid
 flowchart TD
     subgraph DESK_DEV_ENVIRONMENT ["DESK Development Environment (Agent Memory Loop)"]
-        Agents["Coding Agents<br/>(Claude Code, OpenCode, Codex, Pi)"]
+        Agents["Coding Agents<br/>(Claude Code, Codex, Pi, OpenCode, Grok, Cursor, Hermes)"]
         Transcripts["Local Session Transcripts<br/>(~/.claude, ~/.local/share/opencode)"]
         
         subgraph BACKPASS_CORE ["Backpass Core Engine"]
@@ -51,9 +51,14 @@ flowchart TD
 ## Separation Guarantees
 
 1. **Zero Runtime Dependency:** Backpass is packaged as a Node.js CLI tool (`backpass` via npm). It is not listed in DESK's `pyproject.toml`, `requirements.txt`, or Python modules.
-2. **Zero Production Import:** Neither `desk.*` nor `tools/*.py` import or depend on Backpass.
+2. **Zero Production Import:** No `desk.*` module imports or references Backpass (enforced by `tests/test_learn.py`
+   `TestDevelopmentBoundary`). The one dev-time exception is the learning engine, `tools/learn.py` +
+   `devtools/learn/`, which loads Backpass's transcript adapters and redaction from a pinned clone at
+   `library/tools/backpass` (`library/tools/BACKPASS_PIN`). It lives outside the `desk` package and is not shipped in the wheel.
+5. **One Memory Writer:** transcript-derived edits to `AGENTS.md`, `CLAUDE.md` and `.agents/skills/` land only through
+   `backpass apply`. The learning engine turns AGENTS.md proposals into task files; it never writes a memory file.
 3. **Fail-Safe Isolation:** If Backpass is uninstalled or fails, DESK's core electrical, routing, placement, and DRC pipelines function completely uninterrupted.
-4. **State Segregation:** All Backpass telemetry, cached transcript loss calculations, gap ledgers, and proposals reside exclusively in the local `.backpass/` directory, which is excluded from Git via `.git/info/exclude` and `.gitignore`.
+4. **State Segregation:** All Backpass telemetry, cached transcript loss calculations, gap ledgers, and proposals reside exclusively in the local `.backpass/` directory, which `.gitignore` lists and Backpass adds to `.git/info/exclude` on first run.
 
 ---
 

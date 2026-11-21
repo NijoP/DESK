@@ -53,7 +53,7 @@ Manages cross-platform bidirectional conversion between DESK internal models, Ki
 
 ## Failure Conditions & Recovery
 - Sexpr parsing syntax error: Roll back to last valid revision; inspect unsupported KiCad token version.
-- Unmatched footprint pad: Abort translation and log missing library footprint to `LEDGER.md`.
+- Unmatched footprint pad: Abort translation and log missing library footprint to `LEDGER.jsonl`.
 
 ## Expected Output
 - Bit-exact, compliant `.kicad_pcb` or `.dsn` netlist artifact matching DESK engineering rules.

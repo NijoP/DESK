@@ -6,6 +6,13 @@
 **Auditor:** Principal Developer Productivity Architect & AI Agent Infrastructure Engineer  
 **Host Platform:** Windows 11 (x64), PowerShell 5.1 / 7.x, Node.js `v24.21.0`, npm `11.19.0`, Git `2.55.0`
 
+> **Corrections (2026-11-21).** This audit describes the Windows host on 2026-11-08. Checked against the
+> repository on 2026-11-21: `.backpass/` was **not** in `.gitignore` until that day (now it is); the dev-only
+> learning engine (`tools/learn.py` + `devtools/learn/`, formerly `desk/learn/`) loads two Backpass internals from a
+> pinned clone, so "never imported by DESK" holds for the `desk` package only; `.backpassrc.json` lists all seven
+> harnesses, not four; AGENTS.md and the skill set have grown (`backpass status`: 3,760 / 5,000 tok, 28 skills,
+> 746 tok always loaded). Current figures: [04_AGENT_MEMORY_DESIGN.md](04_AGENT_MEMORY_DESIGN.md) section 2.
+
 ---
 
 ## Executive Summary
@@ -108,7 +115,7 @@ A production Backpass configuration for DESK (`.backpassrc.json`) must define:
 3. `skillsDir`: `".agents/skills"` (overflow target).
 4. `minGapEvidence`: `2` (corroboration requirement).
 5. `maxTranscripts`: `100` (cap per run with recency-weighted sampling).
-6. `discovery.harnesses`: Prioritize `["claude", "opencode", "codex", "pi"]`.
+6. `discovery.harnesses`: `["claude", "codex", "pi", "opencode", "grok", "cursor", "hermes"]` (all seven; the shipped `.backpassrc.json`).
 7. `discovery.since`: `"30d"` (configurable to `"all"` or `"90d"`).
 8. `discovery.minUserTurns`: `2` (filters out single-turn noise).
 
@@ -141,7 +148,7 @@ Agent transcripts frequently contain sensitive environmental data:
 ### Backpass Safeguards
 - `src/redact.js` runs high-entropy string and known token format redaction on all transcript excerpts before caching or synthesis.
 - Backpass state is stored in `.backpass/` within the repository root.
-- `.backpass/` is registered in `.git/info/exclude` and `.gitignore`, ensuring zero session quotes or private transcripts are committed to Git.
+- `.backpass/` is listed in `.gitignore` (since 2026-11-21) and Backpass adds it to `.git/info/exclude` when it first runs in a checkout, ensuring zero session quotes or private transcripts are committed to Git.
 
 ---
 

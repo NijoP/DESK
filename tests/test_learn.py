@@ -251,6 +251,26 @@ class TestDevelopmentBoundary(unittest.TestCase):
         self.assertNotEqual(p.returncode, 0)
 
 
+class TestDevMemoryDocs(unittest.TestCase):
+    """docs/development_memory claims that are mechanically checkable."""
+    def test_backpass_state_is_git_ignored(self):
+        if not os.path.exists(os.path.join(ROOT, ".git")): self.skipTest("not a git checkout")
+        p = subprocess.run(["git", "-C", ROOT, "check-ignore", "-q", ".backpass/x"], capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, ".backpass/ must be listed in .gitignore " + p.stderr)
+
+    def test_quoted_budget_matches_backpassrc(self):
+        doc = _r(os.path.join(ROOT, "docs", "development_memory", "04_AGENT_MEMORY_DESIGN.md"))
+        m = re.search(r"\*\*Budget:\*\* ([\d,]+) tokens \(`\.backpassrc\.json` `budgetTokens`\)", doc)
+        self.assertIsNotNone(m, "04_AGENT_MEMORY_DESIGN.md must quote the budget line")
+        self.assertEqual(int(m.group(1).replace(",", "")), L.backpass_budget(ROOT))
+
+    def test_skill_doc_links_are_repo_relative(self):
+        skill = _r(os.path.join(ROOT, ".agents", "skills", "repository-maintenance", "SKILL.md"))
+        self.assertNotIn("file:///", skill)
+        for target in re.findall(r"\]\((\.\./[^)]+)\)", skill):
+            self.assertTrue(os.path.exists(os.path.normpath(os.path.join(ROOT, ".agents", "skills", "repository-maintenance", target))), target)
+
+
 class TestSingleMemoryWriter(unittest.TestCase):
     """AGENTS.md section L: transcript-derived memory edits land only via `backpass apply`. No DESK module may open
     AGENTS.md or CLAUDE.md for writing, and the learn engine's editable surfaces exclude them."""

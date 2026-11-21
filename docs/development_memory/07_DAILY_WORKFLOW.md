@@ -85,3 +85,25 @@ Do not run Backpass after every minor commit. Run it periodically (e.g. after co
    ```powershell
    python -m unittest discover -s tests -p "test_*.py"
    ```
+6. **Record the funnel (A7):** add one ledger `decision` entry per milestone pass with the counts sessions → findings
+   → corroborated gaps → proposed edits → accepted edits, citing `.backpass/proposal.json`.
+
+### Where `tools/learn.py` fits
+`python tools/learn.py run` adds DESK-specific deterministic signals that Backpass does not compute: context-engine
+bypasses, oversized tool outputs, EasyEDA API failures, retry loops. Accepting one of its AGENTS.md proposals only
+writes `.desk_learn/tasks/<id>.md`. Use the task as evidence for `backpass apply`, or make the change by hand in a
+reviewed commit. `backpass apply` is the only writer of `AGENTS.md`, `CLAUDE.md` and `.agents/skills/`.
+
+### Operator steps not yet performed (A6, A7)
+These need a person with the session history and a logged-in model harness. They have **not** been done in this
+repository yet:
+
+- **A6. Point Backpass at the sessions that exist.** Keep the in-repo `.backpassrc.json` on its defaults. Name the
+  fleet worktree pools in the personal `~/.config/backpass/config.json` (`discovery.cloneRoots`, SSH hosts); Backpass
+  already associates worktrees of the same clone. Windows SSH remotes are unsupported by Backpass, so history on a
+  Windows host needs a native or WSL run there. Record `backpass scan --strict` per-harness counts in
+  [08_VALIDATION_REPORT.md](08_VALIDATION_REPORT.md), replacing the 2026-11-08 "0 sessions" record.
+- **A7. Milestone cadence with real evidence.** After each milestone: `backpass` (model calls on the operator's own
+  harness), then `backpass apply` reviewed edit by edit, then the funnel ledger entry above. The first accepted edit
+  must be backed by at least 2 distinct sessions (Backpass enforces this), and the measured always-loaded tokens must
+  stay within `budgetTokens`. With a thin corpus, "nothing corroborated" is the expected, honest result.

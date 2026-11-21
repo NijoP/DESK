@@ -48,8 +48,8 @@ flowchart LR
 1. **Local-First Processing:**  
    Backpass runs exclusively on the local machine. It does not phone home, does not upload telemetry to third-party tracking services, and maintains all state under `.backpass/`.
 2. **Git Exclusions (Dual-Layer Defense):**
-   - **Layer 1 (`.git/info/exclude`):** Backpass automatically registers `.backpass/` upon `backpass init`.
-   - **Layer 2 (`.gitignore`):** Explicit entry in `.gitignore` prevents leaks even across clean checkouts or fresh clones.
+   - **Layer 1 (`.git/info/exclude`):** Backpass registers `.backpass/` when it first runs in a checkout.
+   - **Layer 2 (`.gitignore`):** Explicit entry in `.gitignore` (added 2026-11-21) prevents leaks even across clean checkouts or fresh clones.
 3. **No Credential Generation:**  
    Backpass never prompts for or stores third-party API keys in its configuration files. Model calls rely solely on the user's pre-authenticated agent harnesses via `acpx`.
 4. **Human Verification Gate:**  
