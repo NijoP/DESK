@@ -555,22 +555,70 @@ def main(argv):
             return 1 if cfg.validate() else 0
         raise UsageError("usage: desk.py config show|schema [--json]")
 
+    if a[0] == "models":
+        # Model-agnostic provider layer (desk/orchestrator/providers/). `list`, `policy` and
+        # `allocate` never touch the network; `discover` asks configured providers for their models.
+        from desk.orchestrator.providers.registry import get_provider_registry
+        from desk.orchestrator.providers.allocation import allocate, load_policy
+        sub = a[1] if len(a) > 1 else "list"
+        as_json = "--json" in a
+        reg = get_provider_registry()
+        if sub == "list":
+            out = {"providers": reg.status(), "catalog": [d.to_dict() for d in reg.catalog.entries()]}
+            if as_json:
+                print(json.dumps(out, indent=1))
+            else:
+                for r in out["providers"]:
+                    print(f"{r['provider']:<10} {r['kind']:<14} {'configured' if r['configured'] else 'not configured':<15} {r['detail']}")
+                print("catalog:")
+                for d in out["catalog"]:
+                    print(f"  {d['provider']}:{d['model']}  ctx={d['context_window']} tools={d['native_tools']} "
+                          f"json={d['structured_output']} vision={d['vision']} [{d['source']}]")
+            return 0
+        if sub == "discover":
+            names = [x for x in a[2:] if not x.startswith("--")] or None
+            res = reg.discover(names, include_local="--local" in a)
+            if as_json:
+                print(json.dumps(res, indent=1))
+            else:
+                for n, r in res.items():
+                    state = f"{len(r['models'])} models" if r.get("ok") else (r.get("skipped") or r.get("error"))
+                    print(f"{n:<10} {state}")
+            return 0 if any(r.get("ok") for r in res.values()) else 1
+        if sub == "policy":
+            print(json.dumps(load_policy(), indent=1))
+            return 0
+        if sub == "allocate":
+            if len(a) < 3:
+                raise UsageError("usage: desk.py models allocate <task_class> [--domain <d>]... [--json]")
+            doms = [a[i + 1] for i, x in enumerate(a) if x == "--domain" and i + 1 < len(a)]
+            try:
+                al = allocate(a[2], doms)
+            except ValueError as e:
+                raise UsageError(str(e))
+            print(json.dumps(al.to_dict(), indent=1))
+            return 0
+        raise UsageError("usage: desk.py models list|discover [provider...] [--local]|policy|allocate <task_class> [--json]")
+
     if a[0] == "agent":
         from desk.orchestrator.agent_loop import run_agent
         opt = a[1:]
         skip = set()
-        for flag in ("--model", "--max-turns", "--window"):
+        for flag in ("--model", "--max-turns", "--window", "--fallback"):
             if flag in opt:
                 skip.add(opt.index(flag) + 1)
         pos = [x for i, x in enumerate(opt) if not x.startswith("--") and i not in skip]
         if len(pos) < 2:
-            raise SystemExit('usage: desk.py agent projects/<P> "<task>" [--model <id>] [--allow-mutation] [--max-turns N] [--json]')
+            raise SystemExit('usage: desk.py agent projects/<P> "<task>" [--model <id>|<provider:model>] '
+                             '[--fallback <provider:model>,...] [--allow-mutation] [--max-turns N] [--json]')
         proj, task = pos[0], " ".join(pos[1:])
+        fallbacks = [f.strip() for f in opt[opt.index("--fallback") + 1].split(",") if f.strip()] if "--fallback" in opt else None
         run = run_agent(task, project=proj,
                         model=opt[opt.index("--model") + 1] if "--model" in opt else None,
                         allow_mutation="--allow-mutation" in opt,
                         max_turns=int(opt[opt.index("--max-turns") + 1]) if "--max-turns" in opt else 12,
-                        window_id=opt[opt.index("--window") + 1] if "--window" in opt else None)
+                        window_id=opt[opt.index("--window") + 1] if "--window" in opt else None,
+                        fallback_models=fallbacks)
         if "--json" in opt:
             print(json.dumps(run.to_dict(), indent=1, ensure_ascii=False))
         else:

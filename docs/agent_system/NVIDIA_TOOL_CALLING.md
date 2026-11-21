@@ -33,10 +33,13 @@ python tools/desk.py agent projects/MYBOARD "..." --allow-mutation --model nvidi
 
 Environment: `DESK_AGENT_MODEL` (default `nvidia/nemotron-3-ultra-550b-a55b`), `DESK_HTTP_BASE_URL`, `DESK_HTTP_MAX_TOKENS`.
 
+Other providers (OpenAI, Grok, Anthropic, Gemini, local servers) and fallback chains: `--model provider:model`, see [MODEL_PROVIDERS.md](MODEL_PROVIDERS.md).
+
 ## Guarantees enforced in code
 
 - Without `--allow-mutation` the `wire_net` schema is not even sent; a model that asks for it gets an error string.
 - Every tool call runs through `tools_manifest.dispatch`; exceptions and `SystemExit` become `{"error": ...}` so the loop reports instead of crashing.
+- The project is fixed by the operator for the session: a model-supplied `project` naming another directory is refused, and `wire_net` refuses to mutate without an operator-fixed project (audit S-5).
 - Bounds: `max_turns` (12), `max_tool_calls_per_turn` (6), `budget_sec` (600), per-request timeout ≤ 180 s.
 - `wire_net` plans from a fresh read, writes under `ops.write_op` (dirty-flag, recoverable), then re-reads and lists `verified_pins` / `unverified_pins`.
 - No browser automation path exists anywhere in DESK; the only transport is the bridge gateway.
