@@ -116,6 +116,16 @@ def _log(project: str, rec: Dict[str, Any]):
         h.write(json.dumps(rec) + "\n")
 
 
+def _task_event(project: str, phase: str, rec: Dict[str, Any]) -> None:
+    """Mirror a write_op phase into the engineering task record (desk/tasks.py). The op journal stays the
+    authority for recovery; a task-record write error must never fail or mask the live operation."""
+    try:
+        from desk import tasks
+        tasks.on_op(project, phase, rec)
+    except Exception:
+        pass
+
+
 def pending(project: str) -> List[Dict[str, Any]]:
     open_ = {}
     for r in journal(project):
@@ -324,6 +334,7 @@ def write_op(
 
     acquire_atomic_lock(lock, rec, force_unlock=force_unlock)
     _log(project, rec)
+    _task_event(project, "begin", rec)
 
     _VERDICT_KEYS = ("execution_state", "after_fingerprint", "verified")
     try:
@@ -337,6 +348,7 @@ def write_op(
             "ts": time.time(),
             **{k: rec[k] for k in _VERDICT_KEYS if k in rec},
         })
+        _task_event(project, "end", rec)
     except BaseException as e:
         if rec.get("dirty"):
             is_dirty = True
@@ -359,6 +371,7 @@ def write_op(
             "dirty": is_dirty,
             **{k: rec[k] for k in _VERDICT_KEYS if k in rec},
         })
+        _task_event(project, "fail", dict(rec, error=str(e)[:300], dirty=is_dirty))
         raise
     finally:
         release_atomic_lock(lock, rec["id"], rec["pid"])

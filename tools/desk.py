@@ -14,6 +14,8 @@
   python tools/desk.py config show|schema [--json]   effective configuration (env > ~/.desk/config.json > desk.config.json > default), secrets masked
   python tools/desk.py weft status|workflows|nodes|validate [<workflow>]|serve|run <workflow> --project <P> --requirements <file>|history --project <P>|resume <run-id>
                                                      Weft orchestration: typed workflows over DESK nodes; `weft` alone prints the full help (docs/weft/)
+  python tools/desk.py task show projects/<P> <task_id> [--json]   engineering task record (desk/tasks.py)
+  python tools/desk.py task list projects/<P>        tasks with execution / verification status and failure class
   python tools/desk.py recover projects/<P>          list unfinished/dirty live operations and how to resolve each
   python tools/desk.py recover projects/<P> --clear  resolve dirty builds by running tools/clear_block.py for them (live)
   python tools/desk.py recover projects/<P> --mark-resolved <op_id> --reason "checked by hand"
@@ -574,6 +576,23 @@ def main(argv):
             print(run.final_text or f"(no final text; stopped: {run.stopped_reason})")
             print(f"-- {run.model}: {run.turns} turns, {run.tool_calls} tool calls, {run.elapsed_s}s, stopped={run.stopped_reason}, trace={run.trace_path}")
         return 0 if run.stopped_reason == "final" else 1
+
+    if a[0] == "task":
+        from desk import tasks as T
+        if len(a) < 3 or a[1] not in ("show", "list"):
+            raise UsageError("usage: desk.py task show <project> <task_id> [--json] | desk.py task list <project>")
+        store = T.TaskStore(a[2])
+        if a[1] == "list":
+            for tid in store.ids():
+                r = store.get(tid)
+                print(f"{tid:40s} {r['execution_status']:10s} {r['verification_status']:8s} "
+                      f"{(r.get('failure') or {}).get('category', '-')}")
+            return 0
+        if len(a) < 4:
+            raise UsageError("usage: desk.py task show <project> <task_id> [--json]")
+        rec = store.get(a[3])
+        print(json.dumps(rec, indent=1, ensure_ascii=False) if "--json" in a else T.fmt(rec))
+        return 0
 
     if a[0] == "recover":
         proj = a[1]
