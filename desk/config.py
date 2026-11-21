@@ -64,7 +64,8 @@ SCHEMA: List[Setting] = [
             "Fraction of a routing chunk's time window the adaptive planner fills with measured pass time (0.3-0.9)."),
     Setting("DESK_MUTATION_POLICY", ENUM, "record", "safety",
             "record: journal whether a human approval accompanied each live mutation; "
-            "require: refuse non-idempotent mutations without one.", choices=("record", "require")),
+            "require: refuse non-idempotent mutations without one; any other value fails closed to require.",
+            choices=("record", "require")),
     # -- credentials ------------------------------------------------------------------------
     Setting("DESK_CREDENTIAL_STORE", ENUM, None, "credentials",
             "Force a vault backend instead of the platform default.", choices=("windows", "keychain", "file")),

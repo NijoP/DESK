@@ -4,8 +4,16 @@ import collections
 
 
 def compare(blocks, check_ids, parts, lib):
-    """Return (errors, nets{name:[ref.pin]}, single_pin_nets). check_ids = block ids to compare part-by-part."""
+    """Return (errors, nets{name:[ref.pin]}, single_pin_nets). check_ids = block ids to compare part-by-part.
+
+    Fail-closed (report F-1): an empty `check_ids` or an id that names no block spec is an error, because comparing
+    zero parts proves nothing and must never read as VERIFIED."""
     E = []
+    known = {b.get("id") for b in blocks}
+    if not check_ids:
+        E.append("no block selected for comparison (no state/layout.json and no block id given) - nothing was verified")
+    for bid in sorted(set(check_ids or ()) - known):
+        E.append(f"block '{bid}' is not in the block specs - nothing was compared for it")
     live = {p["ref"]: p for p in parts}
     spec_nets, spec_refs = collections.Counter(), set()
     for b in blocks:

@@ -34,6 +34,10 @@ SERVER_VERSION = "1.0.0"
 # Path traversal rejection regex
 PATH_TRAVERSAL_RE = re.compile(r"(\.\./|\.\.\\|\x00|[a-zA-Z]:[\\/])")
 
+# Per-launch secret required on every state-changing request (DeskServer.token); see _has_valid_token.
+TOKEN_HEADER = "X-DESK-Token"
+STATE_CHANGING_GET_PATHS = {"/api/project/select", "/api/v1/project/select", "/api/sync", "/api/v1/sync"}
+
 
 class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
     """HTTP request handler implementing localhost security and the REST/SSE monitoring API."""
@@ -44,12 +48,35 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         """Suppress standard HTTP server request noise from stderr."""
         pass
 
+    def _own_port(self) -> int:
+        try:
+            return int(self.server.server_address[1])
+        except Exception:
+            return DEFAULT_PORT
+
     def _is_safe_origin(self) -> bool:
-        """Validates that request comes strictly from localhost."""
-        origin = self.headers.get("Origin") or self.headers.get("Host") or ""
-        # Strip port if present
-        host_part = origin.split("://")[-1].split(":")[0] if "://" in origin else origin.split(":")[0]
-        return host_part in {"127.0.0.1", "localhost", ""}
+        """Validates that the request comes from this Mission Control origin (report S-1).
+
+        The Host header is required and must be 127.0.0.1/localhost on THIS server's port (a missing Host used to
+        pass, and the port was ignored, so any other local dev-server origin passed too). An Origin header, when the
+        browser sends one, must be http://127.0.0.1:<port> or http://localhost:<port>."""
+        port = self._own_port()
+        allowed_hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
+        host = (self.headers.get("Host") or "").strip().lower()
+        if host not in allowed_hosts:
+            return False
+        origin = self.headers.get("Origin")
+        if origin is not None and origin.strip().lower() not in {f"http://{h}" for h in allowed_hosts}:
+            return False
+        return True
+
+    def _has_valid_token(self) -> bool:
+        """State-changing requests (POST, project select, sync) carry the per-launch token in X-DESK-Token (report
+        S-1/S-2). A cross-site page cannot set a custom header without a CORS preflight, which is never granted."""
+        import hmac
+        expected = getattr(self.server, "desk_token", None)
+        supplied = self.headers.get(TOKEN_HEADER) or ""
+        return bool(expected) and hmac.compare_digest(supplied.encode("utf-8"), str(expected).encode("utf-8"))
 
     def _send_security_headers(self, content_type: str = "application/json") -> None:
         """Applies essential security headers for localhost isolation."""
@@ -94,11 +121,10 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self) -> None:
-        """Rejects state-mutating requests (strictly read-only dashboard)."""
-        self.send_error(405, "Method Not Allowed: Mission Control is strictly read-only")
+        """Handles telemetry ingestion from local tools, strictly read-only for PCB state.
 
-    def do_POST(self) -> None:
-        """Handles telemetry ingestion from local tools, strictly read-only for PCB state."""
+        Events drive the projection (a full set of stage.complete events reads as ACCEPTED), so a POST needs this
+        server's per-launch token as well as a local origin (report S-2)."""
         if not self._is_safe_origin():
             self._send_json(403, {"error": "Access forbidden: Unrecognized Origin / Host header"})
             return
@@ -107,6 +133,9 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         path = parsed.path
 
         if path in {"/api/events", "/api/v1/events", "/api/telemetry", "/api/v1/telemetry"}:
+            if not self._has_valid_token():
+                self._send_json(403, {"error": f"Access forbidden: missing or wrong {TOKEN_HEADER} header"})
+                return
             try:
                 length = int(self.headers.get("Content-Length", 0))
                 body = self.rfile.read(length)
@@ -151,6 +180,12 @@ class DeskRequestHandler(http.server.BaseHTTPRequestHandler):
         # Path traversal guard
         if PATH_TRAVERSAL_RE.search(path):
             self._send_json(400, {"error": "Invalid path: Potential path traversal detected"})
+            return
+
+        # Switching or re-syncing the project writes <project>/state/execution_state.json: a GET an <img> tag on any
+        # page could trigger, so it needs the per-launch token (report S-1).
+        if path in STATE_CHANGING_GET_PATHS and not self._has_valid_token():
+            self._send_json(403, {"error": f"Access forbidden: {path} changes state and needs the {TOKEN_HEADER} header"})
             return
 
         # Route matching
@@ -554,6 +589,10 @@ class DeskServer:
         self.requested_port = port
         self.actual_port = port
         self.server: Optional[http.server.ThreadingHTTPServer] = None
+        # Per-launch secret for state-changing requests (POST /api/events, project select, sync); a local tool that
+        # emits events sends it as the X-DESK-Token header. Never served by any endpoint.
+        import secrets
+        self.token = secrets.token_urlsafe(32)
         self._thread: Optional[threading.Thread] = None
         self._monitor_thread: Optional[threading.Thread] = None
         self._is_running = False
@@ -597,6 +636,7 @@ class DeskServer:
         if server_instance is None:
             raise RuntimeError(f"Failed to bind to any port in range {self.requested_port}..{current_port}")
 
+        server_instance.desk_token = self.token
         self.server = server_instance
         self._is_running = True
 

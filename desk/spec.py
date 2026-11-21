@@ -44,9 +44,22 @@ def load_blocks(project):
     return blocks
 
 
+def _block_matches(b, key):
+    """A block is named by its id, file name, file stem or numeric file prefix ('02' for 02_PWR.json)."""
+    return key in (b.get("id"), b["_file"], b["_file"][:-5], b["_file"].split("_")[0])
+
+
+def resolve_block_id(blocks, key):
+    """Canonical block id for `key` (id or one of its aliases), or None when no block matches."""
+    for b in blocks:
+        if _block_matches(b, key):
+            return b.get("id")
+    return None
+
+
 def find_block(project, key):
     for b in load_blocks(project):
-        if key in (b["id"], b["_file"], b["_file"][:-5], b["_file"].split("_")[0]):
+        if _block_matches(b, key):
             return b
     raise SystemExit(f"block '{key}' not found in {project}/blocks")
 
@@ -67,6 +80,13 @@ def lint(project, only=None, final=False):
                 net_pins[net].append((b["id"], p["ref"], num))
     for r, n in refs.items():
         if n > 1: E.append(f"designator {r} used {n} times")
+    if only:
+        # An alias (file name, stem, numeric prefix) lints the block it names; a name that matches no block is an
+        # error, never a silent "nothing to lint" PASS (report F-2).
+        resolved = resolve_block_id(blocks, only)
+        if resolved is None:
+            E.append(f"block '{only}' not found in {project}/blocks - nothing was linted")
+        only = resolved
     for b in blocks:
         if only and b["id"] != only: continue
         tag = b["id"]

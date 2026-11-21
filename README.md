@@ -9,7 +9,7 @@ Requirements in, verified and manufacturable boards out, with the physics done b
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-informational.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-stdlib%20only-success.svg)](desk/)
-[![Tests](https://img.shields.io/badge/tests-713-informational.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-850-informational.svg)](tests/)
 [![ECAD](https://img.shields.io/badge/ecad-EasyEDA%20Pro-orange.svg)](https://pro.easyeda.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -243,7 +243,7 @@ An earlier run under the same requirements is kept in
 
 ## Verification status
 
-The test suite was last run on 2026-11-12: 717 tests, 0 failures (9 skips). Environment-dependent tests skip when their prerequisite is absent: a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` does not), the private project-one fixture, `shapely`, a free EasyEDA bridge port, Node with Backpass, and the git-ignored WATCH routing fixture. `test_orchestrator` 07/10/11 still fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell. CI runs the suite on Linux, Windows and macOS.
+The suite has 850 tests (`unittest` discovery count, 2026-11-21). The last full local run, on 2026-11-21 at `main` `5ad8492` before the "truth first" fixes, ran 811 tests with 0 failures (14 skips); the tests added since then are verified by the GitHub CI matrix on each pull request. Environment-dependent tests skip when their prerequisite is absent: a Freerouting 2.2+ jar that starts under the local Java (`library/tools` or `FREEROUTING_JAR`; 2.5.0 with Java 25 passes, the unversioned `freerouting.jar` does not), the private project-one fixture, `shapely`, a free EasyEDA bridge port, Node with Backpass, and the git-ignored WATCH routing fixture. `test_orchestrator` 07/10/11 still fail when `DESK_L*_MODEL_PI` or `DESK_FRONTIER_*` are set in the shell. CI runs the suite on Linux, Windows and macOS.
 
 | Area | Status | Evidence |
 |---|---|---|
@@ -272,12 +272,10 @@ The test suite was last run on 2026-11-12: 717 tests, 0 failures (9 skips). Envi
 - No switching-loop area minimisation and no RF-specific ground-plane synthesis yet. Those rules are ADVISORY in the domain library.
 - Junction-temperature and component-rating rules are UNSUPPORTED: DESK lists them, it cannot evaluate them.
 - JLCPCB constraints are a static declaration; there is no live DFM or quoting API call.
-- Developed and tested on Windows 11. GitHub CI on `main` at `b168be9` (run 43181657514, 2026-11-12) passes on **5 of 8**
-  jobs:
-  - Passing: Ubuntu with Python 3.11 and 3.12, Windows with 3.11 and 3.12, macOS with 3.12.
-  - Python 3.9 on Ubuntu 22.04 and Windows: 4 errors in `test_ci_storage`, because that Python's SQLite has no
-    `unixepoch`.
-  - macOS with Python 3.11: 1 failure in `test_bridge_port_discovery`.
+- Developed and tested on Windows 11. GitHub CI on `main` at `5ad8492` (run 43238664294, 2026-11-13) passes all
+  **8 of 8** jobs (Ubuntu, Windows and macOS across the Python matrix). Earlier `main` runs were not all green: run
+  43219591735 failed only on `windows-latest / py3.12`, so treat that job as intermittent until it has a longer
+  green record.
   - Weft runs are not part of CI (see the Weft section).
 - Weft workflows have not been executed by a Weft runtime: durable waits, approval pauses and recovery are unproven, and 22 of the 32 DESK nodes are declared but fail closed until their engine adapter is written.
 - Two timed end-to-end benchmarks exist ([`live-test/`](live-test/README.md)):

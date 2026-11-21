@@ -93,7 +93,7 @@ class TestQualityFailClosed(unittest.TestCase):
             evidence_id="EV_CUSTOM_1",
             timestamp=1000.0,
             pcb_revision_hash="REV_1",
-            profile_hash="P_1",
+            profile_hash=self.profile.profile_hash,   # recorded against the current profile, so it is not STALE
             tool_and_version="EasyEDA DRC 2.0",
             status="FAIL",
             details="Custom short detected in copper pour",

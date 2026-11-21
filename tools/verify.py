@@ -33,7 +33,10 @@ if __name__ == "__main__":
     blocks = S.load_blocks(proj)
     lay = os.path.join(st, "layout.json")
     built = set(json.load(open(lay))["blocks"]) if os.path.exists(lay) else set()
+    # Aliases (file name, stem, numeric prefix) resolve to the canonical id; an unknown or empty id set is an error
+    # in netcheck.compare, never a vacuous VERIFIED (report F-1).
     ids = {only} if only else built
+    ids = {S.resolve_block_id(blocks, i) or i for i in ids}
     E, nets, singles = netcheck.compare(blocks, ids, snap["parts"], lib)
     res = {"parts": len(snap["parts"]), "nets": len(nets), "single_pin_nets": singles, "errors": E,
            "fanout": {n: len(nets[n]) for n in sorted(nets, key=lambda n: -len(nets[n]))[:8]}}
