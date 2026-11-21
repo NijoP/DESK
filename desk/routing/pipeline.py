@@ -515,6 +515,10 @@ def run(argv) -> int:
         "populated_nets": len(net_graph.nets),
         "import_success": (r is True),
         "fully_connected_nets": conn_result.fully_connected_nets,
+        "total_nets": conn_result.total_nets,
+        # The connectivity readback verdict, the only source of "routed" (AGENTS.md); readers such as the dashboard
+        # must not infer success from this file's existence (report F-4).
+        "routing_verdict": "FULL" if _fully_routed else "PARTIAL",
         "completion_pct": conn_result.overall_completion_pct,
         "engine": f"{exec_result.engine_name} {exec_result.engine_version}"
     }

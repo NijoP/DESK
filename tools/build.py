@@ -11,11 +11,14 @@ from desk import ledger as LG
 args = sys.argv[1:]
 proj, bid = args[0], args[1]
 P = load_project(proj)
+# Resolve the alias (file name, stem, numeric prefix) FIRST, then lint and build that one block under its canonical
+# id: linting the raw argument let `build.py P 02` lint nothing and draw a block with lint errors (report F-2).
+b = S.find_block(proj, bid)
+bid = b["id"]
 E, _ = S.lint(proj, bid)
 if E:
     for e in E: print("ERROR", e)
     raise SystemExit("STOP: lint failed - fix the block spec first (python tools/lint.py)")
-b = S.find_block(proj, bid)
 lib = S.load_library()
 nopin = sorted({p["mpn"] for p in b["parts"] if S.load_pins(p["mpn"]) is None})
 if nopin:

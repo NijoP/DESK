@@ -141,7 +141,14 @@ def _power(ctx: Context, i: Dict[str, Any]) -> Result:
 
 def _quality(ctx: Context, i: Dict[str, Any]) -> Result:
     from desk.quality import QualityGateEvaluator
-    ctx.store.get_profile(i["profileHash"])
+    from desk.profile import DesignProfile
+    compiled = ctx.store.get_profile(i["profileHash"]).get("compiled", {}).get("design_profile")
+    # The stackup, electrical and manufacturing gates are judged against the compiled profile; one that cannot be
+    # loaded leaves them UNKNOWN (fail-closed, report F-5) instead of the old "default accepted" PASS.
+    try:
+        profile = DesignProfile.from_dict(compiled) if isinstance(compiled, dict) else None
+    except (TypeError, ValueError):
+        profile = None
     ev = ctx.store.get_evidence(i["evidenceRef"])
     drc = ev.get("drc_violations")
     report = QualityGateEvaluator.evaluate(
@@ -149,6 +156,7 @@ def _quality(ctx: Context, i: Dict[str, Any]) -> Result:
         unconnected_nets=ev.get("unconnected_nets"),
         critical_nets=ev.get("critical_nets"),
         routability_score=float(ev.get("routability_score", 0.0)),
+        profile=profile,
         discontinuities_count=ev.get("discontinuities_count"),
         board_revision=ev.get("board_revision"),
         evidence_revision=ev.get("evidence_revision"),
