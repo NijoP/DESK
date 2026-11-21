@@ -1,5 +1,13 @@
 """Performance Baseline and Profiling CLI for DESK.
 Usage: python tools/profile_perf.py [projects/<P>] [--json] [--report]
+       python tools/profile_perf.py --offline [--fixture F] [--scale 1[,4,16]] [--repeat N] [--json] [--out F.json]
+                                    [--summary F.md] [--timeout S]
+       python tools/profile_perf.py --write-fixture
+
+--offline profiles the checked-in SYNTHETIC board (tests/fixtures/perf/synth_board.json, see desk/perf_bench.py) so the
+profile runs on a fresh clone and in CI: no project directory, no bridge, no network. Stages that need EasyEDA or
+Freerouting are reported as not measured. Several scales run one fresh process each (peak RSS is per process).
+--write-fixture regenerates the fixture file from desk.perf_bench.generate_fixture().
 
 Measures and records the 20 core operations:
  1. Bridge discovery
@@ -190,6 +198,110 @@ def run_profiling(project_dir: str):
 
     summary = collector.summary()
     return summary
+
+def _opt(argv, name, default=None):
+    """Value of `--name V` or `--name=V` in argv."""
+    for i, a in enumerate(argv):
+        if a == name and i + 1 < len(argv):
+            return argv[i + 1]
+        if a.startswith(name + "="):
+            return a.split("=", 1)[1]
+    return default
+
+
+_COLD_IMPORT_CODE = (
+    "import json, sys, time; t = time.perf_counter(); sys.path.insert(0, sys.argv[1]); "
+    "from desk import perf_bench as pb; pb._stages(); "
+    "print(json.dumps({'import_ms': round((time.perf_counter() - t) * 1000.0, 3), 'peak_rss_mb': pb.peak_rss_mb()}))"
+)
+
+
+def _run_child(args, timeout):
+    """One measurement in a fresh interpreter, so its peak RSS and import cost are its own."""
+    import subprocess
+    try:
+        cp = subprocess.run(args, capture_output=True, text=True, timeout=timeout, cwd=ROOT)
+    except subprocess.TimeoutExpired:
+        return {"error": f"timed out after {timeout} s"}
+    if cp.returncode != 0:
+        return {"error": f"exit {cp.returncode}: {(cp.stderr or '').strip()[-800:]}"}
+    try:
+        return json.loads(cp.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        return {"error": f"unparseable output: {cp.stdout[-400:]!r}"}
+
+
+def run_offline_cli(argv):
+    """`--offline`: measure the synthetic fixture. Returns the result dict (also written to --out / --summary)."""
+    from desk import perf_bench as pb
+    fixture = _opt(argv, "--fixture") or pb.FIXTURE_PATH
+    repeat = int(_opt(argv, "--repeat", "5"))
+    timeout = float(_opt(argv, "--timeout", "900"))
+    scales = [int(s) for s in str(_opt(argv, "--scale", "1")).split(",") if s.strip()]
+    if not scales or min(scales) < 1:
+        raise SystemExit("--scale takes positive integers, e.g. --scale 1,4,16")
+
+    if "--child" in argv:   # one scale in this process (used by the parent below)
+        return pb.run_offline(pb.scale_fixture(pb.load_fixture(fixture), scales[0]), repeat=repeat)
+
+    runs = []
+    for k in scales:
+        res = _run_child([sys.executable, os.path.abspath(__file__), "--offline", "--child", "--json",
+                          "--fixture", fixture, "--scale", str(k), "--repeat", str(repeat)], timeout)
+        res["scale"] = k
+        runs.append(res)
+    cold_import = [_run_child([sys.executable, "-c", _COLD_IMPORT_CODE, ROOT], 120) for _ in range(3)]
+    ok = [c for c in cold_import if "import_ms" in c]
+    out = {
+        "schema": "desk.perf.offline/1",
+        "measured_at_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "host": pb.host_info(),
+        "fixture_path": os.path.relpath(fixture, ROOT) if os.path.isabs(fixture) else fixture,
+        "repeat": repeat,
+        "cold_engine_import": {"samples": cold_import,
+                               "median_ms": sorted(c["import_ms"] for c in ok)[len(ok) // 2] if ok else None},
+        "runs": runs,
+        "note": "Synthetic fixture, software-only measurement; not validated on a live design.",
+    }
+    return out
+
+
+def _offline_markdown(res):
+    from desk import perf_bench as pb
+    h = res["host"]
+    lines = [f"### DESK offline profile: {h.get('system')} {h.get('release')} / {h.get('machine')} / "
+             f"Python {h.get('python')} / {h.get('cpu_count')} CPUs / {h.get('physical_ram_mb')} MB RAM", "",
+             f"Cold engine import (fresh process, median of 3): {res['cold_engine_import']['median_ms']} ms", ""]
+    for run in res["runs"]:
+        if "error" in run:
+            lines += [f"**scale x{run['scale']}**: {run['error']}", ""]
+        else:
+            lines += [pb.format_table(run), ""]
+    lines.append("Not measured offline: " + "; ".join(f"`{k}` ({v})" for k, v in pb.NOT_MEASURED.items()))
+    return "\n".join(lines) + "\n"
+
+
+if __name__ == "__main__" and "--write-fixture" in sys.argv:
+    from desk import perf_bench as _pb
+    with open(_pb.FIXTURE_PATH, "w", encoding="utf-8", newline="\n") as _f:
+        _f.write(_pb.fixture_json(_pb.generate_fixture()))
+    print(f"wrote {os.path.relpath(_pb.FIXTURE_PATH, ROOT)}")
+    raise SystemExit(0)
+
+if __name__ == "__main__" and "--offline" in sys.argv:
+    _res = run_offline_cli(sys.argv[1:])
+    if _opt(sys.argv, "--out"):
+        with open(_opt(sys.argv, "--out"), "w", encoding="utf-8") as _f:
+            json.dump(_res, _f, indent=2)
+    if _opt(sys.argv, "--summary") and "--child" not in sys.argv:
+        with open(_opt(sys.argv, "--summary"), "a", encoding="utf-8") as _f:
+            _f.write(_offline_markdown(_res))
+    if "--json" in sys.argv:
+        print(json.dumps(_res, indent=None if "--child" in sys.argv else 2))
+    else:
+        print(_offline_markdown(_res))
+    _failed = [r for r in _res.get("runs", []) if "error" in r]
+    raise SystemExit(1 if _failed and len(_failed) == len(_res.get("runs", [])) else 0)
 
 if __name__ == "__main__":
     proj = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else (__import__("desk.config", fromlist=["get"]).get("DESK_PROJECT") or "")
